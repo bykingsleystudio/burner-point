@@ -1,22 +1,16 @@
-FROM node:20-alpine AS base
+FROM node:20-alpine
 WORKDIR /app
+
 RUN apk add --no-cache libc6-compat
 
-FROM base AS deps
-COPY package*.json ./
-RUN npm ci --only=production
-
-FROM base AS builder
 COPY package*.json ./
 RUN npm ci
-COPY . .
-RUN npm run build
 
-FROM base AS runner
+COPY . .
+RUN npm run build && ls -la dist/
+
+RUN npm prune --production
+
 ENV NODE_ENV=production
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY package*.json ./
 EXPOSE 3001
 CMD ["node", "dist/main"]
