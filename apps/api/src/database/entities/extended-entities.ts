@@ -102,6 +102,9 @@ export class PaymentSession {
   @Column({ type: 'jsonb', default: {} })
   gatewayResponse: Record<string, unknown>;
 
+  @Column({ type: 'jsonb', default: {} })
+  metadata: Record<string, unknown>;
+
   @Column({ nullable: true, type: 'timestamp' })
   paidAt: Date;
 

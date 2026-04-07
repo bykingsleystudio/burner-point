@@ -146,7 +146,7 @@ export class PaymentsService {
 
     // Create payment session
     const session = this.sessionRepo.create({
-      id: reference,
+      reference,
       userId,
       gateway,
       amountKobo: this.getAmountForPaymentType(paymentType),
@@ -700,7 +700,7 @@ export class PaymentsService {
     });
 
     // Apply effects (would need to extract payment type from session metadata)
-    const paymentType = session.metadata?.paymentType;
+    const paymentType = session.metadata?.paymentType as string;
     await this.applyPaymentEffects(session.userId, paymentType, session.metadata);
   }
 

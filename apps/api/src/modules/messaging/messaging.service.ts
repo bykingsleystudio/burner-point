@@ -23,7 +23,7 @@ export class MessagingService {
 
   constructor(private configService: ConfigService) {
     // Initialize Resend SMTP transporter
-    this.emailTransporter = nodemailer.createTransporter({
+    this.emailTransporter = nodemailer.createTransport({
       host: this.configService.get('SMTP_HOST'),
       port: parseInt(this.configService.get('SMTP_PORT', '465')),
       secure: true, // true for 465, false for other ports
