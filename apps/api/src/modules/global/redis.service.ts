@@ -9,14 +9,11 @@ export class RedisService implements OnModuleDestroy {
 
   constructor(private configService: ConfigService) {
     const redisUrl = this.configService.get<string>('REDIS_URL');
+    const redisHost = this.configService.get<string>('REDIS_HOST');
+    const redisPort = this.configService.get<string>('REDIS_PORT');
 
-    if (!redisUrl) {
-      this.logger.warn('REDIS_URL not set — Redis features disabled. Rate limiting will not work.');
-      return;
-    }
-
-    this.client = new Redis(redisUrl, {
-      retryStrategy: (times) => {
+    const redisOptions = {
+      retryStrategy: (times: number) => {
         if (times > 3) {
           this.logger.error('Redis: max retries reached — giving up');
           return null;
@@ -25,7 +22,19 @@ export class RedisService implements OnModuleDestroy {
       },
       lazyConnect: false,
       maxRetriesPerRequest: 1,
-    });
+    };
+
+    if (redisUrl) {
+      this.client = new Redis(redisUrl, redisOptions);
+    } else if (redisHost) {
+      const port = parseInt(redisPort ?? '6379', 10);
+      this.client = new Redis({ host: redisHost, port, ...redisOptions });
+    } else {
+      this.logger.warn(
+        'REDIS_URL / REDIS_HOST not set — Redis features disabled. Rate limiting will not work.',
+      );
+      return;
+    }
 
     this.client.on('error', (err) => this.logger.error(`Redis error: ${err.message}`));
     this.client.on('connect', () => this.logger.log('Redis connected'));

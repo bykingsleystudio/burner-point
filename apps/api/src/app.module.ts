@@ -37,32 +37,52 @@ import { SecurityMiddleware } from './middleware/security.middleware';
 
 @Module({
   imports: [
-    // Config — must be first
+    // Config — must be first (Railway injects env in production; no .env file on disk)
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: process.env.NODE_ENV === 'production' ? '.env.production' : '.env',
+      ignoreEnvFile: process.env.NODE_ENV === 'production',
     }),
 
-    // Database
+    // Database — DATABASE_URL (Railway Postgres reference) or individual DB_* vars
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (cfg: ConfigService) => ({
-        type: 'postgres',
-        url: cfg.get<string>('DATABASE_URL'),
-        synchronize: cfg.get<string>('DB_SYNCHRONIZE') === 'true',
-        logging: cfg.get<string>('DB_LOGGING') === 'true',
-        autoLoadEntities: true,
-        ssl:
-          cfg.get('NODE_ENV') === 'production'
-            ? { rejectUnauthorized: false }
-            : false,
-        // Connection pool settings for production
-        extra:
-          cfg.get('NODE_ENV') === 'production'
-            ? { max: 20, idleTimeoutMillis: 30000, connectionTimeoutMillis: 2000 }
+      useFactory: (cfg: ConfigService) => {
+        const databaseUrl = cfg.get<string>('DATABASE_URL');
+        const isProduction = cfg.get<string>('NODE_ENV') === 'production';
+        const ssl = isProduction ? { rejectUnauthorized: false } : false;
+
+        const base = {
+          type: 'postgres' as const,
+          synchronize: cfg.get<string>('DB_SYNCHRONIZE') === 'true',
+          logging: cfg.get<string>('DB_LOGGING') === 'true',
+          autoLoadEntities: true,
+          retryAttempts: 20,
+          retryDelay: 3000,
+          extra: isProduction
+            ? { max: 20, idleTimeoutMillis: 30000, connectionTimeoutMillis: 10000 }
             : {},
-      }),
+        };
+
+        if (databaseUrl) {
+          return {
+            ...base,
+            url: databaseUrl,
+            ssl,
+          };
+        }
+
+        return {
+          ...base,
+          host: cfg.get<string>('DB_HOST'),
+          port: parseInt(cfg.get<string>('DB_PORT') ?? '5432', 10),
+          username: cfg.get<string>('DB_USER'),
+          password: cfg.get<string>('DB_PASS'),
+          database: cfg.get<string>('DB_NAME'),
+          ssl,
+        };
+      },
     }),
 
     // Cron jobs

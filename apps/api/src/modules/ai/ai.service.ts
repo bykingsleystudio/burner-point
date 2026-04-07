@@ -109,8 +109,9 @@ export class AiService {
       const raw = response.choices[0]?.message?.content ?? '{}';
       const result = JSON.parse(raw);
       return result as MessageClassification;
-    } catch (err) {
-      this.logger.warn(`AI classification failed: ${err.message} — using heuristic fallback`);
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      this.logger.warn(`AI classification failed: ${errMsg} — using heuristic fallback`);
       return { classification: 'personal', spamScore: 0.1, confidence: 0.5 };
     }
   }

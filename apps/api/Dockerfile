@@ -18,4 +18,7 @@ ENV PORT=3001
 
 EXPOSE 3001
 
-CMD ["node", "dist/main"]
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD sh -c "wget -qO- http://127.0.0.1:$${PORT:-3001}/health || exit 1"
+
+CMD ["node", "dist/main.js"]

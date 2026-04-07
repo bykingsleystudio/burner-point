@@ -109,15 +109,22 @@ async function bootstrap() {
     SwaggerModule.setup('api/docs', app, document, {
       swaggerOptions: { persistAuthorization: true },
     });
-    logger.log(`📚 Swagger: http://localhost:${process.env.APP_PORT ?? 3001}/api/docs`);
+    logger.log(`📚 Swagger: http://localhost:${process.env.PORT ?? process.env.APP_PORT ?? 3001}/api/docs`);
   }
 
-  const port = parseInt(process.env.APP_PORT ?? '3001');
+  // Railway healthcheck (railway.toml healthcheckPath = "/health")
+  const httpAdapter = app.getHttpAdapter();
+  httpAdapter.get('/health', (_req: unknown, res: { status: (code: number) => { json: (body: object) => void } }) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  const port = parseInt(process.env.PORT ?? process.env.APP_PORT ?? '3001', 10);
   await app.listen(port, '0.0.0.0');
   logger.log(`🔥 BurnerPoint API running on port ${port} [${process.env.NODE_ENV}]`);
 }
 
-bootstrap().catch((err) => {
-  console.error('Fatal bootstrap error:', err);
+bootstrap().catch((err: unknown) => {
+  const message = err instanceof Error ? err.message : String(err);
+  console.error('Fatal bootstrap error:', message);
   process.exit(1);
 });
