@@ -34,12 +34,16 @@ const SPAM_KEYWORDS = [
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
-  private openai: OpenAI;
+  private _openai: OpenAI | null = null;
 
-  constructor(private config: ConfigService) {
-    this.openai = new OpenAI({
-      apiKey: this.config.get<string>('OPENAI_API_KEY'),
-    });
+  constructor(private config: ConfigService) {}
+
+  private get openai(): OpenAI | null {
+    if (this._openai) return this._openai;
+    const apiKey = this.config.get<string>('OPENAI_API_KEY');
+    if (!apiKey) return null;
+    this._openai = new OpenAI({ apiKey });
+    return this._openai;
   }
 
   // ─── Kill switch check ────────────────────────────────────────────────────
@@ -79,9 +83,9 @@ export class AiService {
       };
     }
 
-    // 3. AI classification — only if kill switch is off
-    if (this.isKillSwitchActive()) {
-      this.logger.warn('AI kill switch active — falling back to heuristic classification');
+    // 3. AI classification — only if kill switch is off and key is set
+    if (this.isKillSwitchActive() || !this.openai) {
+      this.logger.warn('AI unavailable (kill switch or missing key) — using heuristic fallback');
       return { classification: 'personal', spamScore: 0.1, confidence: 0.5 };
     }
 
@@ -122,7 +126,7 @@ export class AiService {
    */
   async healthCheck(): Promise<{ active: boolean; killSwitch: boolean }> {
     return {
-      active: !this.isKillSwitchActive(),
+      active: !this.isKillSwitchActive() && !!this.openai,
       killSwitch: this.isKillSwitchActive(),
     };
   }
