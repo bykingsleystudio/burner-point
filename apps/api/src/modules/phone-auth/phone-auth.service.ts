@@ -12,7 +12,7 @@ const OTP_TTL_MINUTES = 10;
 @Injectable()
 export class PhoneAuthService {
   private readonly logger = new Logger(PhoneAuthService.name);
-  private twilioClient: twilio.Twilio;
+  private _twilioClient: twilio.Twilio | null = null;
   private verifyServiceSid: string;
 
   constructor(
@@ -20,14 +20,20 @@ export class PhoneAuthService {
     @InjectRepository(User) private userRepo: Repository<User>,
     private configService: ConfigService,
   ) {
-    this.twilioClient = twilio(
-      configService.get('TWILIO_ACCOUNT_SID'),
-      configService.get('TWILIO_AUTH_TOKEN'),
-    );
     this.verifyServiceSid = configService.get('TWILIO_VERIFY_SERVICE_SID');
   }
 
+  private get twilioClient(): twilio.Twilio | null {
+    if (this._twilioClient) return this._twilioClient;
+    const sid = this.configService.get<string>('TWILIO_ACCOUNT_SID');
+    const token = this.configService.get<string>('TWILIO_AUTH_TOKEN');
+    if (!sid || !token) return null;
+    this._twilioClient = twilio(sid, token);
+    return this._twilioClient;
+  }
+
   async sendOtp(phoneNumber: string, channel: 'sms' | 'call' | 'whatsapp', ip?: string) {
+    if (!this.twilioClient) throw new BadRequestException('Phone auth not configured');
     // Check for existing pending session (rate limit: max 3 sends per 10 minutes)
     const existing = await this.sessionRepo.findOne({
       where: { phoneNumber, status: 'pending' },
@@ -60,6 +66,7 @@ export class PhoneAuthService {
   }
 
   async verifyOtp(phoneNumber: string, code: string) {
+    if (!this.twilioClient) throw new BadRequestException('Phone auth not configured');
     const session = await this.sessionRepo.findOne({
       where: { phoneNumber, status: 'pending' },
       order: { createdAt: 'DESC' },

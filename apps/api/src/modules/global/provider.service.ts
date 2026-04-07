@@ -7,16 +7,20 @@ export enum ProviderName { TWILIO = 'twilio', TELNYX = 'telnyx' }
 @Injectable()
 export class ProviderService {
   private readonly logger = new Logger(ProviderService.name);
-  private twilioClient: Twilio.Twilio;
+  private _twilioClient: Twilio.Twilio | null = null;
 
-  constructor(private configService: ConfigService) {
-    this.twilioClient = new Twilio.Twilio(
-      this.configService.get<string>('TWILIO_ACCOUNT_SID'),
-      this.configService.get<string>('TWILIO_AUTH_TOKEN'),
-    );
+  constructor(private configService: ConfigService) {}
+
+  private get twilioClient(): Twilio.Twilio | null {
+    if (this._twilioClient) return this._twilioClient;
+    const sid = this.configService.get<string>('TWILIO_ACCOUNT_SID');
+    const token = this.configService.get<string>('TWILIO_AUTH_TOKEN');
+    if (!sid || !token) return null;
+    this._twilioClient = new Twilio.Twilio(sid, token);
+    return this._twilioClient;
   }
 
-  getTwilioClient(): Twilio.Twilio {
+  getTwilioClient(): Twilio.Twilio | null {
     return this.twilioClient;
   }
 
@@ -31,6 +35,7 @@ export class ProviderService {
   }
 
   async sendSms(to: string, from: string, body: string): Promise<{ sid: string; status: string }> {
+    if (!this.twilioClient) throw new Error('Twilio not configured');
     try {
       const msg = await this.twilioClient.messages.create({ to, from, body });
       return { sid: msg.sid, status: msg.status };
@@ -42,6 +47,7 @@ export class ProviderService {
   }
 
   async searchNumbers(countryCode: string, areaCode?: string, smsEnabled = true) {
+    if (!this.twilioClient) throw new Error('Twilio not configured');
     try {
       const params: Record<string, unknown> = { smsEnabled, limit: 20 };
       if (areaCode) params.areaCode = areaCode;
@@ -64,6 +70,7 @@ export class ProviderService {
   }
 
   async purchaseNumber(phoneNumber: string): Promise<{ sid: string; number: string }> {
+    if (!this.twilioClient) throw new Error('Twilio not configured');
     const purchased = await this.twilioClient.incomingPhoneNumbers.create({
       phoneNumber,
       smsUrl: `${this.configService.get('APP_URL')}/webhooks/twilio/sms`,
@@ -74,6 +81,7 @@ export class ProviderService {
   }
 
   async releaseNumber(sid: string): Promise<void> {
+    if (!this.twilioClient) throw new Error('Twilio not configured');
     await this.twilioClient.incomingPhoneNumbers(sid).remove();
   }
 }
