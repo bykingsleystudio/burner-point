@@ -4,10 +4,12 @@
   "scripts": {
     "build": "nest build",
     "start": "node dist/main",
+    "start:prod": "node dist/main",
     "dev": "nest start --watch",
+    "lint": "eslint src",
     "test": "jest",
-    "db:migrate": "typeorm migration:run -d src/database/data-source.ts",
-    "db:revert": "typeorm migration:revert -d src/database/data-source.ts"
+    "db:migrate": "ts-node -r tsconfig-paths/register src/database/data-source.ts",
+    "typeorm": "ts-node -r tsconfig-paths/register node_modules/typeorm/cli"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.10",
@@ -47,6 +49,7 @@
     "@nestjs/testing": "^10.3.10",
     "@types/bcrypt": "^5.0.2",
     "@types/node": "^22.7.9",
+    "@types/nodemailer": "^6.4.16",
     "@types/passport-jwt": "^4.0.1",
     "@types/uuid": "^10.0.0",
     "ts-node": "^10.9.2",
