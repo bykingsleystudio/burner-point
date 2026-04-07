@@ -1,0 +1,16 @@
+{
+  "name": "@burner-point/sdk",
+  "version": "1.0.0",
+  "description": "Official BurnerPoint JavaScript/TypeScript SDK",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "keywords": ["burnerpoint", "sms", "phone", "privacy", "otp"],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}
