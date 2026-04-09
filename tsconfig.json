@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "node16",
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
@@ -16,7 +16,7 @@
     "strictNullChecks": false,
     "noImplicitAny": false,
     "useDefineForClassFields": false,
-    "moduleResolution": "node"
+    "moduleResolution": "node16"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "test"]
