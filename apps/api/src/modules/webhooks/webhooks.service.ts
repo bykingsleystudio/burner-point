@@ -11,6 +11,9 @@ import { AiService } from '../ai/ai.service';
 export class WebhooksService {
   private readonly logger = new Logger(WebhooksService.name);
 
+  private readonly apiWebhookBaseUrl =
+    `${(process.env.APP_URL ?? '').replace(/\/$/, '')}/api/webhooks`;
+
   constructor(
     @InjectRepository(Message) private msgRepo: Repository<Message>,
     @InjectRepository(Call) private callRepo: Repository<Call>,
@@ -114,7 +117,7 @@ export class WebhooksService {
     return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Say voice="Polly.Joanna">You have reached a BurnerPoint number. Please leave a message.</Say>
-  <Record maxLength="60" recordingStatusCallback="${process.env.APP_URL}/webhooks/twilio/recording"/>
+  <Record maxLength="60" recordingStatusCallback="${this.apiWebhookBaseUrl}/twilio/recording"/>
 </Response>`;
   }
 
@@ -132,6 +135,60 @@ export class WebhooksService {
       const status = statusMap[payload.MessageStatus] || MessageStatus.SENT;
       await this.msgRepo.update({ providerMessageSid: sid }, { status });
     }
+    return { success: true };
+  }
+
+  async handleRecordingStatus(payload: Record<string, string>) {
+    const callSid = payload.CallSid;
+    if (!callSid) return { success: true };
+
+    await this.callRepo.update(
+      { providerCallSid: callSid },
+      {
+        recordingUrl: payload.RecordingUrl,
+        voicemailUrl: payload.RecordingUrl,
+        durationSeconds: parseInt(payload.RecordingDuration || '0', 10),
+        status: payload.RecordingStatus === 'completed' ? CallStatus.COMPLETED : CallStatus.RINGING,
+        metadata: payload,
+      },
+    );
+
+    return { success: true };
+  }
+
+  async handleVerifyStatus(payload: Record<string, string>) {
+    const sid = payload.VerificationSid || payload.sid || 'unknown';
+    this.logger.log(`Twilio Verify callback received: ${sid}`);
+    return { success: true };
+  }
+
+  async handleTelnyxWebhook(
+    payload: Record<string, unknown>,
+    headers: Record<string, string>,
+  ) {
+    const eventId =
+      (headers['telnyx-event-id'] as string | undefined) ||
+      ((payload.data as Record<string, unknown> | undefined)?.id as string | undefined) ||
+      ((payload.meta as Record<string, unknown> | undefined)?.id as string | undefined);
+
+    if (eventId) {
+      const existing = await this.dedupRepo.findOne({ where: { eventId } });
+      if (existing) {
+        this.logger.debug(`Duplicate Telnyx webhook: ${eventId}`);
+        return { success: true };
+      }
+
+      await this.dedupRepo.save(
+        this.dedupRepo.create({
+          eventId,
+          source: 'telnyx',
+          eventType: String(payload.event_type ?? 'unknown'),
+          payload,
+        }),
+      );
+    }
+
+    this.logger.log(`Telnyx webhook received: ${String(payload.event_type ?? 'unknown')}`);
     return { success: true };
   }
 }

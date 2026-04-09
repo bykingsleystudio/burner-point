@@ -4,6 +4,8 @@ import Twilio = require('twilio');
 
 export enum ProviderName { TWILIO = 'twilio', TELNYX = 'telnyx' }
 
+const API_WEBHOOK_BASE_PATH = '/api/webhooks';
+
 @Injectable()
 export class ProviderService {
   private readonly logger = new Logger(ProviderService.name);
@@ -71,11 +73,16 @@ export class ProviderService {
 
   async purchaseNumber(phoneNumber: string): Promise<{ sid: string; number: string }> {
     if (!this.twilioClient) throw new Error('Twilio not configured');
+    const appUrl = this.configService.get<string>('APP_URL');
+    const webhookBaseUrl = appUrl
+      ? `${appUrl.replace(/\/$/, '')}${API_WEBHOOK_BASE_PATH}`
+      : API_WEBHOOK_BASE_PATH;
+
     const purchased = await this.twilioClient.incomingPhoneNumbers.create({
       phoneNumber,
-      smsUrl: `${this.configService.get('APP_URL')}/webhooks/twilio/sms`,
-      voiceUrl: `${this.configService.get('APP_URL')}/webhooks/twilio/voice`,
-      statusCallback: `${this.configService.get('APP_URL')}/webhooks/twilio/status`,
+      smsUrl: `${webhookBaseUrl}/twilio/sms`,
+      voiceUrl: `${webhookBaseUrl}/twilio/voice`,
+      statusCallback: `${webhookBaseUrl}/twilio/status`,
     });
     return { sid: purchased.sid, number: purchased.phoneNumber };
   }

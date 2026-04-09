@@ -214,5 +214,5 @@ CREATE TABLE referrals (
 INSERT INTO subscription_plans (slug, name, description, price_kobo_monthly, price_kobo_yearly, features, sort_order) VALUES
   ('free', 'Free', 'Get started with BurnerPoint', 0, 0, '{"numbers":1,"sms_per_month":50,"calls_per_month":10,"api_access":false,"enterprise":false}', 0),
   ('starter', 'Starter', 'For personal privacy needs', 300000, 3000000, '{"numbers":3,"sms_per_month":300,"calls_per_month":100,"api_access":false,"enterprise":false}', 1),
-  ('pro', 'Pro', 'For power users', 800000, 8000000, '{"numbers":10,"sms_per_month":unlimited,"calls_per_month":unlimited,"api_access":true,"enterprise":false}', 2),
-  ('enterprise', 'Enterprise', 'For teams and businesses', 3000000, 30000000, '{"numbers":unlimited,"sms_per_month":unlimited,"calls_per_month":unlimited,"api_access":true,"enterprise":true}', 3);
+  ('pro', 'Pro', 'For power users', 800000, 8000000, '{"numbers":10,"sms_per_month":"unlimited","calls_per_month":"unlimited","api_access":true,"enterprise":false}', 2),
+  ('enterprise', 'Enterprise', 'For teams and businesses', 3000000, 30000000, '{"numbers":"unlimited","sms_per_month":"unlimited","calls_per_month":"unlimited","api_access":true,"enterprise":true}', 3);

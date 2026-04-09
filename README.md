@@ -62,7 +62,7 @@ All configuration is via environment variables. See `.env.example` for full refe
 
 ## 🗄️ Database
 
-Three migration files run in sequence:
+Four SQL migration files run in sequence for a fresh database:
 
 ```bash
 # Run all migrations
@@ -72,6 +72,7 @@ npm run db:migrate
 - **001_initial_schema.sql** — Core tables (users, phone_numbers, messages, calls)
 - **002_extensions.sql** — Billing, abuse, enterprise, API platform
 - **003_payments_phone_auth.sql** — Payment sessions, phone OTP, credit packages
+- **004_replace_gateways.sql** — Align payment gateway enum values with the current Paddle/NOWPayments code
 
 ## 📱 Features
 

@@ -32,4 +32,25 @@ export class WebhooksController {
   async twilioStatus(@Body() body: Record<string, string>) {
     return this.service.handleStatusUpdate(body);
   }
+
+  @Post('twilio/recording')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Twilio recording status callback' })
+  async twilioRecording(@Body() body: Record<string, string>) {
+    return this.service.handleRecordingStatus(body);
+  }
+
+  @Post('twilio/verify')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Twilio Verify status callback' })
+  async twilioVerify(@Body() body: Record<string, string>) {
+    return this.service.handleVerifyStatus(body);
+  }
+
+  @Post('telnyx')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Telnyx webhook receiver' })
+  async telnyxWebhook(@Body() body: Record<string, unknown>, @Headers() headers: Record<string, string>) {
+    return this.service.handleTelnyxWebhook(body, headers);
+  }
 }
