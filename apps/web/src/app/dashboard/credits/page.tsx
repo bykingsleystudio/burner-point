@@ -127,7 +127,7 @@ export default function CreditsPage() {
     setProcessing(true);
     try {
       const r = await paymentsApi.initialize({
-        packageId: selectedPkg.id,
+        paymentType: 'credits',
         gateway: selectedGateway,
       });
       if (r.data.checkoutUrl) {
