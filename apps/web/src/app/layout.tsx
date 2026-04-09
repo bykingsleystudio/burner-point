@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
 import { Space_Grotesk, DM_Mono } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
 import './globals.css';
@@ -18,15 +19,15 @@ const dmMono = DM_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'BurnerPoint — Privacy-first Phone Numbers',
-  description: 'Privacy is not a feature. It is the foundation.',
+  title: 'Burner Point - Private by Design',
+  description: 'Privacy-first phone numbers, verifications, rentals, and communication tools.',
   themeColor: '#0A0A0A',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${spaceGrotesk.variable} ${dmMono.variable}`}>
-      <body className="bg-brand-black text-white font-sans antialiased min-h-screen">
+      <body className="min-h-screen bg-brand-black font-sans antialiased text-white">
         {children}
         <Toaster
           position="top-right"
