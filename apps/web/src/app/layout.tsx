@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { Space_Grotesk, DM_Mono } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
@@ -21,6 +21,9 @@ const dmMono = DM_Mono({
 export const metadata: Metadata = {
   title: 'Burner Point - Private by Design',
   description: 'Privacy-first phone numbers, verifications, rentals, and communication tools.',
+};
+
+export const viewport: Viewport = {
   themeColor: '#0A0A0A',
 };
 

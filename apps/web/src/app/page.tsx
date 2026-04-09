@@ -45,6 +45,7 @@ export default function Home() {
     <main className="relative overflow-hidden bg-brand-black text-white">
       <div className="pointer-events-none absolute inset-0">
         <div className="bp-grid-bg absolute inset-0 opacity-80" />
+        <div className="bp-hero-fx" />
         <div className="absolute inset-y-0 left-0 w-[38%] bg-[radial-gradient(circle_at_left,rgba(0,255,157,0.12),transparent_70%)]" />
         <div className="absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(circle_at_top,rgba(0,255,157,0.12),transparent_65%)]" />
       </div>
@@ -97,14 +98,14 @@ export default function Home() {
               Don&apos;t want to give out your phone number?
             </p>
 
-            <div className="space-y-1 leading-[0.88]">
+            <div className="space-y-2 leading-[0.9] md:space-y-1">
               <div className="text-6xl font-semibold uppercase text-white md:text-[8rem]">No</div>
               <div className="bp-outline text-6xl font-semibold uppercase md:text-[8rem]">Problem.</div>
               <div className="text-6xl font-semibold uppercase text-white md:text-[8rem]">Use</div>
               <div className="bp-outline text-6xl font-semibold uppercase md:text-[8rem]">Ours.</div>
             </div>
 
-            <p className="mx-auto mt-8 max-w-2xl text-base leading-8 text-white/58 md:text-xl">
+            <p className="mx-auto mt-8 max-w-[44rem] text-base leading-8 text-white/58 md:text-xl">
               Generate secure, non-VoIP numbers instantly and stay in control of your communication anytime, anywhere.
             </p>
 

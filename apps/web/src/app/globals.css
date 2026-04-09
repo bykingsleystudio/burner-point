@@ -39,6 +39,35 @@ body { background: var(--black); color: white; }
   mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.96), rgba(0, 0, 0, 0.4));
 }
 
+.bp-hero-fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.bp-hero-fx::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.01) 25%,
+    rgba(0, 0, 0, 0.1) 70%
+  );
+  opacity: 0.12;
+  mix-blend-mode: soft-light;
+}
+
+.bp-hero-fx::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 0.6px, transparent 0.6px);
+  background-size: 3px 3px;
+  opacity: 0.06;
+}
+
 .bp-divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
@@ -50,6 +79,7 @@ body { background: var(--black); color: white; }
     rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.07);
   box-shadow: 0 30px 70px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(2px);
 }
 
 .bp-outline {
@@ -62,6 +92,7 @@ body { background: var(--black); color: white; }
   box-shadow:
     0 0 0 1px rgba(0, 255, 157, 0.22),
     0 0 32px rgba(0, 255, 157, 0.22);
+  transform: translateZ(0);
 }
 
 @keyframes bp-marquee {
@@ -71,14 +102,17 @@ body { background: var(--black); color: white; }
 
 .bp-number-track {
   animation: bp-marquee 34s linear infinite;
+  will-change: transform;
 }
 
 .bp-flag-track {
   animation: bp-marquee 24s linear infinite;
+  will-change: transform;
 }
 
 .bp-service-track {
   animation: bp-marquee 30s linear infinite;
+  will-change: transform;
 }
 
 @keyframes bp-float {
@@ -110,5 +144,15 @@ body { background: var(--black); color: white; }
 @media (min-width: 768px) {
   .bp-outline {
     -webkit-text-stroke: 2px rgba(0, 255, 157, 0.78);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bp-number-track,
+  .bp-flag-track,
+  .bp-service-track,
+  .bp-orb,
+  .bp-orb-ring {
+    animation: none !important;
   }
 }
