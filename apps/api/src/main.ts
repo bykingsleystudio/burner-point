@@ -53,6 +53,9 @@ async function bootstrap() {
   // ── HTTPS redirect in production ──────────────────────────────────────────
   if (isProduction) {
     app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+      if (req.path === '/health') {
+        return next();
+      }
       if (req.headers['x-forwarded-proto'] !== 'https') {
         return res.redirect(301, `https://${req.headers.host}${req.url}`);
       }
