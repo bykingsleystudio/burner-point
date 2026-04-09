@@ -40,7 +40,7 @@ import { SecurityMiddleware } from './middleware/security.middleware';
     // Config — must be first (Railway injects env in production; no .env file on disk)
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: process.env.NODE_ENV === 'production' ? '.env.production' : '.env',
+      envFilePath: '.env',
       ignoreEnvFile: process.env.NODE_ENV === 'production',
     }),
 

@@ -97,6 +97,9 @@ async function bootstrap() {
   // ── WebSocket ────────────────────────────────────────────────────────────
   app.useWebSocketAdapter(new IoAdapter(app));
 
+  // Global prefix — keep /health outside prefixed routes for Railway checks
+  app.setGlobalPrefix('api', { exclude: ['health'] });
+
   // ── Swagger (dev only) ────────────────────────────────────────────────────
   if (!isProduction) {
     const config = new DocumentBuilder()
@@ -115,7 +118,7 @@ async function bootstrap() {
   // Railway healthcheck (railway.toml healthcheckPath = "/health")
   const httpAdapter = app.getHttpAdapter();
   httpAdapter.get('/health', (_req: unknown, res: { status: (code: number) => { json: (body: object) => void } }) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+    res.status(200).json({ status: 'ok', ts: new Date().toISOString() });
   });
 
   const port = parseInt(process.env.PORT ?? process.env.APP_PORT ?? '3001', 10);
