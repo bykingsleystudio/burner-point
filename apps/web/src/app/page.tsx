@@ -99,7 +99,7 @@ export default function Home() {
             <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.24em] text-white/44">
               Receive SMS, voice calls, and OTP verifications from 900+ platforms globally.
             </p>
-            <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+            <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
               <Link href="/auth/signup" className="bp-button-glow inline-flex min-h-12 items-center justify-center rounded-2xl bg-brand-green px-8 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac]">
                 Get Started
                 <ArrowRight className="ml-3 h-4 w-4" />
@@ -110,6 +110,23 @@ export default function Home() {
               <Link href="/api/docs" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-brand-green/18 bg-brand-green/8 px-8 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-brand-green transition hover:bg-brand-green/14">
                 View API Docs
               </Link>
+            </div>
+            <div className="mt-5 flex flex-wrap gap-3">
+              {[
+                { href: '/verifications', label: 'Get Verification' },
+                { href: '/rentals', label: 'Rent A Number' },
+                { href: '/pricing', label: 'Start Monthly Plan' },
+                { href: '/auth/signup', label: 'Get Your Number' },
+                { href: '/pricing', label: 'View Pricing' },
+              ].map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white/72 transition hover:border-brand-green/35 hover:text-brand-green"
+                >
+                  {item.label}
+                </Link>
+              ))}
             </div>
           </div>
 

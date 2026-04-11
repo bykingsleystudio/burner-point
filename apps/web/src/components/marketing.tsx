@@ -33,6 +33,34 @@ import {
   type MarketingPageContent,
 } from '@/lib/marketing-data';
 
+function CtaLink({
+  href,
+  className,
+  children,
+}: {
+  href: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  const external = href.startsWith('http') || href.startsWith('mailto:');
+  if (external) {
+    return (
+      <a
+        href={href}
+        className={className}
+        {...(href.startsWith('http') ? { target: '_blank', rel: 'noreferrer' } : {})}
+      >
+        {children}
+      </a>
+    );
+  }
+  return (
+    <Link href={href} className={className}>
+      {children}
+    </Link>
+  );
+}
+
 const icons: Record<IconKey, LucideIcon> = {
   bell: Bell,
   book: BookOpen,
@@ -231,7 +259,10 @@ export function BulletList({ items }: { items: string[] }) {
 export function FeatureCard({ card }: { card: MarketingCard }) {
   const Icon = card.icon ? icons[card.icon] : ShieldCheck;
   const content = (
-    <article className="bp-card group h-full rounded-[30px] p-7 transition duration-300 hover:-translate-y-1 hover:border-brand-green/24 hover:shadow-[0_34px_90px_rgba(0,255,157,0.11)]">
+    <article
+      id={card.anchorId}
+      className="bp-card group h-full scroll-mt-28 rounded-[30px] p-7 transition duration-300 hover:-translate-y-1 hover:border-brand-green/24 hover:shadow-[0_34px_90px_rgba(0,255,157,0.11)]"
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/8 bg-white/[0.03]">
           <Icon className="h-6 w-6 text-brand-green" />
@@ -263,8 +294,23 @@ export function MarketingPage({ page }: { page: MarketingPageContent }) {
             <p className="mt-7 max-w-3xl text-base leading-8 text-white/62 md:text-xl md:leading-9">{page.description}</p>
             {(page.primaryCta || page.secondaryCta) ? (
               <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-                {page.primaryCta ? <Link href={page.primaryCta.href} className="bp-button-glow inline-flex min-h-12 items-center justify-center rounded-2xl bg-brand-green px-7 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac]">{page.primaryCta.label}<ArrowRight className="ml-3 h-4 w-4" /></Link> : null}
-                {page.secondaryCta ? <Link href={page.secondaryCta.href} className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/10 px-7 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-white/82 transition hover:border-brand-green/35 hover:text-white">{page.secondaryCta.label}</Link> : null}
+                {page.primaryCta ? (
+                  <CtaLink
+                    href={page.primaryCta.href}
+                    className="bp-button-glow inline-flex min-h-12 items-center justify-center rounded-2xl bg-brand-green px-7 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac]"
+                  >
+                    {page.primaryCta.label}
+                    <ArrowRight className="ml-3 h-4 w-4" />
+                  </CtaLink>
+                ) : null}
+                {page.secondaryCta ? (
+                  <CtaLink
+                    href={page.secondaryCta.href}
+                    className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/10 px-7 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-white/82 transition hover:border-brand-green/35 hover:text-white"
+                  >
+                    {page.secondaryCta.label}
+                  </CtaLink>
+                ) : null}
               </div>
             ) : null}
           </div>

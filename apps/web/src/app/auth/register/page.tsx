@@ -22,6 +22,8 @@ const schema = z.object({
   password: z.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Must include uppercase, lowercase, and number'),
   country: z.string().default('NG'),
   referralCode: z.string().optional(),
+  acceptTerms: z.boolean().refine((v) => v === true, { message: 'You must accept the Terms of Service' }),
+  acceptPrivacy: z.boolean().refine((v) => v === true, { message: 'You must accept the Privacy Policy' }),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -40,7 +42,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { country: 'NG' },
+    defaultValues: { country: 'NG', acceptTerms: false, acceptPrivacy: false },
   });
 
   const onSubmit = async (data: FormData) => {
@@ -72,7 +74,7 @@ export default function RegisterPage() {
       </div>
       <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-6xl items-center gap-10 px-5 py-10 md:grid-cols-[0.9fr_1.1fr] md:px-8">
         <section className="hidden md:block">
-          <Link href="/" className="inline-flex items-center gap-3">
+          <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-brand-green/25 bg-brand-green/10">
               <Image src="/assets/logo-mark.svg" alt="" width={26} height={26} />
             </span>
@@ -95,8 +97,8 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="bp-card rounded-[34px] p-5 md:p-7">
           <div className="rounded-[28px] border border-white/8 bg-black/24 p-5 md:p-6">
             <div className="mb-6 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-              <Link href="/" className="inline-flex items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-brand-green/25 bg-brand-green/10">
+              <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-brand-green/25 bg-brand-green/10">
                   <Image src="/assets/logo-mark.svg" alt="" width={26} height={26} />
                 </span>
                 <span className="font-mono text-sm font-semibold uppercase tracking-[0.2em]">Burner <span className="text-brand-green">Point</span></span>
@@ -138,6 +140,31 @@ export default function RegisterPage() {
               <Field label="Referral code">
                 <input {...register('referralCode')} placeholder="ABC1234" className="auth-input font-mono" />
               </Field>
+            </div>
+
+            <div className="mt-6 space-y-3 rounded-[24px] border border-white/8 bg-white/[0.02] p-4">
+              <label className="flex cursor-pointer items-start gap-3 text-sm text-white/70">
+                <input type="checkbox" {...register('acceptTerms')} className="mt-1 h-4 w-4 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
+                <span>
+                  I accept the{' '}
+                  <Link href="/terms" className="text-brand-green underline-offset-2 hover:underline">
+                    Terms of Service
+                  </Link>
+                  .
+                </span>
+              </label>
+              {errors.acceptTerms ? <p className="text-xs text-red-300">{errors.acceptTerms.message}</p> : null}
+              <label className="flex cursor-pointer items-start gap-3 text-sm text-white/70">
+                <input type="checkbox" {...register('acceptPrivacy')} className="mt-1 h-4 w-4 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
+                <span>
+                  I accept the{' '}
+                  <Link href="/privacy" className="text-brand-green underline-offset-2 hover:underline">
+                    Privacy Policy
+                  </Link>
+                  .
+                </span>
+              </label>
+              {errors.acceptPrivacy ? <p className="text-xs text-red-300">{errors.acceptPrivacy.message}</p> : null}
             </div>
 
             <button type="submit" disabled={loading} className="bp-button-glow mt-5 flex min-h-12 w-full items-center justify-center rounded-2xl bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">

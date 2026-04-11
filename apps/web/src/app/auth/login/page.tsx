@@ -69,7 +69,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="bp-card w-full rounded-[34px] p-5 md:p-7">
           <div className="rounded-[28px] border border-white/8 bg-black/24 p-5 md:p-6">
             <div className="mb-8 text-center">
-              <Link href="/" className="mx-auto inline-flex items-center justify-center gap-3">
+              <Link href="/" className="mx-auto inline-flex items-center justify-center gap-3" aria-label="Burner Point home">
                 <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-brand-green/25 bg-brand-green/10">
                   <Image src="/assets/logo-mark.svg" alt="" width={28} height={28} />
                 </span>
@@ -88,7 +88,7 @@ export default function LoginPage() {
                 <input
                   {...register('identifier')}
                   type="text"
-                  inputMode="email"
+                  inputMode="text"
                   autoComplete="username"
                   placeholder="you@example.com or +1 415 555 0182"
                   className="auth-input mt-1.5"
@@ -112,6 +112,12 @@ export default function LoginPage() {
                 </div>
                 {errors.password ? <p className="mt-1.5 text-xs text-red-300">{errors.password.message}</p> : null}
               </label>
+
+              <div className="text-right">
+                <Link href="/contact" className="text-xs font-medium text-brand-green/90 underline-offset-2 hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
             </div>
 
             <button type="submit" disabled={loading} className="bp-button-glow mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">

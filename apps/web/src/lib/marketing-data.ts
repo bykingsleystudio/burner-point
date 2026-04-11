@@ -18,7 +18,7 @@ export type IconKey =
   | 'wifi';
 
 export type MarketingLink = { label: string; href: string };
-export type MarketingCard = { title: string; text: string; meta?: string; href?: string; cta?: string; icon?: IconKey };
+export type MarketingCard = { title: string; text: string; meta?: string; href?: string; cta?: string; icon?: IconKey; anchorId?: string };
 export type MarketingSection = { title: string; text: string; items?: string[] };
 export type MarketingPageContent = {
   slug: string;
@@ -197,11 +197,11 @@ export const marketingPages: Record<string, MarketingPageContent> = {
     title: 'Practical privacy writing for real-world telecom decisions.',
     description: 'Guides for safer registrations, better communication separation, and stronger privacy habits.',
     cards: [
-      { icon: 'file', meta: 'Privacy - 6 min read', title: 'Why You Should Never Use Your Personal Number Online', text: 'Reduce spam, data brokerage, SIM swap exposure, and unwanted account linkage.' },
-      { icon: 'file', meta: 'Security - 5 min read', title: 'How Burner Numbers Protect Your Identity', text: 'Compartmentalize marketplaces, social apps, and short-term signups.' },
-      { icon: 'file', meta: 'Telecom - 7 min read', title: 'Understanding Non-VoIP Numbers', text: 'Why SIM-backed inventory matters for OTP reliability.' },
-      { icon: 'file', meta: 'Communication - 4 min read', title: 'Private Communication for Travel and Remote Work', text: 'Keep access, recovery, and messages portable across countries.' },
-      { icon: 'file', meta: 'Verification - 5 min read', title: 'OTP Hygiene in the Digital Age', text: 'Handle codes and account recovery without exposing your real number.' },
+      { icon: 'file', meta: 'Privacy - 6 min read', title: 'Why You Should Never Use Your Personal Number Online', text: 'Reduce spam, data brokerage, SIM swap exposure, and unwanted account linkage.', href: '/blog#post-personal-number', anchorId: 'post-personal-number' },
+      { icon: 'file', meta: 'Security - 5 min read', title: 'How Burner Numbers Protect Your Identity', text: 'Compartmentalize marketplaces, social apps, and short-term signups.', href: '/blog#post-burner-identity', anchorId: 'post-burner-identity' },
+      { icon: 'file', meta: 'Telecom - 7 min read', title: 'Understanding Non-VoIP Numbers', text: 'Why SIM-backed inventory matters for OTP reliability.', href: '/blog#post-nonvoip', anchorId: 'post-nonvoip' },
+      { icon: 'file', meta: 'Communication - 4 min read', title: 'Private Communication for Travel and Remote Work', text: 'Keep access, recovery, and messages portable across countries.', href: '/blog#post-travel-remote', anchorId: 'post-travel-remote' },
+      { icon: 'file', meta: 'Verification - 5 min read', title: 'OTP Hygiene in the Digital Age', text: 'Handle codes and account recovery without exposing your real number.', href: '/blog#post-otp-hygiene', anchorId: 'post-otp-hygiene' },
     ],
   },
   updates: {
