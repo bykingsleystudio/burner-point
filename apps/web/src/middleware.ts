@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PUBLIC_PATHS = ['/auth/login', '/auth/register', '/'];
+const PUBLIC_PATHS = ['/auth/login', '/auth/register', '/auth/signup'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+  const isPublic = pathname === '/' || PUBLIC_PATHS.some((p) => pathname.startsWith(p));
 
   // Get token from cookie (set during login)
   const token = request.cookies.get('accessToken')?.value;

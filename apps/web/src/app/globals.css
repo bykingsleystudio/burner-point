@@ -95,6 +95,29 @@ body { background: var(--black); color: white; }
   transform: translateZ(0);
 }
 
+.auth-input {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.35);
+  padding: 0.875rem 1rem;
+  color: #fff;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.auth-input::placeholder {
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.auth-input:focus {
+  border-color: rgba(0, 255, 157, 0.48);
+  background: rgba(0, 0, 0, 0.48);
+  box-shadow: 0 0 0 4px rgba(0, 255, 157, 0.08);
+}
+
 @keyframes bp-marquee {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }

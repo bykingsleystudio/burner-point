@@ -5,7 +5,7 @@
  * COMPLETE REPLACEMENT FILE
  * - Removed: Stripe, Crypto (Coinbase) entries
  * - Added:   Paddle, NOWPayments entries
- * - Payment method order: Flutterwave → Paystack → Squad → Korapay → OPay → Paddle → NOWPayments
+ * - Payment method order: Paystack -> Paddle -> NOWPayments
  * - SVG brand assets referenced from /public/assets/ (see SVG placement guide)
  */
 import { useEffect, useState } from 'react';
@@ -106,7 +106,7 @@ type GatewayId = (typeof GATEWAYS)[number]['id'];
 export default function CreditsPage() {
   const [packages, setPackages] = useState<Package[]>([]);
   const [selectedPkg, setSelectedPkg] = useState<Package | null>(null);
-  const [selectedGateway, setSelectedGateway] = useState<GatewayId>('flutterwave');
+  const [selectedGateway, setSelectedGateway] = useState<GatewayId>('paystack');
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
 
@@ -129,6 +129,8 @@ export default function CreditsPage() {
       const r = await paymentsApi.initialize({
         paymentType: 'credits',
         gateway: selectedGateway,
+        packageId: selectedPkg.id,
+        clientPlatform: 'web',
       });
       if (r.data.checkoutUrl) {
         window.location.href = r.data.checkoutUrl;
@@ -146,7 +148,7 @@ export default function CreditsPage() {
   };
 
   const selectedGatewayDef = GATEWAYS.find((g) => g.id === selectedGateway);
-  const ngGateways = GATEWAYS.filter((g) => g.category === 'ng');
+  const ngGateways = GATEWAYS.filter((g) => g.id === 'paystack');
   const intlGateways = GATEWAYS.filter((g) => g.category === 'intl');
 
   return (

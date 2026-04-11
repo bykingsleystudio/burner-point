@@ -24,6 +24,8 @@ import {
   PaymentGateway,
   TransactionType,
   TransactionStatus,
+  CreditPackage,
+  WebhookDedup,
 } from '../../database/entities/extended-entities';
 import { User } from '../../database/entities/user.entity';
 import { UsersService } from '../users/users.service';
@@ -44,6 +46,46 @@ const PADDLE_CONFIG = {
   PRICE_SUB_MONTHLY: 'PADDLE_PRICE_SUB_MONTHLY',
 };
 
+const CORE_WEB_GATEWAYS = [
+  PaymentGateway.PAYSTACK,
+  PaymentGateway.PADDLE,
+  PaymentGateway.NOWPAYMENTS,
+];
+
+const DEFERRED_GATEWAYS = [
+  PaymentGateway.FLUTTERWAVE,
+  PaymentGateway.SQUAD,
+  PaymentGateway.KORAPAY,
+  PaymentGateway.OPAY,
+];
+
+const DEFAULT_CREDIT_PACKAGES = [
+  {
+    id: 'starter',
+    name: 'Starter Credits',
+    amountKobo: 160000,
+    bonusKobo: 0,
+    priceKobo: 160000,
+    isFeatured: false,
+  },
+  {
+    id: 'growth',
+    name: 'Growth Credits',
+    amountKobo: 800000,
+    bonusKobo: 80000,
+    priceKobo: 800000,
+    isFeatured: true,
+  },
+  {
+    id: 'scale',
+    name: 'Scale Credits',
+    amountKobo: 1600000,
+    bonusKobo: 240000,
+    priceKobo: 1600000,
+    isFeatured: false,
+  },
+];
+
 @Injectable()
 export class PaymentsService {
   private readonly logger = new Logger(PaymentsService.name);
@@ -53,6 +95,10 @@ export class PaymentsService {
     private sessionRepo: Repository<PaymentSession>,
     @InjectRepository(WalletTransaction)
     private txRepo: Repository<WalletTransaction>,
+    @InjectRepository(CreditPackage)
+    private packageRepo: Repository<CreditPackage>,
+    @InjectRepository(WebhookDedup)
+    private webhookDedupRepo: Repository<WebhookDedup>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
     private configService: ConfigService,
@@ -61,14 +107,26 @@ export class PaymentsService {
 
   // ─── Public API ───────────────────────────────────────────────────────────
 
+  async getCreditPackages() {
+    const packages = await this.packageRepo.find({
+      where: { isActive: true },
+      order: { sortOrder: 'ASC' },
+    });
+
+    return packages.length ? packages : DEFAULT_CREDIT_PACKAGES;
+  }
+
   async initializePayment(
     userId: string,
-    paymentType: PaymentType,
-    gateway: PaymentGateway,
+    paymentType: PaymentType = PaymentType.CREDITS,
+    gateway: PaymentGateway = PaymentGateway.PAYSTACK,
     rentalDays?: number, // Only for rental payments
+    packageId?: string,
+    clientPlatform: 'web' | 'mobile' = 'web',
   ) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
+    this.assertGatewayAllowed(gateway, clientPlatform);
 
     // Validate rental days
     if (paymentType === PaymentType.RENTAL) {
@@ -78,6 +136,7 @@ export class PaymentsService {
     }
 
     const reference = `BP-${paymentType.toUpperCase()}-${Date.now()}-${uuidv4().slice(0, 8).toUpperCase()}`;
+    const amountKobo = await this.resolveAmountKobo(paymentType, packageId);
 
     let checkoutUrl: string;
     let gatewayReference: string;
@@ -97,13 +156,14 @@ export class PaymentsService {
           paymentType,
           reference,
           rentalDays,
+          amountKobo,
         ));
         break;
 
       case PaymentGateway.PAYSTACK:
         ({ checkoutUrl, gatewayReference } = await this.initPaystack(
           user.email,
-          this.getAmountForPaymentType(paymentType),
+          amountKobo,
           reference,
         ));
         break;
@@ -111,7 +171,7 @@ export class PaymentsService {
       case PaymentGateway.FLUTTERWAVE:
         ({ checkoutUrl, gatewayReference } = await this.initFlutterwave(
           user,
-          this.getAmountForPaymentType(paymentType),
+          amountKobo,
           reference,
         ));
         break;
@@ -119,7 +179,7 @@ export class PaymentsService {
       case PaymentGateway.SQUAD:
         ({ checkoutUrl, gatewayReference } = await this.initSquad(
           user.email,
-          this.getAmountForPaymentType(paymentType),
+          amountKobo,
           reference,
         ));
         break;
@@ -127,7 +187,7 @@ export class PaymentsService {
       case PaymentGateway.KORAPAY:
         ({ checkoutUrl, gatewayReference } = await this.initKorapay(
           user.email,
-          this.getAmountForPaymentType(paymentType),
+          amountKobo,
           reference,
         ));
         break;
@@ -135,7 +195,7 @@ export class PaymentsService {
       case PaymentGateway.OPAY:
         ({ checkoutUrl, gatewayReference } = await this.initOpay(
           user.email,
-          this.getAmountForPaymentType(paymentType),
+          amountKobo,
           reference,
         ));
         break;
@@ -149,12 +209,16 @@ export class PaymentsService {
       reference,
       userId,
       gateway,
-      amountKobo: this.getAmountForPaymentType(paymentType),
-      currency: 'USD',
+      amountKobo,
+      currency: gateway === PaymentGateway.PADDLE || gateway === PaymentGateway.NOWPAYMENTS ? 'USD' : 'NGN',
       status: 'pending',
+      gatewayReference,
+      checkoutUrl,
       metadata: {
         paymentType,
+        packageId: packageId || null,
         rentalDays: rentalDays || null,
+        clientPlatform,
       },
     });
 
@@ -163,8 +227,9 @@ export class PaymentsService {
     return {
       checkoutUrl,
       reference,
-      amount: this.getAmountForPaymentType(paymentType),
-      currency: 'USD',
+      amount: amountKobo,
+      currency: session.currency,
+      gateway,
     };
   }
 
@@ -242,11 +307,12 @@ export class PaymentsService {
     paymentType: PaymentType,
     reference: string,
     rentalDays?: number,
+    amountKobo?: number,
   ) {
     const apiKey = this.configService.get('NOWPAYMENTS_API_KEY');
     const isSandbox = this.configService.get('NOWPAYMENTS_SANDBOX') === 'true';
 
-    const amount = this.getAmountForPaymentType(paymentType);
+    const amount = amountKobo ?? this.getAmountForPaymentType(paymentType);
     const usdAmount = amount / 100; // Convert kobo to USD
 
     const payload = {
@@ -451,6 +517,14 @@ export class PaymentsService {
     }
 
     const payload = JSON.parse(rawBody.toString());
+    const eventId = payload.event_id ?? `${payload.event_type}:${payload.data?.id ?? Date.now()}`;
+    const isFresh = await this.recordWebhookOnce(
+      `paddle:${eventId}`,
+      'paddle',
+      payload.event_type,
+      payload,
+    );
+    if (!isFresh) return { received: true, duplicate: true };
 
     // Handle different event types
     switch (payload.event_type) {
@@ -482,6 +556,15 @@ export class PaymentsService {
       throw new BadRequestException('Invalid IPN signature');
     }
 
+    const eventId = payload.payment_id ?? `${payload.order_id}:${payload.payment_status}`;
+    const isFresh = await this.recordWebhookOnce(
+      `nowpayments:${eventId}`,
+      'nowpayments',
+      payload.payment_status ?? 'unknown',
+      payload,
+    );
+    if (!isFresh) return { received: true, duplicate: true };
+
     if (payload.payment_status === 'finished') {
       await this.handleNowPaymentsCompleted(payload);
     }
@@ -492,6 +575,8 @@ export class PaymentsService {
   async handleWebhook(gateway: PaymentGateway, body: any, headers: Record<string, string>) {
     let reference: string;
     let isSuccess: boolean;
+    let eventType = 'unknown';
+    let eventId: string;
 
     switch (gateway) {
       case PaymentGateway.PAYSTACK: {
@@ -506,6 +591,8 @@ export class PaymentsService {
         }
 
         const event = body as { event: string; data: { reference: string; status: string } };
+        eventType = event.event;
+        eventId = `${gateway}:${event.event}:${event.data?.reference}`;
         if (event.event !== 'charge.success') return { received: true };
         reference = event.data.reference;
         isSuccess = event.data.status === 'success';
@@ -520,6 +607,8 @@ export class PaymentsService {
           return { received: true };
         }
         const event = body as { event: string; data: { tx_ref: string; status: string } };
+        eventType = event.event;
+        eventId = `${gateway}:${event.event}:${event.data?.tx_ref}`;
         if (event.event !== 'charge.completed') return { received: true };
         reference = event.data.tx_ref;
         isSuccess = event.data.status === 'successful';
@@ -528,6 +617,8 @@ export class PaymentsService {
 
       case PaymentGateway.SQUAD: {
         const event = body as { Event: string; Body: { transaction_ref: string; success: boolean } };
+        eventType = event.Event;
+        eventId = `${gateway}:${event.Event}:${event.Body?.transaction_ref}`;
         if (event.Event !== 'charge_successful') return { received: true };
         reference = event.Body.transaction_ref;
         isSuccess = event.Body.success;
@@ -536,6 +627,8 @@ export class PaymentsService {
 
       case PaymentGateway.KORAPAY: {
         const event = body as { event: string; data: { reference: string; status: string } };
+        eventType = event.event;
+        eventId = `${gateway}:${event.event}:${event.data?.reference}`;
         if (event.event !== 'charge.success') return { received: true };
         reference = event.data.reference;
         isSuccess = event.data.status === 'success';
@@ -544,6 +637,8 @@ export class PaymentsService {
 
       case PaymentGateway.OPAY: {
         const event = body as { eventType: string; data: { reference: string; status: string } };
+        eventType = event.eventType;
+        eventId = `${gateway}:${event.eventType}:${event.data?.reference}`;
         if (event.eventType !== 'charge.success') return { received: true };
         reference = event.data.reference;
         isSuccess = event.data.status === 'successful';
@@ -554,6 +649,9 @@ export class PaymentsService {
         throw new BadRequestException(`Webhook not implemented for ${gateway}`);
     }
 
+    const isFresh = await this.recordWebhookOnce(eventId ?? `${gateway}:${reference}`, gateway, eventType, body);
+    if (!isFresh) return { received: true, duplicate: true };
+
     if (reference && isSuccess) {
       await this.fulfillPayment(reference);
     }
@@ -561,8 +659,8 @@ export class PaymentsService {
     return { received: true };
   }
 
-  async fulfillPayment(reference: string) {
-    const session = await this.sessionRepo.findOne({ where: { id: reference } });
+  async fulfillPayment(reference: string, gatewayReference?: string) {
+    const session = await this.sessionRepo.findOne({ where: { reference } });
     if (!session || session.status === 'completed') {
       this.logger.debug(`Payment ${reference} already fulfilled or not found`);
       return;
@@ -592,6 +690,7 @@ export class PaymentsService {
 
     await this.sessionRepo.update(session.id, {
       status: 'completed',
+      gatewayReference: gatewayReference ?? session.gatewayReference,
       paidAt: new Date(),
     });
 
@@ -601,6 +700,65 @@ export class PaymentsService {
   }
 
   // ─── Private Helpers ──────────────────────────────────────────────────────
+
+  private assertGatewayAllowed(gateway: PaymentGateway, clientPlatform: 'web' | 'mobile'): void {
+    if (clientPlatform === 'mobile' && this.configService.get('MOBILE_EXTERNAL_PAYMENTS_ENABLED') !== 'true') {
+      throw new BadRequestException(
+        'Mobile in-app external payments are disabled for store-policy safety. Complete purchases on web.',
+      );
+    }
+
+    if (CORE_WEB_GATEWAYS.includes(gateway)) return;
+
+    if (
+      DEFERRED_GATEWAYS.includes(gateway) &&
+      this.configService.get('SECONDARY_GATEWAYS_ENABLED') === 'true'
+    ) {
+      return;
+    }
+
+    throw new BadRequestException(
+      `${gateway} is deferred until the Paystack core revenue flow is stable`,
+    );
+  }
+
+  private async resolveAmountKobo(paymentType: PaymentType, packageId?: string): Promise<number> {
+    if (paymentType === PaymentType.CREDITS && packageId) {
+      const creditPackage = await this.packageRepo.findOne({
+        where: { id: packageId, isActive: true },
+      });
+      if (creditPackage) return Number(creditPackage.priceKobo);
+
+      const fallbackPackage = DEFAULT_CREDIT_PACKAGES.find((pkg) => pkg.id === packageId);
+      if (fallbackPackage) return fallbackPackage.priceKobo;
+    }
+
+    return this.getAmountForPaymentType(paymentType);
+  }
+
+  private async recordWebhookOnce(
+    eventId: string,
+    source: string,
+    eventType: string,
+    payload: Record<string, unknown>,
+  ): Promise<boolean> {
+    const existing = await this.webhookDedupRepo.findOne({ where: { eventId } });
+    if (existing) {
+      this.logger.debug(`Duplicate webhook ignored: ${eventId}`);
+      return false;
+    }
+
+    await this.webhookDedupRepo.save(
+      this.webhookDedupRepo.create({
+        eventId,
+        source,
+        eventType,
+        payload,
+        status: 'processed',
+      }),
+    );
+    return true;
+  }
 
   private getAmountForPaymentType(paymentType: PaymentType): number {
     switch (paymentType) {
@@ -632,34 +790,7 @@ export class PaymentsService {
     const reference = transaction.custom_data?.reference;
     if (!reference) return;
 
-    const session = await this.sessionRepo.findOne({ where: { id: reference } });
-    if (!session || session.status !== 'pending') return;
-
-    // Update session status
-    session.status = 'completed';
-    session.gatewayReference = transaction.id;
-    await this.sessionRepo.save(session);
-
-    // Create transaction record
-    const paymentType = transaction.custom_data?.paymentType;
-    const userId = transaction.custom_data?.userId;
-
-    await this.txRepo.save({
-      userId,
-      type: this.getTransactionTypeForPayment(paymentType),
-      status: TransactionStatus.COMPLETED,
-      amountKobo: transaction.details.totals.total,
-      currency: transaction.currency_code,
-      gateway: PaymentGateway.PADDLE,
-      gatewayReference: transaction.id,
-      metadata: {
-        paymentType,
-        rentalDays: transaction.custom_data?.rentalDays,
-      },
-    });
-
-    // Apply business logic
-    await this.applyPaymentEffects(userId, paymentType, transaction.custom_data);
+    await this.fulfillPayment(reference, transaction.id);
   }
 
   private async handlePaddleSubscriptionEvent(subscription: any) {
@@ -680,28 +811,7 @@ export class PaymentsService {
 
   private async handleNowPaymentsCompleted(payload: any) {
     const reference = payload.order_id;
-    const session = await this.sessionRepo.findOne({ where: { id: reference } });
-    if (!session || session.status !== 'pending') return;
-
-    // Update session
-    session.status = 'completed';
-    session.gatewayReference = payload.payment_id;
-    await this.sessionRepo.save(session);
-
-    // Create transaction
-    await this.txRepo.save({
-      userId: session.userId,
-      type: TransactionType.CREDIT_PURCHASE, // Would need to map properly
-      status: TransactionStatus.COMPLETED,
-      amountKobo: payload.price_amount * 100, // Convert to kobo
-      currency: payload.price_currency.toUpperCase(),
-      gateway: PaymentGateway.NOWPAYMENTS,
-      gatewayReference: payload.payment_id,
-    });
-
-    // Apply effects (would need to extract payment type from session metadata)
-    const paymentType = session.metadata?.paymentType as string;
-    await this.applyPaymentEffects(session.userId, paymentType, session.metadata);
+    await this.fulfillPayment(reference, payload.payment_id);
   }
 
   private getTransactionTypeForPayment(paymentType: string): TransactionType {

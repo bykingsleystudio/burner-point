@@ -1,6 +1,6 @@
-import { Body, Controller, Post, Req, Res, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, HttpCode, HttpStatus, Redirect } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
-import { Request, Response } from 'express';
+import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -18,9 +18,16 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Login with email and password' })
+  @ApiOperation({ summary: 'Login with email or phone number and password' })
   async login(@Body() dto: LoginDto, @Req() req: Request) {
     return this.authService.login(dto, req.ip);
+  }
+
+  @Get('oauth/:provider')
+  @Redirect()
+  @ApiOperation({ summary: 'Redirect to configured OAuth provider' })
+  async oauth(@Param('provider') provider: string) {
+    return { url: await this.authService.getOAuthRedirect(provider) };
   }
 
   @Post('refresh')

@@ -4,7 +4,7 @@
  * COMPLETE REPLACEMENT FILE
  * - Removed: Stripe, Crypto (Coinbase) entries
  * - Added:   Paddle, NOWPayments entries
- * - Payment order matches web: Flutterwave → Paystack → Squad → Korapay → OPay → Paddle → NOWPayments
+ * - Payment order matches web: Paystack -> Paddle -> NOWPayments
  */
 import { useEffect, useState } from 'react';
 import {
@@ -18,10 +18,10 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
+const WEB_BILLING_URL = process.env.EXPO_PUBLIC_WEB_URL || 'https://burnerpoint.app/dashboard/credits';
 
 // ─── Gateway definitions — EXACT PRIORITY ORDER ───────────────────────────
 const GATEWAYS = [
@@ -39,7 +39,7 @@ const GATEWAYS = [
 export default function CreditsScreen() {
   const [packages, setPackages] = useState<any[]>([]);
   const [selectedPkg, setSelectedPkg] = useState<any>(null);
-  const [gateway, setGateway] = useState('flutterwave');
+  const [gateway, setGateway] = useState('paystack');
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
 
@@ -58,17 +58,10 @@ export default function CreditsScreen() {
     }
     setPaying(true);
     try {
-      const token = await SecureStore.getItemAsync('accessToken');
-      const res = await axios.post(
-        `${API_URL}/payments/initialize`,
-        { packageId: selectedPkg.id, gateway },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-      if (res.data.checkoutUrl) {
-        await Linking.openURL(res.data.checkoutUrl);
-      }
+      const url = `${WEB_BILLING_URL}?packageId=${encodeURIComponent(selectedPkg.id)}&gateway=${encodeURIComponent(gateway)}`;
+      await Linking.openURL(url);
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.message ?? 'Payment failed');
+      Alert.alert('Error', e?.message ?? 'Unable to open secure web checkout');
     } finally {
       setPaying(false);
     }
@@ -123,7 +116,7 @@ export default function CreditsScreen() {
             <Text style={s.sectionLabel}>🇳🇬 NIGERIAN PAYMENTS</Text>
             <View style={s.gatewayGrid}>
               {GATEWAYS.filter((g) =>
-                ['flutterwave', 'paystack', 'squad', 'korapay', 'opay'].includes(g.id),
+                ['paystack'].includes(g.id),
               ).map((gw) => (
                 <TouchableOpacity
                   key={gw.id}

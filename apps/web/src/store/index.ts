@@ -4,8 +4,9 @@ import { persist } from 'zustand/middleware';
 interface User {
   id: string;
   email: string;
+  phoneNumber?: string;
   firstName: string;
-  lastName?: string;
+  lastName: string;
   role: string;
   walletBalanceKobo: number;
   referralCode?: string;

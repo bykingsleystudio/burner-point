@@ -2,9 +2,9 @@ import { Injectable, NotFoundException, BadRequestException, Logger } from '@nes
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PhoneNumber, NumberStatus, NumberType, NumberProvider } from '../../database/entities/phone-number.entity';
-import { WalletTransaction, TransactionType, TransactionStatus, PaymentGateway } from '../../database/entities/extended-entities';
+import { WalletTransaction, TransactionType, TransactionStatus } from '../../database/entities/extended-entities';
 import { User } from '../../database/entities/user.entity';
-import { ProviderService } from '../global/provider.service';
+import { ProviderName, ProviderService } from '../global/provider.service';
 import { UsersService } from '../users/users.service';
 
 const NUMBER_PRICING_KOBO: Record<string, Record<string, number>> = {
@@ -32,18 +32,27 @@ export class NumbersService {
   ) {}
 
   async searchAvailable(countryCode: string, areaCode?: string) {
-    return this.providerService.searchNumbers(countryCode.toUpperCase(), areaCode);
+    const country = countryCode.toUpperCase();
+    if (!['US', 'CA'].includes(country)) {
+      throw new BadRequestException('Conversation numbers are available for US and Canada only');
+    }
+    return this.providerService.searchNumbers(country, areaCode);
   }
 
   async provision(userId: string, phoneNumber: string, type: NumberType, countryCode: string) {
-    const pricing = NUMBER_PRICING_KOBO[countryCode] || NUMBER_PRICING_KOBO.default;
+    const country = countryCode.toUpperCase();
+    if (type !== NumberType.VERIFICATION && !['US', 'CA'].includes(country)) {
+      throw new BadRequestException('Conversation rentals are available for US and Canada only');
+    }
+
+    const pricing = NUMBER_PRICING_KOBO[country] || NUMBER_PRICING_KOBO.default;
     const priceKobo = pricing[type] || pricing.burner;
 
     // Debit wallet
     await this.usersService.debitWallet(userId, priceKobo);
 
     // Purchase from provider
-    const { sid, number } = await this.providerService.purchaseNumber(phoneNumber);
+    const { sid, number, provider } = await this.providerService.purchaseNumber(phoneNumber, country);
 
     // Calculate expiry
     const durationDays = NUMBER_DURATION_DAYS[type] || 1;
@@ -55,14 +64,14 @@ export class NumbersService {
       number,
       status: NumberStatus.ACTIVE,
       type,
-      provider: NumberProvider.TWILIO,
+      provider: this.mapNumberProvider(provider),
       providerNumberSid: sid,
-      countryCode: countryCode.toUpperCase(),
+      countryCode: country,
       userId,
       priceKobo,
       renewalPriceKobo: priceKobo,
       expiresAt,
-      capabilities: ['sms', 'voice'],
+      capabilities: ['sms', 'mms', 'voice'],
     });
 
     const saved = await this.numberRepo.save(num);
@@ -102,7 +111,7 @@ export class NumbersService {
 
     // Release from provider
     if (num.providerNumberSid) {
-      try { await this.providerService.releaseNumber(num.providerNumberSid); }
+      try { await this.providerService.releaseNumber(num.providerNumberSid, num.provider as unknown as ProviderName); }
       catch (e) { this.logger.warn(`Provider release failed for ${num.number}: ${e.message}`); }
     }
 
@@ -135,5 +144,25 @@ export class NumbersService {
       .where('pn.expiresAt <= :date', { date: beforeDate })
       .andWhere('pn.status = :status', { status: NumberStatus.ACTIVE })
       .getMany();
+  }
+
+  private mapNumberProvider(provider: ProviderName): NumberProvider {
+    switch (provider) {
+      case ProviderName.BANDWIDTH:
+        return NumberProvider.BANDWIDTH;
+      case ProviderName.VONAGE:
+        return NumberProvider.VONAGE;
+      case ProviderName.INFOBIP:
+        return NumberProvider.INFOBIP;
+      case ProviderName.TELNYX:
+        return NumberProvider.TELNYX;
+      case ProviderName.PLIVO:
+        return NumberProvider.PLIVO;
+      case ProviderName.TERMII:
+        return NumberProvider.TERMII;
+      case ProviderName.TWILIO:
+      default:
+        return NumberProvider.TWILIO;
+    }
   }
 }

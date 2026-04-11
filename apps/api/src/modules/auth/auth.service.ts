@@ -7,7 +7,6 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
 import { User, UserStatus } from '../../database/entities/user.entity';
 import { RedisService } from '../global/redis.service';
 import { RegisterDto } from './dto/register.dto';
@@ -27,19 +26,23 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto, ip?: string) {
+    const email = this.normalizeEmail(dto.email);
+    const phoneNumber = this.normalizePhoneNumber(dto.phoneNumber);
     const existing = await this.userRepo.findOne({
-      where: [{ email: dto.email }],
+      where: [{ email }, { phoneNumber }],
     });
-    if (existing) throw new ConflictException('Email already registered');
+    if (existing?.email === email) throw new ConflictException('Email already registered');
+    if (existing?.phoneNumber === phoneNumber) throw new ConflictException('Phone number already registered');
 
     const passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
     const referralCode = this.generateReferralCode();
 
     const user = this.userRepo.create({
-      email: dto.email.toLowerCase().trim(),
+      email,
+      phoneNumber,
       passwordHash,
-      firstName: dto.firstName,
-      lastName: dto.lastName,
+      firstName: dto.firstName.trim(),
+      lastName: dto.lastName.trim(),
       country: dto.country || 'NG',
       referralCode,
       status: UserStatus.ACTIVE,
@@ -59,8 +62,15 @@ export class AuthService {
   }
 
   async login(dto: LoginDto, ip?: string) {
+    const identifier = dto.identifier || dto.email || dto.phoneNumber;
+    if (!identifier) throw new BadRequestException('Email or phone number is required');
+    const normalizedIdentifier = this.normalizeLoginIdentifier(identifier);
+    const where = normalizedIdentifier.includes('@')
+      ? { email: normalizedIdentifier }
+      : { phoneNumber: normalizedIdentifier };
+
     const user = await this.userRepo.findOne({
-      where: { email: dto.email.toLowerCase().trim() },
+      where,
       select: ['id', 'email', 'passwordHash', 'status', 'twoFactorEnabled',
                'twoFactorSecret', 'failedLoginAttempts', 'lockedUntil', 'role'],
     });
@@ -132,9 +142,29 @@ export class AuthService {
     return { success: true };
   }
 
-  async validateUser(email: string, password: string): Promise<User | null> {
+  async getOAuthRedirect(provider: string) {
+    const providerConfig: Record<string, { label: string; env: string }> = {
+      google: { label: 'Google', env: 'GOOGLE_OAUTH_URL' },
+      apple: { label: 'Apple iCloud', env: 'APPLE_OAUTH_URL' },
+      microsoft: { label: 'Microsoft Outlook', env: 'MICROSOFT_OAUTH_URL' },
+    };
+    const config = providerConfig[provider.toLowerCase()];
+    if (!config) throw new BadRequestException('Unsupported OAuth provider');
+
+    const redirectUrl = this.configService.get<string>(config.env);
+    if (!redirectUrl) {
+      throw new BadRequestException(`${config.label} OAuth is not configured. Set ${config.env}.`);
+    }
+    return redirectUrl;
+  }
+
+  async validateUser(identifier: string, password: string): Promise<User | null> {
+    const normalizedIdentifier = this.normalizeLoginIdentifier(identifier);
+    const where = normalizedIdentifier.includes('@')
+      ? { email: normalizedIdentifier }
+      : { phoneNumber: normalizedIdentifier };
     const user = await this.userRepo.findOne({
-      where: { email: email.toLowerCase() },
+      where,
       select: ['id', 'email', 'passwordHash', 'status', 'role'],
     });
     if (!user) return null;
@@ -166,5 +196,18 @@ export class AuthService {
 
   private generateReferralCode(): string {
     return Math.random().toString(36).slice(2, 9).toUpperCase();
+  }
+
+  private normalizeEmail(email: string): string {
+    return email.toLowerCase().trim();
+  }
+
+  private normalizePhoneNumber(phoneNumber: string): string {
+    return phoneNumber.trim().replace(/[^\d+]/g, '');
+  }
+
+  private normalizeLoginIdentifier(identifier: string): string {
+    const trimmed = identifier.trim();
+    return trimmed.includes('@') ? this.normalizeEmail(trimmed) : this.normalizePhoneNumber(trimmed);
   }
 }

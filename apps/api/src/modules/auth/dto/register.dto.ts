@@ -6,6 +6,15 @@ export class RegisterDto {
   @IsEmail()
   email: string;
 
+  @ApiProperty({ example: '+14155550182' })
+  @IsString()
+  @MinLength(7)
+  @MaxLength(24)
+  @Matches(/^\+?[0-9\s().-]{7,24}$/, {
+    message: 'Phone number must be a valid international phone number',
+  })
+  phoneNumber: string;
+
   @ApiProperty({ example: 'StrongPass123!' })
   @IsString()
   @MinLength(8)
@@ -22,10 +31,10 @@ export class RegisterDto {
   firstName: string;
 
   @ApiProperty({ example: 'Doe' })
-  @IsOptional()
   @IsString()
+  @MinLength(1)
   @MaxLength(50)
-  lastName?: string;
+  lastName: string;
 
   @ApiProperty({ example: 'NG', required: false })
   @IsOptional()

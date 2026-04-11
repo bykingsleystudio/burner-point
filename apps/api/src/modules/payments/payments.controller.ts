@@ -25,9 +25,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PaymentGateway } from '../../database/entities/extended-entities';
 
 class InitPaymentDto {
-  paymentType: PaymentType;
-  gateway: PaymentGateway;
+  paymentType?: PaymentType;
+  gateway?: PaymentGateway;
   rentalDays?: number; // Only for rental payments
+  packageId?: string;
+  clientPlatform?: 'web' | 'mobile';
 }
 
 @ApiTags('payments')
@@ -47,7 +49,15 @@ export class PaymentsController {
       dto.paymentType,
       dto.gateway,
       dto.rentalDays,
+      dto.packageId,
+      dto.clientPlatform,
     );
+  }
+
+  @Get('packages')
+  @ApiOperation({ summary: 'Get active credit packages' })
+  packages() {
+    return this.service.getCreditPackages();
   }
 
   @Get('history')

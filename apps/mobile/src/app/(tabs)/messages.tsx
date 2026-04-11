@@ -5,7 +5,7 @@ import { MessageSquare, Zap, Shield } from 'lucide-react-native';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 export default function MessagesScreen() {
   const [numbers, setNumbers] = useState<any[]>([]);

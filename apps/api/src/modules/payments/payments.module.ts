@@ -13,6 +13,7 @@ import {
   PaymentSession,
   WalletTransaction,
   CreditPackage,
+  WebhookDedup,
 } from '../../database/entities/extended-entities';
 import { User } from '../../database/entities/user.entity';
 import { UsersModule } from '../users/users.module';
@@ -23,6 +24,7 @@ import { UsersModule } from '../users/users.module';
       PaymentSession,
       WalletTransaction,
       CreditPackage,
+      WebhookDedup,
       User,
     ]),
     UsersModule,

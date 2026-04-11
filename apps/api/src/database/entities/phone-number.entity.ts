@@ -7,7 +7,15 @@ import { Message } from './message.entity';
 
 export enum NumberStatus { ACTIVE = 'active', EXPIRED = 'expired', RELEASED = 'released', SUSPENDED = 'suspended', PENDING = 'pending' }
 export enum NumberType { BURNER = 'burner', RENTAL = 'rental', VERIFICATION = 'verification', ENTERPRISE = 'enterprise' }
-export enum NumberProvider { TWILIO = 'twilio', TELNYX = 'telnyx' }
+export enum NumberProvider {
+  TWILIO = 'twilio',
+  BANDWIDTH = 'bandwidth',
+  VONAGE = 'vonage',
+  INFOBIP = 'infobip',
+  TELNYX = 'telnyx',
+  PLIVO = 'plivo',
+  TERMII = 'termii',
+}
 
 @Entity('phone_numbers')
 export class PhoneNumber {
