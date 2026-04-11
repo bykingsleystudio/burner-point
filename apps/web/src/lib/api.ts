@@ -87,8 +87,6 @@ export interface InitPaymentParams {
   paymentType: PaymentType;
   gateway: PaymentGatewayId;
   rentalDays?: number; // Only for rental payments
-  packageId?: string;
-  clientPlatform?: 'web' | 'mobile';
 }
 
 export interface PaymentResponse {
