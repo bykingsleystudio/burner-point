@@ -2,14 +2,17 @@ import { notFound } from 'next/navigation';
 import { MarketingPage } from '@/components/marketing';
 import { getMarketingPage, marketingPages } from '@/lib/marketing-data';
 
+type PublicPageParams = Promise<{ slug: string }>;
+
 export function generateStaticParams() {
   return Object.keys(marketingPages)
     .filter((slug) => slug !== 'api' && slug !== 'api-docs')
     .map((slug) => ({ slug }));
 }
 
-export function generateMetadata({ params }: { params: { slug: string } }) {
-  const page = getMarketingPage(params.slug);
+export async function generateMetadata({ params }: { params: PublicPageParams }) {
+  const { slug } = await params;
+  const page = getMarketingPage(slug);
   if (!page) return {};
   return {
     title: `${page.eyebrow} - Burner Point`,
@@ -17,8 +20,9 @@ export function generateMetadata({ params }: { params: { slug: string } }) {
   };
 }
 
-export default function PublicPage({ params }: { params: { slug: string } }) {
-  const page = getMarketingPage(params.slug);
+export default async function PublicPage({ params }: { params: PublicPageParams }) {
+  const { slug } = await params;
+  const page = getMarketingPage(slug);
   if (!page || page.slug === 'api' || page.slug === 'api-docs') notFound();
   return <MarketingPage page={page} />;
 }
