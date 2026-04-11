@@ -19,9 +19,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
-const WEB_BILLING_URL = process.env.EXPO_PUBLIC_WEB_URL || 'https://burnerpoint.app/dashboard/credits';
+import { API_BASE_URL, WEB_BILLING_URL } from '../../lib/config';
 
 // ─── Gateway definitions — EXACT PRIORITY ORDER ───────────────────────────
 const GATEWAYS = [
@@ -45,7 +43,7 @@ export default function CreditsScreen() {
 
   useEffect(() => {
     axios
-      .get(`${API_URL}/payments/packages`)
+      .get(`${API_BASE_URL}/payments/packages`)
       .then((r) => setPackages(r.data))
       .catch(() => Alert.alert('Error', 'Failed to load packages'))
       .finally(() => setLoading(false));

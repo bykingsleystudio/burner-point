@@ -6,8 +6,7 @@ import * as SecureStore from 'expo-secure-store';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import axios from 'axios';
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
+import { API_BASE_URL } from '../../lib/config';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -17,7 +16,7 @@ export default function ProfileScreen() {
     (async () => {
       const token = await SecureStore.getItemAsync('accessToken');
       if (!token) return;
-      const res = await axios.get(`${API_URL}/users/me`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.get(`${API_BASE_URL}/users/me`, { headers: { Authorization: `Bearer ${token}` } });
       setUser(res.data);
     })().catch(() => {});
   }, []);

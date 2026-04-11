@@ -6,13 +6,12 @@ import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import { Check, ShieldCheck } from 'lucide-react-native';
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
+import { API_BASE_URL } from '../../lib/config';
 
 const providers = [
-  ['Google', `${API_URL}/auth/oauth/google`],
-  ['Apple iCloud', `${API_URL}/auth/oauth/apple`],
-  ['Microsoft Outlook', `${API_URL}/auth/oauth/microsoft`],
+  ['Google', `${API_BASE_URL}/auth/oauth/google`],
+  ['Apple iCloud', `${API_BASE_URL}/auth/oauth/apple`],
+  ['Microsoft Outlook', `${API_BASE_URL}/auth/oauth/microsoft`],
 ] as const;
 
 export default function RegisterScreen() {
@@ -27,7 +26,7 @@ export default function RegisterScreen() {
     }
     setLoading(true);
     try {
-      const res = await axios.post(`${API_URL}/auth/register`, { ...form, country: 'NG' });
+      const res = await axios.post(`${API_BASE_URL}/auth/register`, { ...form, country: 'NG' });
       await SecureStore.setItemAsync('accessToken', res.data.accessToken);
       await SecureStore.setItemAsync('refreshToken', res.data.refreshToken);
       router.replace('/(tabs)' as any);

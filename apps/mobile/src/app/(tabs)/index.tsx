@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
+import { API_BASE_URL } from '../../lib/config';
 type AppIcon = ComponentType<any>;
 
 export default function HomeScreen() {
@@ -22,8 +22,8 @@ export default function HomeScreen() {
       if (!token) { router.replace('/auth/login' as any); return; }
       const headers = { Authorization: `Bearer ${token}` };
       const [userRes, numsRes] = await Promise.all([
-        axios.get(`${API_URL}/users/me`, { headers }),
-        axios.get(`${API_URL}/numbers`, { headers }),
+        axios.get(`${API_BASE_URL}/users/me`, { headers }),
+        axios.get(`${API_BASE_URL}/numbers`, { headers }),
       ]);
       setUser(userRes.data);
       setNumbers(numsRes.data.slice(0, 3));

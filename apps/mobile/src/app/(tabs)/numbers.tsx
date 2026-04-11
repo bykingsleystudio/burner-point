@@ -4,8 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Phone, Plus, Trash2, Clock } from 'lucide-react-native';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
+import { API_BASE_URL } from '../../lib/config';
 
 export default function NumbersScreen() {
   const [numbers, setNumbers] = useState<any[]>([]);
@@ -14,7 +13,7 @@ export default function NumbersScreen() {
   const load = async () => {
     try {
       const token = await SecureStore.getItemAsync('accessToken');
-      const res = await axios.get(`${API_URL}/numbers`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.get(`${API_BASE_URL}/numbers`, { headers: { Authorization: `Bearer ${token}` } });
       setNumbers(res.data);
     } catch {} finally { setLoading(false); }
   };
@@ -27,7 +26,7 @@ export default function NumbersScreen() {
       { text: 'Release', style: 'destructive', onPress: async () => {
         try {
           const token = await SecureStore.getItemAsync('accessToken');
-          await axios.delete(`${API_URL}/numbers/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+          await axios.delete(`${API_BASE_URL}/numbers/${id}`, { headers: { Authorization: `Bearer ${token}` } });
           setNumbers((n) => n.filter((num) => num.id !== id));
         } catch {}
       }},

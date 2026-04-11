@@ -4,8 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MessageSquare, Zap, Shield } from 'lucide-react-native';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
+import { API_BASE_URL } from '../../lib/config';
 
 export default function MessagesScreen() {
   const [numbers, setNumbers] = useState<any[]>([]);
@@ -17,11 +16,11 @@ export default function MessagesScreen() {
     (async () => {
       const token = await SecureStore.getItemAsync('accessToken');
       const h = { Authorization: `Bearer ${token}` };
-      const numsRes = await axios.get(`${API_URL}/numbers`, { headers: h });
+      const numsRes = await axios.get(`${API_BASE_URL}/numbers`, { headers: h });
       setNumbers(numsRes.data);
       if (numsRes.data.length) {
         setSelectedId(numsRes.data[0].id);
-        const msgRes = await axios.get(`${API_URL}/messages?phoneNumberId=${numsRes.data[0].id}`, { headers: h });
+        const msgRes = await axios.get(`${API_BASE_URL}/messages?phoneNumberId=${numsRes.data[0].id}`, { headers: h });
         setMessages(msgRes.data);
       }
       setLoading(false);
