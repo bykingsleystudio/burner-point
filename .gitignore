@@ -41,3 +41,6 @@ ios/
 
 # Coverage
 coverage/
+
+.vercel
+.env*.local
