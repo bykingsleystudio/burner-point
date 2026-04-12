@@ -101,7 +101,7 @@ CREATE TABLE velocity_counters (
   key VARCHAR(255) NOT NULL UNIQUE,
   dimension VARCHAR(50) NOT NULL,
   action VARCHAR(50) NOT NULL,
-  window VARCHAR(10) NOT NULL,
+  "window" VARCHAR(10) NOT NULL,
   count INT NOT NULL DEFAULT 0,
   window_start TIMESTAMP NOT NULL,
   window_end TIMESTAMP NOT NULL,
