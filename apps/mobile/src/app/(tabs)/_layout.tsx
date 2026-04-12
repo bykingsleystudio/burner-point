@@ -1,8 +1,15 @@
 import { Tabs } from 'expo-router';
+import { Redirect } from 'expo-router';
 import { StyleSheet, View, Text } from 'react-native';
 import { Phone, MessageSquare, CreditCard, User, LayoutDashboard } from 'lucide-react-native';
+import { useAuth } from '@clerk/clerk-expo';
 
 export default function TabsLayout() {
+  const { isLoaded, isSignedIn } = useAuth();
+
+  if (!isLoaded) return null;
+  if (!isSignedIn) return <Redirect href="/auth/login" />;
+
   return (
     <Tabs
       screenOptions={{

@@ -2,7 +2,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useAuth, useClerk, useUser } from '@clerk/nextjs';
 import { useAuthStore, useUIStore } from '@/store';
+import { authApi, clearApiSession, setApiSession } from '@/lib/api';
 import { io, Socket } from 'socket.io-client';
 import toast from 'react-hot-toast';
 import {
@@ -34,12 +36,55 @@ const NAV = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, clearAuth, accessToken } = useAuthStore();
+  const { isLoaded, isSignedIn, getToken } = useAuth();
+  const { signOut } = useClerk();
+  const { user: clerkUser } = useUser();
+  const { user, setAuth, clearAuth } = useAuthStore();
   const { sidebarOpen, toggleSidebar } = useUIStore();
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [sessionReady, setSessionReady] = useState(false);
 
   useEffect(() => {
-    if (!accessToken) { router.push('/auth/login'); return; }
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      clearAuth();
+      clearApiSession();
+      router.push('/auth/login');
+      return;
+    }
+
+    let cancelled = false;
+    async function exchangeSession() {
+      setSessionReady(false);
+      try {
+        const clerkToken = await getToken();
+        if (!clerkToken) throw new Error('Missing Clerk session token');
+        const { data } = await authApi.exchangeClerkToken(clerkToken, {
+          firstName: clerkUser?.firstName,
+          lastName: clerkUser?.lastName,
+          email: clerkUser?.primaryEmailAddress?.emailAddress,
+          phoneNumber: clerkUser?.primaryPhoneNumber?.phoneNumber,
+        });
+        if (cancelled) return;
+        setApiSession(data.accessToken, data.refreshToken);
+        setAuth(data.user, data.accessToken, data.refreshToken);
+        setAccessToken(data.accessToken);
+        setSessionReady(true);
+      } catch (error: any) {
+        if (cancelled) return;
+        toast.error(error.response?.data?.message || 'Unable to start your Burner Point API session.');
+        clearApiSession();
+        setSessionReady(true);
+      }
+    }
+
+    exchangeSession();
+    return () => { cancelled = true; };
+  }, [isLoaded, isSignedIn, getToken, clerkUser?.id]);
+
+  useEffect(() => {
+    if (!accessToken) return;
 
     // Real-time WebSocket connection
     const s = io(`${process.env.NEXT_PUBLIC_WS_URL}/events`, {
@@ -63,11 +108,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => { s.disconnect(); };
   }, [accessToken]);
 
-  const logout = () => {
+  const logout = async () => {
     clearAuth();
-    document.cookie = 'accessToken=; max-age=0; path=/';
-    router.push('/auth/login');
+    clearApiSession();
+    await signOut({ redirectUrl: '/auth/login' });
   };
+
+  if (!isLoaded || !sessionReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-brand-black text-white">
+        <div className="rounded-3xl border border-brand-green/20 bg-brand-green/10 px-6 py-5 text-center">
+          <p className="font-mono text-xs uppercase tracking-[0.24em] text-brand-green">Burner Point</p>
+          <p className="mt-2 text-sm text-white/60">Securing your Clerk session...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-brand-black overflow-hidden">
@@ -121,11 +177,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="border-t border-brand-border px-3 py-3">
           <div className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-brand-card cursor-pointer group">
             <div className="w-7 h-7 rounded-full bg-brand-green/20 border border-brand-green/30 flex items-center justify-center flex-shrink-0">
-              <span className="text-xs font-bold text-brand-green">{user?.firstName?.[0]?.toUpperCase()}</span>
+              <span className="text-xs font-bold text-brand-green">{(user?.firstName || clerkUser?.firstName || 'B')?.[0]?.toUpperCase()}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium truncate">{user?.firstName}</p>
-              <p className="text-[10px] text-brand-muted truncate">{user?.email}</p>
+              <p className="text-xs font-medium truncate">{user?.firstName || clerkUser?.firstName}</p>
+              <p className="text-[10px] text-brand-muted truncate">{user?.email || clerkUser?.primaryEmailAddress?.emailAddress}</p>
             </div>
             <button onClick={logout} className="text-brand-muted hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100">
               <LogOut size={13}/>

@@ -4,15 +4,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useSignUp } from '@clerk/nextjs';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { Check, Mail } from 'lucide-react';
-import { authApi } from '@/lib/api';
-import { useAuthStore } from '@/store';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://burner-point-api-production.up.railway.app/api';
 
 const schema = z.object({
   firstName: z.string().min(1, 'First name is required').max(50),
@@ -31,38 +28,129 @@ type FormData = z.infer<typeof schema>;
 const FEATURES = ['Real SIM-backed numbers', 'OTP and voice verification', 'eSIM, proxies, and VPN privacy', 'No personal number exposure'];
 
 const oauthProviders = [
-  { label: 'Google', href: `${API_URL}/auth/oauth/google` },
-  { label: 'Apple iCloud', href: `${API_URL}/auth/oauth/apple` },
-  { label: 'Microsoft Outlook', href: `${API_URL}/auth/oauth/microsoft` },
-];
+  { label: 'Google', strategy: 'oauth_google' },
+  { label: 'Apple iCloud', strategy: 'oauth_apple' },
+  { label: 'Microsoft Outlook', strategy: 'oauth_microsoft' },
+] as const;
+
+type PendingVerification = 'email' | 'phone';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { setAuth } = useAuthStore();
+  const { signUp, fetchStatus } = useSignUp();
   const [loading, setLoading] = useState(false);
+  const [pendingVerification, setPendingVerification] = useState<PendingVerification | null>(null);
+  const [verificationCode, setVerificationCode] = useState('');
+  const isSubmitting = loading || fetchStatus === 'fetching';
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { country: 'NG', acceptTerms: false, acceptPrivacy: false },
   });
 
+  const finishSignUp = async () => {
+    const { error } = await signUp.finalize({
+      navigate: ({ session, decorateUrl }) => {
+        const destination = session?.currentTask ? '/onboarding' : '/dashboard';
+        const url = decorateUrl(destination);
+        if (url.startsWith('http')) {
+          window.location.href = url;
+          return;
+        }
+        router.push(url);
+      },
+    });
+
+    if (error) {
+      throw error;
+    }
+  };
+
+  const continueSignUpVerification = async () => {
+    if (signUp.status === 'complete') {
+      await finishSignUp();
+      toast.success('Account created. Welcome to Burner Point.');
+      return;
+    }
+
+    if (signUp.unverifiedFields.includes('email_address')) {
+      const { error } = await signUp.verifications.sendEmailCode();
+      if (error) throw error;
+      setPendingVerification('email');
+      toast.success('Check your email for the Clerk verification code.');
+      return;
+    }
+
+    if (signUp.unverifiedFields.includes('phone_number')) {
+      const { error } = await signUp.verifications.sendPhoneCode();
+      if (error) throw error;
+      setPendingVerification('phone');
+      toast.success('Check your phone for the Clerk verification code.');
+      return;
+    }
+
+    toast.error('Clerk needs more information before this account can be completed.');
+  };
+
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      const res = await authApi.register(data);
-      const { accessToken, refreshToken } = res.data;
-      const { default: api } = await import('@/lib/api');
-      api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
-      const userRes = await api.get('/users/me');
-      setAuth(userRes.data, accessToken, refreshToken);
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
-      document.cookie = `accessToken=${accessToken}; path=/; max-age=900`;
-      toast.success('Account created. Welcome to Burner Point.');
-      router.push('/dashboard');
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Registration failed');
+      const { error } = await signUp.create({
+        emailAddress: data.email,
+        phoneNumber: data.phoneNumber,
+        password: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        legalAccepted: true,
+        unsafeMetadata: {
+          country: data.country,
+          referralCode: data.referralCode,
+          acceptTerms: data.acceptTerms,
+          acceptPrivacy: data.acceptPrivacy,
+        },
+      });
+      if (error) throw error;
+
+      await continueSignUpVerification();
+    } catch (err) {
+      toast.error(getClerkErrorMessage(err, 'Registration failed'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const verifyEmail = async () => {
+    if (!pendingVerification || !verificationCode.trim()) return;
+    setLoading(true);
+    try {
+      const code = verificationCode.trim();
+      const { error } =
+        pendingVerification === 'email'
+          ? await signUp.verifications.verifyEmailCode({ code })
+          : await signUp.verifications.verifyPhoneCode({ code });
+      if (error) {
+        throw error;
+      }
+
+      setVerificationCode('');
+      await continueSignUpVerification();
+    } catch (err) {
+      toast.error(getClerkErrorMessage(err, 'Verification failed'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startOAuth = async (strategy: (typeof oauthProviders)[number]['strategy']) => {
+    try {
+      const { error } = await signUp.sso({
+        strategy,
+        redirectUrl: '/onboarding',
+        redirectCallbackUrl: '/sso-callback',
+        unsafeMetadata: { authSource: 'web_signup', acceptTerms: false, acceptPrivacy: false },
+      });
+      if (error) throw error;
+    } catch (err) {
+      toast.error(getClerkErrorMessage(err, 'OAuth sign-up failed'));
     }
   };
 
@@ -81,7 +169,7 @@ export default function RegisterPage() {
             <span className="font-mono text-lg font-semibold uppercase tracking-[0.22em]">Burner <span className="text-brand-green">Point</span></span>
           </Link>
           <h1 className="mt-10 text-5xl font-semibold uppercase leading-[0.95]">Create a private identity layer before the internet asks for your number.</h1>
-          <p className="mt-6 max-w-md text-base leading-8 text-white/58">Signup requires first name, last name, email, and phone number so account recovery and verification support stay reliable.</p>
+          <p className="mt-6 max-w-md text-base leading-8 text-white/58">Clerk powers account security. Burner Point still requires first name, last name, email, and phone number for account recovery and verification support.</p>
           <div className="mt-8 space-y-3">
             {FEATURES.map((item) => (
               <div key={item} className="flex items-center gap-3">
@@ -103,73 +191,87 @@ export default function RegisterPage() {
                 </span>
                 <span className="font-mono text-sm font-semibold uppercase tracking-[0.2em]">Burner <span className="text-brand-green">Point</span></span>
               </Link>
-              <span className="rounded-full border border-brand-green/20 bg-brand-green/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">Required profile</span>
+              <span className="rounded-full border border-brand-green/20 bg-brand-green/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">Clerk protected</span>
             </div>
 
             <h2 className="text-3xl font-semibold uppercase">Create account</h2>
             <p className="mt-2 text-sm leading-6 text-white/52">Private by design. Stay anonymous. Stay connected.</p>
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <Field label="First name" error={errors.firstName?.message}>
-                <input {...register('firstName')} autoComplete="given-name" placeholder="Kingsley" className="auth-input" />
-              </Field>
-              <Field label="Last name" error={errors.lastName?.message}>
-                <input {...register('lastName')} autoComplete="family-name" placeholder="Doe" className="auth-input" />
-              </Field>
-            </div>
-
-            <div className="mt-6 rounded-[24px] border border-white/8 bg-white/[0.02] p-4">
-              <div className="mb-4 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.22em] text-brand-green">
-                <Mail className="h-4 w-4" />
-                Required Contact
+            {pendingVerification ? (
+              <div className="mt-6 rounded-[24px] border border-brand-green/20 bg-brand-green/[0.04] p-4">
+                <label className="block text-sm font-medium text-white/70">
+                  {pendingVerification === 'email' ? 'Email verification code' : 'Phone verification code'}
+                  <input value={verificationCode} onChange={(event) => setVerificationCode(event.target.value)} inputMode="numeric" autoComplete="one-time-code" placeholder="Enter Clerk code" className="auth-input mt-1.5" />
+                </label>
+                <button type="button" disabled={isSubmitting} onClick={verifyEmail} className="bp-button-glow mt-4 flex min-h-12 w-full items-center justify-center rounded-2xl bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+                  {isSubmitting ? 'Verifying...' : 'Verify and continue'}
+                </button>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Email address" error={errors.email?.message}>
-                  <input {...register('email')} type="email" inputMode="email" autoComplete="email" placeholder="you@example.com" className="auth-input" />
-                </Field>
-                <Field label="Phone number" error={errors.phoneNumber?.message}>
-                  <input {...register('phoneNumber')} type="tel" inputMode="tel" autoComplete="tel" placeholder="+1 415 555 0182" className="auth-input" />
-                </Field>
-              </div>
-            </div>
+            ) : (
+              <>
+                <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                  <Field label="First name" error={errors.firstName?.message}>
+                    <input {...register('firstName')} autoComplete="given-name" placeholder="Kingsley" className="auth-input" />
+                  </Field>
+                  <Field label="Last name" error={errors.lastName?.message}>
+                    <input {...register('lastName')} autoComplete="family-name" placeholder="Doe" className="auth-input" />
+                  </Field>
+                </div>
 
-            <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_0.7fr]">
-              <Field label="Password" error={errors.password?.message}>
-                <input {...register('password')} type="password" autoComplete="new-password" placeholder="Min 8 chars, mixed case + number" className="auth-input" />
-              </Field>
-              <Field label="Referral code">
-                <input {...register('referralCode')} placeholder="ABC1234" className="auth-input font-mono" />
-              </Field>
-            </div>
+                <div className="mt-6 rounded-[24px] border border-white/8 bg-white/[0.02] p-4">
+                  <div className="mb-4 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.22em] text-brand-green">
+                    <Mail className="h-4 w-4" />
+                    Required Contact
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Email address" error={errors.email?.message}>
+                      <input {...register('email')} type="email" inputMode="email" autoComplete="email" placeholder="you@example.com" className="auth-input" />
+                    </Field>
+                    <Field label="Phone number" error={errors.phoneNumber?.message}>
+                      <input {...register('phoneNumber')} type="tel" inputMode="tel" autoComplete="tel" placeholder="+1 415 555 0182" className="auth-input" />
+                    </Field>
+                  </div>
+                </div>
 
-            <div className="mt-6 space-y-3 rounded-[24px] border border-white/8 bg-white/[0.02] p-4">
-              <label className="flex cursor-pointer items-start gap-3 text-sm text-white/70">
-                <input type="checkbox" {...register('acceptTerms')} className="mt-1 h-4 w-4 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
-                <span>
-                  I accept the{' '}
-                  <Link href="/terms" className="text-brand-green underline-offset-2 hover:underline">
-                    Terms of Service
-                  </Link>
-                  .
-                </span>
-              </label>
-              {errors.acceptTerms ? <p className="text-xs text-red-300">{errors.acceptTerms.message}</p> : null}
-              <label className="flex cursor-pointer items-start gap-3 text-sm text-white/70">
-                <input type="checkbox" {...register('acceptPrivacy')} className="mt-1 h-4 w-4 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
-                <span>
-                  I accept the{' '}
-                  <Link href="/privacy" className="text-brand-green underline-offset-2 hover:underline">
-                    Privacy Policy
-                  </Link>
-                  .
-                </span>
-              </label>
-              {errors.acceptPrivacy ? <p className="text-xs text-red-300">{errors.acceptPrivacy.message}</p> : null}
-            </div>
+                <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_0.7fr]">
+                  <Field label="Password" error={errors.password?.message}>
+                    <input {...register('password')} type="password" autoComplete="new-password" placeholder="Min 8 chars, mixed case + number" className="auth-input" />
+                  </Field>
+                  <Field label="Referral code">
+                    <input {...register('referralCode')} placeholder="ABC1234" className="auth-input font-mono" />
+                  </Field>
+                </div>
 
-            <button type="submit" disabled={loading} className="bp-button-glow mt-5 flex min-h-12 w-full items-center justify-center rounded-2xl bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
-              {loading ? 'Creating account...' : 'Create account'}
-            </button>
+                <div className="mt-6 space-y-3 rounded-[24px] border border-white/8 bg-white/[0.02] p-4">
+                  <label className="flex cursor-pointer items-start gap-3 text-sm text-white/70">
+                    <input type="checkbox" {...register('acceptTerms')} className="mt-1 h-4 w-4 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
+                    <span>
+                      I accept the{' '}
+                      <Link href="/terms" className="text-brand-green underline-offset-2 hover:underline">
+                        Terms of Service
+                      </Link>
+                      .
+                    </span>
+                  </label>
+                  {errors.acceptTerms ? <p className="text-xs text-red-300">{errors.acceptTerms.message}</p> : null}
+                  <label className="flex cursor-pointer items-start gap-3 text-sm text-white/70">
+                    <input type="checkbox" {...register('acceptPrivacy')} className="mt-1 h-4 w-4 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
+                    <span>
+                      I accept the{' '}
+                      <Link href="/privacy" className="text-brand-green underline-offset-2 hover:underline">
+                        Privacy Policy
+                      </Link>
+                      .
+                    </span>
+                  </label>
+                  {errors.acceptPrivacy ? <p className="text-xs text-red-300">{errors.acceptPrivacy.message}</p> : null}
+                </div>
+
+                <button type="submit" disabled={isSubmitting} className="bp-button-glow mt-5 flex min-h-12 w-full items-center justify-center rounded-2xl bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+                  {isSubmitting ? 'Creating account...' : 'Create account'}
+                </button>
+              </>
+            )}
 
             <div className="my-6 flex items-center gap-3">
               <span className="h-px flex-1 bg-white/8" />
@@ -178,9 +280,9 @@ export default function RegisterPage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               {oauthProviders.map((provider) => (
-                <a key={provider.label} href={provider.href} className="flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.02] px-3 py-3 text-center text-xs font-semibold text-white/76 transition hover:border-brand-green/35 hover:text-brand-green">
+                <button key={provider.label} type="button" onClick={() => startOAuth(provider.strategy)} className="flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.02] px-3 py-3 text-center text-xs font-semibold text-white/76 transition hover:border-brand-green/35 hover:text-brand-green">
                   {provider.label}
-                </a>
+                </button>
               ))}
             </div>
 
@@ -202,4 +304,9 @@ function Field({ label, error, children }: { label: string; error?: string; chil
       {error ? <p className="mt-1.5 text-xs text-red-300">{error}</p> : null}
     </label>
   );
+}
+
+function getClerkErrorMessage(error: unknown, fallback: string) {
+  const clerkError = error as { longMessage?: string; message?: string; errors?: Array<{ longMessage?: string; message?: string }> };
+  return clerkError.errors?.[0]?.longMessage || clerkError.errors?.[0]?.message || clerkError.longMessage || clerkError.message || fallback;
 }

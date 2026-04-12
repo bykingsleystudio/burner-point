@@ -43,4 +43,15 @@ export class AuthController {
   async logout(@Body('refreshToken') refreshToken: string) {
     return this.authService.logout(refreshToken);
   }
+
+  @Post('clerk/exchange')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Exchange a Clerk session token for a Burner Point API session' })
+  async exchangeClerkToken(
+    @Body('clerkToken') clerkToken: string,
+    @Body('profile') profile: Record<string, unknown>,
+    @Req() req: Request,
+  ) {
+    return this.authService.exchangeClerkSession(clerkToken, profile, req.ip);
+  }
 }

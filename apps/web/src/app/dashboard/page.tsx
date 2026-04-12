@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useUser } from '@clerk/nextjs';
 import { useAuthStore } from '@/store';
 import api from '@/lib/api';
 import { Phone, MessageSquare, CreditCard, TrendingUp, Shield, Zap, Globe, Lock } from 'lucide-react';
@@ -8,6 +9,7 @@ interface Stats { totalNumbers: number; totalMessages: number; walletBalanceKobo
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
+  const { user: clerkUser } = useUser();
   const [stats, setStats] = useState<Stats>({ totalNumbers: 0, totalMessages: 0, walletBalanceKobo: 0, activeNumbers: 0 });
 
   useEffect(() => {
@@ -42,7 +44,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">
-          Good {getGreeting()}, <span className="text-brand-green">{user?.firstName}</span> 👋
+          Good {getGreeting()}, <span className="text-brand-green">{user?.firstName || clerkUser?.firstName || 'there'}</span> 👋
         </h1>
         <p className="text-brand-muted text-sm mt-1">Here's your privacy dashboard overview.</p>
       </div>

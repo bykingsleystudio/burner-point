@@ -2,31 +2,32 @@ import { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LogOut, Shield, Copy, Share2, Key, HelpCircle, ChevronRight } from 'lucide-react-native';
-import * as SecureStore from 'expo-secure-store';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
+import { useAuth } from '@clerk/clerk-expo';
 import axios from 'axios';
 import { API_BASE_URL } from '../../lib/config';
+import { clearApiSession, getApiAccessToken } from '../../lib/auth';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { getToken, signOut } = useAuth();
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     (async () => {
-      const token = await SecureStore.getItemAsync('accessToken');
-      if (!token) return;
+      const token = await getApiAccessToken(getToken);
       const res = await axios.get(`${API_BASE_URL}/users/me`, { headers: { Authorization: `Bearer ${token}` } });
       setUser(res.data);
     })().catch(() => {});
-  }, []);
+  }, [getToken]);
 
   const logout = () => {
     Alert.alert('Sign Out', 'Are you sure?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Sign Out', style: 'destructive', onPress: async () => {
-        await SecureStore.deleteItemAsync('accessToken');
-        await SecureStore.deleteItemAsync('refreshToken');
+        await clearApiSession();
+        await signOut();
         router.replace('/auth/login' as any);
       }},
     ]);

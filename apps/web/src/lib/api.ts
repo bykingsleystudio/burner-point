@@ -8,13 +8,40 @@ const api: AxiosInstance = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+const ACCESS_TOKEN_KEYS = ['burnerpointApiAccessToken', 'accessToken'];
+const REFRESH_TOKEN_KEYS = ['burnerpointApiRefreshToken', 'refreshToken'];
+
+function getStoredToken(keys: string[]) {
+  if (typeof window === 'undefined') return null;
+  for (const key of keys) {
+    const token = localStorage.getItem(key);
+    if (token) return token;
+  }
+  return null;
+}
+
+export function setApiSession(accessToken: string, refreshToken: string) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem('burnerpointApiAccessToken', accessToken);
+  localStorage.setItem('burnerpointApiRefreshToken', refreshToken);
+  localStorage.setItem('accessToken', accessToken);
+  localStorage.setItem('refreshToken', refreshToken);
+  api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+  document.cookie = `accessToken=${accessToken}; path=/; max-age=900; SameSite=Lax`;
+}
+
+export function clearApiSession() {
+  if (typeof window === 'undefined') return;
+  [...ACCESS_TOKEN_KEYS, ...REFRESH_TOKEN_KEYS].forEach((key) => localStorage.removeItem(key));
+  delete api.defaults.headers.common.Authorization;
+  document.cookie = 'accessToken=; max-age=0; path=/';
+}
+
 // Request interceptor: attach access token
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('accessToken');
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+  const token = getStoredToken(ACCESS_TOKEN_KEYS);
+  if (token && config.headers) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
@@ -27,17 +54,16 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
+        const refreshToken = getStoredToken(REFRESH_TOKEN_KEYS);
         if (!refreshToken) throw new Error('No refresh token');
 
         const { data } = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
-        localStorage.setItem('accessToken', data.accessToken);
-        localStorage.setItem('refreshToken', data.refreshToken);
+        setApiSession(data.accessToken, data.refreshToken);
 
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
         return api(originalRequest);
       } catch {
-        localStorage.clear();
+        clearApiSession();
         window.location.href = '/auth/login';
         return Promise.reject(error);
       }
@@ -53,6 +79,8 @@ export const authApi = {
   register: (data: Record<string, unknown>) => api.post('/auth/register', data),
   login: (data: Record<string, unknown>) => api.post('/auth/login', data),
   logout: (refreshToken: string) => api.post('/auth/logout', { refreshToken }),
+  exchangeClerkToken: (clerkToken: string, profile?: Record<string, unknown>) =>
+    api.post('/auth/clerk/exchange', { clerkToken, profile }),
 };
 
 export const numbersApi = {

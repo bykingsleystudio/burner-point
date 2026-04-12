@@ -4,22 +4,25 @@ import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Bell, CalendarDays, CreditCard, Globe2, Lock, MessageSquare, Phone, ShieldCheck, Smartphone, Wifi } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
+import { useAuth } from '@clerk/clerk-expo';
 import axios from 'axios';
 
 import { API_BASE_URL } from '../../lib/config';
+import { getApiAccessToken } from '../../lib/auth';
 type AppIcon = ComponentType<any>;
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { isLoaded, isSignedIn, getToken } = useAuth();
   const [user, setUser] = useState<any>(null);
   const [numbers, setNumbers] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = async () => {
     try {
-      const token = await SecureStore.getItemAsync('accessToken');
-      if (!token) { router.replace('/auth/login' as any); return; }
+      if (!isLoaded) return;
+      if (!isSignedIn) { router.replace('/auth/login' as any); return; }
+      const token = await getApiAccessToken(getToken);
       const headers = { Authorization: `Bearer ${token}` };
       const [userRes, numsRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/users/me`, { headers }),
@@ -32,7 +35,7 @@ export default function HomeScreen() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [isLoaded, isSignedIn]);
   const onRefresh = async () => { setRefreshing(true); await load(); setRefreshing(false); };
 
   const quickActions = [

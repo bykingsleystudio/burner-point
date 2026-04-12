@@ -1,12 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { ClerkProvider } from '@clerk/clerk-expo';
+import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import * as Font from 'expo-font';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
+import * as WebBrowser from 'expo-web-browser';
 import { View, Text, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+WebBrowser.maybeCompleteAuthSession();
+
+const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -81,13 +88,17 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar style="light" backgroundColor="#0A0A0A"/>
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0A0A0A' } }}>
-        <Stack.Screen name="(tabs)"/>
-        <Stack.Screen name="call/active" options={{ presentation: 'fullScreenModal' }}/>
-      </Stack>
-    </GestureHandlerRootView>
+    <ClerkProvider publishableKey={clerkPublishableKey || ''} tokenCache={tokenCache}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <StatusBar style="light" backgroundColor="#0A0A0A"/>
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0A0A0A' } }}>
+          <Stack.Screen name="auth/login"/>
+          <Stack.Screen name="auth/register"/>
+          <Stack.Screen name="(tabs)"/>
+          <Stack.Screen name="call/active" options={{ presentation: 'fullScreenModal' }}/>
+        </Stack>
+      </GestureHandlerRootView>
+    </ClerkProvider>
   );
 }
 

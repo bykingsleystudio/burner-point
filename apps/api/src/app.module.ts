@@ -44,14 +44,23 @@ import { SecurityMiddleware } from './middleware/security.middleware';
       ignoreEnvFile: process.env.NODE_ENV === 'production',
     }),
 
-    // Database — DATABASE_URL (Railway Postgres reference) or individual DB_* vars
+    // Database - Neon Postgres via DATABASE_URL, with DB_* fallbacks for local tooling.
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (cfg: ConfigService) => {
         const databaseUrl = cfg.get<string>('DATABASE_URL');
         const isProduction = cfg.get<string>('NODE_ENV') === 'production';
-        const ssl = isProduction ? { rejectUnauthorized: false } : false;
+        const databaseHost = cfg.get<string>('DB_HOST') ?? '';
+        const requiresSsl =
+          isProduction ||
+          cfg.get<string>('DB_SSL') === 'true' ||
+          databaseUrl?.includes('sslmode=require') ||
+          databaseUrl?.includes('.neon.tech') ||
+          databaseHost.includes('.neon.tech');
+        const ssl = requiresSsl
+          ? { rejectUnauthorized: cfg.get<string>('DB_SSL_REJECT_UNAUTHORIZED') === 'true' }
+          : false;
 
         const base = {
           type: 'postgres' as const,
@@ -77,9 +86,9 @@ import { SecurityMiddleware } from './middleware/security.middleware';
           ...base,
           host: cfg.get<string>('DB_HOST'),
           port: parseInt(cfg.get<string>('DB_PORT') ?? '5432', 10),
-          username: cfg.get<string>('DB_USER'),
-          password: cfg.get<string>('DB_PASS'),
-          database: cfg.get<string>('DB_NAME'),
+          username: cfg.get<string>('DB_USER') ?? cfg.get<string>('DB_USERNAME'),
+          password: cfg.get<string>('DB_PASS') ?? cfg.get<string>('DB_PASSWORD'),
+          database: cfg.get<string>('DB_NAME') ?? cfg.get<string>('DB_DATABASE'),
           ssl,
         };
       },

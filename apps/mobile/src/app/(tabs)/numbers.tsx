@@ -2,17 +2,19 @@ import { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Phone, Plus, Trash2, Clock } from 'lucide-react-native';
-import * as SecureStore from 'expo-secure-store';
+import { useAuth } from '@clerk/clerk-expo';
 import axios from 'axios';
 import { API_BASE_URL } from '../../lib/config';
+import { getApiAccessToken } from '../../lib/auth';
 
 export default function NumbersScreen() {
+  const { getToken } = useAuth();
   const [numbers, setNumbers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
     try {
-      const token = await SecureStore.getItemAsync('accessToken');
+      const token = await getApiAccessToken(getToken);
       const res = await axios.get(`${API_BASE_URL}/numbers`, { headers: { Authorization: `Bearer ${token}` } });
       setNumbers(res.data);
     } catch {} finally { setLoading(false); }
@@ -25,7 +27,7 @@ export default function NumbersScreen() {
       { text: 'Cancel', style: 'cancel' },
       { text: 'Release', style: 'destructive', onPress: async () => {
         try {
-          const token = await SecureStore.getItemAsync('accessToken');
+          const token = await getApiAccessToken(getToken);
           await axios.delete(`${API_BASE_URL}/numbers/${id}`, { headers: { Authorization: `Bearer ${token}` } });
           setNumbers((n) => n.filter((num) => num.id !== id));
         } catch {}

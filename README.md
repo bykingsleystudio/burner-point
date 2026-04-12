@@ -57,10 +57,12 @@ All configuration is via environment variables. See `.env.example` for full refe
 | `PADDLE_VENDOR_ID` | International payments |
 | `JWT_ACCESS_SECRET` | Auth tokens (min 64 chars) |
 | `JWT_REFRESH_SECRET` | Refresh tokens (min 64 chars) |
-| `DATABASE_URL` | PostgreSQL connection |
+| `DATABASE_URL` | Neon Postgres connection with `sslmode=require` |
 | `REDIS_URL` | Redis connection |
 
 ## 🗄️ Database
+
+Burner Point uses Neon Postgres as the database source of truth. Use DBeaver as the database client for local, staging, and production inspection. See `docs/NEON_DBEAVER_SETUP.md` for the exact connection format, Railway variables, and DBeaver setup fields.
 
 Four SQL migration files run in sequence for a fresh database:
 
@@ -90,7 +92,7 @@ npm run db:migrate
 - ✅ Referral/growth engine
 - ✅ Idempotent webhook processing (deduplication table)
 
-### Web (Next.js 14)
+### Web (Next.js 15)
 - ✅ Login / registration with Zod validation
 - ✅ Protected dashboard with sidebar + real-time WebSocket
 - ✅ SMS inbox with AI OTP highlighting
@@ -138,12 +140,13 @@ All gateways are fully integrated with webhook verification:
 | Layer | Technology |
 |---|---|
 | API Runtime | Node.js 20 + NestJS 10 |
-| Database | PostgreSQL 16 + TypeORM |
+| Database | Neon Postgres + TypeORM |
+| Database Client | DBeaver |
 | Cache / Sessions | Redis 7 |
 | SMS / Voice | Twilio (primary), Telnyx (fallback) |
 | AI Classification | OpenAI GPT-4o-mini |
 | Real-time | Socket.IO |
-| Frontend | Next.js 14 + Tailwind CSS |
+| Frontend | Next.js 15 + Tailwind CSS |
 | Mobile | React Native + Expo 51 |
 | Auth | Passport.js + JWT |
 | Payments | Paddle SDK + Axios (others) |

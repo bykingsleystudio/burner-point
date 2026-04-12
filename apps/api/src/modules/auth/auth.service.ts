@@ -6,6 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { createClerkClient, verifyToken } from '@clerk/backend';
 import * as bcrypt from 'bcrypt';
 import { User, UserStatus } from '../../database/entities/user.entity';
 import { RedisService } from '../global/redis.service';
@@ -142,6 +143,96 @@ export class AuthService {
     return { success: true };
   }
 
+  async exchangeClerkSession(
+    clerkToken: string,
+    profile?: Partial<{
+      email: string;
+      phoneNumber: string;
+      firstName: string;
+      lastName: string;
+      country: string;
+      acceptTerms: boolean;
+      acceptPrivacy: boolean;
+    }>,
+    ip?: string,
+  ) {
+    const secretKey = this.configService.get<string>('CLERK_SECRET_KEY');
+    if (!secretKey) {
+      throw new BadRequestException('Clerk is not configured. Set CLERK_SECRET_KEY on the API service.');
+    }
+
+    const claims = await verifyToken(clerkToken, { secretKey });
+    const clerkUserId = claims.sub;
+    if (!clerkUserId) throw new UnauthorizedException('Invalid Clerk session');
+
+    const clerkClient = createClerkClient({ secretKey });
+    const clerkUser = await clerkClient.users.getUser(clerkUserId) as any;
+    const primaryEmail =
+      clerkUser.emailAddresses?.find((entry: any) => entry.id === clerkUser.primaryEmailAddressId)?.emailAddress
+      ?? clerkUser.emailAddresses?.[0]?.emailAddress
+      ?? profile?.email;
+    if (!primaryEmail) {
+      throw new BadRequestException('Clerk user must have an email address before using Burner Point.');
+    }
+
+    const primaryPhone =
+      clerkUser.phoneNumbers?.find((entry: any) => entry.id === clerkUser.primaryPhoneNumberId)?.phoneNumber
+      ?? clerkUser.phoneNumbers?.[0]?.phoneNumber
+      ?? profile?.phoneNumber;
+    const unsafeMetadata = clerkUser.unsafeMetadata || {};
+    const email = this.normalizeEmail(primaryEmail);
+    const phoneNumber = primaryPhone ? this.normalizePhoneNumber(primaryPhone) : undefined;
+    const firstName = (profile?.firstName || clerkUser.firstName || 'Burner').trim();
+    const lastName = (profile?.lastName || clerkUser.lastName || 'Point').trim();
+    const country = profile?.country || unsafeMetadata.country || 'NG';
+
+    const lookup = phoneNumber ? [{ email }, { phoneNumber }] : [{ email }];
+    let user = await this.userRepo.findOne({ where: lookup });
+    const preferences = {
+      ...(user?.preferences || {}),
+      clerkUserId,
+      clerkPrimaryEmailId: clerkUser.primaryEmailAddressId ?? null,
+      clerkPrimaryPhoneId: clerkUser.primaryPhoneNumberId ?? null,
+      termsAccepted: profile?.acceptTerms ?? unsafeMetadata.acceptTerms ?? (user?.preferences as any)?.termsAccepted ?? false,
+      privacyAccepted: profile?.acceptPrivacy ?? unsafeMetadata.acceptPrivacy ?? (user?.preferences as any)?.privacyAccepted ?? false,
+      referralCode: unsafeMetadata.referralCode ?? (user?.preferences as any)?.referralCode ?? null,
+      authProvider: 'clerk',
+    };
+
+    if (!user) {
+      user = this.userRepo.create({
+        email,
+        phoneNumber,
+        firstName,
+        lastName,
+        country,
+        referralCode: this.generateReferralCode(),
+        status: UserStatus.ACTIVE,
+        emailVerified: this.isVerifiedClerkEmail(clerkUser, email),
+        phoneVerified: Boolean(phoneNumber),
+        lastLoginAt: new Date(),
+        lastLoginIp: ip,
+        preferences,
+      });
+    } else {
+      user.email = user.email || email;
+      user.phoneNumber = user.phoneNumber || phoneNumber;
+      user.firstName = firstName || user.firstName;
+      user.lastName = lastName || user.lastName;
+      user.country = user.country || country;
+      user.status = user.status === UserStatus.PENDING ? UserStatus.ACTIVE : user.status;
+      user.emailVerified = user.emailVerified || this.isVerifiedClerkEmail(clerkUser, email);
+      user.phoneVerified = user.phoneVerified || Boolean(phoneNumber);
+      user.lastLoginAt = new Date();
+      user.lastLoginIp = ip;
+      user.preferences = preferences;
+    }
+
+    await this.userRepo.save(user);
+    const tokens = await this.generateTokens(user);
+    return { ...tokens, user };
+  }
+
   async getOAuthRedirect(provider: string) {
     const providerConfig: Record<string, { label: string; env: string }> = {
       google: { label: 'Google', env: 'GOOGLE_OAUTH_URL' },
@@ -209,5 +300,10 @@ export class AuthService {
   private normalizeLoginIdentifier(identifier: string): string {
     const trimmed = identifier.trim();
     return trimmed.includes('@') ? this.normalizeEmail(trimmed) : this.normalizePhoneNumber(trimmed);
+  }
+
+  private isVerifiedClerkEmail(clerkUser: any, email: string): boolean {
+    const emailRecord = clerkUser.emailAddresses?.find((entry: any) => entry.emailAddress === email);
+    return emailRecord?.verification?.status === 'verified';
   }
 }

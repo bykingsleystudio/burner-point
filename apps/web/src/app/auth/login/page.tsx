@@ -4,15 +4,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useSignIn } from '@clerk/nextjs';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff, ShieldCheck, Zap } from 'lucide-react';
-import { authApi } from '@/lib/api';
-import { useAuthStore } from '@/store';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://burner-point-api-production.up.railway.app/api';
 
 const schema = z.object({
   identifier: z.string().min(3, 'Enter your email address or phone number'),
@@ -22,39 +19,134 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 const oauthProviders = [
-  { label: 'Google', href: `${API_URL}/auth/oauth/google` },
-  { label: 'Apple iCloud', href: `${API_URL}/auth/oauth/apple` },
-  { label: 'Microsoft Outlook', href: `${API_URL}/auth/oauth/microsoft` },
-];
+  { label: 'Google', strategy: 'oauth_google' },
+  { label: 'Apple iCloud', strategy: 'oauth_apple' },
+  { label: 'Microsoft Outlook', strategy: 'oauth_microsoft' },
+] as const;
+
+type SecondFactorStrategy = 'email_code' | 'phone_code' | 'totp' | 'backup_code';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setAuth } = useAuthStore();
+  const { signIn, fetchStatus } = useSignIn();
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [secondFactorStrategy, setSecondFactorStrategy] = useState<SecondFactorStrategy | null>(null);
+  const [secondFactorCode, setSecondFactorCode] = useState('');
+  const isSubmitting = loading || fetchStatus === 'fetching';
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
+  const finishSignIn = async () => {
+    const { error } = await signIn.finalize({
+      navigate: ({ session, decorateUrl }) => {
+        if (session?.currentTask) {
+          router.push('/onboarding');
+          return;
+        }
+
+        const url = decorateUrl('/dashboard');
+        if (url.startsWith('http')) {
+          window.location.href = url;
+          return;
+        }
+        router.push(url);
+      },
+    });
+
+    if (error) {
+      throw error;
+    }
+  };
+
+  const prepareSecondFactor = async () => {
+    const factor = signIn.supportedSecondFactors?.[0] as { strategy?: SecondFactorStrategy } | undefined;
+    const strategy = factor?.strategy ?? 'totp';
+
+    if (strategy === 'email_code') {
+      const { error } = await signIn.mfa.sendEmailCode();
+      if (error) throw error;
+    }
+
+    if (strategy === 'phone_code') {
+      const { error } = await signIn.mfa.sendPhoneCode();
+      if (error) throw error;
+    }
+
+    setSecondFactorStrategy(strategy);
+    toast.success('Enter your Clerk 2FA code to continue.');
+  };
+
+  const completeOrContinueSignIn = async () => {
+    if (signIn.status === 'complete') {
+      await finishSignIn();
+      toast.success('Welcome back.');
+      return;
+    }
+
+    if (signIn.status === 'needs_second_factor' || signIn.status === 'needs_client_trust') {
+      await prepareSecondFactor();
+      return;
+    }
+
+    toast.error('Additional verification is required before this session can continue.');
+  };
+
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      const res = await authApi.login(data);
-      const { accessToken, refreshToken } = res.data;
-      const { default: api } = await import('@/lib/api');
-      api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
-      const userRes = await api.get('/users/me');
-      setAuth(userRes.data, accessToken, refreshToken);
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
-      document.cookie = `accessToken=${accessToken}; path=/; max-age=900`;
-      toast.success('Welcome back.');
-      router.push('/dashboard');
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Login failed');
+      const { error } = await signIn.password({
+        identifier: data.identifier,
+        password: data.password,
+      });
+      if (error) throw error;
+
+      await completeOrContinueSignIn();
+    } catch (err) {
+      toast.error(getClerkErrorMessage(err, 'Login failed'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const verifySecondFactor = async () => {
+    if (!secondFactorStrategy || !secondFactorCode.trim()) return;
+    setLoading(true);
+    try {
+      const code = secondFactorCode.trim();
+      const { error } =
+        secondFactorStrategy === 'email_code'
+          ? await signIn.mfa.verifyEmailCode({ code })
+          : secondFactorStrategy === 'phone_code'
+            ? await signIn.mfa.verifyPhoneCode({ code })
+            : secondFactorStrategy === 'backup_code'
+              ? await signIn.mfa.verifyBackupCode({ code })
+              : await signIn.mfa.verifyTOTP({ code });
+
+      if (error) {
+        throw error;
+      }
+
+      await completeOrContinueSignIn();
+    } catch (err) {
+      toast.error(getClerkErrorMessage(err, '2FA verification failed'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startOAuth = async (strategy: (typeof oauthProviders)[number]['strategy']) => {
+    try {
+      const { error } = await signIn.sso({
+        strategy,
+        redirectUrl: '/dashboard',
+        redirectCallbackUrl: '/sso-callback',
+      });
+      if (error) throw error;
+    } catch (err) {
+      toast.error(getClerkErrorMessage(err, 'OAuth sign-in failed'));
     }
   };
 
@@ -79,9 +171,28 @@ export default function LoginPage() {
                 <ShieldCheck className="h-7 w-7 text-brand-green" />
               </div>
               <h1 className="mt-5 text-3xl font-semibold uppercase">Welcome back</h1>
-              <p className="mt-2 text-sm text-white/52">Sign in with your email address or phone number.</p>
+              <p className="mt-2 text-sm text-white/52">Sign in with Clerk using your email address or phone number.</p>
             </div>
 
+            {secondFactorStrategy ? (
+              <div className="space-y-4 rounded-[24px] border border-brand-green/20 bg-brand-green/[0.04] p-4">
+                <label className="block text-sm font-medium text-white/70">
+                  Clerk 2FA code
+                  <input
+                    value={secondFactorCode}
+                    onChange={(event) => setSecondFactorCode(event.target.value)}
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="Enter verification code"
+                    className="auth-input mt-1.5"
+                  />
+                </label>
+                <button type="button" disabled={isSubmitting} onClick={verifySecondFactor} className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-2xl bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+                  {isSubmitting ? 'Verifying...' : 'Verify 2FA'}
+                </button>
+              </div>
+            ) : (
             <div className="space-y-4">
               <label className="block text-sm font-medium text-white/70">
                 Email or phone number
@@ -119,11 +230,14 @@ export default function LoginPage() {
                 </Link>
               </div>
             </div>
+            )}
 
-            <button type="submit" disabled={loading} className="bp-button-glow mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
-              {loading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" /> : <Zap size={16} />}
-              {loading ? 'Signing in...' : 'Sign In'}
-            </button>
+            {!secondFactorStrategy ? (
+              <button type="submit" disabled={isSubmitting} className="bp-button-glow mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+                {isSubmitting ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" /> : <Zap size={16} />}
+                {isSubmitting ? 'Signing in...' : 'Sign In'}
+              </button>
+            ) : null}
 
             <div className="my-6 flex items-center gap-3">
               <span className="h-px flex-1 bg-white/8" />
@@ -132,9 +246,9 @@ export default function LoginPage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               {oauthProviders.map((provider) => (
-                <a key={provider.label} href={provider.href} className="flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.02] px-3 py-3 text-center text-xs font-semibold text-white/76 transition hover:border-brand-green/35 hover:text-brand-green">
+                <button key={provider.label} type="button" onClick={() => startOAuth(provider.strategy)} className="flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.02] px-3 py-3 text-center text-xs font-semibold text-white/76 transition hover:border-brand-green/35 hover:text-brand-green">
                   {provider.label}
-                </a>
+                </button>
               ))}
             </div>
 
@@ -146,4 +260,9 @@ export default function LoginPage() {
       </div>
     </main>
   );
+}
+
+function getClerkErrorMessage(error: unknown, fallback: string) {
+  const clerkError = error as { longMessage?: string; message?: string; errors?: Array<{ longMessage?: string; message?: string }> };
+  return clerkError.errors?.[0]?.longMessage || clerkError.errors?.[0]?.message || clerkError.longMessage || clerkError.message || fallback;
 }

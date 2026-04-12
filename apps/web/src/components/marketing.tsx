@@ -1,3 +1,6 @@
+'use client';
+
+import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -128,12 +131,24 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="hidden items-center gap-3 lg:flex">
-          <Link href="/auth/login" className="rounded-xl border border-white/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/82 transition hover:border-brand-green/45 hover:text-white">
-            Sign In
-          </Link>
-          <Link href="/auth/signup" className="bp-button-glow rounded-xl bg-brand-green px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac]">
-            Get Started
-          </Link>
+          <Show when="signed-out">
+            <SignInButton mode="redirect">
+              <button type="button" className="rounded-xl border border-white/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/82 transition hover:border-brand-green/45 hover:text-white">
+                Sign In
+              </button>
+            </SignInButton>
+            <SignUpButton mode="redirect">
+              <button type="button" className="bp-button-glow rounded-xl bg-brand-green px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac]">
+                Get Started
+              </button>
+            </SignUpButton>
+          </Show>
+          <Show when="signed-in">
+            <Link href="/dashboard" className="rounded-xl border border-white/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/82 transition hover:border-brand-green/45 hover:text-white">
+              Dashboard
+            </Link>
+            <UserButton />
+          </Show>
           <Link href="/api/docs" className="rounded-xl border border-brand-green/20 bg-brand-green/8 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-brand-green transition hover:bg-brand-green/15">
             View API Docs
           </Link>
@@ -152,8 +167,26 @@ export function SiteHeader() {
               ))}
             </div>
             <div className="mt-4 grid gap-2 border-t border-white/8 pt-4">
-              <Link href="/auth/login" className="rounded-2xl border border-white/10 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-white/82">Sign In</Link>
-              <Link href="/auth/signup" className="rounded-2xl bg-brand-green px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-black">Get Started</Link>
+              <Show when="signed-out">
+                <SignInButton mode="redirect">
+                  <button type="button" className="rounded-2xl border border-white/10 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-white/82">
+                    Sign In
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="redirect">
+                  <button type="button" className="rounded-2xl bg-brand-green px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-black">
+                    Get Started
+                  </button>
+                </SignUpButton>
+              </Show>
+              <Show when="signed-in">
+                <Link href="/dashboard" className="rounded-2xl border border-white/10 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-white/82">
+                  Dashboard
+                </Link>
+                <div className="flex justify-center rounded-2xl border border-white/10 px-4 py-3">
+                  <UserButton />
+                </div>
+              </Show>
               <Link href="/api/docs" className="rounded-2xl border border-brand-green/20 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-brand-green">View API Docs</Link>
             </div>
           </div>

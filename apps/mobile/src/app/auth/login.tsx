@@ -1,55 +1,122 @@
 import { useState } from 'react';
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Eye, EyeOff, ShieldCheck, Zap } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
-import axios from 'axios';
-import { API_BASE_URL } from '../../lib/config';
+import * as ExpoLinking from 'expo-linking';
+import { useAuth, useSignIn, useSSO } from '@clerk/clerk-expo';
+import { exchangeClerkForApiSession } from '../../lib/auth';
 
 const providers = [
-  ['Google', `${API_BASE_URL}/auth/oauth/google`],
-  ['Apple iCloud', `${API_BASE_URL}/auth/oauth/apple`],
-  ['Microsoft Outlook', `${API_BASE_URL}/auth/oauth/microsoft`],
+  ['Google', 'oauth_google'],
+  ['Apple iCloud', 'oauth_apple'],
+  ['Microsoft Outlook', 'oauth_microsoft'],
 ] as const;
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { isLoaded, signIn, setActive } = useSignIn();
+  const { getToken } = useAuth();
+  const { startSSOFlow } = useSSO();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [secondFactorStrategy, setSecondFactorStrategy] = useState<string | null>(null);
+  const [secondFactorCode, setSecondFactorCode] = useState('');
 
   const login = async () => {
+    if (!isLoaded) return;
     if (!identifier || !password) {
       Alert.alert('Required fields', 'Enter your email or phone number and password.');
       return;
     }
     setLoading(true);
     try {
-      const res = await axios.post(`${API_BASE_URL}/auth/login`, { identifier, password });
-      await SecureStore.setItemAsync('accessToken', res.data.accessToken);
-      await SecureStore.setItemAsync('refreshToken', res.data.refreshToken);
+      const result = await signIn.create({ identifier, password });
+      if (result.status === 'needs_second_factor') {
+        const factor = result.supportedSecondFactors?.[0] as any;
+        if (factor?.strategy && factor.strategy !== 'totp' && factor.strategy !== 'backup_code') {
+          await signIn.prepareSecondFactor(factor);
+        }
+        setSecondFactorStrategy(factor?.strategy || 'totp');
+        Alert.alert('2FA required', 'Enter your Clerk verification code to continue.');
+        return;
+      }
+      if (result.status !== 'complete' || !result.createdSessionId) {
+        Alert.alert('Verification required', 'Additional Clerk verification is required before this session can continue.');
+        return;
+      }
+      await setActive({ session: result.createdSessionId });
+      await exchangeClerkForApiSession(getToken);
       router.replace('/(tabs)' as any);
     } catch (error: any) {
-      Alert.alert('Login failed', error.response?.data?.message || 'Check your credentials');
+      Alert.alert('Login failed', error.errors?.[0]?.longMessage || error.errors?.[0]?.message || 'Check your credentials');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const verifySecondFactor = async () => {
+    if (!isLoaded || !secondFactorStrategy || !secondFactorCode.trim()) return;
+    setLoading(true);
+    try {
+      const result = await signIn.attemptSecondFactor({
+        strategy: secondFactorStrategy as any,
+        code: secondFactorCode.trim(),
+      });
+      if (result.status === 'complete' && result.createdSessionId) {
+        await setActive({ session: result.createdSessionId });
+        await exchangeClerkForApiSession(getToken);
+        router.replace('/(tabs)' as any);
+        return;
+      }
+      Alert.alert('Not complete', 'Check the code and try again.');
+    } catch (error: any) {
+      Alert.alert('2FA failed', error.errors?.[0]?.message || 'Unable to verify your second factor.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const oauth = async (strategy: (typeof providers)[number][1]) => {
+    try {
+      const { createdSessionId, setActive: setOAuthActive } = await startSSOFlow({
+        strategy,
+        redirectUrl: ExpoLinking.createURL('auth/login'),
+      });
+      if (createdSessionId && setOAuthActive) {
+        await setOAuthActive({ session: createdSessionId });
+        await exchangeClerkForApiSession(getToken);
+        router.replace('/(tabs)' as any);
+      }
+    } catch (error: any) {
+      Alert.alert('OAuth failed', error.errors?.[0]?.message || 'Unable to continue with this provider.');
     }
   };
 
   return (
     <SafeAreaView style={s.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.inner}>
-        <TouchableOpacity style={s.logo} onPress={() => router.replace('/' as any)} activeOpacity={0.8}>
+        <TouchableOpacity style={s.logo} onPress={() => router.replace('/(tabs)' as any)} activeOpacity={0.8}>
           <View style={s.logoIcon}><ShieldCheck size={28} color="#03110b" /></View>
           <Text style={s.logoText}>Burner<Text style={s.green}>Point</Text></Text>
           <Text style={s.logoSub}>Welcome back. Private by design.</Text>
         </TouchableOpacity>
 
         <View style={s.form}>
+          {secondFactorStrategy ? (
+            <>
+              <Text style={s.label}>Clerk 2FA code</Text>
+              <TextInput value={secondFactorCode} onChangeText={setSecondFactorCode} placeholder="Enter verification code" placeholderTextColor="#526157" style={s.input} keyboardType="number-pad" autoCapitalize="none" autoCorrect={false} autoComplete="one-time-code" />
+              <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={verifySecondFactor} disabled={loading} activeOpacity={0.85}>
+                {loading ? <ActivityIndicator color="#03110b" /> : <Text style={s.btnText}>Verify 2FA</Text>}
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
           <Text style={s.label}>Email or phone number</Text>
-          <TextInput value={identifier} onChangeText={setIdentifier} placeholder="you@example.com or +1 415 555 0182" placeholderTextColor="#526157" style={s.input} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} autoComplete="username" />
+          <TextInput value={identifier} onChangeText={setIdentifier} placeholder="you@example.com or +1 415 555 0182" placeholderTextColor="#526157" style={s.input} keyboardType="default" autoCapitalize="none" autoCorrect={false} autoComplete="username" />
 
           <Text style={s.label}>Password</Text>
           <View style={s.passwordWrap}>
@@ -59,14 +126,16 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={login} disabled={loading} activeOpacity={0.85}>
+          <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={login} disabled={loading || !isLoaded} activeOpacity={0.85}>
             {loading ? <ActivityIndicator color="#03110b" /> : <><Zap size={16} color="#03110b" /><Text style={s.btnText}>Sign In</Text></>}
           </TouchableOpacity>
+            </>
+          )}
 
           <Text style={s.or}>or continue with</Text>
           <View style={s.providerGrid}>
-            {providers.map(([label, url]) => (
-              <TouchableOpacity key={label} style={s.provider} onPress={() => Linking.openURL(url)} activeOpacity={0.75}>
+            {providers.map(([label, strategy]) => (
+              <TouchableOpacity key={label} style={s.provider} onPress={() => oauth(strategy)} activeOpacity={0.75}>
                 <Text style={s.providerText}>{label}</Text>
               </TouchableOpacity>
             ))}
