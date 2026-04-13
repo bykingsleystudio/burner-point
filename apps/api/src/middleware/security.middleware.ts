@@ -27,17 +27,31 @@ const AUTH_ROUTES = [
   '/auth/refresh',
   '/phone-auth/send',
   '/phone-auth/verify',
+  '/api/auth/login',
+  '/api/auth/register',
+  '/api/auth/refresh',
+  '/api/phone-auth/send',
+  '/api/phone-auth/verify',
 ];
 
 const PAYMENT_ROUTES = [
   '/payments/initialize',
   '/paddle/checkout',
+  '/api/payments/initialize',
+  '/api/paddle/checkout',
 ];
 
 const WEBHOOK_ROUTES = [
   '/payments/webhook',
+  '/api/payments/webhook',
   '/webhooks/twilio',
+  '/webhooks/vonage',
+  '/webhooks/infobip',
+  '/api/webhooks/twilio',
+  '/api/webhooks/vonage',
+  '/api/webhooks/infobip',
   '/paddle/webhook',
+  '/api/paddle/webhook',
 ];
 
 // ─── Limits ────────────────────────────────────────────────────────────────

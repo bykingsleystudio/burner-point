@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import { ProviderName, ProviderService, RouteProduct } from '../global/provider.service';
 
 export interface EmailOptions {
   to: string;
@@ -14,6 +15,9 @@ export interface SMSOptions {
   to: string;
   body: string;
   from?: string;
+  countryCode?: string;
+  product?: RouteProduct;
+  preferredProvider?: ProviderName;
 }
 
 @Injectable()
@@ -21,7 +25,10 @@ export class MessagingService {
   private readonly logger = new Logger(MessagingService.name);
   private emailTransporter: nodemailer.Transporter;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private providerService: ProviderService,
+  ) {
     // Initialize Resend SMTP transporter
     this.emailTransporter = nodemailer.createTransport({
       host: this.configService.get('SMTP_HOST'),
@@ -125,10 +132,26 @@ export class MessagingService {
 
   // ─── SMS Services (via Twilio) ───────────────────────────────────────────
 
-  async sendSMS(options: SMSOptions): Promise<{ sid: string }> {
-    // This would integrate with the existing ProviderService
-    // For now, we'll throw an error indicating this should be handled by phone-auth
-    throw new Error('SMS sending should be handled through phone-auth module');
+  async sendSMS(options: SMSOptions) {
+    const from =
+      options.from ||
+      this.configService.get<string>('SMS_DEFAULT_FROM') ||
+      this.configService.get<string>('TWILIO_DEFAULT_FROM') ||
+      this.configService.get<string>('VONAGE_DEFAULT_FROM') ||
+      this.configService.get<string>('INFOBIP_DEFAULT_FROM');
+
+    if (!from) {
+      throw new Error('SMS sender not configured. Set SMS_DEFAULT_FROM or a provider-specific sender.');
+    }
+
+    const result = await this.providerService.sendSms(options.to, from, options.body, {
+      countryCode: options.countryCode,
+      product: options.product ?? RouteProduct.CONVERSATION,
+      preferredProvider: options.preferredProvider,
+    });
+
+    this.logger.log(`SMS queued through ${result.provider}: ${result.sid}`);
+    return result;
   }
 
   // ─── Bulk Operations ─────────────────────────────────────────────────────

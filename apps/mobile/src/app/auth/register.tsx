@@ -14,13 +14,15 @@ const providers = [
   ['Microsoft Outlook', 'oauth_microsoft'],
 ] as const;
 
+type PendingVerification = 'email' | 'phone';
+
 export default function RegisterScreen() {
   const { isLoaded, signUp, setActive } = useSignUp();
   const { getToken } = useAuth();
   const { startSSOFlow } = useSSO();
   const [loading, setLoading] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
-  const [pendingVerification, setPendingVerification] = useState(false);
+  const [pendingVerification, setPendingVerification] = useState<PendingVerification | null>(null);
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -50,6 +52,31 @@ export default function RegisterScreen() {
     router.replace('/(tabs)' as any);
   };
 
+  const continueVerification = async (result: any) => {
+    if (result.status === 'complete' && result.createdSessionId) {
+      await finish(result.createdSessionId);
+      return;
+    }
+
+    if (result.unverifiedFields?.includes('email_address')) {
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+      setPendingVerification('email');
+      setVerificationCode('');
+      Alert.alert('Check your email', 'Enter the Clerk email verification code to continue signup.');
+      return;
+    }
+
+    if (result.unverifiedFields?.includes('phone_number')) {
+      await signUp.preparePhoneNumberVerification({ strategy: 'phone_code' });
+      setPendingVerification('phone');
+      setVerificationCode('');
+      Alert.alert('Check your phone', 'Enter the Clerk phone verification code to finish signup.');
+      return;
+    }
+
+    Alert.alert('Verification required', 'Clerk needs additional verification before this signup can be completed.');
+  };
+
   const createAccount = async () => {
     if (!isLoaded || !validateProfile()) return;
     if (!form.password) {
@@ -68,14 +95,7 @@ export default function RegisterScreen() {
         unsafeMetadata: { ...form, country: 'NG' },
       });
 
-      if (result.status === 'complete' && result.createdSessionId) {
-        await finish(result.createdSessionId);
-        return;
-      }
-
-      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-      setPendingVerification(true);
-      Alert.alert('Check your email', 'Enter the Clerk verification code to finish signup.');
+      await continueVerification(result);
     } catch (error: any) {
       Alert.alert('Signup failed', error.errors?.[0]?.longMessage || error.errors?.[0]?.message || 'Please check your details and try again.');
     } finally {
@@ -84,17 +104,18 @@ export default function RegisterScreen() {
   };
 
   const verifyEmail = async () => {
-    if (!isLoaded || !verificationCode.trim()) return;
+    if (!isLoaded || !pendingVerification || !verificationCode.trim()) return;
     setLoading(true);
     try {
-      const result = await signUp.attemptEmailAddressVerification({ code: verificationCode.trim() });
-      if (result.status === 'complete' && result.createdSessionId) {
-        await finish(result.createdSessionId);
-        return;
-      }
-      Alert.alert('Not complete', 'Check the code and try again.');
+      const code = verificationCode.trim();
+      const result =
+        pendingVerification === 'email'
+          ? await signUp.attemptEmailAddressVerification({ code })
+          : await signUp.attemptPhoneNumberVerification({ code });
+
+      await continueVerification(result);
     } catch (error: any) {
-      Alert.alert('Verification failed', error.errors?.[0]?.message || 'Unable to verify your email code.');
+      Alert.alert('Verification failed', error.errors?.[0]?.message || 'Unable to verify your Clerk code.');
     } finally {
       setLoading(false);
     }
@@ -132,7 +153,7 @@ export default function RegisterScreen() {
           <View style={s.card}>
             {pendingVerification ? (
               <>
-                <Input label="Email verification code" value={verificationCode} onChangeText={setVerificationCode} keyboardType="number-pad" autoComplete="one-time-code" />
+                <Input label={pendingVerification === 'email' ? 'Email verification code' : 'Phone verification code'} value={verificationCode} onChangeText={setVerificationCode} keyboardType="number-pad" autoComplete="one-time-code" />
                 <TouchableOpacity style={[s.btn, loading && s.disabled]} onPress={verifyEmail} disabled={loading} activeOpacity={0.85}>
                   {loading ? <ActivityIndicator color="#03110b" /> : <Text style={s.btnText}>Verify and continue</Text>}
                 </TouchableOpacity>

@@ -25,6 +25,8 @@ const oauthProviders = [
 ] as const;
 
 type SecondFactorStrategy = 'email_code' | 'phone_code' | 'totp' | 'backup_code';
+type AuthMode = 'sign-in' | 'reset-request' | 'reset-code' | 'reset-password';
+type ResetPasswordMethod = 'email' | 'phone';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,6 +35,11 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [secondFactorStrategy, setSecondFactorStrategy] = useState<SecondFactorStrategy | null>(null);
   const [secondFactorCode, setSecondFactorCode] = useState('');
+  const [authMode, setAuthMode] = useState<AuthMode>('sign-in');
+  const [resetIdentifier, setResetIdentifier] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [resetPassword, setResetPassword] = useState('');
+  const [resetMethod, setResetMethod] = useState<ResetPasswordMethod>('email');
   const isSubmitting = loading || fetchStatus === 'fetching';
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
@@ -111,6 +118,91 @@ export default function LoginPage() {
     }
   };
 
+  const startPasswordReset = async () => {
+    const identifier = resetIdentifier.trim();
+    if (identifier.length < 3) {
+      toast.error('Enter your account email address or phone number.');
+      return;
+    }
+
+    const method: ResetPasswordMethod = identifier.includes('@') ? 'email' : 'phone';
+    setLoading(true);
+    try {
+      const { error: createError } = await signIn.create({ identifier });
+      if (createError) throw createError;
+
+      const { error: sendError } =
+        method === 'email'
+          ? await signIn.resetPasswordEmailCode.sendCode()
+          : await signIn.resetPasswordPhoneCode.sendCode();
+
+      if (sendError) throw sendError;
+
+      setResetMethod(method);
+      setAuthMode('reset-code');
+      toast.success(`Check your ${method === 'email' ? 'email' : 'phone'} for the Clerk reset code.`);
+    } catch (err) {
+      toast.error(getClerkErrorMessage(err, 'Unable to send password reset code'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyPasswordResetCode = async () => {
+    const code = resetCode.trim();
+    if (!code) return;
+
+    setLoading(true);
+    try {
+      const { error } =
+        resetMethod === 'email'
+          ? await signIn.resetPasswordEmailCode.verifyCode({ code })
+          : await signIn.resetPasswordPhoneCode.verifyCode({ code });
+
+      if (error) throw error;
+
+      setAuthMode('reset-password');
+      toast.success('Code verified. Set your new password.');
+    } catch (err) {
+      toast.error(getClerkErrorMessage(err, 'Password reset verification failed'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const submitNewPassword = async () => {
+    if (resetPassword.length < 8) {
+      toast.error('New password must be at least 8 characters.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } =
+        resetMethod === 'email'
+          ? await signIn.resetPasswordEmailCode.submitPassword({ password: resetPassword, signOutOfOtherSessions: true })
+          : await signIn.resetPasswordPhoneCode.submitPassword({ password: resetPassword, signOutOfOtherSessions: true });
+
+      if (error) throw error;
+
+      await finishSignIn();
+      toast.success('Password reset. Welcome back.');
+    } catch (err) {
+      toast.error(getClerkErrorMessage(err, 'Unable to set new password'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const returnToSignIn = () => {
+    setAuthMode('sign-in');
+    setSecondFactorStrategy(null);
+    setSecondFactorCode('');
+    setResetIdentifier('');
+    setResetCode('');
+    setResetPassword('');
+  };
+
   const verifySecondFactor = async () => {
     if (!secondFactorStrategy || !secondFactorCode.trim()) return;
     setLoading(true);
@@ -174,7 +266,69 @@ export default function LoginPage() {
               <p className="mt-2 text-sm text-white/52">Sign in with Clerk using your email address or phone number.</p>
             </div>
 
-            {secondFactorStrategy ? (
+            {authMode === 'reset-request' ? (
+              <div className="space-y-4 rounded-[24px] border border-brand-green/20 bg-brand-green/[0.04] p-4">
+                <label className="block text-sm font-medium text-white/70">
+                  Email or phone number
+                  <input
+                    value={resetIdentifier}
+                    onChange={(event) => setResetIdentifier(event.target.value)}
+                    type="text"
+                    inputMode="text"
+                    autoComplete="username"
+                    placeholder="you@example.com or +1 415 555 0182"
+                    className="auth-input mt-1.5"
+                  />
+                </label>
+                <button type="button" disabled={isSubmitting} onClick={startPasswordReset} className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-2xl bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+                  {isSubmitting ? 'Sending code...' : 'Send reset code'}
+                </button>
+                <button type="button" onClick={returnToSignIn} className="w-full text-xs font-medium text-white/48 underline-offset-2 transition hover:text-brand-green hover:underline">
+                  Back to sign in
+                </button>
+              </div>
+            ) : authMode === 'reset-code' ? (
+              <div className="space-y-4 rounded-[24px] border border-brand-green/20 bg-brand-green/[0.04] p-4">
+                <label className="block text-sm font-medium text-white/70">
+                  Clerk reset code
+                  <input
+                    value={resetCode}
+                    onChange={(event) => setResetCode(event.target.value)}
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder="Enter reset code"
+                    className="auth-input mt-1.5"
+                  />
+                </label>
+                <button type="button" disabled={isSubmitting} onClick={verifyPasswordResetCode} className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-2xl bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+                  {isSubmitting ? 'Verifying...' : 'Verify reset code'}
+                </button>
+                <button type="button" onClick={returnToSignIn} className="w-full text-xs font-medium text-white/48 underline-offset-2 transition hover:text-brand-green hover:underline">
+                  Back to sign in
+                </button>
+              </div>
+            ) : authMode === 'reset-password' ? (
+              <div className="space-y-4 rounded-[24px] border border-brand-green/20 bg-brand-green/[0.04] p-4">
+                <label className="block text-sm font-medium text-white/70">
+                  New password
+                  <input
+                    value={resetPassword}
+                    onChange={(event) => setResetPassword(event.target.value)}
+                    type="password"
+                    autoComplete="new-password"
+                    placeholder="Enter a new password"
+                    className="auth-input mt-1.5"
+                  />
+                </label>
+                <button type="button" disabled={isSubmitting} onClick={submitNewPassword} className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-2xl bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+                  {isSubmitting ? 'Saving password...' : 'Reset password'}
+                </button>
+                <button type="button" onClick={returnToSignIn} className="w-full text-xs font-medium text-white/48 underline-offset-2 transition hover:text-brand-green hover:underline">
+                  Back to sign in
+                </button>
+              </div>
+            ) : secondFactorStrategy ? (
               <div className="space-y-4 rounded-[24px] border border-brand-green/20 bg-brand-green/[0.04] p-4">
                 <label className="block text-sm font-medium text-white/70">
                   Clerk 2FA code
@@ -225,36 +379,40 @@ export default function LoginPage() {
               </label>
 
               <div className="text-right">
-                <Link href="/contact" className="text-xs font-medium text-brand-green/90 underline-offset-2 hover:underline">
+                <button type="button" onClick={() => setAuthMode('reset-request')} className="text-xs font-medium text-brand-green/90 underline-offset-2 hover:underline">
                   Forgot password?
-                </Link>
+                </button>
               </div>
             </div>
             )}
 
-            {!secondFactorStrategy ? (
+            {!secondFactorStrategy && authMode === 'sign-in' ? (
               <button type="submit" disabled={isSubmitting} className="bp-button-glow mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
                 {isSubmitting ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" /> : <Zap size={16} />}
                 {isSubmitting ? 'Signing in...' : 'Sign In'}
               </button>
             ) : null}
 
-            <div className="my-6 flex items-center gap-3">
-              <span className="h-px flex-1 bg-white/8" />
-              <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/34">or continue with</span>
-              <span className="h-px flex-1 bg-white/8" />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              {oauthProviders.map((provider) => (
-                <button key={provider.label} type="button" onClick={() => startOAuth(provider.strategy)} className="flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.02] px-3 py-3 text-center text-xs font-semibold text-white/76 transition hover:border-brand-green/35 hover:text-brand-green">
-                  {provider.label}
-                </button>
-              ))}
-            </div>
+            {authMode === 'sign-in' ? (
+              <>
+                <div className="my-6 flex items-center gap-3">
+                  <span className="h-px flex-1 bg-white/8" />
+                  <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/34">or continue with</span>
+                  <span className="h-px flex-1 bg-white/8" />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {oauthProviders.map((provider) => (
+                    <button key={provider.label} type="button" onClick={() => startOAuth(provider.strategy)} className="flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.02] px-3 py-3 text-center text-xs font-semibold text-white/76 transition hover:border-brand-green/35 hover:text-brand-green">
+                      {provider.label}
+                    </button>
+                  ))}
+                </div>
 
-            <p className="mt-6 text-center text-sm text-white/48">
-              No account? <Link href="/auth/signup" className="text-brand-green hover:underline">Create one free</Link>
-            </p>
+                <p className="mt-6 text-center text-sm text-white/48">
+                  No account? <Link href="/auth/signup" className="text-brand-green hover:underline">Create one free</Link>
+                </p>
+              </>
+            ) : null}
           </div>
         </form>
       </div>

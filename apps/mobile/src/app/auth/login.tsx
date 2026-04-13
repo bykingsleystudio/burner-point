@@ -13,6 +13,9 @@ const providers = [
   ['Microsoft Outlook', 'oauth_microsoft'],
 ] as const;
 
+type AuthStep = 'sign-in' | 'reset-request' | 'reset-confirm';
+type ResetPasswordStrategy = 'reset_password_email_code' | 'reset_password_phone_code';
+
 export default function LoginScreen() {
   const router = useRouter();
   const { isLoaded, signIn, setActive } = useSignIn();
@@ -24,6 +27,26 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [secondFactorStrategy, setSecondFactorStrategy] = useState<string | null>(null);
   const [secondFactorCode, setSecondFactorCode] = useState('');
+  const [authStep, setAuthStep] = useState<AuthStep>('sign-in');
+  const [resetIdentifier, setResetIdentifier] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [resetStrategy, setResetStrategy] = useState<ResetPasswordStrategy>('reset_password_email_code');
+
+  const finishClerkSession = async (sessionId: string) => {
+    await setActive({ session: sessionId });
+    await exchangeClerkForApiSession(getToken);
+    router.replace('/(tabs)' as any);
+  };
+
+  const resetAuthState = () => {
+    setAuthStep('sign-in');
+    setSecondFactorStrategy(null);
+    setSecondFactorCode('');
+    setResetIdentifier('');
+    setResetCode('');
+    setNewPassword('');
+  };
 
   const login = async () => {
     if (!isLoaded) return;
@@ -47,11 +70,70 @@ export default function LoginScreen() {
         Alert.alert('Verification required', 'Additional Clerk verification is required before this session can continue.');
         return;
       }
-      await setActive({ session: result.createdSessionId });
-      await exchangeClerkForApiSession(getToken);
-      router.replace('/(tabs)' as any);
+      await finishClerkSession(result.createdSessionId);
     } catch (error: any) {
       Alert.alert('Login failed', error.errors?.[0]?.longMessage || error.errors?.[0]?.message || 'Check your credentials');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const requestPasswordReset = async () => {
+    if (!isLoaded || !resetIdentifier.trim()) {
+      Alert.alert('Account identifier required', 'Enter the email address or phone number on your Clerk account.');
+      return;
+    }
+
+    const strategy: ResetPasswordStrategy = resetIdentifier.includes('@')
+      ? 'reset_password_email_code'
+      : 'reset_password_phone_code';
+
+    setLoading(true);
+    try {
+      await signIn.create({
+        strategy,
+        identifier: resetIdentifier.trim(),
+      });
+      setResetStrategy(strategy);
+      setResetCode('');
+      setNewPassword('');
+      setAuthStep('reset-confirm');
+      Alert.alert('Reset code sent', strategy === 'reset_password_email_code'
+        ? 'Check your email for the Clerk password reset code.'
+        : 'Check your phone for the Clerk password reset code.');
+    } catch (error: any) {
+      Alert.alert('Reset failed', error.errors?.[0]?.longMessage || error.errors?.[0]?.message || 'Unable to send a reset code.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const submitPasswordReset = async () => {
+    if (!isLoaded || !resetCode.trim() || !newPassword) {
+      Alert.alert('Reset details required', 'Enter the reset code and your new password.');
+      return;
+    }
+    if (newPassword.length < 8) {
+      Alert.alert('Password too short', 'Use at least 8 characters for your new password.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await signIn.attemptFirstFactor({
+        strategy: resetStrategy,
+        code: resetCode.trim(),
+        password: newPassword,
+      });
+
+      if (result.status === 'complete' && result.createdSessionId) {
+        await finishClerkSession(result.createdSessionId);
+        return;
+      }
+
+      Alert.alert('Reset not complete', 'Clerk needs another verification step before sign-in can finish.');
+    } catch (error: any) {
+      Alert.alert('Reset failed', error.errors?.[0]?.longMessage || error.errors?.[0]?.message || 'Unable to reset your password.');
     } finally {
       setLoading(false);
     }
@@ -66,9 +148,7 @@ export default function LoginScreen() {
         code: secondFactorCode.trim(),
       });
       if (result.status === 'complete' && result.createdSessionId) {
-        await setActive({ session: result.createdSessionId });
-        await exchangeClerkForApiSession(getToken);
-        router.replace('/(tabs)' as any);
+        await finishClerkSession(result.createdSessionId);
         return;
       }
       Alert.alert('Not complete', 'Check the code and try again.');
@@ -115,6 +195,44 @@ export default function LoginScreen() {
             </>
           ) : (
             <>
+              {authStep === 'reset-request' ? (
+                <>
+                  <Text style={s.label}>Email or phone number</Text>
+                  <TextInput value={resetIdentifier} onChangeText={setResetIdentifier} placeholder="you@example.com or +1 415 555 0182" placeholderTextColor="#526157" style={s.input} keyboardType="default" autoCapitalize="none" autoCorrect={false} autoComplete="username" />
+                  <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={requestPasswordReset} disabled={loading || !isLoaded} activeOpacity={0.85}>
+                    {loading ? <ActivityIndicator color="#03110b" /> : <Text style={s.btnText}>Send reset code</Text>}
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={resetAuthState} style={s.resetLink}>
+                    <Text style={s.resetText}>Back to sign in</Text>
+                  </TouchableOpacity>
+                </>
+              ) : authStep === 'reset-confirm' ? (
+                <>
+                  <Text style={s.label}>{resetStrategy === 'reset_password_email_code' ? 'Email reset code' : 'Phone reset code'}</Text>
+                  <TextInput value={resetCode} onChangeText={setResetCode} placeholder="Enter reset code" placeholderTextColor="#526157" style={s.input} keyboardType="number-pad" autoCapitalize="none" autoCorrect={false} autoComplete="one-time-code" />
+
+                  <Text style={s.label}>New password</Text>
+                  <View style={s.passwordWrap}>
+                    <TextInput value={newPassword} onChangeText={setNewPassword} placeholder="New password" placeholderTextColor="#526157" style={[s.input, s.passwordInput]} secureTextEntry={!showPassword} autoComplete="new-password" />
+                    <TouchableOpacity style={s.eye} onPress={() => setShowPassword((value) => !value)}>
+                      {showPassword ? <EyeOff size={18} color="#95A69D" /> : <Eye size={18} color="#95A69D" />}
+                    </TouchableOpacity>
+                  </View>
+
+                  <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={submitPasswordReset} disabled={loading || !isLoaded} activeOpacity={0.85}>
+                    {loading ? <ActivityIndicator color="#03110b" /> : <Text style={s.btnText}>Reset password</Text>}
+                  </TouchableOpacity>
+                  <View style={s.resetActions}>
+                    <TouchableOpacity onPress={requestPasswordReset} disabled={loading}>
+                      <Text style={s.resetText}>Resend code</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={resetAuthState}>
+                      <Text style={s.resetText}>Back to sign in</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              ) : (
+                <>
           <Text style={s.label}>Email or phone number</Text>
           <TextInput value={identifier} onChangeText={setIdentifier} placeholder="you@example.com or +1 415 555 0182" placeholderTextColor="#526157" style={s.input} keyboardType="default" autoCapitalize="none" autoCorrect={false} autoComplete="username" />
 
@@ -129,21 +247,30 @@ export default function LoginScreen() {
           <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={login} disabled={loading || !isLoaded} activeOpacity={0.85}>
             {loading ? <ActivityIndicator color="#03110b" /> : <><Zap size={16} color="#03110b" /><Text style={s.btnText}>Sign In</Text></>}
           </TouchableOpacity>
+          <TouchableOpacity onPress={() => setAuthStep('reset-request')} style={s.resetLink}>
+            <Text style={s.resetText}>Forgot password?</Text>
+          </TouchableOpacity>
+                </>
+              )}
             </>
           )}
 
-          <Text style={s.or}>or continue with</Text>
-          <View style={s.providerGrid}>
-            {providers.map(([label, strategy]) => (
-              <TouchableOpacity key={label} style={s.provider} onPress={() => oauth(strategy)} activeOpacity={0.75}>
-                <Text style={s.providerText}>{label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          {authStep === 'sign-in' && !secondFactorStrategy ? (
+            <>
+              <Text style={s.or}>or continue with</Text>
+              <View style={s.providerGrid}>
+                {providers.map(([label, strategy]) => (
+                  <TouchableOpacity key={label} style={s.provider} onPress={() => oauth(strategy)} activeOpacity={0.75}>
+                    <Text style={s.providerText}>{label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
 
-          <TouchableOpacity onPress={() => router.push('/auth/register' as any)} style={s.registerLink}>
-            <Text style={s.registerText}>No account? <Text style={s.registerHighlight}>Create one free</Text></Text>
-          </TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push('/auth/register' as any)} style={s.registerLink}>
+                <Text style={s.registerText}>No account? <Text style={s.registerHighlight}>Create one free</Text></Text>
+              </TouchableOpacity>
+            </>
+          ) : null}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -174,4 +301,7 @@ const s = StyleSheet.create({
   registerLink: { alignItems: 'center', paddingTop: 8 },
   registerText: { color: '#8A978F', fontSize: 14 },
   registerHighlight: { color: '#00FF9D', fontWeight: '800' },
+  resetLink: { alignItems: 'center', paddingTop: 8 },
+  resetText: { color: '#00FF9D', fontSize: 13, fontWeight: '800' },
+  resetActions: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, paddingTop: 8 },
 });

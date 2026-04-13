@@ -265,6 +265,7 @@ export class ProviderService {
     const apiKey = this.configService.get<string>('VONAGE_API_KEY');
     const apiSecret = this.configService.get<string>('VONAGE_API_SECRET');
     if (!apiKey || !apiSecret) throw new Error('Vonage not configured');
+    const webhookBaseUrl = this.getWebhookBaseUrl();
 
     const response = await axios.post('https://rest.nexmo.com/sms/json', {
       api_key: apiKey,
@@ -272,6 +273,8 @@ export class ProviderService {
       to: this.stripPlus(to),
       from: this.stripPlus(from),
       text: body,
+      'status-report-req': 1,
+      callback: `${webhookBaseUrl}/vonage/status`,
     });
 
     const message = response.data?.messages?.[0] ?? {};
@@ -290,6 +293,7 @@ export class ProviderService {
     const baseUrl = this.configService.get<string>('INFOBIP_BASE_URL');
     const apiKey = this.configService.get<string>('INFOBIP_API_KEY');
     if (!baseUrl || !apiKey) throw new Error('Infobip not configured');
+    const webhookBaseUrl = this.getWebhookBaseUrl();
 
     const response = await axios.post(
       `${baseUrl.replace(/\/$/, '')}/sms/2/text/advanced`,
@@ -298,6 +302,8 @@ export class ProviderService {
           from: this.stripPlus(from),
           destinations: [{ to: this.stripPlus(to) }],
           text: body,
+          notifyUrl: `${webhookBaseUrl}/infobip/status`,
+          notifyContentType: 'application/json',
         }],
       },
       {

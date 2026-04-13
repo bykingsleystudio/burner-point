@@ -162,6 +162,90 @@ export class WebhooksService {
     return { success: true };
   }
 
+  async handleVonageInboundWebhook(payload: Record<string, unknown>) {
+    const eventId = this.asString(payload.messageId ?? payload['message-id'] ?? payload.messageId);
+    if (!eventId) return { success: true };
+
+    const duplicate = await this.storeWebhookEvent(eventId, 'vonage', 'message.inbound', payload);
+    if (duplicate) return { success: true };
+
+    await this.persistInboundProviderSms({
+      provider: 'vonage',
+      eventId,
+      from: this.normalizePhone(this.asString(payload.msisdn ?? payload.from)),
+      to: this.normalizePhone(this.asString(payload.to)),
+      body: this.asString(payload.text),
+      payload,
+    });
+
+    return { success: true };
+  }
+
+  async handleVonageStatusWebhook(payload: Record<string, unknown>) {
+    const eventId = this.asString(payload.messageId ?? payload['message-id'] ?? payload.messageId);
+    if (!eventId) return { success: true };
+
+    const webhookEventId = `${eventId}:${this.asString(payload.status) || 'status'}`;
+    const duplicate = await this.storeWebhookEvent(webhookEventId, 'vonage', 'message.status', payload);
+    if (duplicate) return { success: true };
+
+    await this.msgRepo.update(
+      { providerMessageSid: eventId },
+      { status: this.mapVonageMessageStatus(this.asString(payload.status)) },
+    );
+
+    return { success: true };
+  }
+
+  async handleInfobipInboundWebhook(
+    payload: Record<string, unknown>,
+    headers: Record<string, string>,
+  ) {
+    const results = this.getWebhookResults(payload);
+
+    for (const item of results) {
+      const eventId = this.asString(item.messageId ?? item.messageID ?? headers['x-infobip-message-id']);
+      if (!eventId) continue;
+
+      const duplicate = await this.storeWebhookEvent(eventId, 'infobip', 'message.inbound', item);
+      if (duplicate) continue;
+
+      await this.persistInboundProviderSms({
+        provider: 'infobip',
+        eventId,
+        from: this.normalizePhone(this.asString(item.from)),
+        to: this.normalizePhone(this.asString(item.to)),
+        body: this.asString(item.text ?? item.cleanText),
+        payload: item,
+      });
+    }
+
+    return { success: true };
+  }
+
+  async handleInfobipDeliveryWebhook(
+    payload: Record<string, unknown>,
+    headers: Record<string, string>,
+  ) {
+    const results = this.getWebhookResults(payload);
+
+    for (const item of results) {
+      const eventId = this.asString(item.messageId ?? item.messageID ?? headers['x-infobip-message-id']);
+      if (!eventId) continue;
+
+      const webhookEventId = `${eventId}:${this.asString((item.status as Record<string, unknown> | undefined)?.groupName ?? item.status) || 'status'}`;
+      const duplicate = await this.storeWebhookEvent(webhookEventId, 'infobip', 'message.status', item);
+      if (duplicate) continue;
+
+      await this.msgRepo.update(
+        { providerMessageSid: eventId },
+        { status: this.mapInfobipMessageStatus(item.status) },
+      );
+    }
+
+    return { success: true };
+  }
+
   async handleTelnyxWebhook(
     payload: Record<string, unknown>,
     headers: Record<string, string>,
@@ -190,5 +274,112 @@ export class WebhooksService {
 
     this.logger.log(`Telnyx webhook received: ${String(payload.event_type ?? 'unknown')}`);
     return { success: true };
+  }
+
+  private async persistInboundProviderSms(params: {
+    provider: string;
+    eventId: string;
+    from: string;
+    to: string;
+    body: string;
+    payload: Record<string, unknown>;
+  }) {
+    const phoneNum = await this.numRepo.findOne({ where: { number: params.to } });
+    const aiResult = await this.aiService.classifyMessage(params.body).catch(() => null);
+
+    const msg = this.msgRepo.create({
+      from: params.from,
+      to: params.to,
+      body: params.body,
+      direction: MessageDirection.INBOUND,
+      status: MessageStatus.RECEIVED,
+      type: MessageType.SMS,
+      providerMessageSid: params.eventId,
+      numSegments: 1,
+      phoneNumberId: phoneNum?.id,
+      userId: phoneNum?.userId,
+      aiClassification: aiResult?.classification,
+      extractedOtp: aiResult?.otp,
+      spamScore: aiResult?.spamScore || 0,
+      isSpam: (aiResult?.spamScore || 0) > 0.7,
+      metadata: { provider: params.provider, raw: params.payload },
+    });
+
+    const saved = await this.msgRepo.save(msg);
+
+    if (phoneNum) {
+      await this.numRepo.increment({ id: phoneNum.id }, 'smsReceived', 1);
+    }
+
+    if (phoneNum?.userId) {
+      this.eventsGateway.emitToUser(phoneNum.userId, 'message.received', {
+        messageId: saved.id,
+        provider: params.provider,
+        from: params.from,
+        to: params.to,
+        body: msg.isSpam ? '[Spam filtered]' : params.body,
+        otp: aiResult?.otp,
+        classification: aiResult?.classification,
+        receivedAt: saved.createdAt,
+      });
+    }
+
+    this.logger.log(`${params.provider} inbound SMS stored: ${params.eventId}`);
+  }
+
+  private async storeWebhookEvent(
+    eventId: string,
+    source: string,
+    eventType: string,
+    payload: Record<string, unknown>,
+  ) {
+    const existing = await this.dedupRepo.findOne({ where: { eventId } });
+    if (existing) {
+      this.logger.debug(`Duplicate ${source} webhook: ${eventId}`);
+      return true;
+    }
+
+    await this.dedupRepo.save(this.dedupRepo.create({ eventId, source, eventType, payload }));
+    return false;
+  }
+
+  private getWebhookResults(payload: Record<string, unknown>): Record<string, unknown>[] {
+    const results = payload.results;
+    if (Array.isArray(results)) {
+      return results.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object');
+    }
+    return [payload];
+  }
+
+  private mapVonageMessageStatus(status: string): MessageStatus {
+    const normalized = status.toLowerCase();
+    if (['delivered'].includes(normalized)) return MessageStatus.DELIVERED;
+    if (['accepted', 'buffered', 'sent'].includes(normalized)) return MessageStatus.SENT;
+    if (['failed', 'expired', 'rejected', 'undeliverable'].includes(normalized)) return MessageStatus.FAILED;
+    return MessageStatus.SENT;
+  }
+
+  private mapInfobipMessageStatus(status: unknown): MessageStatus {
+    const value = typeof status === 'object' && status
+      ? this.asString((status as Record<string, unknown>).groupName ?? (status as Record<string, unknown>).name)
+      : this.asString(status);
+    const normalized = value.toLowerCase();
+    if (normalized.includes('delivered')) return MessageStatus.DELIVERED;
+    if (normalized.includes('pending') || normalized.includes('sent')) return MessageStatus.SENT;
+    if (normalized.includes('undeliverable') || normalized.includes('expired') || normalized.includes('rejected')) {
+      return MessageStatus.FAILED;
+    }
+    return MessageStatus.SENT;
+  }
+
+  private normalizePhone(value: string): string {
+    if (!value) return '';
+    return value.startsWith('+') ? value : `+${value}`;
+  }
+
+  private asString(value: unknown): string {
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    return '';
   }
 }

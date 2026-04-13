@@ -30,18 +30,18 @@ const coreFeatures: Array<{ icon: LucideIcon; title: string; text: string; href:
   {
     icon: Smartphone,
     title: 'Phone Numbers and Verifications',
-    text: 'Secure access to real SIM-backed mobile numbers for instant verification and communication.',
+    text: 'Secure access to real SIM-backed mobile numbers for instant verification and private communication.',
     href: '/verifications',
     cta: 'Get Verification',
-    items: ['Non-VoIP numbers', 'SMS and OTP verification', 'Voice call verification', 'Multi-country coverage'],
+    items: ['Non-VoIP numbers', 'SMS and OTP verification', 'Voice call verification', '900+ platform support'],
   },
   {
     icon: CalendarDays,
     title: 'Number Rentals',
-    text: 'Flexible number ownership for temporary projects, repeat verifications, and account recovery.',
+    text: 'Flexible number ownership for temporary projects, repeat verifications, account recovery, and US/CA conversation flows.',
     href: '/rentals',
     cta: 'Rent A Number',
-    items: ['Short-term 1-14 day rentals', 'Renewable monthly numbers', 'Unlimited verification usage', 'Multi-platform compatibility'],
+    items: ['Short-term 1-14 day rentals', 'Renewable monthly numbers', 'SMS, MMS, calls, voicemail', 'WiFi and mobile-data calling'],
   },
   {
     icon: Code2,
@@ -60,9 +60,9 @@ const platformFeatures = [
 ];
 
 const pricingCards = [
-  { icon: ShieldCheck, title: 'Verifications', price: '$0.99+', period: 'per verification', href: '/verifications', cta: 'Get Verification', items: ['Instant SMS and OTP', 'Real SIM numbers', '900+ platform support'] },
-  { icon: CalendarDays, title: 'Non-Renewable Rentals', price: '$5.99+', period: 'per rental', href: '/rentals', cta: 'Rent A Number', items: ['1-14 day access', 'Unlimited verification usage', 'No auto-renewal surprise'] },
-  { icon: CreditCard, title: 'Monthly Plans', price: '$15.99+', period: 'per month', href: '/pricing', cta: 'Start Monthly Plan', items: ['Renewable access', 'SMS and voice support', 'Best for continuity'] },
+  { icon: ShieldCheck, title: 'Verifications', price: '$0.99+', period: 'per verification', href: '/verifications', cta: 'Get Verification', items: ['Instant SMS and OTP', 'Real SIM numbers', '900+ platform support', 'USD, NGN, card and crypto checkout'] },
+  { icon: CalendarDays, title: 'Non-Renewable Rentals', price: '$5.99+', period: 'per rental', href: '/rentals', cta: 'Rent A Number', items: ['1-14 day access', 'Unlimited verification usage', 'No auto-renewal surprise', 'Local transfer-ready billing model'] },
+  { icon: CreditCard, title: 'Monthly Plans', price: '$15.99+', period: 'per month', href: '/pricing', cta: 'Start Monthly Plan', items: ['Renewable access', 'SMS and voice support', 'Best for continuity', 'Built for business privacy workflows'] },
 ];
 
 const productLinks = [
@@ -75,39 +75,144 @@ const productLinks = [
 
 const useCases = ['Online registrations', 'Marketplaces', 'Business communication', 'Dating platforms', 'Travel usage', 'Privacy protection'];
 
+const coverageRegions = [
+  {
+    flag: '🇺🇸',
+    code: 'US',
+    country: 'United States',
+    dial: '+1',
+    sample: '+1 415 555 0182',
+    gradient: 'linear-gradient(135deg,#b22234 0 38%,#ffffff 38% 48%,#3c3b6e 48% 100%)',
+  },
+  {
+    flag: '🇨🇦',
+    code: 'CA',
+    country: 'Canada',
+    dial: '+1',
+    sample: '+1 647 555 0198',
+    gradient: 'linear-gradient(90deg,#d52b1e 0 28%,#ffffff 28% 72%,#d52b1e 72% 100%)',
+  },
+  {
+    flag: '🇬🇧',
+    code: 'GB',
+    country: 'United Kingdom',
+    dial: '+44',
+    sample: '+44 20 7946 0482',
+    gradient: 'linear-gradient(135deg,#012169 0 38%,#ffffff 38% 48%,#c8102e 48% 58%,#012169 58% 100%)',
+  },
+  {
+    flag: '🇫🇷',
+    code: 'FR',
+    country: 'France',
+    dial: '+33',
+    sample: '+33 1 76 35 48 10',
+    gradient: 'linear-gradient(90deg,#0055a4 0 33%,#ffffff 33% 66%,#ef4135 66% 100%)',
+  },
+  {
+    flag: '🇩🇪',
+    code: 'DE',
+    country: 'Germany',
+    dial: '+49',
+    sample: '+49 30 5557 0192',
+    gradient: 'linear-gradient(180deg,#000000 0 33%,#dd0000 33% 66%,#ffce00 66% 100%)',
+  },
+  {
+    flag: '🇯🇵',
+    code: 'JP',
+    country: 'Japan',
+    dial: '+81',
+    sample: '+81 3 4510 2440',
+    gradient: 'radial-gradient(circle,#bc002d 0 28%,#ffffff 29% 100%)',
+  },
+  {
+    flag: '🇮🇳',
+    code: 'IN',
+    country: 'India',
+    dial: '+91',
+    sample: '+91 80 4567 2109',
+    gradient: 'linear-gradient(180deg,#ff9933 0 33%,#ffffff 33% 66%,#138808 66% 100%)',
+  },
+  {
+    flag: '🇳🇬',
+    code: 'NG',
+    country: 'Nigeria',
+    dial: '+234',
+    sample: '+234 802 555 0198',
+    gradient: 'linear-gradient(90deg,#008751 0 33%,#ffffff 33% 66%,#008751 66% 100%)',
+  },
+];
+
+const natureSignals = [
+  ['Fox Mask', 'identity separation'],
+  ['Falcon Route', 'fast OTP delivery'],
+  ['Firefly Pulse', 'live webhook events'],
+];
+
+const heroStats = [
+  ['900+', 'services supported'],
+  ['180+', 'countries available'],
+  ['99.9%', 'uptime target'],
+  ['0', 'bytes logged'],
+];
+
 export default function Home() {
   return (
     <MarketingShell>
-      <section className="relative">
-        <div className="mx-auto grid max-w-7xl gap-12 px-5 pb-20 pt-14 sm:px-6 md:pb-28 md:pt-24 lg:grid-cols-[1.08fr_0.92fr] lg:items-center xl:px-8">
-          <div>
-            <div className="mb-7 inline-flex rounded-full border border-brand-green/18 bg-brand-green/10 px-5 py-2 font-mono text-[10px] uppercase tracking-[0.32em] text-brand-green">
-              Private by Design
+      <section className="relative overflow-hidden">
+        <div className="bp-hero-fx" />
+        <div className="pointer-events-none absolute left-[8%] top-24 hidden md:block">
+          <div className="bp-orb" />
+        </div>
+        <div className="pointer-events-none absolute right-[10%] top-44 hidden md:block">
+          <div className="bp-orb-ring" />
+        </div>
+        <div className="mx-auto grid max-w-[1600px] gap-12 px-5 pb-14 pt-10 sm:px-6 md:pb-20 md:pt-20 lg:grid-cols-[1.02fr_0.98fr] lg:items-center xl:px-10 2xl:px-12">
+          <div className="bp-reveal">
+            <div className="mb-6 flex flex-wrap items-center gap-3">
+              <div className="bp-privacy-stamp inline-flex rounded-full border border-brand-green/30 bg-brand-green/10 px-5 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.36em] text-brand-green shadow-[0_0_44px_rgba(0,255,157,0.18)]">
+                Private By Design
+              </div>
+              <span className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 font-mono text-[10px] uppercase tracking-[0.22em] text-white/54">
+                Real SIM Numbers - No Logs Policy
+              </span>
             </div>
-            <h1 className="text-6xl font-semibold uppercase leading-[0.86] text-white md:text-8xl xl:text-[9.2rem]">
-              Stay
-              <br />
-              <span className="bp-outline">Anonymous.</span>
-              <br />
-              Stay
-              <br />
-              <span className="text-brand-green">Connected.</span>
+
+            <p className="font-mono text-sm font-semibold uppercase tracking-[0.28em] text-white/58 md:text-base">
+              Stay Anonymous. <span className="text-brand-green">Stay Connected.</span>
+            </p>
+            <h1 className="mt-5 max-w-6xl text-[clamp(3.25rem,9vw,9.8rem)] font-black uppercase leading-[0.84] tracking-[-0.08em] text-white">
+              <span className="block">Don&apos;t Want</span>
+              <span className="block text-white/82">To Give Out</span>
+              <span className="block bp-outline">Your Phone</span>
+              <span className="block">Number?</span>
             </h1>
-            <p className="mt-7 max-w-2xl text-lg leading-9 text-white/64 md:text-xl">
-              Do not want to give out your phone number? No problem. Use ours. Generate secure, non-VoIP numbers instantly and take control of communication anywhere in the world.
-            </p>
-            <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.24em] text-white/44">
-              Receive SMS, voice calls, and OTP verifications from 900+ platforms globally.
-            </p>
-            <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
-              <Link href="/auth/signup" className="bp-button-glow inline-flex min-h-12 items-center justify-center rounded-2xl bg-brand-green px-8 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac]">
-                Get Started
+            <div className="mt-6 max-w-4xl rounded-[28px] border border-brand-green/16 bg-brand-green/[0.06] p-5 md:p-6">
+              <p className="text-[clamp(1.65rem,4vw,4.2rem)] font-black uppercase leading-[0.9] tracking-[-0.05em] text-brand-green">
+                No problem. Use ours.
+              </p>
+              <p className="mt-4 max-w-3xl text-base leading-8 text-white/68 md:text-xl md:leading-9">
+                Generate secure, non-VoIP numbers instantly for SMS, MMS, voice calls, OTP verification, rentals, and private WiFi/data communication without exposing your real line.
+              </p>
+            </div>
+
+            <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {heroStats.map(([value, label]) => (
+                <div key={label} className="rounded-[22px] border border-white/8 bg-white/[0.025] px-5 py-4">
+                  <div className="font-mono text-3xl font-semibold text-white md:text-4xl">{value}</div>
+                  <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-white/40">{label}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
+              <Link href="/auth/signup" className="bp-button-glow inline-flex min-h-12 items-center justify-center rounded-2xl bg-brand-green px-8 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition duration-300 hover:-translate-y-1 hover:bg-[#1cffac]">
+                Get Started Free
                 <ArrowRight className="ml-3 h-4 w-4" />
               </Link>
-              <Link href="/overview" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/10 px-8 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-white/82 transition hover:border-brand-green/35 hover:text-white">
-                Learn More
+              <Link href="/overview" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/10 px-8 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-white/82 transition duration-300 hover:-translate-y-1 hover:border-brand-green/35 hover:text-white">
+                See How It Works
               </Link>
-              <Link href="/api/docs" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-brand-green/18 bg-brand-green/8 px-8 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-brand-green transition hover:bg-brand-green/14">
+              <Link href="/api/docs" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-brand-green/18 bg-brand-green/8 px-8 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-brand-green transition duration-300 hover:-translate-y-1 hover:bg-brand-green/14">
                 View API Docs
               </Link>
             </div>
@@ -130,38 +235,74 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="bp-card rounded-[44px] p-5 md:p-7">
-            <div className="rounded-[38px] border border-brand-green/15 bg-[#050807] p-6 shadow-[0_0_80px_rgba(0,255,157,0.1)]">
-              <div className="flex items-center justify-between">
+          <div className="bp-card bp-reveal-delay rounded-[38px] p-4 md:rounded-[54px] md:p-6">
+            <div className="rounded-[32px] border border-brand-green/15 bg-[#050807] p-4 shadow-[0_0_80px_rgba(0,255,157,0.1)] md:rounded-[46px] md:p-6">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-3">
-                  <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} />
+                  <Image src="/assets/logo-mark.svg" alt="" width={38} height={38} />
                   <div>
-                    <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-brand-green">Live Number</p>
-                    <p className="font-mono text-sm text-white/48">US - Real SIM</p>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-brand-green">Live Coverage Flow</p>
+                    <p className="font-mono text-sm text-white/48">180+ countries - 900+ platforms</p>
                   </div>
                 </div>
-                <span className="rounded-full border border-brand-green/20 bg-brand-green/10 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">Active</span>
+                <span className="w-fit rounded-full border border-brand-green/20 bg-brand-green/10 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">Real SIM-backed</span>
               </div>
-              <div className="mt-8 font-mono text-4xl font-medium text-brand-green md:text-5xl">+1 415 555 0182</div>
-              <div className="mt-7 grid grid-cols-2 gap-3">
-                {[
-                  ['148', 'SMS Received'],
-                  ['23', 'Voice Calls'],
-                  ['5d 14h', 'Rental Left'],
-                  ['0', 'Personal Leaks'],
-                ].map(([value, label]) => (
-                  <div key={label} className="rounded-[22px] border border-white/8 bg-white/[0.025] p-4">
-                    <div className="text-3xl font-semibold text-white">{value}</div>
-                    <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-white/34">{label}</div>
+
+              <div className="mt-6 overflow-hidden rounded-[30px] border border-white/8 bg-black/30 p-3">
+                <div className="bp-flag-track flex w-max gap-3">
+                  {[...coverageRegions, ...coverageRegions].map((region, index) => (
+                    <div key={`${region.code}-${index}`} className="w-[220px] rounded-[24px] border border-white/8 bg-white/[0.035] p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl shadow-[inset_0_0_0_1px_rgba(255,255,255,0.18)]" style={{ background: region.gradient }}>
+                          {region.flag}
+                        </span>
+                        <span className="rounded-full border border-white/10 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-white/50">{region.code}</span>
+                      </div>
+                      <h2 className="mt-4 text-lg font-semibold text-white">{region.country}</h2>
+                      <p className="mt-1 font-mono text-sm text-brand-green">{region.dial}</p>
+                      <p className="mt-3 font-mono text-xs text-white/48">{region.sample}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-3 md:grid-cols-3">
+                {natureSignals.map(([title, text]) => (
+                  <div key={title} className="rounded-[24px] border border-white/8 bg-[radial-gradient(circle_at_top,rgba(0,255,157,0.08),rgba(255,255,255,0.025))] p-4">
+                    <div className="bp-nature-dot" />
+                    <h3 className="mt-4 font-mono text-xs font-semibold uppercase tracking-[0.18em] text-white">{title}</h3>
+                    <p className="mt-2 text-xs leading-5 text-white/48">{text}</p>
                   </div>
                 ))}
               </div>
-              <div className="mt-7 space-y-3">
-                <div className="max-w-[84%] rounded-[20px] border border-white/8 bg-white/[0.04] px-4 py-3 text-sm text-white/78">
+
+              <div className="mt-5 rounded-[30px] border border-brand-green/15 bg-brand-green/[0.06] p-5">
+                <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-brand-green">Selected route</p>
+                    <div className="mt-3 font-mono text-3xl font-medium text-brand-green md:text-5xl">+1 415 555 0182</div>
+                    <p className="mt-3 text-sm leading-6 text-white/58">SMS - MMS photos - voice calls - voicemail - OTP delivery over WiFi or mobile data for US/CA conversation numbers.</p>
+                  </div>
+                  <div className="grid min-w-[170px] grid-cols-2 gap-3">
+                    {[
+                      ['15s', 'avg code'],
+                      ['0', 'logs'],
+                    ].map(([value, label]) => (
+                      <div key={label} className="rounded-[20px] border border-white/8 bg-black/25 p-4 text-center">
+                        <div className="text-2xl font-semibold text-white">{value}</div>
+                        <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.18em] text-white/34">{label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-5 space-y-3">
+                <div className="max-w-[88%] rounded-[20px] border border-white/8 bg-white/[0.04] px-4 py-3 text-sm text-white/78">
                   Your verification code is <span className="font-mono text-brand-green">847291</span>.
                 </div>
-                <div className="ml-auto max-w-[74%] rounded-[20px] border border-brand-green/20 bg-brand-green/10 px-4 py-3 text-sm text-white/88">
-                  Personal number stayed private.
+                <div className="ml-auto max-w-[82%] rounded-[20px] border border-brand-green/20 bg-brand-green/10 px-4 py-3 text-sm text-white/88">
+                  Protected. Private. Routed through Burner Point.
                 </div>
               </div>
             </div>
@@ -196,7 +337,8 @@ export default function Home() {
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
               <Eyebrow>Core Features</Eyebrow>
-              <h2 className="max-w-4xl text-5xl font-semibold uppercase leading-[0.95] text-white md:text-7xl">Numbers, rentals, and API access in one private stack.</h2>
+              <h2 className="max-w-4xl text-5xl font-semibold uppercase leading-[0.95] text-white md:text-7xl">Protect your real number. Verify anything.</h2>
+              <p className="mt-5 max-w-3xl text-base leading-8 text-white/58">Your private phone number for SMS, voice, OTP verification, messaging, and rentals, with instant activation and privacy-first infrastructure.</p>
             </div>
             <Link href="/pricing" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/10 px-6 py-4 text-sm font-semibold uppercase tracking-[0.2em] text-white/82 transition hover:border-brand-green/35 hover:text-brand-green">
               View Pricing

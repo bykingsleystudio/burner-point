@@ -1,7 +1,7 @@
-import { Controller, Post, Body, Headers, RawBodyRequest, Req, Res, HttpCode } from '@nestjs/common';
+import { All, Controller, Post, Body, Headers, Req, Res, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { WebhooksService } from './webhooks.service';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 
 @ApiTags('webhooks')
 @Controller('webhooks')
@@ -52,5 +52,40 @@ export class WebhooksController {
   @ApiOperation({ summary: 'Telnyx webhook receiver' })
   async telnyxWebhook(@Body() body: Record<string, unknown>, @Headers() headers: Record<string, string>) {
     return this.service.handleTelnyxWebhook(body, headers);
+  }
+
+  @All('vonage/inbound')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Vonage inbound SMS webhook receiver' })
+  async vonageInbound(@Req() req: Request) {
+    return this.service.handleVonageInboundWebhook(this.mergeWebhookPayload(req));
+  }
+
+  @All('vonage/status')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Vonage delivery status webhook receiver' })
+  async vonageStatus(@Req() req: Request) {
+    return this.service.handleVonageStatusWebhook(this.mergeWebhookPayload(req));
+  }
+
+  @Post('infobip/inbound')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Infobip inbound SMS webhook receiver' })
+  async infobipInbound(@Body() body: Record<string, unknown>, @Headers() headers: Record<string, string>) {
+    return this.service.handleInfobipInboundWebhook(body, headers);
+  }
+
+  @Post('infobip/status')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Infobip delivery status webhook receiver' })
+  async infobipStatus(@Body() body: Record<string, unknown>, @Headers() headers: Record<string, string>) {
+    return this.service.handleInfobipDeliveryWebhook(body, headers);
+  }
+
+  private mergeWebhookPayload(req: Request): Record<string, unknown> {
+    return {
+      ...(req.query as Record<string, unknown>),
+      ...((req.body ?? {}) as Record<string, unknown>),
+    };
   }
 }

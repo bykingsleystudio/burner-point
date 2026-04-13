@@ -121,7 +121,10 @@ JWT_ACCESS_SECRET=<your 128-char hex>
 JWT_REFRESH_SECRET=<your different 128-char hex>
 ENCRYPTION_KEY=<your 32-char hex>
 ADMIN_SECRET_KEY=<your strong string>
+CLERK_SECRET_KEY=<your rotated Clerk secret key>
 ```
+
+Do not commit the Clerk secret key. If it was shared in chat or screenshots during setup, rotate it in Clerk before production and update Railway/Vercel/EAS with the rotated value.
 
 ### Twilio
 
@@ -130,6 +133,25 @@ TWILIO_ACCOUNT_SID=ACxxxxxxxx
 TWILIO_AUTH_TOKEN=xxxxxxxx
 TWILIO_VERIFY_SERVICE_SID=VAxxxxxxxx
 TWILIO_DEFAULT_FROM=+15551234567
+```
+
+### Infobip and Vonage Routing
+
+Set these when enabling the global verification fallback routes and independent SMS provider routing. Provider callback URLs should point to your Railway API domain under the global `/api` prefix:
+
+- Vonage inbound SMS: `https://your-railway-domain.up.railway.app/api/webhooks/vonage/inbound`
+- Vonage delivery status: `https://your-railway-domain.up.railway.app/api/webhooks/vonage/status`
+- Infobip inbound SMS: `https://your-railway-domain.up.railway.app/api/webhooks/infobip/inbound`
+- Infobip delivery status: `https://your-railway-domain.up.railway.app/api/webhooks/infobip/status`
+
+```env
+SMS_DEFAULT_FROM=BurnerPoint
+VONAGE_API_KEY=your_vonage_api_key
+VONAGE_API_SECRET=your_vonage_api_secret
+VONAGE_DEFAULT_FROM=BurnerPoint
+INFOBIP_BASE_URL=https://xxxx.api.infobip.com
+INFOBIP_API_KEY=your_infobip_api_key
+INFOBIP_DEFAULT_FROM=BurnerPoint
 ```
 
 ### Payments

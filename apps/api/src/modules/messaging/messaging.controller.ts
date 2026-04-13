@@ -8,7 +8,9 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { MessagingService, EmailOptions } from './messaging.service';
+import { MessagingService } from './messaging.service';
+import { ProviderName, RouteProduct } from '../global/provider.service';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 
 class SendEmailDto {
   to: string;
@@ -16,6 +18,30 @@ class SendEmailDto {
   html?: string;
   text?: string;
   from?: string;
+}
+
+class SendSmsDto {
+  @IsString()
+  to: string;
+
+  @IsString()
+  body: string;
+
+  @IsOptional()
+  @IsString()
+  from?: string;
+
+  @IsOptional()
+  @IsString()
+  countryCode?: string;
+
+  @IsOptional()
+  @IsEnum(RouteProduct)
+  product?: RouteProduct;
+
+  @IsOptional()
+  @IsEnum(ProviderName)
+  preferredProvider?: ProviderName;
 }
 
 @ApiTags('messaging')
@@ -65,9 +91,9 @@ export class MessagingController {
   @Post('sms/send')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.BAD_REQUEST)
-  @ApiOperation({ summary: 'Send SMS (use phone-auth module instead)' })
-  async sendSMS() {
-    throw new Error('SMS sending should be handled through /phone-auth/send endpoint');
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOperation({ summary: 'Send SMS through provider routing (Twilio primary, Vonage/Infobip fallback)' })
+  async sendSMS(@Body() dto: SendSmsDto) {
+    return this.messagingService.sendSMS(dto);
   }
 }
