@@ -4,16 +4,25 @@
 @tailwind utilities;
 
 :root {
+  --deep-green: #013220;
   --green: #00FF9D;
-  --black: #0A0A0A;
-  --dark: #111111;
-  --card: #1A1A1A;
-  --border: #2A2A2A;
+  --neon-green: #39FF14;
+  --black: #000000;
+  --dark: #03110B;
+  --card: #07140F;
+  --border: #123425;
+  --metal-start: #9FA6B2;
+  --metal-end: #E5E7EB;
 }
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { background: var(--black); color: white; }
+body {
+  background:
+    radial-gradient(circle at 50% -10%, rgba(1, 50, 32, 0.78), transparent 38rem),
+    var(--black);
+  color: white;
+}
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
@@ -75,11 +84,18 @@ body { background: var(--black); color: white; }
 
 .bp-card {
   background:
-    linear-gradient(180deg, rgba(4, 23, 16, 0.92), rgba(2, 14, 10, 0.84)),
+    linear-gradient(180deg, rgba(1, 50, 32, 0.76), rgba(0, 0, 0, 0.86)),
     rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(229, 231, 235, 0.05);
   backdrop-filter: blur(2px);
+}
+
+.bp-metal-text {
+  background: linear-gradient(105deg, var(--metal-start), var(--metal-end) 46%, #ffffff 58%, var(--metal-start));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .bp-outline {
@@ -93,6 +109,12 @@ body { background: var(--black); color: white; }
     0 0 0 1px rgba(0, 255, 157, 0.22),
     0 0 32px rgba(0, 255, 157, 0.22);
   transform: translateZ(0);
+}
+
+.bp-button-glow:active,
+a:active,
+button:active {
+  transform: scale(0.97);
 }
 
 .bp-privacy-stamp {

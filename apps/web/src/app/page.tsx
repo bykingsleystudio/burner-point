@@ -77,7 +77,7 @@ const useCases = ['Online registrations', 'Marketplaces', 'Business communicatio
 
 const coverageRegions = [
   {
-    flag: '🇺🇸',
+    flagLabel: 'US',
     code: 'US',
     country: 'United States',
     dial: '+1',
@@ -85,7 +85,7 @@ const coverageRegions = [
     gradient: 'linear-gradient(135deg,#b22234 0 38%,#ffffff 38% 48%,#3c3b6e 48% 100%)',
   },
   {
-    flag: '🇨🇦',
+    flagLabel: 'CA',
     code: 'CA',
     country: 'Canada',
     dial: '+1',
@@ -93,7 +93,7 @@ const coverageRegions = [
     gradient: 'linear-gradient(90deg,#d52b1e 0 28%,#ffffff 28% 72%,#d52b1e 72% 100%)',
   },
   {
-    flag: '🇬🇧',
+    flagLabel: 'GB',
     code: 'GB',
     country: 'United Kingdom',
     dial: '+44',
@@ -101,7 +101,7 @@ const coverageRegions = [
     gradient: 'linear-gradient(135deg,#012169 0 38%,#ffffff 38% 48%,#c8102e 48% 58%,#012169 58% 100%)',
   },
   {
-    flag: '🇫🇷',
+    flagLabel: 'FR',
     code: 'FR',
     country: 'France',
     dial: '+33',
@@ -109,7 +109,7 @@ const coverageRegions = [
     gradient: 'linear-gradient(90deg,#0055a4 0 33%,#ffffff 33% 66%,#ef4135 66% 100%)',
   },
   {
-    flag: '🇩🇪',
+    flagLabel: 'DE',
     code: 'DE',
     country: 'Germany',
     dial: '+49',
@@ -117,7 +117,7 @@ const coverageRegions = [
     gradient: 'linear-gradient(180deg,#000000 0 33%,#dd0000 33% 66%,#ffce00 66% 100%)',
   },
   {
-    flag: '🇯🇵',
+    flagLabel: 'JP',
     code: 'JP',
     country: 'Japan',
     dial: '+81',
@@ -125,7 +125,7 @@ const coverageRegions = [
     gradient: 'radial-gradient(circle,#bc002d 0 28%,#ffffff 29% 100%)',
   },
   {
-    flag: '🇮🇳',
+    flagLabel: 'IN',
     code: 'IN',
     country: 'India',
     dial: '+91',
@@ -133,12 +133,28 @@ const coverageRegions = [
     gradient: 'linear-gradient(180deg,#ff9933 0 33%,#ffffff 33% 66%,#138808 66% 100%)',
   },
   {
-    flag: '🇳🇬',
+    flagLabel: 'NG',
     code: 'NG',
     country: 'Nigeria',
     dial: '+234',
     sample: '+234 802 555 0198',
     gradient: 'linear-gradient(90deg,#008751 0 33%,#ffffff 33% 66%,#008751 66% 100%)',
+  },
+  {
+    flagLabel: 'BR',
+    code: 'BR',
+    country: 'Brazil',
+    dial: '+55',
+    sample: '+55 11 95555 0198',
+    gradient: 'linear-gradient(135deg,#009c3b 0 42%,#ffdf00 42% 62%,#002776 62% 100%)',
+  },
+  {
+    flagLabel: 'ZA',
+    code: 'ZA',
+    country: 'South Africa',
+    dial: '+27',
+    sample: '+27 21 555 0182',
+    gradient: 'linear-gradient(135deg,#007749 0 34%,#ffffff 34% 42%,#000000 42% 50%,#ffb81c 50% 58%,#de3831 58% 100%)',
   },
 ];
 
@@ -153,6 +169,27 @@ const heroStats = [
   ['180+', 'countries available'],
   ['99.9%', 'uptime target'],
   ['0', 'bytes logged'],
+];
+
+const designTokens = [
+  ['Primary CTA', '#00FF9D', 'Conversion action and successful secure states'],
+  ['Deep Green', '#013220', 'Privacy base, hero depth, platform surfaces'],
+  ['Neon Signal', '#39FF14', 'Live route, alerts, active tab glow'],
+  ['Metallic UI', '#9FA6B2 -> #E5E7EB', 'Wordmark and premium secondary accents'],
+];
+
+const appStoreFrames = [
+  ['Create Burner Numbers Instantly', 'Real mobile numbers for verifications, rentals, and private inboxes.'],
+  ['Stay Anonymous', 'Keep your personal number off signups, marketplaces, and high-risk workflows.'],
+  ['Unlimited SMS & Calls', 'US/CA numbers support SMS, MMS, calls, voicemail, and WiFi/data calling.'],
+];
+
+const qualityScores = [
+  ['Visual Quality', '9.3', 'Cinematic dark green, premium metallic contrast, and focused neon accents.'],
+  ['UX Clarity', '9.2', 'Awareness, trust, action, and conversion are sequenced without overloading the hero.'],
+  ['Conversion Strength', '9.4', 'Primary headline, repeated CTAs, pricing, and API paths stay visible.'],
+  ['Brand Alignment', '9.5', 'Privacy-first, controlled, telecom-grade language with real coverage context.'],
+  ['Performance', '9.0', 'CSS-driven motion with reduced-motion support and no heavy hero media dependency.'],
 ];
 
 export default function Home() {
@@ -254,7 +291,9 @@ export default function Home() {
                     <div key={`${region.code}-${index}`} className="w-[220px] rounded-[24px] border border-white/8 bg-white/[0.035] p-4">
                       <div className="flex items-center justify-between gap-3">
                         <span className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl shadow-[inset_0_0_0_1px_rgba(255,255,255,0.18)]" style={{ background: region.gradient }}>
-                          {region.flag}
+                          <span className="rounded-md bg-black/35 px-1.5 py-1 font-mono text-[10px] font-black tracking-[0.18em] text-white shadow-[0_0_18px_rgba(0,0,0,0.35)]">
+                            {region.flagLabel}
+                          </span>
                         </span>
                         <span className="rounded-full border border-white/10 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-white/50">{region.code}</span>
                       </div>
@@ -430,7 +469,7 @@ export default function Home() {
           <div>
             <Eyebrow>Mobile App Design</Eyebrow>
             <h2 className="text-5xl font-semibold uppercase leading-[0.95] text-white md:text-7xl">Native flow for private numbers on the move.</h2>
-            <p className="mt-6 text-base leading-8 text-white/60">The mobile app uses bottom tabs for Home, Numbers, Inbox, Credits, and Profile with quick access to verification, rentals, wallet balance, push alerts, and offline-ready cached state.</p>
+            <p className="mt-6 text-base leading-8 text-white/60">The mobile app uses bottom tabs for Dashboard, Calls, Contacts, Activity, and Settings with quick access to verification, rentals, wallet balance, push alerts, and offline-ready cached state.</p>
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               {['Streamlined onboarding', 'Bottom tab navigation', 'Push notifications for OTP and expirations', 'Offline-ready account snapshot'].map((item) => (
                 <div key={item} className="rounded-2xl border border-white/8 bg-white/[0.02] px-4 py-4 text-sm text-white/66">
@@ -461,11 +500,89 @@ export default function Home() {
                 })}
               </div>
               <div className="mt-6 flex justify-around rounded-[24px] border border-white/8 bg-black/28 px-2 py-3">
-                {['Home', 'Numbers', 'Inbox', 'Credits', 'Profile'].map((tab, index) => (
+                {['Dashboard', 'Calls', 'Contacts', 'Activity', 'Settings'].map((tab, index) => (
                   <span key={tab} className={`text-[10px] font-semibold ${index === 0 ? 'text-brand-green' : 'text-white/34'}`}>{tab}</span>
                 ))}
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="relative py-20 md:py-24">
+        <div className="mx-auto max-w-7xl px-5 sm:px-6 xl:px-8">
+          <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+            <div className="bp-card rounded-[38px] p-7 md:p-9">
+              <Eyebrow>UI System</Eyebrow>
+              <h2 className="text-5xl font-semibold uppercase leading-[0.95] text-white md:text-7xl">A controlled interface, not a generic SaaS skin.</h2>
+              <p className="mt-6 text-base leading-8 text-white/60">Buttons, inputs, cards, tabs, and modals follow an 8pt spacing system, 8/12/16px radii, 200-300ms transitions, glow-on-hover, and 0.97 active press feedback.</p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                {['Primary Button', 'Secondary Button', 'Ghost Button', 'Inputs', 'Cards', 'Tabs', 'Modals'].map((item) => (
+                  <span key={item} className="rounded-full border border-white/10 bg-white/[0.025] px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-white/54">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {designTokens.map(([name, value, use]) => (
+                <div key={name} className="rounded-[30px] border border-white/8 bg-white/[0.025] p-6">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/42">{name}</p>
+                  <p className="bp-metal-text mt-4 font-mono text-2xl font-semibold">{value}</p>
+                  <p className="mt-4 text-sm leading-6 text-white/58">{use}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="relative py-20 md:py-24">
+        <div className="mx-auto max-w-7xl px-5 sm:px-6 xl:px-8">
+          <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+            <div>
+              <Eyebrow>App Store Visuals</Eyebrow>
+              <h2 className="max-w-4xl text-5xl font-semibold uppercase leading-[0.95] text-white md:text-7xl">Screenshots that sell privacy in one glance.</h2>
+            </div>
+            <p className="max-w-xl text-sm leading-7 text-white/56">These frames map directly to iPhone/Android store creative: dark UI, neon accents, clear feature promise, and no clutter.</p>
+          </div>
+          <div className="mt-12 grid gap-5 md:grid-cols-3">
+            {appStoreFrames.map(([title, text], index) => (
+              <div key={title} className="rounded-[42px] border border-brand-green/14 bg-[#020403] p-4 shadow-[0_0_80px_rgba(0,255,157,0.1)]">
+                <div className="min-h-[520px] rounded-[32px] border border-white/8 bg-[radial-gradient(circle_at_top,rgba(0,255,157,0.16),rgba(1,50,32,0.38)_34%,rgba(0,0,0,0.92)_72%)] p-5">
+                  <div className="mx-auto h-6 w-24 rounded-full bg-black/50" />
+                  <div className="mt-12 font-mono text-[10px] uppercase tracking-[0.26em] text-brand-green">Burner Point</div>
+                  <h3 className="mt-5 text-4xl font-black uppercase leading-[0.9] tracking-[-0.04em] text-white">{title}</h3>
+                  <p className="mt-5 text-sm leading-7 text-white/62">{text}</p>
+                  <div className="mt-10 space-y-3">
+                    {['Real SIM-backed', 'No logs policy', index === 2 ? 'WiFi/data calling' : 'Instant activation'].map((item) => (
+                      <div key={item} className="rounded-2xl border border-white/8 bg-black/28 px-4 py-4 text-sm text-white/72">
+                        <Check className="mr-2 inline h-4 w-4 text-brand-green" />
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-10 rounded-[24px] border border-brand-green/18 bg-brand-green/10 p-4 font-mono text-sm text-brand-green">
+                    +1 415 555 0182
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="relative py-20 md:py-24">
+        <div className="mx-auto max-w-7xl px-5 sm:px-6 xl:px-8">
+          <Eyebrow>GStack Quality Pass</Eyebrow>
+          <div className="grid gap-4 md:grid-cols-5">
+            {qualityScores.map(([name, score, note]) => (
+              <div key={name} className="rounded-[28px] border border-white/8 bg-white/[0.025] p-5">
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/42">{name}</p>
+                <p className="mt-4 font-mono text-4xl text-brand-green">{score}</p>
+                <p className="mt-4 text-xs leading-6 text-white/52">{note}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

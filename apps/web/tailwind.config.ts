@@ -5,16 +5,19 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
+          deep: '#013220',
           green: '#00FF9D',
-          black: '#050505',
-          dark: '#0A0A0A',
-          surface: '#111111',
-          border: '#1A1A1A',
+          neon: '#39FF14',
+          black: '#000000',
+          dark: '#03110B',
+          surface: '#07140F',
+          border: '#123425',
           muted: '#888888',
+          metal: '#E5E7EB',
         },
       },
       fontFamily: {
-        sans: ['Space Grotesk', 'system-ui', 'sans-serif'],
+        sans: ['Neue Haas Grotesk Display', 'Space Grotesk', 'system-ui', 'sans-serif'],
         mono: ['DM Mono', 'monospace'],
       },
       boxShadow: {
