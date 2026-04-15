@@ -3,7 +3,7 @@ import type { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Burner Point',
-    short_name: 'BurnerPoint',
+    short_name: 'Burner Point',
     description: 'Private phone numbers, OTP verification, rentals, eSIM, proxies, and secure communication tools.',
     start_url: '/',
     scope: '/',

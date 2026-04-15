@@ -1,12 +1,14 @@
 import { Injectable, BadRequestException, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { MoreThan } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import twilio from 'twilio';
 import { PhoneOtpSession } from '../../database/entities/extended-entities';
 import { User } from '../../database/entities/user.entity';
 
-const MAX_ATTEMPTS = 3;
+const MAX_SENDS_PER_WINDOW = 5;
+const MAX_VERIFY_ATTEMPTS = 3;
 const OTP_TTL_MINUTES = 10;
 
 @Injectable()
@@ -32,28 +34,30 @@ export class PhoneAuthService {
     return this._twilioClient;
   }
 
-  async sendOtp(phoneNumber: string, channel: 'sms' | 'call' | 'whatsapp', ip?: string) {
-    if (!this.twilioClient) throw new BadRequestException('Phone auth not configured');
-    // Check for existing pending session (rate limit: max 3 sends per 10 minutes)
-    const existing = await this.sessionRepo.findOne({
-      where: { phoneNumber, status: 'pending' },
-      order: { createdAt: 'DESC' },
+  async sendOtp(phoneNumber: string, channel: 'sms' | 'call', ip?: string) {
+    this.ensureConfigured();
+    const normalizedPhone = this.normalizePhone(phoneNumber);
+    const windowStart = new Date(Date.now() - OTP_TTL_MINUTES * 60 * 1000);
+    const recentSends = await this.sessionRepo.count({
+      where: {
+        phoneNumber: normalizedPhone,
+        createdAt: MoreThan(windowStart),
+      },
     });
-    if (existing && existing.attempts >= MAX_ATTEMPTS) {
+
+    if (recentSends >= MAX_SENDS_PER_WINDOW) {
       throw new HttpException(
-        'Too many OTP attempts. Please try again later.',
+        'Too many OTP send attempts. Please try again in 10 minutes.',
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }
 
-    // Send via Twilio Verify
     const verification = await this.twilioClient.verify.v2
       .services(this.verifyServiceSid)
-      .verifications.create({ to: phoneNumber, channel });
+      .verifications.create({ to: normalizedPhone, channel });
 
-    // Save session
     const session = this.sessionRepo.create({
-      phoneNumber,
+      phoneNumber: normalizedPhone,
       channel,
       verificationSid: verification.sid,
       status: 'pending',
@@ -66,19 +70,30 @@ export class PhoneAuthService {
   }
 
   async verifyOtp(phoneNumber: string, code: string) {
-    if (!this.twilioClient) throw new BadRequestException('Phone auth not configured');
+    this.ensureConfigured();
+    const normalizedPhone = this.normalizePhone(phoneNumber);
     const session = await this.sessionRepo.findOne({
-      where: { phoneNumber, status: 'pending' },
+      where: { phoneNumber: normalizedPhone, status: 'pending' },
       order: { createdAt: 'DESC' },
     });
     if (!session || session.expiresAt < new Date()) {
+      if (session) {
+        session.status = 'expired';
+        await this.sessionRepo.save(session);
+      }
       throw new BadRequestException('OTP session expired or not found');
     }
 
-    // Verify with Twilio
+    if (session.attempts >= MAX_VERIFY_ATTEMPTS) {
+      throw new HttpException(
+        'Too many invalid verification attempts. Please request a new code.',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
     const result = await this.twilioClient.verify.v2
       .services(this.verifyServiceSid)
-      .verificationChecks.create({ to: phoneNumber, code });
+      .verificationChecks.create({ to: normalizedPhone, code: code.trim() });
 
     if (result.status !== 'approved') {
       session.attempts += 1;
@@ -91,8 +106,18 @@ export class PhoneAuthService {
     await this.sessionRepo.save(session);
 
     // Mark user's phone as verified
-    await this.userRepo.update({ phoneNumber }, { phoneVerified: true });
+    await this.userRepo.update({ phoneNumber: normalizedPhone }, { phoneVerified: true });
 
-    return { success: true, phoneNumber };
+    return { success: true, phoneNumber: normalizedPhone };
+  }
+
+  private ensureConfigured() {
+    if (!this.twilioClient || !this.verifyServiceSid) {
+      throw new BadRequestException('Phone auth is not configured');
+    }
+  }
+
+  private normalizePhone(phoneNumber: string) {
+    return phoneNumber.trim().replace(/[^\d+]/g, '');
   }
 }

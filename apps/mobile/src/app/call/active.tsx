@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Vibration } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Mic, MicOff, Volume2, Phone, PhoneOff, Pause, Users } from 'lucide-react-native';
+import { Mic, MicOff, Volume2, PhoneOff, Pause } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 
 export default function ActiveCallScreen() {
@@ -12,7 +12,7 @@ export default function ActiveCallScreen() {
   const [held, setHeld] = useState(false);
   const [duration, setDuration] = useState(0);
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  const timerRef = useRef<NodeJS.Timeout>();
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     // Pulse animation for active call indicator
@@ -30,7 +30,7 @@ export default function ActiveCallScreen() {
 
     return () => {
       pulse.stop();
-      clearInterval(timerRef.current);
+      if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);
 
@@ -55,7 +55,7 @@ export default function ActiveCallScreen() {
           </View>
         </Animated.View>
         <Text style={s.callFrom}>{params.from || 'Unknown'}</Text>
-        <Text style={s.callTo}>→ {params.to || 'Your number'}</Text>
+        <Text style={s.callTo}>To {params.to || 'Your number'}</Text>
         <View style={s.timerBadge}>
           <View style={s.timerDot}/>
           <Text style={s.timerText}>{formatDuration(duration)}</Text>

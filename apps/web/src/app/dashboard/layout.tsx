@@ -11,7 +11,7 @@ import {
   LayoutDashboard, MessageSquare, Phone, PhoneIncoming,
   Voicemail, ShieldCheck, Clock, CreditCard, Key,
   HelpCircle, Wifi, Smartphone, Globe, Shield, LogOut,
-  Menu, X, Bell, ChevronRight,
+  Menu, X, Bell, ChevronRight, Settings,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -31,6 +31,7 @@ const NAV = [
   { href: '/dashboard/proxies', icon: Globe, label: 'Proxies', badge: 'Soon' },
   null,
   { href: '/dashboard/support', icon: HelpCircle, label: 'Support' },
+  { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -102,7 +103,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       ), { duration: 6000 });
     });
     s.on('call.incoming', (data) => {
-      toast(`📞 Incoming call from ${data.from}`, { duration: 8000 });
+      toast(`Incoming call from ${data.from}`, { duration: 8000 });
     });
     setSocket(s);
     return () => { s.disconnect(); };
@@ -137,7 +138,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="w-7 h-7 rounded bg-brand-green flex items-center justify-center flex-shrink-0">
             <Shield size={14} className="text-black"/>
           </div>
-          <span className="font-bold text-sm tracking-tight">BurnerPoint</span>
+          <span className="font-bold text-sm tracking-tight">Burner Point</span>
         </div>
 
         {/* Wallet badge */}
@@ -145,7 +146,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="bg-brand-black rounded-xl px-3 py-2.5 flex items-center justify-between">
             <span className="text-xs text-brand-muted">Balance</span>
             <span className="text-sm font-mono font-semibold text-brand-green">
-              ₦{((user?.walletBalanceKobo || 0) / 100).toLocaleString()}
+              NGN {((user?.walletBalanceKobo || 0) / 100).toLocaleString()}
             </span>
           </div>
         </div>

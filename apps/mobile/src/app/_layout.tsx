@@ -54,7 +54,7 @@ export default function RootLayout() {
       const enrolled = await LocalAuthentication.isEnrolledAsync();
       if (compatible && enrolled) {
         const result = await LocalAuthentication.authenticateAsync({
-          promptMessage: 'Authenticate to access BurnerPoint',
+          promptMessage: 'Authenticate to access Burner Point',
           fallbackLabel: 'Use passcode',
         });
         setAuthenticated(result.success);
@@ -73,7 +73,7 @@ export default function RootLayout() {
         <View style={styles.logoBox}>
           <Text style={styles.logoText}>BP</Text>
         </View>
-        <Text style={styles.splashTitle}>BurnerPoint</Text>
+        <Text style={styles.splashTitle}>Burner Point</Text>
         <Text style={styles.splashSub}>Privacy is not a feature.</Text>
       </View>
     );

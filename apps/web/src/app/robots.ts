@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-const baseUrl = 'https://burnerpoint.vercel.app';
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://burnerpoint.vercel.app';
 
 export default function robots(): MetadataRoute.Robots {
   return {

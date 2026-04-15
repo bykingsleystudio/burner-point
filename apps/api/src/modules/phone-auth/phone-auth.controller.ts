@@ -1,16 +1,24 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PhoneAuthService } from './phone-auth.service';
-import { IsString, IsMobilePhone, IsIn } from 'class-validator';
+import { IsString, IsIn, Matches, Length } from 'class-validator';
 
 class SendOtpDto {
-  @IsMobilePhone() phoneNumber: string;
-  @IsString() @IsIn(['sms', 'call', 'whatsapp']) channel: 'sms' | 'call' | 'whatsapp';
+  @Matches(/^\+[1-9]\d{6,14}$/, { message: 'phoneNumber must be a valid E.164 phone number' })
+  phoneNumber: string;
+
+  @IsString()
+  @IsIn(['sms', 'call'])
+  channel: 'sms' | 'call';
 }
 
 class VerifyOtpDto {
-  @IsMobilePhone() phoneNumber: string;
-  @IsString() code: string;
+  @Matches(/^\+[1-9]\d{6,14}$/, { message: 'phoneNumber must be a valid E.164 phone number' })
+  phoneNumber: string;
+
+  @IsString()
+  @Length(4, 10)
+  code: string;
 }
 
 @ApiTags('phone-auth')

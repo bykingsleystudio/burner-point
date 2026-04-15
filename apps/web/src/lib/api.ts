@@ -10,11 +10,12 @@ const api: AxiosInstance = axios.create({
 
 const ACCESS_TOKEN_KEYS = ['burnerpointApiAccessToken', 'accessToken'];
 const REFRESH_TOKEN_KEYS = ['burnerpointApiRefreshToken', 'refreshToken'];
+const LEGACY_TOKEN_KEYS = [...ACCESS_TOKEN_KEYS, ...REFRESH_TOKEN_KEYS];
 
 function getStoredToken(keys: string[]) {
   if (typeof window === 'undefined') return null;
   for (const key of keys) {
-    const token = localStorage.getItem(key);
+    const token = sessionStorage.getItem(key);
     if (token) return token;
   }
   return null;
@@ -22,17 +23,20 @@ function getStoredToken(keys: string[]) {
 
 export function setApiSession(accessToken: string, refreshToken: string) {
   if (typeof window === 'undefined') return;
-  localStorage.setItem('burnerpointApiAccessToken', accessToken);
-  localStorage.setItem('burnerpointApiRefreshToken', refreshToken);
-  localStorage.setItem('accessToken', accessToken);
-  localStorage.setItem('refreshToken', refreshToken);
+  sessionStorage.setItem('burnerpointApiAccessToken', accessToken);
+  sessionStorage.setItem('burnerpointApiRefreshToken', refreshToken);
+  sessionStorage.setItem('accessToken', accessToken);
+  sessionStorage.setItem('refreshToken', refreshToken);
+  LEGACY_TOKEN_KEYS.forEach((key) => localStorage.removeItem(key));
   api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
-  document.cookie = `accessToken=${accessToken}; path=/; max-age=900; SameSite=Lax`;
 }
 
 export function clearApiSession() {
   if (typeof window === 'undefined') return;
-  [...ACCESS_TOKEN_KEYS, ...REFRESH_TOKEN_KEYS].forEach((key) => localStorage.removeItem(key));
+  LEGACY_TOKEN_KEYS.forEach((key) => {
+    sessionStorage.removeItem(key);
+    localStorage.removeItem(key);
+  });
   delete api.defaults.headers.common.Authorization;
   document.cookie = 'accessToken=; max-age=0; path=/';
 }
@@ -115,6 +119,8 @@ export interface InitPaymentParams {
   paymentType: PaymentType;
   gateway: PaymentGatewayId;
   rentalDays?: number; // Only for rental payments
+  packageId?: string;
+  clientPlatform?: 'web' | 'mobile';
 }
 
 export interface PaymentResponse {
@@ -129,6 +135,13 @@ export const paymentsApi = {
   initialize: (data: InitPaymentParams) =>
     api.post<PaymentResponse>('/payments/initialize', data),
   history: () => api.get('/payments/history'),
+};
+
+export const phoneAuthApi = {
+  send: (data: { phoneNumber: string; channel: 'sms' | 'call' }) =>
+    api.post<{ success: boolean; channel: string; expiresInMinutes: number }>('/phone-auth/send', data),
+  verify: (data: { phoneNumber: string; code: string }) =>
+    api.post<{ success: boolean; phoneNumber: string }>('/phone-auth/verify', data),
 };
 
 export const usersApi = {

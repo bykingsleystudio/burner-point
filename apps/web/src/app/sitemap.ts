@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { marketingPages } from '@/lib/marketing-data';
 
-const baseUrl = 'https://burnerpoint.vercel.app';
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://burnerpoint.vercel.app';
 
 const routeForSlug = (slug: string) => {
   if (slug === 'api-docs') return '/api/docs';

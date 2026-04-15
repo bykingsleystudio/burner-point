@@ -3,7 +3,7 @@
  *
  * Burner Point Payment Controller
  * - Credits: $0.99 per verification
- * - Rental: $5 per rental (1-14 days)
+ * - Rental: $5.99 per rental (1-14 days)
  * - Subscription: $15.99/month
  */
 import {
@@ -23,12 +23,29 @@ import { Request } from 'express';
 import { PaymentsService, PaymentType } from './payments.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PaymentGateway } from '../../database/entities/extended-entities';
+import { IsEnum, IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 class InitPaymentDto {
+  @IsOptional()
+  @IsEnum(PaymentType)
   paymentType?: PaymentType;
+
+  @IsOptional()
+  @IsEnum(PaymentGateway)
   gateway?: PaymentGateway;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(14)
   rentalDays?: number; // Only for rental payments
+
+  @IsOptional()
+  @IsString()
   packageId?: string;
+
+  @IsOptional()
+  @IsIn(['web', 'mobile'])
   clientPlatform?: 'web' | 'mobile';
 }
 

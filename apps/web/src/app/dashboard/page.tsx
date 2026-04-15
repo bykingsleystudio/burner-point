@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useAuthStore } from '@/store';
 import api from '@/lib/api';
-import { Phone, MessageSquare, CreditCard, TrendingUp, Shield, Zap, Globe, Lock } from 'lucide-react';
+import { Phone, MessageSquare, CreditCard, TrendingUp, Shield, Zap, Globe, Lock, Wifi, Radio } from 'lucide-react';
 
 interface Stats { totalNumbers: number; totalMessages: number; walletBalanceKobo: number; activeNumbers: number; }
 
@@ -27,16 +27,23 @@ export default function DashboardPage() {
 
   const cards = [
     { label: 'Active Numbers', value: stats.activeNumbers, icon: Phone, color: 'text-brand-green', bg: 'bg-brand-green/10' },
-    { label: 'Messages Received', value: stats.totalMessages.toLocaleString(), icon: MessageSquare, color: 'text-blue-400', bg: 'bg-blue-400/10' },
-    { label: 'Wallet Balance', value: `₦${(stats.walletBalanceKobo / 100).toLocaleString()}`, icon: CreditCard, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
-    { label: 'Total Numbers', value: stats.totalNumbers, icon: TrendingUp, color: 'text-purple-400', bg: 'bg-purple-400/10' },
+    { label: 'Private Messages', value: stats.totalMessages.toLocaleString(), icon: MessageSquare, color: 'text-brand-green', bg: 'bg-brand-green/10' },
+    { label: 'Wallet Balance', value: `NGN ${(stats.walletBalanceKobo / 100).toLocaleString()}`, icon: CreditCard, color: 'text-brand-green', bg: 'bg-brand-green/10' },
+    { label: 'Total Identities', value: stats.totalNumbers, icon: TrendingUp, color: 'text-brand-green', bg: 'bg-brand-green/10' },
   ];
 
   const features = [
-    { icon: Shield, title: 'End-to-end Privacy', desc: 'Your real identity is never exposed' },
-    { icon: Zap, title: 'Instant OTP', desc: 'AI extracts OTPs in under 1 second' },
-    { icon: Globe, title: 'Global Numbers', desc: 'US, UK, NG, CA, AU and more' },
-    { icon: Lock, title: 'Zero Logs', desc: 'We never store your messages' },
+    { icon: Shield, title: 'Private by Design', desc: 'Every core action separates your real number from public services.' },
+    { icon: Zap, title: 'Verification Ready', desc: 'SMS and voice OTP flows route through server-side provider controls.' },
+    { icon: Globe, title: 'Global Access', desc: 'Numbers, eSIM, proxies, and routing features are organized by region and use case.' },
+    { icon: Lock, title: 'Controlled Exposure', desc: 'Tokens, payments, provider keys, and privacy controls stay backend-first.' },
+  ];
+
+  const controlModules = [
+    { href: '/dashboard/rentals', label: 'Rentals', icon: Radio, text: 'Temporary and renewable number access' },
+    { href: '/dashboard/esim', label: 'eSIM', icon: Wifi, text: 'Travel-ready data connectivity' },
+    { href: '/dashboard/proxies', label: 'Proxies', icon: Globe, text: 'Location-aware routing' },
+    { href: '/dashboard/vpn', label: 'VPN', icon: Lock, text: 'Built-in privacy protection' },
   ];
 
   return (
@@ -44,9 +51,9 @@ export default function DashboardPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">
-          Good {getGreeting()}, <span className="text-brand-green">{user?.firstName || clerkUser?.firstName || 'there'}</span> 👋
+          Good {getGreeting()}, <span className="text-brand-green">{user?.firstName || clerkUser?.firstName || 'there'}</span>
         </h1>
-        <p className="text-brand-muted text-sm mt-1">Here's your privacy dashboard overview.</p>
+        <p className="text-brand-muted text-sm mt-1">Your private telecom control center for numbers, verification, billing, and protection.</p>
       </div>
 
       {/* Stats */}
@@ -83,9 +90,23 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      <div>
+        <h2 className="text-sm font-semibold text-brand-muted uppercase tracking-wider mb-4">Product modules</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {controlModules.map((module) => (
+            <a key={module.href} href={module.href}
+              className="bg-brand-card border border-brand-border rounded-xl p-4 hover:border-brand-green/40 hover:bg-brand-green/5 transition-all group">
+              <module.icon size={17} className="text-brand-green" />
+              <p className="mt-3 text-sm font-semibold">{module.label}</p>
+              <p className="mt-1 text-xs leading-5 text-brand-muted">{module.text}</p>
+            </a>
+          ))}
+        </div>
+      </div>
+
       {/* Feature highlights */}
       <div className="bg-brand-card border border-brand-border rounded-2xl p-6">
-        <h2 className="text-sm font-semibold mb-4">Why BurnerPoint</h2>
+        <h2 className="text-sm font-semibold mb-4">Why Burner Point</h2>
         <div className="grid grid-cols-2 gap-4">
           {features.map((f) => (
             <div key={f.title} className="flex items-start gap-3">

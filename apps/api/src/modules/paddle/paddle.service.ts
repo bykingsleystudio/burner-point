@@ -3,7 +3,7 @@
  *
  * Handles all three Paddle monetization types:
  *   1. Credits (verifications)  → one-time $0.99
- *   2. Rentals (phone numbers)  → one-time $5.00
+ *   2. Rentals (phone numbers)  -> one-time $5.99
  *   3. Subscriptions            → $15.99/month recurring
  */
 import {
@@ -24,15 +24,15 @@ import { WalletTransaction } from '../../database/entities/extended-entities';
 // ─── Paddle payment types ──────────────────────────────────────────────────
 export enum PaddlePaymentType {
   VERIFICATION = 'verification',   // $0.99 per OTP check
-  RENTAL       = 'rental',         // $5.00 per phone number rental
+  RENTAL       = 'rental',         // $5.99 per phone number rental
   SUBSCRIPTION = 'subscription',   // $15.99/month
 }
 
 // Credits awarded per payment type
 const CREDITS_MAP: Record<PaddlePaymentType, number> = {
-  [PaddlePaymentType.VERIFICATION]: 160,     // ₦160 in kobo = 1 verification
-  [PaddlePaymentType.RENTAL]:       80000,   // ₦800 = access to 1 number for 14 days
-  [PaddlePaymentType.SUBSCRIPTION]: 256000,  // ₦2,560/month = unlimited
+  [PaddlePaymentType.VERIFICATION]: 160,     // NGN 160 in kobo = 1 verification
+  [PaddlePaymentType.RENTAL]:       95840,   // Approximate NGN value for $5.99 at launch assumptions
+  [PaddlePaymentType.SUBSCRIPTION]: 256000,  // NGN 2,560/month = unlimited
 };
 
 @Injectable()
@@ -92,7 +92,7 @@ export class PaddleService {
         ...metadata,
       },
       checkout: {
-        url: `${this.config.get('WEB_URL')}/dashboard/payment/success?ref=${reference}`,
+        url: `${this.getWebUrl()}/dashboard/payments/success?ref=${reference}`,
       },
       // For subscriptions, Paddle handles recurrence automatically
       // For one-time, transaction completes and fires transaction.completed
@@ -401,5 +401,9 @@ export class PaddleService {
         gateway: 'paddle' as any,
       }),
     );
+  }
+
+  private getWebUrl(): string {
+    return (this.config.get<string>('WEB_URL') || 'http://localhost:3000').replace(/\/+$/, '');
   }
 }

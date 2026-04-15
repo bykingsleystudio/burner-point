@@ -36,7 +36,15 @@ export const useAuthStore = create<AuthState>()(
       clearAuth: () =>
         set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false }),
     }),
-    { name: 'burnerpoint-auth' }
+    {
+      name: 'burnerpoint-auth',
+      partialize: (state) => ({
+        user: state.user,
+        accessToken: null,
+        refreshToken: null,
+        isAuthenticated: false,
+      }),
+    }
   )
 );
 

@@ -41,6 +41,27 @@ The platform gives users controlled access to communication infrastructure witho
 
 The product must feel like telecom infrastructure, not a generic SaaS landing page. The emotional signal is controlled power: a dark, secure, premium system for users who care about identity separation and communication control.
 
+## Current Code Integration Status
+
+This repository now includes a first production integration pass for the core launch path:
+
+- Public web routes are live through `apps/web/src/lib/marketing-data.ts`, the dynamic `[slug]` route, dedicated `/api` and `/api/docs` pages, sitemap, robots, manifest, and global metadata.
+- Header authentication links route directly to `/auth/login` and `/auth/signup`, while the Burner Point logo routes to `/`.
+- Clerk-backed sign-up and sign-in flows collect first name, last name, email, phone number, password, Terms acceptance, Privacy acceptance, OAuth, reset password, and second-factor handling.
+- Web dashboard verification at `/dashboard/verification` now sends and verifies Twilio OTP codes through the Burner Point backend only.
+- API phone authentication validates E.164 numbers, limits sends and invalid verification attempts, expires sessions, and keeps Twilio credentials server-side.
+- Payment initialization DTOs now have class-validator decorators so the global Nest whitelist pipe preserves intended fields.
+- Web billing sends the selected credit package, gateway, and client platform to the API, with Paystack, Paddle, and NOWPayments surfaced as core gateway paths.
+- Gateway return pages exist at `/dashboard/payments/success` and `/dashboard/payments/cancel`.
+- API payment callbacks now derive live web/API URLs from `WEB_URL` and `API_URL`, removing hardcoded placeholder domains.
+- Web API bridge tokens now use `sessionStorage` instead of durable `localStorage`, and old local token keys are cleared on new sessions.
+- Settings and profile routes exist at `/dashboard/settings` and `/dashboard/profile`.
+- Dashboard module placeholders were replaced with product-specific telecom control pages for calls, voicemail, rentals, eSIM, proxies, VPN, and support.
+- The authenticated dashboard overview now frames Burner Point as a private telecom control center, with quick paths to verification, rentals, numbers, billing, eSIM, proxies, and VPN.
+- Number management now uses clearer lifecycle language for verification, non-renewable rentals, and renewable rentals.
+- Native mobile inbox now has a real conversation-screen scaffold for calls, texts, voicemail, and MMS instead of a coming-soon placeholder.
+- Production verification completed locally with `npm run build` in `apps/web`, `npm run build` in `apps/api`, and `npx tsc --noEmit` in `apps/mobile`.
+
 ### Core Product Pillars
 
 - Privacy control: users can verify, communicate, and register without exposing their real number.
@@ -936,15 +957,16 @@ Required:
 
 Current improvement included:
 
-- Web metadata now includes favicon icon references and Open Graph basics.
+- Web metadata includes favicon icon references, Open Graph basics, and an Organization JSON-LD block.
+- `app/sitemap.ts` generates public routes from the marketing page registry.
+- `app/robots.ts` allows public content while blocking dashboard, onboarding, callback, test, and internal routes.
+- Dynamic marketing pages generate per-page metadata from `marketing-data.ts`.
 
 Next SEO tasks:
 
-- Add `app/sitemap.ts`.
-- Add `app/robots.ts`.
-- Add OG image asset.
-- Add per-page metadata from marketing data.
-- Add JSON-LD for FAQ and organization.
+- Add a dedicated 1200x630 Open Graph image asset instead of relying on the brand SVG.
+- Add JSON-LD for FAQ and article pages.
+- Verify Google Search Console, Bing Webmaster Tools, and IndexNow keys after the production domain is final.
 
 ## 14. Deployment Order
 

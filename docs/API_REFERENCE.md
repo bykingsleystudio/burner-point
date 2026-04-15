@@ -181,7 +181,7 @@ Creates Paddle checkout for credits, rental, or subscription.
 Body: {
   "type": "verification",
   // "verification" = $0.99 one-time OTP credits
-  // "rental"       = $5.00 one-time phone rental
+  // "rental"       = $5.99 one-time phone rental
   // "subscription" = $15.99/month recurring
   "metadata": {}  // optional
 }

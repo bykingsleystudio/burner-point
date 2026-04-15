@@ -68,7 +68,7 @@ export default function TermsPage() {
         <h3>4.1 Pricing</h3>
         <ul>
           <li>Pay-per-use: $0.99 per verification credit</li>
-          <li>Rental: $5.00 per phone number (1–14 days)</li>
+          <li>Rental: $5.99 per phone number (1–14 days)</li>
           <li>Subscription: $15.99/month (auto-renewing)</li>
         </ul>
 

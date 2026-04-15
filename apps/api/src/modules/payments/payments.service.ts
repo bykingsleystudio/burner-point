@@ -3,7 +3,7 @@
  *
  * Burner Point Payment Service
  * - Credits: $0.99 per verification (one-time)
- * - Rental: $5 per rental (1-14 days, one-time)
+ * - Rental: $5.99 per rental (1-14 days, one-time)
  * - Subscription: $15.99/month (recurring)
  */
 import {
@@ -33,7 +33,7 @@ import { UsersService } from '../users/users.service';
 // ─── Payment Types ─────────────────────────────────────────────────────────
 export enum PaymentType {
   CREDITS = 'credits',           // $0.99 per verification
-  RENTAL = 'rental',             // $5 per rental (1-14 days)
+  RENTAL = 'rental',             // $5.99 per rental (1-14 days)
   SUBSCRIPTION = 'subscription', // $15.99/month
 }
 
@@ -252,9 +252,11 @@ export class PaymentsService {
     const isSandbox = this.configService.get('PADDLE_SANDBOX') === 'true';
     const apiKey = this.configService.get('PADDLE_API_KEY');
     const baseUrl = isSandbox ? PADDLE_CONFIG.SANDBOX_API_URL : PADDLE_CONFIG.API_URL;
+    if (!apiKey) throw new BadRequestException('Paddle is not configured');
 
     // Get the correct price ID
     const priceId = this.getPaddlePriceId(paymentType);
+    if (!priceId) throw new BadRequestException('Paddle price is not configured');
 
     const payload = {
       items: [{
@@ -272,9 +274,7 @@ export class PaymentsService {
         userId: user.id,
       },
       checkout: {
-        url: isSandbox
-          ? 'http://localhost:3000/dashboard/payments/success'
-          : 'https://yourdomain.com/dashboard/payments/success',
+        url: `${this.getWebUrl()}/dashboard/payments/success`,
       },
     };
 
@@ -283,11 +283,8 @@ export class PaymentsService {
         `${baseUrl}/transactions`,
         payload,
         {
-          auth: {
-            username: apiKey,
-            password: '',
-          },
           headers: {
+            Authorization: `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
           },
         }
@@ -310,26 +307,20 @@ export class PaymentsService {
     amountKobo?: number,
   ) {
     const apiKey = this.configService.get('NOWPAYMENTS_API_KEY');
-    const isSandbox = this.configService.get('NOWPAYMENTS_SANDBOX') === 'true';
+    if (!apiKey) throw new BadRequestException('NOWPayments is not configured');
 
     const amount = amountKobo ?? this.getAmountForPaymentType(paymentType);
-    const usdAmount = amount / 100; // Convert kobo to USD
+    const usdAmount = amount / 100; // minor units to USD amount
 
     const payload = {
       price_amount: usdAmount,
       price_currency: 'usd',
       pay_currency: 'btc', // Let user choose, but default to BTC
-      ipn_callback_url: isSandbox
-        ? 'http://localhost:3001/payments/webhook/nowpayments'
-        : 'https://api.yourdomain.com/payments/webhook/nowpayments',
+      ipn_callback_url: `${this.getApiUrl()}/payments/webhook/nowpayments`,
       order_id: reference,
       order_description: `Burner Point ${paymentType}`,
-      success_url: isSandbox
-        ? 'http://localhost:3000/dashboard/payments/success'
-        : 'https://yourdomain.com/dashboard/payments/success',
-      cancel_url: isSandbox
-        ? 'http://localhost:3000/dashboard/payments/cancel'
-        : 'https://yourdomain.com/dashboard/payments/cancel',
+      success_url: `${this.getWebUrl()}/dashboard/payments/success?ref=${reference}`,
+      cancel_url: `${this.getWebUrl()}/dashboard/payments/cancel?ref=${reference}`,
     };
 
     try {
@@ -359,17 +350,19 @@ export class PaymentsService {
     amountKobo: number,
     reference: string,
   ) {
+    const secretKey = this.configService.get('PAYSTACK_SECRET_KEY');
+    if (!secretKey) throw new BadRequestException('Paystack is not configured');
     const res = await axios.post(
       'https://api.paystack.co/transaction/initialize',
       {
         email,
         amount: amountKobo,
         reference,
-        callback_url: `${this.configService.get('WEB_URL')}/dashboard/payments/success?ref=${reference}`,
+        callback_url: `${this.getWebUrl()}/dashboard/payments/success?ref=${reference}`,
       },
       {
         headers: {
-          Authorization: `Bearer ${this.configService.get('PAYSTACK_SECRET_KEY')}`,
+          Authorization: `Bearer ${secretKey}`,
         },
       },
     );
@@ -391,14 +384,14 @@ export class PaymentsService {
         tx_ref: reference,
         amount: amountNgn,
         currency: 'NGN',
-        redirect_url: `${this.configService.get('WEB_URL')}/dashboard/payments/success?ref=${reference}`,
+        redirect_url: `${this.getWebUrl()}/dashboard/payments/success?ref=${reference}`,
         customer: {
           email: user.email,
           name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
         },
         customizations: {
           title: 'Burner Point Credits',
-          logo: `${this.configService.get('WEB_URL')}/assets/logo-mark.svg`,
+          logo: `${this.getWebUrl()}/assets/logo-mark.svg`,
         },
       },
       {
@@ -426,7 +419,7 @@ export class PaymentsService {
         currency: 'NGN',
         transaction_ref: reference,
         pass_charge: false,
-        callback_url: `${this.configService.get('WEB_URL')}/dashboard/payments/success?ref=${reference}`,
+        callback_url: `${this.getWebUrl()}/dashboard/payments/success?ref=${reference}`,
       },
       {
         headers: {
@@ -451,11 +444,11 @@ export class PaymentsService {
         reference,
         amount: amountKobo,
         currency: 'NGN',
-        redirect_url: `${this.configService.get('WEB_URL')}/dashboard/payments/success?ref=${reference}`,
+        redirect_url: `${this.getWebUrl()}/dashboard/payments/success?ref=${reference}`,
         customer: {
           email,
         },
-        notification_url: `${this.configService.get('API_URL')}/payments/webhook/korapay`,
+        notification_url: `${this.getApiUrl()}/payments/webhook/korapay`,
       },
       {
         headers: {
@@ -480,7 +473,7 @@ export class PaymentsService {
         reference,
         amount: amountKobo.toString(),
         currency: 'NGN',
-        returnUrl: `${this.configService.get('WEB_URL')}/dashboard/payments/success?ref=${reference}`,
+        returnUrl: `${this.getWebUrl()}/dashboard/payments/success?ref=${reference}`,
         userInfo: {
           userEmail: email,
         },
@@ -488,7 +481,7 @@ export class PaymentsService {
           name: 'Burner Point Credits',
           description: 'Purchase credits for Burner Point services',
         },
-        callbackUrl: `${this.configService.get('API_URL')}/payments/webhook/opay`,
+        callbackUrl: `${this.getApiUrl()}/payments/webhook/opay`,
       },
       {
         headers: {
@@ -765,7 +758,7 @@ export class PaymentsService {
       case PaymentType.CREDITS:
         return 99; // $0.99 in kobo (multiply by 100)
       case PaymentType.RENTAL:
-        return 500; // $5.00 in kobo
+        return 599; // $5.99 in cents-equivalent minor units
       case PaymentType.SUBSCRIPTION:
         return 1599; // $15.99 in kobo
       default:
@@ -784,6 +777,14 @@ export class PaymentsService {
       default:
         throw new BadRequestException('Invalid payment type for Paddle');
     }
+  }
+
+  private getWebUrl(): string {
+    return (this.configService.get<string>('WEB_URL') || 'http://localhost:3000').replace(/\/+$/, '');
+  }
+
+  private getApiUrl(): string {
+    return (this.configService.get<string>('API_URL') || 'http://localhost:3001/api').replace(/\/+$/, '');
   }
 
   private async handlePaddleTransactionCompleted(transaction: any) {
