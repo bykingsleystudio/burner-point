@@ -66,6 +66,8 @@ EXPO_PUBLIC_SENTRY_DSN=https://your_real_mobile_dsn_here
 
 For deployed environments, set the same values in Railway, Vercel, and EAS environment variables. A DSN is not a Clerk key, API key, or database URL; it is the full Sentry URL-like value for the specific Sentry project.
 
+`SENTRY_AUTH_TOKEN` is optional for runtime error reporting. Add it only when Burner Point should upload source maps or attach release metadata during builds. The DSN variables are the required values for basic error capture.
+
 ## Clerk Secret Rotation
 
 The Clerk secret key was shared during setup. Rotate it in Clerk before production or real users, then update:
