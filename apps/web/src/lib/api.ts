@@ -144,6 +144,67 @@ export const phoneAuthApi = {
     api.post<{ success: boolean; phoneNumber: string }>('/phone-auth/verify', data),
 };
 
+export type StackIntegrationStatus =
+  | 'ready'
+  | 'configured'
+  | 'partial'
+  | 'missing_env'
+  | 'planned'
+  | 'deferred'
+  | 'disabled';
+
+export type StackCategory =
+  | 'frontend'
+  | 'backend'
+  | 'data'
+  | 'auth'
+  | 'payments'
+  | 'telecom'
+  | 'connectivity'
+  | 'privacy'
+  | 'observability'
+  | 'operations';
+
+export interface StackIntegrationSnapshot {
+  id: string;
+  name: string;
+  category: StackCategory;
+  priority: 'core' | 'primary' | 'fallback' | 'secondary' | 'supporting' | 'planned';
+  exposure: 'public-client' | 'server-only' | 'deployment' | 'operator-tooling';
+  role: string;
+  productSurface: string;
+  status: StackIntegrationStatus;
+  requiredEnv: Array<{ name: string; configured: boolean }>;
+  optionalEnv: Array<{ name: string; configured: boolean }>;
+}
+
+export interface PlatformStackSnapshot {
+  product: 'Burner Point';
+  generatedAt: string;
+  environment: string;
+  policies: {
+    webHosting: 'Vercel';
+    apiHosting: 'Railway';
+    database: 'Neon Postgres';
+    mobileDelivery: 'Expo / EAS';
+    primaryPayments: readonly string[];
+    secondaryPayments: readonly string[];
+    secondaryGatewaysEnabled: boolean;
+    mobileExternalPaymentsEnabled: boolean;
+    conversationScope: 'US/Canada only';
+    verificationScope: 'Global SMS and voice';
+    aiKillSwitchEnabled: boolean;
+  };
+  summary: Record<StackIntegrationStatus, number> & { total: number };
+  groups: Partial<Record<StackCategory, StackIntegrationSnapshot[]>>;
+  integrations: StackIntegrationSnapshot[];
+}
+
+export const platformApi = {
+  stack: () => api.get<PlatformStackSnapshot>('/platform/stack'),
+  readiness: () => api.get('/platform/readiness'),
+};
+
 export const usersApi = {
   me: () => api.get('/users/me'),
   update: (data: Record<string, unknown>) => api.patch('/users/me', data),

@@ -46,6 +46,10 @@ The product must feel like telecom infrastructure, not a generic SaaS landing pa
 This repository now includes a first production integration pass for the core launch path:
 
 - Public web routes are live through `apps/web/src/lib/marketing-data.ts`, the dynamic `[slug]` route, dedicated `/api` and `/api/docs` pages, sitemap, robots, manifest, and global metadata.
+- Burner Point brand identity is now codified in shared web and mobile token modules, with exact Deep Green, Black, Cyber Green, Neon Green, metallic accents, Neue Haas fallback typography, 8/12/16px radius guidance, and standard motion values.
+- The web global shell, marketing chrome, landing page hero, native app splash, auth screens, dashboard tabs, calls, inbox, numbers, credits, profile, and settings screens now consume the shared brand tokens instead of hardcoded near-black/gray theme values.
+- The preferred production stack is now encoded in the API through `/api/platform/stack` and `/api/platform/readiness`, covering Next.js, Vercel, NestJS, Railway, Neon, Clerk, Resend, Sentry, Expo, OpenAI, S3-compatible storage, Redis queues, PostHog, Paystack, Paddle, NOWPayments, Twilio, Bandwidth, Infobip, Vonage, 1GLOBAL, Bright Data, and WireGuard.
+- The authenticated dashboard now shows stack readiness without exposing secrets, and the native settings screen includes the mobile-facing stack map.
 - Header authentication links route directly to `/auth/login` and `/auth/signup`, while the Burner Point logo routes to `/`.
 - Clerk-backed sign-up and sign-in flows collect first name, last name, email, phone number, password, Terms acceptance, Privacy acceptance, OAuth, reset password, and second-factor handling.
 - Web dashboard verification at `/dashboard/verification` now sends and verifies Twilio OTP codes through the Burner Point backend only.

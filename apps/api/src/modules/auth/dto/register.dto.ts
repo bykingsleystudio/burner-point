@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength, MaxLength, IsOptional, Matches } from 'class-validator';
+import { Equals, IsBoolean, IsEmail, IsString, MinLength, MaxLength, IsOptional, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterDto {
@@ -23,6 +23,16 @@ export class RegisterDto {
     message: 'Password must contain uppercase, lowercase, and number',
   })
   password: string;
+
+  @ApiProperty({ example: true, description: 'User accepted Burner Point Terms of Service' })
+  @IsBoolean()
+  @Equals(true, { message: 'Terms of Service must be accepted' })
+  acceptTerms: boolean;
+
+  @ApiProperty({ example: true, description: 'User accepted Burner Point Privacy Policy' })
+  @IsBoolean()
+  @Equals(true, { message: 'Privacy Policy must be accepted' })
+  acceptPrivacy: boolean;
 
   @ApiProperty({ example: 'Kingsley' })
   @IsString()

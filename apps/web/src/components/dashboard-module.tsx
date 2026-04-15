@@ -5,8 +5,13 @@ import {
   Bell,
   CalendarDays,
   CheckCircle2,
+  Code2,
+  CreditCard,
+  FileText,
   Globe2,
   Headphones,
+  Image as ImageIcon,
+  KeyRound,
   Lock,
   MessageSquare,
   Phone,
@@ -22,8 +27,13 @@ type IconKey =
   | 'bell'
   | 'calendar'
   | 'check'
+  | 'code'
+  | 'credit'
+  | 'file'
   | 'globe'
   | 'headphones'
+  | 'image'
+  | 'key'
   | 'lock'
   | 'message'
   | 'phone'
@@ -53,8 +63,13 @@ const icons: Record<IconKey, LucideIcon> = {
   bell: Bell,
   calendar: CalendarDays,
   check: CheckCircle2,
+  code: Code2,
+  credit: CreditCard,
+  file: FileText,
   globe: Globe2,
   headphones: Headphones,
+  image: ImageIcon,
+  key: KeyRound,
   lock: Lock,
   message: MessageSquare,
   phone: Phone,
@@ -66,6 +81,27 @@ const icons: Record<IconKey, LucideIcon> = {
 };
 
 export const dashboardModules: Record<string, DashboardModuleContent> = {
+  messages: {
+    eyebrow: 'Conversation Inbox',
+    title: 'SMS, MMS, photos, and private message threads.',
+    description:
+      'Keep text conversations attached to the Burner Point number that received them. The module is designed for US/Canada SMS, MMS, photo messaging, call context, and WiFi/data communication history.',
+    status: 'Threaded communication',
+    primaryAction: { label: 'Open Inbox', href: '/dashboard/inbox' },
+    secondaryAction: { label: 'Manage Numbers', href: '/dashboard/numbers' },
+    stats: [
+      { label: 'Media', value: 'MMS' },
+      { label: 'Photos', value: 'Private' },
+      { label: 'Region', value: 'US/CA' },
+    ],
+    cards: [
+      { icon: 'message', title: 'Threaded SMS', text: 'Read inbound and outbound messages by number, contact, service, and delivery status.', meta: 'Text' },
+      { icon: 'image', title: 'MMS and Photos', text: 'Attach protected media metadata to each conversation without public upload exposure.', meta: 'Media' },
+      { icon: 'phone', title: 'Voice Context', text: 'Connect call activity and voicemail to the same communication timeline.', meta: 'Calls' },
+    ],
+    workflow: ['Select a conversation number', 'Open the active contact or service thread', 'Send or receive SMS, MMS, and photos', 'Preserve delivery, spam, and OTP context'],
+    note: 'Messaging, MMS, photo storage, and provider callbacks must be normalized by the backend before anything reaches the client. Twilio secrets stay server-side.',
+  },
   calls: {
     eyebrow: 'US/Canada Conversation',
     title: 'Private calls over WiFi and mobile data.',
@@ -198,8 +234,8 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
     description:
       'Support must understand privacy workflows: verification delivery, rental continuity, number status, payment reconciliation, eSIM activation, proxies, and account security.',
     status: 'Support operations',
-    primaryAction: { label: 'Email Support', href: 'mailto:info.burnerpoint@gmail.com' },
-    secondaryAction: { label: 'Telegram', href: 'https://t.me/burnerpoint' },
+    primaryAction: { label: 'Open Tickets', href: '/dashboard/support/tickets' },
+    secondaryAction: { label: 'Email Support', href: 'mailto:info.burnerpoint@gmail.com' },
     stats: [
       { label: 'Email', value: 'Active' },
       { label: 'Telegram', value: 'Active' },
@@ -212,6 +248,69 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
     ],
     workflow: ['Collect issue category and reference', 'Attach account and provider context', 'Escalate telecom or payment failures', 'Close with clear resolution history'],
     note: 'Future ticket endpoints should include audit logs and role-based access for support operators.',
+  },
+  tickets: {
+    eyebrow: 'Support Tickets',
+    title: 'Track service, billing, and privacy support from one queue.',
+    description:
+      'Support tickets give users a controlled way to report failed OTP delivery, number expiry, payment references, eSIM activation, proxy durability, and account access issues without leaking unnecessary personal data.',
+    status: 'Ticket framework',
+    primaryAction: { label: 'Open Support', href: '/dashboard/support' },
+    secondaryAction: { label: 'Email Support', href: 'mailto:info.burnerpoint@gmail.com' },
+    stats: [
+      { label: 'Categories', value: '7' },
+      { label: 'Privacy', value: 'Scoped' },
+      { label: 'Audit', value: 'Logged' },
+    ],
+    cards: [
+      { icon: 'ticket', title: 'Case Intake', text: 'Collect issue type, service, affected number, order, payment reference, and severity.', meta: 'Open' },
+      { icon: 'file', title: 'Resolution History', text: 'Show user-visible status changes, operator notes, and final outcomes.', meta: 'Trace' },
+      { icon: 'shield', title: 'Sensitive Data Guardrails', text: 'Request IDs or documents only when legally required and store them privately.', meta: 'Privacy' },
+    ],
+    workflow: ['Create ticket with scoped context', 'Attach telecom, payment, or account references', 'Route to support or operations', 'Close with refund, retry, renewal, or explanation'],
+    note: 'Ticket data should use role-based access, audit logging, private attachments, and strict retention rules before production support launch.',
+  },
+  billing: {
+    eyebrow: 'Credits and Billing',
+    title: 'Credits, purchases, subscriptions, and payment history.',
+    description:
+      'Billing keeps verification credits, rental purchases, monthly plans, gateway checkout state, transaction history, refunds, and reconciliation in one controlled account surface.',
+    status: 'Payment center',
+    primaryAction: { label: 'Buy Credits', href: '/dashboard/credits' },
+    secondaryAction: { label: 'Open Support', href: '/dashboard/support' },
+    stats: [
+      { label: 'Verify', value: '$0.99+' },
+      { label: 'Rental', value: '$5.99+' },
+      { label: 'Monthly', value: '$15.99' },
+    ],
+    cards: [
+      { icon: 'credit', title: 'Wallet Credits', text: 'Use wallet balance for verifications, rentals, eSIM, proxies, and renewals.', meta: 'Credits' },
+      { icon: 'bell', title: 'Webhook-Safe Updates', text: 'Balance changes only after gateway confirmation and idempotent ledger entries.', meta: 'Events' },
+      { icon: 'file', title: 'Transaction History', text: 'Expose references, gateway status, product assignment, and receipt support.', meta: 'Ledger' },
+    ],
+    workflow: ['Choose package or product', 'Create checkout through Burner Point API', 'Confirm payment by webhook', 'Update ledger and assign inventory'],
+    note: 'Gateway integrations must remain backend-only. Mobile in-app purchases need Apple and Google policy review before selling digital goods in native checkout.',
+  },
+  developer: {
+    eyebrow: 'API and Developer Tools',
+    title: 'API keys, webhooks, and telecom automation.',
+    description:
+      'Developer tools let teams automate private verification, number provisioning, inbox events, webhooks, and account-safe workflows through scoped API access.',
+    status: 'Developer console',
+    primaryAction: { label: 'Manage API Keys', href: '/dashboard/api' },
+    secondaryAction: { label: 'View Docs', href: '/api/docs' },
+    stats: [
+      { label: 'Auth', value: 'Bearer' },
+      { label: 'Events', value: 'Webhooks' },
+      { label: 'Keys', value: 'Scoped' },
+    ],
+    cards: [
+      { icon: 'key', title: 'Scoped Keys', text: 'Create and revoke API keys with least-privilege scopes for production workflows.', meta: 'Keys' },
+      { icon: 'bell', title: 'Webhook Events', text: 'Deliver payment, message, call, number, and verification events to developer systems.', meta: 'Events' },
+      { icon: 'code', title: 'API Contracts', text: 'Keep endpoints typed, documented, rate-limited, and compatible across web and mobile.', meta: 'REST' },
+    ],
+    workflow: ['Create a named API key', 'Configure webhook URL and event types', 'Verify signatures server-side', 'Provision numbers or consume events safely'],
+    note: 'Raw API keys should be shown once, stored hashed, and protected by rate limits, audit logging, and revoke flows.',
   },
 };
 

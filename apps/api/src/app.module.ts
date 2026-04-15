@@ -31,6 +31,7 @@ import { GrowthModule } from './modules/growth/growth.module';
 import { GlobalModule } from './modules/global/global.module';
 import { SeoModule } from './modules/seo/seo.module';
 import { MessagingModule } from './modules/messaging/messaging.module';
+import { PlatformModule } from './modules/platform/platform.module';
 
 // ── Security middleware ───────────────────────────────────────────────────────
 import { SecurityMiddleware } from './middleware/security.middleware';
@@ -99,15 +100,16 @@ import { SecurityMiddleware } from './middleware/security.middleware';
 
     // Global infrastructure (Redis, ProviderService)
     GlobalModule,
+    PlatformModule,        // Safe stack registry + readiness status
 
     // Feature modules — all 10 services connected
     AuthModule,
     PhoneAuthModule,       // Twilio Verify OTP
     UsersModule,
-    NumbersModule,         // Twilio + Telnyx number provisioning
+    NumbersModule,         // Twilio now, Bandwidth-backed number infrastructure target
     LifecycleModule,       // TTL expiry cron jobs
     WebhooksModule,        // Twilio SMS/call event receiver
-    PaymentsModule,        // Flutterwave, Paystack, Squad, Korapay, OPay, NOWPayments
+    PaymentsModule,        // Paystack, Paddle, NOWPayments core; secondary gateways gated
     PaddleModule,          // Paddle: credits, rentals, subscriptions
     BillingV2Module,       // Wallet ledger + subscription plans
     AbuseModule,           // Velocity limits + risk engine
@@ -126,7 +128,7 @@ export class AppModule implements NestModule {
    * Apply SecurityMiddleware to all routes.
    * This handles:
    * - Per-IP rate limiting
-   * - Auth route lockout (5 attempts / 10 min)
+   * - Auth route lockout (5 attempts / 15 min)
    * - Payment throttling
    * - Body size enforcement
    */

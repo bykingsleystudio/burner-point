@@ -16,6 +16,8 @@ import { LoginDto } from './dto/login.dto';
 const BCRYPT_ROUNDS = 12;
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+const AUTH_PROFILE_REQUIRED_MESSAGE =
+  'Complete first name, last name, email, phone number, Terms of Service, and Privacy Policy before using Burner Point.';
 
 @Injectable()
 export class AuthService {
@@ -48,6 +50,15 @@ export class AuthService {
       referralCode,
       status: UserStatus.ACTIVE,
       lastLoginIp: ip,
+      emailVerified: false,
+      phoneVerified: false,
+      preferences: {
+        termsAccepted: true,
+        privacyAccepted: true,
+        authProvider: 'password',
+        termsAcceptedAt: new Date().toISOString(),
+        privacyAcceptedAt: new Date().toISOString(),
+      },
     });
 
     // Handle referral
@@ -86,11 +97,18 @@ export class AuthService {
 
     if (user.status === UserStatus.BANNED) throw new ForbiddenException('Account banned');
     if (user.status === UserStatus.SUSPENDED) throw new ForbiddenException('Account suspended');
+    if (!user.passwordHash) {
+      throw new UnauthorizedException('Use Clerk sign-in for this account.');
+    }
 
     const passwordValid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!passwordValid) {
       await this.handleFailedLogin(user);
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (user.twoFactorEnabled) {
+      throw new ForbiddenException('This account requires Clerk multifactor authentication. Sign in with Clerk to continue.');
     }
 
     // Reset failed attempts on success
@@ -185,16 +203,39 @@ export class AuthService {
     const firstName = (profile?.firstName || clerkUser.firstName || 'Burner').trim();
     const lastName = (profile?.lastName || clerkUser.lastName || 'Point').trim();
     const country = profile?.country || unsafeMetadata.country || 'NG';
-
     const lookup = phoneNumber ? [{ email }, { phoneNumber }] : [{ email }];
     let user = await this.userRepo.findOne({ where: lookup });
+    const termsAccepted =
+      Boolean(profile?.acceptTerms) ||
+      Boolean(unsafeMetadata.acceptTerms) ||
+      Boolean((user?.preferences as any)?.termsAccepted);
+    const privacyAccepted =
+      Boolean(profile?.acceptPrivacy) ||
+      Boolean(unsafeMetadata.acceptPrivacy) ||
+      Boolean((user?.preferences as any)?.privacyAccepted);
+    const effectivePhoneNumber = phoneNumber || user?.phoneNumber;
+    const profileComplete =
+      Boolean(firstName) &&
+      Boolean(lastName) &&
+      Boolean(email) &&
+      Boolean(effectivePhoneNumber) &&
+      termsAccepted &&
+      privacyAccepted;
+
+    if (!profileComplete) {
+      throw new BadRequestException(AUTH_PROFILE_REQUIRED_MESSAGE);
+    }
+
+    const now = new Date().toISOString();
     const preferences = {
       ...(user?.preferences || {}),
       clerkUserId,
       clerkPrimaryEmailId: clerkUser.primaryEmailAddressId ?? null,
       clerkPrimaryPhoneId: clerkUser.primaryPhoneNumberId ?? null,
-      termsAccepted: profile?.acceptTerms ?? unsafeMetadata.acceptTerms ?? (user?.preferences as any)?.termsAccepted ?? false,
-      privacyAccepted: profile?.acceptPrivacy ?? unsafeMetadata.acceptPrivacy ?? (user?.preferences as any)?.privacyAccepted ?? false,
+      termsAccepted,
+      privacyAccepted,
+      termsAcceptedAt: (user?.preferences as any)?.termsAcceptedAt ?? (termsAccepted ? now : null),
+      privacyAcceptedAt: (user?.preferences as any)?.privacyAcceptedAt ?? (privacyAccepted ? now : null),
       referralCode: unsafeMetadata.referralCode ?? (user?.preferences as any)?.referralCode ?? null,
       authProvider: 'clerk',
     };
@@ -202,7 +243,7 @@ export class AuthService {
     if (!user) {
       user = this.userRepo.create({
         email,
-        phoneNumber,
+        phoneNumber: effectivePhoneNumber,
         firstName,
         lastName,
         country,
@@ -216,7 +257,7 @@ export class AuthService {
       });
     } else {
       user.email = user.email || email;
-      user.phoneNumber = user.phoneNumber || phoneNumber;
+      user.phoneNumber = user.phoneNumber || effectivePhoneNumber;
       user.firstName = firstName || user.firstName;
       user.lastName = lastName || user.lastName;
       user.country = user.country || country;

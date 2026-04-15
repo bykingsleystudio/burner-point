@@ -5,7 +5,7 @@ import { useUser } from '@clerk/nextjs';
 import { Bell, KeyRound, LockKeyhole, ShieldCheck, UserRound } from 'lucide-react';
 
 const settings = [
-  { title: 'Security and 2FA', text: 'Manage Clerk session controls, MFA, password, and trusted devices.', icon: ShieldCheck, href: '/auth/login' },
+  { title: 'Security and 2FA', text: 'Manage Clerk session controls, MFA, password, and trusted devices.', icon: ShieldCheck, href: '/dashboard/security' },
   { title: 'API keys', text: 'Create scoped keys and webhook destinations for developer workflows.', icon: KeyRound, href: '/dashboard/api' },
   { title: 'Notifications', text: 'OTP, rental expiration, billing, and account security alerts.', icon: Bell, href: '/dashboard/support' },
   { title: 'Privacy defaults', text: 'Keep no-logs posture, reduced exposure, and security checks top of mind.', icon: LockKeyhole, href: '/privacy' },
@@ -16,7 +16,7 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <section className="rounded-2xl border border-brand-border bg-brand-card p-6">
+      <section className="rounded-bp-lg border border-brand-border bg-brand-card p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-brand-green/25 bg-brand-green/10">
@@ -38,7 +38,7 @@ export default function SettingsPage() {
         {settings.map((item) => {
           const Icon = item.icon;
           return (
-            <Link key={item.title} href={item.href} className="rounded-2xl border border-brand-border bg-brand-card p-5 transition hover:border-brand-green/35 hover:bg-brand-green/[0.04]">
+            <Link key={item.title} href={item.href} className="rounded-bp-lg border border-brand-border bg-brand-card p-5 transition hover:border-brand-green/35 hover:bg-brand-green/[0.04]">
               <Icon className="h-5 w-5 text-brand-green" />
               <h2 className="mt-4 text-sm font-semibold uppercase tracking-[0.12em]">{item.title}</h2>
               <p className="mt-2 text-sm leading-6 text-brand-muted">{item.text}</p>

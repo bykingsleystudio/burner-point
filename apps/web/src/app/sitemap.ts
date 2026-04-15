@@ -11,6 +11,9 @@ const routeForSlug = (slug: string) => {
 export default function sitemap(): MetadataRoute.Sitemap {
   const publicRoutes = [
     '/',
+    '/announcements',
+    '/help-center',
+    '/privacy-policy',
     ...Object.keys(marketingPages).map(routeForSlug),
   ];
 

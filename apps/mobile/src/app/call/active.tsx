@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Animated, Vibration } from 'r
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mic, MicOff, Volume2, PhoneOff, Pause } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { BRAND } from '../../lib/brand';
 
 export default function ActiveCallScreen() {
   const router = useRouter();
@@ -66,22 +67,22 @@ export default function ActiveCallScreen() {
       <View style={s.controls}>
         <View style={s.controlRow}>
           <TouchableOpacity style={[s.controlBtn, muted && s.controlActive]} onPress={() => setMuted(!muted)}>
-            {muted ? <MicOff size={22} color="#FF4444"/> : <Mic size={22} color="#fff"/>}
+            {muted ? <MicOff size={22} color={BRAND.colors.danger}/> : <Mic size={22} color={BRAND.colors.white}/>}
             <Text style={[s.controlLabel, muted && s.controlLabelActive]}>{muted ? 'Unmute' : 'Mute'}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[s.controlBtn, speaker && s.controlActive]} onPress={() => setSpeaker(!speaker)}>
-            <Volume2 size={22} color={speaker ? '#00FF9D' : '#fff'}/>
-            <Text style={[s.controlLabel, speaker && {color:'#00FF9D'}]}>Speaker</Text>
+            <Volume2 size={22} color={speaker ? BRAND.colors.cyberGreen : BRAND.colors.white}/>
+            <Text style={[s.controlLabel, speaker && {color: BRAND.colors.cyberGreen}]}>Speaker</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[s.controlBtn, held && s.controlActive]} onPress={() => setHeld(!held)}>
-            <Pause size={22} color={held ? '#FBBF24' : '#fff'}/>
-            <Text style={[s.controlLabel, held && {color:'#FBBF24'}]}>{held ? 'Resume' : 'Hold'}</Text>
+            <Pause size={22} color={held ? BRAND.colors.neonGreen : BRAND.colors.white}/>
+            <Text style={[s.controlLabel, held && { color: BRAND.colors.neonGreen }]}>{held ? 'Resume' : 'Hold'}</Text>
           </TouchableOpacity>
         </View>
 
         {/* End call button */}
         <TouchableOpacity style={s.endCallBtn} onPress={hangUp} activeOpacity={0.8}>
-          <PhoneOff size={28} color="#fff"/>
+          <PhoneOff size={28} color={BRAND.colors.white}/>
         </TouchableOpacity>
         <Text style={s.endCallLabel}>End call</Text>
       </View>
@@ -90,22 +91,22 @@ export default function ActiveCallScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0A', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 40 },
+  container: { flex: 1, backgroundColor: BRAND.colors.black, alignItems: 'center', justifyContent: 'space-between', paddingVertical: 40 },
   callerSection: { alignItems: 'center', flex: 1, justifyContent: 'center' },
-  avatarRing: { width: 120, height: 120, borderRadius: 60, borderWidth: 2, borderColor: '#00FF9D40', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
-  avatar: { width: 96, height: 96, borderRadius: 48, backgroundColor: '#1A1A1A', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#2A2A2A' },
-  avatarText: { fontSize: 36, fontWeight: 'bold', color: '#00FF9D' },
-  callFrom: { color: '#fff', fontSize: 26, fontWeight: 'bold', marginBottom: 4 },
-  callTo: { color: '#666', fontSize: 14, fontFamily: 'monospace' },
-  timerBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, backgroundColor: '#00FF9D15', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: '#00FF9D30' },
-  timerDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#00FF9D' },
-  timerText: { color: '#00FF9D', fontFamily: 'monospace', fontSize: 16, fontWeight: '600' },
+  avatarRing: { width: 120, height: 120, borderRadius: 60, borderWidth: 2, borderColor: `${BRAND.colors.cyberGreen}40`, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+  avatar: { width: 96, height: 96, borderRadius: 48, backgroundColor: BRAND.colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: BRAND.colors.border },
+  avatarText: { fontSize: 36, fontWeight: '900', color: BRAND.colors.cyberGreen },
+  callFrom: { color: BRAND.colors.white, fontSize: 26, fontWeight: '900', marginBottom: 4 },
+  callTo: { color: BRAND.colors.muted, fontSize: 14, fontFamily: BRAND.typography.mono },
+  timerBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, backgroundColor: `${BRAND.colors.cyberGreen}15`, paddingHorizontal: 12, paddingVertical: 6, borderRadius: BRAND.radii.md, borderWidth: 1, borderColor: `${BRAND.colors.cyberGreen}30` },
+  timerDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: BRAND.colors.cyberGreen },
+  timerText: { color: BRAND.colors.cyberGreen, fontFamily: BRAND.typography.mono, fontSize: 16, fontWeight: '600' },
   controls: { width: '100%', paddingHorizontal: 24, alignItems: 'center' },
   controlRow: { flexDirection: 'row', justifyContent: 'center', gap: 24, marginBottom: 40 },
-  controlBtn: { alignItems: 'center', gap: 6, backgroundColor: '#1A1A1A', borderRadius: 20, padding: 16, borderWidth: 1, borderColor: '#2A2A2A', minWidth: 72 },
-  controlActive: { backgroundColor: '#1A1A1A', borderColor: '#3A3A3A' },
-  controlLabel: { color: '#666', fontSize: 11 },
-  controlLabelActive: { color: '#FF4444' },
-  endCallBtn: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#FF3B30', alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  endCallLabel: { color: '#666', fontSize: 12 },
+  controlBtn: { alignItems: 'center', gap: 6, backgroundColor: BRAND.colors.surface, borderRadius: BRAND.radii.lg, padding: 16, borderWidth: 1, borderColor: BRAND.colors.border, minWidth: 72 },
+  controlActive: { backgroundColor: BRAND.colors.surface, borderColor: BRAND.colors.cyberGreen },
+  controlLabel: { color: BRAND.colors.muted, fontSize: 11 },
+  controlLabelActive: { color: BRAND.colors.danger },
+  endCallBtn: { width: 72, height: 72, borderRadius: 36, backgroundColor: BRAND.colors.danger, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  endCallLabel: { color: BRAND.colors.muted, fontSize: 12 },
 });

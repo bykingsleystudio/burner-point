@@ -4,12 +4,77 @@
 
 ## Architecture Principle
 
+Frontend and mobile clients communicate only with the Burner Point backend. Third-party API keys stay server-side.
+
 ```
 Frontend (Next.js / React Native)
     ↓  HTTP only
 Backend (NestJS on Railway)
     ↓  Server-side SDK calls (API keys never reach frontend)
 Third-party services (Twilio, Paddle, Paystack, OpenAI, etc.)
+```
+
+---
+
+## 0. Platform Stack Registry
+
+### GET /platform/stack
+
+Returns the safe Burner Point stack source of truth and configuration status. This endpoint never returns secret values. It only returns provider names, roles, policy decisions, and whether required environment variables are present.
+
+Core encoded providers:
+
+- Web: Next.js, React, Tailwind CSS, TypeScript, Vercel.
+- API: NestJS on Railway.
+- Data: Neon Postgres, Redis queues, S3-compatible storage.
+- Auth: Clerk.
+- Email: Resend.
+- Monitoring: Sentry and PostHog.
+- Payments: Paystack, Paddle, NOWPayments.
+- Deferred payments: Flutterwave, Squad by GTCO, Korapay, OPay behind `SECONDARY_GATEWAYS_ENABLED`.
+- Conversation: Twilio primary, Bandwidth number infrastructure, Vonage fallback.
+- Verification: Twilio Verify primary, Infobip global route, Vonage fallback.
+- Add-ons: 1GLOBAL eSIM, Bright Data proxies, WireGuard in-platform VPN.
+
+```json
+Response: {
+  "product": "Burner Point",
+  "environment": "production",
+  "policies": {
+    "webHosting": "Vercel",
+    "apiHosting": "Railway",
+    "database": "Neon Postgres",
+    "mobileDelivery": "Expo / EAS",
+    "primaryPayments": ["paystack", "paddle", "nowpayments"],
+    "secondaryGatewaysEnabled": false,
+    "conversationScope": "US/Canada only",
+    "verificationScope": "Global SMS and voice"
+  },
+  "summary": {
+    "total": 42,
+    "configured": 12,
+    "planned": 5,
+    "deferred": 4
+  }
+}
+```
+
+### GET /platform/readiness
+
+Returns missing required configuration for non-secondary stack integrations.
+
+```json
+Response: {
+  "status": "needs_configuration",
+  "blockers": [
+    {
+      "id": "paystack",
+      "name": "Paystack",
+      "status": "missing_env",
+      "missingEnv": ["PAYSTACK_SECRET_KEY"]
+    }
+  ]
+}
 ```
 
 ---
@@ -26,15 +91,23 @@ Refresh token lifetime: 30 days
 
 ---
 
-## 1. Authentication (Twilio + JWT)
+## 1. Authentication (Clerk Primary + API Session)
+
+Clerk is the primary authentication provider for web and mobile. Burner Point exchanges a verified Clerk session token for a short-lived Burner Point API access token and a refresh token. Legacy password endpoints remain for compatibility, but accounts with MFA enabled must use the Clerk flow.
+
+Auth routes are rate-limited at 5 attempts per route per 15 minutes by IP and by hashed account identifier. Suspicious auth velocity is logged for abuse review.
 
 ### POST /auth/register
 Creates a new account.
 ```json
 Body: {
   "email": "user@example.com",
+  "phoneNumber": "+14155550182",
   "password": "StrongPass123!",
   "firstName": "Kingsley",
+  "lastName": "Doe",
+  "acceptTerms": true,
+  "acceptPrivacy": true,
   "country": "NG",              // optional
   "referralCode": "ABC1234"     // optional
 }
@@ -44,14 +117,31 @@ Response: {
   "userId": "uuid"
 }
 ```
-Rate limit: 5 attempts / 10 minutes per IP
+Rate limit: 5 attempts / 15 minutes per route, per IP and hashed account identifier
 
 ### POST /auth/login
 ```json
-Body: { "email": "...", "password": "..." }
+Body: { "identifier": "user@example.com or +14155550182", "password": "..." }
 Response: { "accessToken": "...", "refreshToken": "...", "userId": "..." }
 ```
-Rate limit: 5 attempts / 10 minutes per IP
+Rate limit: 5 attempts / 15 minutes per route, per IP and hashed account identifier
+
+### POST /auth/clerk/exchange
+Exchanges a verified Clerk session for Burner Point API tokens. The API requires first name, last name, email, phone number, Terms acceptance, and Privacy Policy acceptance before issuing local API tokens.
+```json
+Body: {
+  "clerkToken": "clerk_session_jwt",
+  "profile": {
+    "firstName": "Kingsley",
+    "lastName": "Doe",
+    "email": "user@example.com",
+    "phoneNumber": "+14155550182",
+    "acceptTerms": true,
+    "acceptPrivacy": true
+  }
+}
+Response: { "accessToken": "...", "refreshToken": "...", "user": { "id": "uuid" } }
+```
 
 ### POST /auth/refresh
 ```json

@@ -163,7 +163,7 @@ export default function RegisterPage() {
       <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-6xl items-center gap-10 px-5 py-10 md:grid-cols-[0.9fr_1.1fr] md:px-8">
         <section className="hidden md:block">
           <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-brand-green/25 bg-brand-green/10">
+            <span className="flex h-11 w-11 items-center justify-center rounded-bp-lg border border-brand-green/25 bg-brand-green/10">
               <Image src="/assets/logo-mark.svg" alt="" width={26} height={26} />
             </span>
             <span className="font-mono text-lg font-semibold uppercase tracking-[0.22em]">Burner <span className="text-brand-green">Point</span></span>
@@ -182,11 +182,11 @@ export default function RegisterPage() {
           </div>
         </section>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="bp-card rounded-[34px] p-5 md:p-7">
-          <div className="rounded-[28px] border border-white/8 bg-black/24 p-5 md:p-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="bp-card rounded-bp-lg p-5 md:p-7">
+          <div className="rounded-bp-lg border border-white/8 bg-black/24 p-5 md:p-6">
             <div className="mb-6 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-brand-green/25 bg-brand-green/10">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-bp-lg border border-brand-green/25 bg-brand-green/10">
                   <Image src="/assets/logo-mark.svg" alt="" width={26} height={26} />
                 </span>
                 <span className="font-mono text-sm font-semibold uppercase tracking-[0.2em]">Burner <span className="text-brand-green">Point</span></span>
@@ -198,12 +198,12 @@ export default function RegisterPage() {
             <p className="mt-2 text-sm leading-6 text-white/52">Private by design. Stay anonymous. Stay connected.</p>
 
             {pendingVerification ? (
-              <div className="mt-6 rounded-[24px] border border-brand-green/20 bg-brand-green/[0.04] p-4">
+              <div className="mt-6 rounded-bp-lg border border-brand-green/20 bg-brand-green/[0.04] p-4">
                 <label className="block text-sm font-medium text-white/70">
                   {pendingVerification === 'email' ? 'Email verification code' : 'Phone verification code'}
                   <input value={verificationCode} onChange={(event) => setVerificationCode(event.target.value)} inputMode="numeric" autoComplete="one-time-code" placeholder="Enter Clerk code" className="auth-input mt-1.5" />
                 </label>
-                <button type="button" disabled={isSubmitting} onClick={verifyEmail} className="bp-button-glow mt-4 flex min-h-12 w-full items-center justify-center rounded-2xl bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+                <button type="button" disabled={isSubmitting} onClick={verifyEmail} className="bp-button-glow mt-4 flex min-h-12 w-full items-center justify-center rounded-bp bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
                   {isSubmitting ? 'Verifying...' : 'Verify and continue'}
                 </button>
               </div>
@@ -218,7 +218,7 @@ export default function RegisterPage() {
                   </Field>
                 </div>
 
-                <div className="mt-6 rounded-[24px] border border-white/8 bg-white/[0.02] p-4">
+                <div className="mt-6 rounded-bp-lg border border-white/8 bg-white/[0.02] p-4">
                   <div className="mb-4 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.22em] text-brand-green">
                     <Mail className="h-4 w-4" />
                     Required Contact
@@ -242,7 +242,7 @@ export default function RegisterPage() {
                   </Field>
                 </div>
 
-                <div className="mt-6 space-y-3 rounded-[24px] border border-white/8 bg-white/[0.02] p-4">
+                <div className="mt-6 space-y-3 rounded-bp-lg border border-white/8 bg-white/[0.02] p-4">
                   <label className="flex cursor-pointer items-start gap-3 text-sm text-white/70">
                     <input type="checkbox" {...register('acceptTerms')} className="mt-1 h-4 w-4 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
                     <span>
@@ -267,7 +267,7 @@ export default function RegisterPage() {
                   {errors.acceptPrivacy ? <p className="text-xs text-red-300">{errors.acceptPrivacy.message}</p> : null}
                 </div>
 
-                <button type="submit" disabled={isSubmitting} className="bp-button-glow mt-5 flex min-h-12 w-full items-center justify-center rounded-2xl bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+                <button type="submit" disabled={isSubmitting} className="bp-button-glow mt-5 flex min-h-12 w-full items-center justify-center rounded-bp bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
                   {isSubmitting ? 'Creating account...' : 'Create account'}
                 </button>
               </>
@@ -280,7 +280,7 @@ export default function RegisterPage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               {oauthProviders.map((provider) => (
-                <button key={provider.label} type="button" onClick={() => startOAuth(provider.strategy)} className="flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.02] px-3 py-3 text-center text-xs font-semibold text-white/76 transition hover:border-brand-green/35 hover:text-brand-green">
+                <button key={provider.label} type="button" onClick={() => startOAuth(provider.strategy)} className="flex min-h-11 items-center justify-center rounded-bp border border-white/10 bg-white/[0.02] px-3 py-3 text-center text-xs font-semibold text-white/76 transition hover:border-brand-green/35 hover:text-brand-green">
                   {provider.label}
                 </button>
               ))}

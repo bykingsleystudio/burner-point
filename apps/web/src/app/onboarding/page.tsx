@@ -56,10 +56,10 @@ export default function OnboardingPage() {
     <main className="relative min-h-screen overflow-hidden bg-brand-black px-5 py-10 text-white">
       <div className="bp-grid-bg pointer-events-none fixed inset-0 opacity-60" />
       <section className="relative z-10 mx-auto flex min-h-[calc(100vh-5rem)] max-w-2xl items-center">
-        <div className="bp-card w-full rounded-[34px] p-5 md:p-7">
-          <div className="rounded-[28px] border border-white/8 bg-black/24 p-5 md:p-6">
+        <div className="bp-card w-full rounded-bp-lg p-5 md:p-7">
+          <div className="rounded-bp-lg border border-white/8 bg-black/24 p-5 md:p-6">
             <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-brand-green/25 bg-brand-green/10">
+              <span className="flex h-11 w-11 items-center justify-center rounded-bp-lg border border-brand-green/25 bg-brand-green/10">
                 <Image src="/assets/logo-mark.svg" alt="" width={26} height={26} />
               </span>
               <span className="font-mono text-sm font-semibold uppercase tracking-[0.2em]">Burner <span className="text-brand-green">Point</span></span>
@@ -83,7 +83,7 @@ export default function OnboardingPage() {
               </Field>
             </div>
 
-            <div className="mt-6 space-y-3 rounded-[24px] border border-white/8 bg-white/[0.02] p-4">
+            <div className="mt-6 space-y-3 rounded-bp-lg border border-white/8 bg-white/[0.02] p-4">
               <label className="flex cursor-pointer items-start gap-3 text-sm text-white/70">
                 <input checked={form.acceptTerms} onChange={(event) => setField('acceptTerms')(event.target.checked)} type="checkbox" className="mt-1 h-4 w-4 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
                 <span>I accept the <Link href="/terms" className="text-brand-green hover:underline">Terms of Service</Link>.</span>
@@ -94,7 +94,7 @@ export default function OnboardingPage() {
               </label>
             </div>
 
-            <button type="button" disabled={loading} onClick={completeOnboarding} className="bp-button-glow mt-5 flex min-h-12 w-full items-center justify-center rounded-2xl bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+            <button type="button" disabled={loading} onClick={completeOnboarding} className="bp-button-glow mt-5 flex min-h-12 w-full items-center justify-center rounded-bp bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
               {loading ? 'Saving profile...' : 'Complete onboarding'}
             </button>
           </div>

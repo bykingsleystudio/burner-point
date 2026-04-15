@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { ClerkProvider } from '@clerk/nextjs';
 import { Space_Grotesk, DM_Mono } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
+import { BRAND } from '@/lib/brand';
 import './globals.css';
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://burnerpoint.vercel.app';
@@ -76,7 +77,7 @@ const organizationJsonLd = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#013220',
+  themeColor: BRAND.colors.deepGreen,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -93,8 +94,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <Toaster
             position="top-right"
             toastOptions={{
-              style: { background: '#1A1A1A', color: '#fff', border: '1px solid #2A2A2A' },
-              success: { iconTheme: { primary: '#00FF9D', secondary: '#0A0A0A' } },
+              style: {
+                background: BRAND.colors.surface,
+                color: BRAND.colors.white,
+                border: `1px solid ${BRAND.colors.border}`,
+                borderRadius: BRAND.radii.md,
+              },
+              success: { iconTheme: { primary: BRAND.colors.cyberGreen, secondary: BRAND.colors.black } },
             }}
           />
         </ClerkProvider>

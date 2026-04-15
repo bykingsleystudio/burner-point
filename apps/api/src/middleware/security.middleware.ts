@@ -3,7 +3,7 @@
  *
  * Centralises all security middleware:
  * - Global rate limiting (Redis-backed, per IP + per user)
- * - Auth route lockout (5 attempts / 10 minutes)
+ * - Auth route lockout (5 attempts / 15 minutes)
  * - Payment route throttling
  * - Input sanitisation
  * - Request size limits
@@ -19,17 +19,24 @@ import {
 import { Request, Response, NextFunction } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../modules/global/redis.service';
+import { createHash } from 'crypto';
 
 // ─── Route classification ──────────────────────────────────────────────────
 const AUTH_ROUTES = [
   '/auth/login',
   '/auth/register',
   '/auth/refresh',
+  '/auth/logout',
+  '/auth/oauth',
+  '/auth/clerk/exchange',
   '/phone-auth/send',
   '/phone-auth/verify',
   '/api/auth/login',
   '/api/auth/register',
   '/api/auth/refresh',
+  '/api/auth/logout',
+  '/api/auth/oauth',
+  '/api/auth/clerk/exchange',
   '/api/phone-auth/send',
   '/api/phone-auth/verify',
 ];
@@ -59,7 +66,7 @@ const LIMITS = {
   globalMax: 60,
   globalTtl: 60,          // 60 req/min per IP
   authMax: 5,
-  authTtl: 600,           // 5 attempts / 10 minutes
+  authTtl: 900,           // 5 attempts / 15 minutes
   paymentMax: 10,
   paymentTtl: 60,         // 10 payment inits / minute
   maxBodyBytes: 1_048_576, // 1MB hard limit
@@ -92,16 +99,31 @@ export class SecurityMiddleware implements NestMiddleware {
     }
 
     // 2. Auth route rate limiting (strictest)
-    const isAuth = AUTH_ROUTES.some((r) => path.startsWith(r));
+    const isAuth = this.isAuthRoute(path);
     if (isAuth) {
+      const routeBucket = this.getAuthRouteBucket(path);
       const blocked = await this.checkRateLimit(
-        `auth:${ip}`,
+        `auth:ip:${ip}:${routeBucket}`,
         LIMITS.authMax,
         LIMITS.authTtl,
         res,
-        `Too many authentication attempts. Try again in 10 minutes.`,
+        `Too many authentication attempts. Try again in 15 minutes.`,
       );
       if (blocked) return;
+
+      const identifierHash = this.getAuthIdentifierHash(req);
+      if (identifierHash) {
+        const identityBlocked = await this.checkRateLimit(
+          `auth:identity:${identifierHash}:${routeBucket}`,
+          LIMITS.authMax,
+          LIMITS.authTtl,
+          res,
+          `Too many authentication attempts for this account. Try again in 15 minutes.`,
+        );
+        if (identityBlocked) return;
+      }
+
+      await this.recordAuthRisk(ip, routeBucket, req);
     }
 
     // 3. Payment route rate limiting
@@ -176,6 +198,57 @@ export class SecurityMiddleware implements NestMiddleware {
       req.socket.remoteAddress ||
       'unknown'
     );
+  }
+
+  private isAuthRoute(path: string): boolean {
+    return (
+      AUTH_ROUTES.some((route) => path.startsWith(route)) ||
+      path.startsWith('/auth/') ||
+      path.startsWith('/api/auth/')
+    );
+  }
+
+  private getAuthRouteBucket(path: string): string {
+    return path
+      .replace(/^\/api\//, '/')
+      .split('/')
+      .filter(Boolean)
+      .slice(0, 3)
+      .join(':') || 'auth';
+  }
+
+  private getAuthIdentifierHash(req: Request): string | null {
+    const body = req.body as Record<string, unknown> | undefined;
+    const raw =
+      body?.identifier ||
+      body?.email ||
+      body?.phoneNumber ||
+      body?.refreshToken ||
+      body?.clerkToken;
+    if (typeof raw !== 'string' || raw.trim().length < 3) return null;
+    return createHash('sha256')
+      .update(raw.trim().toLowerCase())
+      .digest('hex')
+      .slice(0, 32);
+  }
+
+  private async recordAuthRisk(ip: string, routeBucket: string, req: Request) {
+    try {
+      const riskKey = `auth:risk:${ip}:${routeBucket}`;
+      const current = await this.redis.incr(riskKey);
+      if (current === 1) {
+        await this.redis.expire(riskKey, LIMITS.authTtl);
+      }
+
+      if (current >= Math.max(3, LIMITS.authMax - 1)) {
+        const userAgent = req.headers['user-agent'] || 'unknown';
+        this.logger.warn(
+          `Suspicious auth velocity: ip=${ip} route=${routeBucket} attempts=${current} ua=${userAgent}`,
+        );
+      }
+    } catch (err) {
+      this.logger.error(`Auth risk check failed: ${err.message}`);
+    }
   }
 }
 

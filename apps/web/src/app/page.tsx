@@ -197,34 +197,28 @@ export default function Home() {
     <MarketingShell>
       <section className="relative overflow-hidden">
         <div className="bp-hero-fx" />
-        <div className="pointer-events-none absolute left-[8%] top-24 hidden md:block">
-          <div className="bp-orb" />
-        </div>
-        <div className="pointer-events-none absolute right-[10%] top-44 hidden md:block">
-          <div className="bp-orb-ring" />
-        </div>
         <div className="mx-auto grid max-w-[1600px] gap-12 px-5 pb-14 pt-10 sm:px-6 md:pb-20 md:pt-20 lg:grid-cols-[1.02fr_0.98fr] lg:items-center xl:px-10 2xl:px-12">
           <div className="bp-reveal">
             <div className="mb-6 flex flex-wrap items-center gap-3">
-              <div className="bp-privacy-stamp inline-flex rounded-full border border-brand-green/30 bg-brand-green/10 px-5 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.36em] text-brand-green shadow-[0_0_44px_rgba(0,255,157,0.18)]">
+              <div className="bp-privacy-stamp bp-label inline-flex rounded-bp border border-brand-green/30 bg-brand-green/10 px-5 py-2 font-mono text-[10px] text-brand-green shadow-[0_0_44px_rgba(0,255,157,0.18)]">
                 Private By Design
               </div>
-              <span className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 font-mono text-[10px] uppercase tracking-[0.22em] text-white/54">
+              <span className="bp-label rounded-bp border border-white/10 bg-white/[0.03] px-4 py-2 font-mono text-[10px] text-white/54">
                 Real SIM Numbers - No Logs Policy
               </span>
             </div>
 
-            <p className="font-mono text-sm font-semibold uppercase tracking-[0.28em] text-white/58 md:text-base">
+            <p className="bp-label font-mono text-sm text-white/58 md:text-base">
               Stay Anonymous. <span className="text-brand-green">Stay Connected.</span>
             </p>
-            <h1 className="mt-5 max-w-6xl text-[clamp(3.25rem,9vw,9.8rem)] font-black uppercase leading-[0.84] tracking-[-0.08em] text-white">
+            <h1 className="bp-headline mt-5 max-w-6xl text-5xl leading-[0.92] text-white sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl">
               <span className="block">Don&apos;t Want</span>
               <span className="block text-white/82">To Give Out</span>
               <span className="block bp-outline">Your Phone</span>
               <span className="block">Number?</span>
             </h1>
-            <div className="mt-6 max-w-4xl rounded-[28px] border border-brand-green/16 bg-brand-green/[0.06] p-5 md:p-6">
-              <p className="text-[clamp(1.65rem,4vw,4.2rem)] font-black uppercase leading-[0.9] tracking-[-0.05em] text-brand-green">
+            <div className="mt-6 max-w-4xl rounded-bp-lg border border-brand-green/16 bg-brand-green/[0.06] p-5 md:p-6">
+              <p className="bp-headline text-3xl leading-[0.94] text-brand-green md:text-5xl">
                 No problem. Use ours.
               </p>
               <p className="mt-4 max-w-3xl text-base leading-8 text-white/68 md:text-xl md:leading-9">
@@ -234,22 +228,22 @@ export default function Home() {
 
             <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {heroStats.map(([value, label]) => (
-                <div key={label} className="rounded-[22px] border border-white/8 bg-white/[0.025] px-5 py-4">
+                <div key={label} className="rounded-bp-md border border-white/8 bg-white/[0.025] px-5 py-4">
                   <div className="font-mono text-3xl font-semibold text-white md:text-4xl">{value}</div>
-                  <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-white/40">{label}</div>
+                  <div className="bp-label mt-1 font-mono text-[10px] text-white/40">{label}</div>
                 </div>
               ))}
             </div>
 
             <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
-              <Link href="/auth/signup" className="bp-button-glow inline-flex min-h-12 items-center justify-center rounded-2xl bg-brand-green px-8 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition duration-300 hover:-translate-y-1 hover:bg-[#1cffac]">
+              <Link href="/auth/signup" className="bp-primary-action inline-flex min-h-12 items-center justify-center px-8 py-4 text-sm font-semibold uppercase">
                 Get Started Free
                 <ArrowRight className="ml-3 h-4 w-4" />
               </Link>
-              <Link href="/overview" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/10 px-8 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-white/82 transition duration-300 hover:-translate-y-1 hover:border-brand-green/35 hover:text-white">
+              <Link href="/overview" className="bp-secondary-action inline-flex min-h-12 items-center justify-center px-8 py-4 text-sm font-semibold uppercase">
                 See How It Works
               </Link>
-              <Link href="/api/docs" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-brand-green/18 bg-brand-green/8 px-8 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-brand-green transition duration-300 hover:-translate-y-1 hover:bg-brand-green/14">
+              <Link href="/api/docs" className="inline-flex min-h-12 items-center justify-center rounded-bp border border-brand-green/18 bg-brand-green/8 px-8 py-4 text-sm font-semibold uppercase text-brand-green transition duration-300 hover:-translate-y-1 hover:bg-brand-green/14">
                 View API Docs
               </Link>
             </div>
@@ -264,7 +258,7 @@ export default function Home() {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white/72 transition hover:border-brand-green/35 hover:text-brand-green"
+                  className="inline-flex min-h-11 items-center justify-center rounded-bp border border-white/10 bg-white/[0.03] px-5 py-3 text-xs font-semibold uppercase text-white/72 transition hover:border-brand-green/35 hover:text-brand-green"
                 >
                   {item.label}
                 </Link>
@@ -272,8 +266,8 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="bp-card bp-reveal-delay rounded-[38px] p-4 md:rounded-[54px] md:p-6">
-            <div className="rounded-[32px] border border-brand-green/15 bg-[#050807] p-4 shadow-[0_0_80px_rgba(0,255,157,0.1)] md:rounded-[46px] md:p-6">
+          <div className="bp-card bp-reveal-delay rounded-bp-lg p-4 md:p-6">
+            <div className="rounded-bp-lg border border-brand-green/15 bg-brand-black p-4 shadow-[0_0_80px_rgba(0,255,157,0.1)] md:p-6">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-3">
                   <Image src="/assets/logo-mark.svg" alt="" width={38} height={38} />
@@ -282,20 +276,20 @@ export default function Home() {
                     <p className="font-mono text-sm text-white/48">180+ countries - 900+ platforms</p>
                   </div>
                 </div>
-                <span className="w-fit rounded-full border border-brand-green/20 bg-brand-green/10 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">Real SIM-backed</span>
+                <span className="w-fit rounded-bp border border-brand-green/20 bg-brand-green/10 px-3 py-1 font-mono text-[10px] uppercase text-brand-green">Real SIM-backed</span>
               </div>
 
-              <div className="mt-6 overflow-hidden rounded-[30px] border border-white/8 bg-black/30 p-3">
+              <div className="mt-6 overflow-hidden rounded-bp-lg border border-white/8 bg-black/30 p-3">
                 <div className="bp-flag-track flex w-max gap-3">
                   {[...coverageRegions, ...coverageRegions].map((region, index) => (
-                    <div key={`${region.code}-${index}`} className="w-[220px] rounded-[24px] border border-white/8 bg-white/[0.035] p-4">
+                    <div key={`${region.code}-${index}`} className="w-[220px] rounded-bp-lg border border-white/8 bg-white/[0.035] p-4">
                       <div className="flex items-center justify-between gap-3">
-                        <span className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl shadow-[inset_0_0_0_1px_rgba(255,255,255,0.18)]" style={{ background: region.gradient }}>
+                        <span className="flex h-12 w-12 items-center justify-center rounded-bp-md text-2xl shadow-[inset_0_0_0_1px_rgba(255,255,255,0.18)]" style={{ background: region.gradient }}>
                           <span className="rounded-md bg-black/35 px-1.5 py-1 font-mono text-[10px] font-black tracking-[0.18em] text-white shadow-[0_0_18px_rgba(0,0,0,0.35)]">
                             {region.flagLabel}
                           </span>
                         </span>
-                        <span className="rounded-full border border-white/10 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-white/50">{region.code}</span>
+                        <span className="rounded-bp border border-white/10 px-3 py-1 font-mono text-[10px] uppercase text-white/50">{region.code}</span>
                       </div>
                       <h2 className="mt-4 text-lg font-semibold text-white">{region.country}</h2>
                       <p className="mt-1 font-mono text-sm text-brand-green">{region.dial}</p>
@@ -307,7 +301,7 @@ export default function Home() {
 
               <div className="mt-5 grid gap-3 md:grid-cols-3">
                 {natureSignals.map(([title, text]) => (
-                  <div key={title} className="rounded-[24px] border border-white/8 bg-[radial-gradient(circle_at_top,rgba(0,255,157,0.08),rgba(255,255,255,0.025))] p-4">
+                  <div key={title} className="rounded-bp-lg border border-white/8 bg-white/[0.025] p-4">
                     <div className="bp-nature-dot" />
                     <h3 className="mt-4 font-mono text-xs font-semibold uppercase tracking-[0.18em] text-white">{title}</h3>
                     <p className="mt-2 text-xs leading-5 text-white/48">{text}</p>
@@ -315,7 +309,7 @@ export default function Home() {
                 ))}
               </div>
 
-              <div className="mt-5 rounded-[30px] border border-brand-green/15 bg-brand-green/[0.06] p-5">
+              <div className="mt-5 rounded-bp-lg border border-brand-green/15 bg-brand-green/[0.06] p-5">
                 <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
                   <div>
                     <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-brand-green">Selected route</p>
@@ -327,7 +321,7 @@ export default function Home() {
                       ['15s', 'avg code'],
                       ['0', 'logs'],
                     ].map(([value, label]) => (
-                      <div key={label} className="rounded-[20px] border border-white/8 bg-black/25 p-4 text-center">
+                      <div key={label} className="rounded-bp-md border border-white/8 bg-black/25 p-4 text-center">
                         <div className="text-2xl font-semibold text-white">{value}</div>
                         <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.18em] text-white/34">{label}</div>
                       </div>
@@ -337,10 +331,10 @@ export default function Home() {
               </div>
 
               <div className="mt-5 space-y-3">
-                <div className="max-w-[88%] rounded-[20px] border border-white/8 bg-white/[0.04] px-4 py-3 text-sm text-white/78">
+                <div className="max-w-[88%] rounded-bp-md border border-white/8 bg-white/[0.04] px-4 py-3 text-sm text-white/78">
                   Your verification code is <span className="font-mono text-brand-green">847291</span>.
                 </div>
-                <div className="ml-auto max-w-[82%] rounded-[20px] border border-brand-green/20 bg-brand-green/10 px-4 py-3 text-sm text-white/88">
+                <div className="ml-auto max-w-[82%] rounded-bp-md border border-brand-green/20 bg-brand-green/10 px-4 py-3 text-sm text-white/88">
                   Protected. Private. Routed through Burner Point.
                 </div>
               </div>
@@ -356,7 +350,7 @@ export default function Home() {
           <Eyebrow>How It Works</Eyebrow>
           <div className="grid gap-5 lg:grid-cols-4">
             {howSteps.map(([number, title, text]) => (
-              <article key={number} className="bp-card rounded-[30px] p-7">
+              <article key={number} className="bp-card rounded-bp-lg p-7">
                 <div className="text-6xl font-semibold text-white/10">{number}</div>
                 <h2 className="mt-6 font-mono text-lg font-semibold uppercase tracking-[0.08em] text-white">{title}</h2>
                 <p className="mt-4 text-sm leading-7 text-white/58">{text}</p>
@@ -379,7 +373,7 @@ export default function Home() {
               <h2 className="max-w-4xl text-5xl font-semibold uppercase leading-[0.95] text-white md:text-7xl">Protect your real number. Verify anything.</h2>
               <p className="mt-5 max-w-3xl text-base leading-8 text-white/58">Your private phone number for SMS, voice, OTP verification, messaging, and rentals, with instant activation and privacy-first infrastructure.</p>
             </div>
-            <Link href="/pricing" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/10 px-6 py-4 text-sm font-semibold uppercase tracking-[0.2em] text-white/82 transition hover:border-brand-green/35 hover:text-brand-green">
+            <Link href="/pricing" className="bp-secondary-action inline-flex min-h-12 items-center justify-center px-6 py-4 text-sm font-semibold uppercase">
               View Pricing
             </Link>
           </div>
@@ -387,14 +381,14 @@ export default function Home() {
             {coreFeatures.map((feature) => {
               const Icon = feature.icon;
               return (
-                <article key={feature.title} className="bp-card rounded-[34px] p-7">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/8 bg-white/[0.03]">
+                <article key={feature.title} className="bp-card rounded-bp-lg p-7">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-bp-md border border-white/8 bg-white/[0.03]">
                     <Icon className="h-6 w-6 text-brand-green" />
                   </div>
                   <h3 className="mt-7 font-mono text-xl font-semibold uppercase tracking-[0.08em] text-white">{feature.title}</h3>
                   <p className="mt-4 text-sm leading-7 text-white/58">{feature.text}</p>
                   <div className="mt-6"><BulletList items={feature.items} /></div>
-                  <Link href={feature.href} className="mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.2em] text-black transition hover:bg-[#1cffac]">
+                  <Link href={feature.href} className="bp-primary-action mt-8 inline-flex min-h-12 w-full items-center justify-center px-6 py-4 text-sm font-semibold uppercase">
                     {feature.cta}
                   </Link>
                 </article>
@@ -406,7 +400,7 @@ export default function Home() {
 
       <section className="relative py-20 md:py-24">
         <div className="mx-auto max-w-7xl px-5 sm:px-6 xl:px-8">
-          <div className="rounded-[42px] border border-brand-green/12 bg-[linear-gradient(135deg,rgba(0,255,157,0.12),rgba(5,8,7,0.96)_60%)] p-7 md:p-10">
+          <div className="rounded-bp-lg border border-brand-green/12 bg-[linear-gradient(135deg,rgba(0,255,157,0.12),rgba(0,0,0,0.96)_60%)] p-7 md:p-10">
             <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
               <div>
                 <Eyebrow>Platform Features</Eyebrow>
@@ -430,8 +424,8 @@ export default function Home() {
           <Eyebrow>Product</Eyebrow>
           <div className="grid gap-4 md:grid-cols-5">
             {productLinks.map((item) => (
-              <Link key={item.href} href={item.href} className="group rounded-[26px] border border-white/8 bg-white/[0.02] p-6 transition hover:-translate-y-1 hover:border-brand-green/30 hover:bg-brand-green/8">
-                <span className="font-mono text-sm font-semibold uppercase tracking-[0.16em] text-white group-hover:text-brand-green">{item.label}</span>
+              <Link key={item.href} href={item.href} className="group rounded-bp-lg border border-white/8 bg-white/[0.02] p-6 transition hover:-translate-y-1 hover:border-brand-green/30 hover:bg-brand-green/8">
+                <span className="font-mono text-sm font-semibold uppercase text-white group-hover:text-brand-green">{item.label}</span>
                 <ArrowRight className="mt-6 h-4 w-4 text-brand-green transition group-hover:translate-x-1" />
               </Link>
             ))}
@@ -446,15 +440,15 @@ export default function Home() {
             {pricingCards.map((plan) => {
               const Icon = plan.icon;
               return (
-                <article key={plan.title} className="bp-card rounded-[34px] p-7">
+                <article key={plan.title} className="bp-card rounded-bp-lg p-7">
                   <div className="flex items-start justify-between">
                     <Icon className="h-7 w-7 text-brand-green" />
-                    <span className="rounded-full border border-white/8 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-white/40">{plan.period}</span>
+                    <span className="rounded-bp border border-white/8 px-3 py-1 font-mono text-[10px] uppercase text-white/40">{plan.period}</span>
                   </div>
                   <h3 className="mt-6 font-mono text-lg font-semibold uppercase tracking-[0.1em] text-white">{plan.title}</h3>
                   <div className="mt-4 text-6xl font-semibold text-brand-green">{plan.price}</div>
                   <div className="mt-6"><BulletList items={plan.items} /></div>
-                  <Link href={plan.href} className="mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-white/10 px-6 py-4 text-sm font-semibold uppercase tracking-[0.2em] text-white/82 transition hover:border-brand-green/35 hover:text-brand-green">
+                  <Link href={plan.href} className="bp-secondary-action mt-8 inline-flex min-h-12 w-full items-center justify-center px-6 py-4 text-sm font-semibold uppercase">
                     {plan.cta}
                   </Link>
                 </article>
@@ -472,15 +466,15 @@ export default function Home() {
             <p className="mt-6 text-base leading-8 text-white/60">The mobile app uses bottom tabs for Dashboard, Calls, Contacts, Activity, and Settings with quick access to verification, rentals, wallet balance, push alerts, and offline-ready cached state.</p>
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               {['Streamlined onboarding', 'Bottom tab navigation', 'Push notifications for OTP and expirations', 'Offline-ready account snapshot'].map((item) => (
-                <div key={item} className="rounded-2xl border border-white/8 bg-white/[0.02] px-4 py-4 text-sm text-white/66">
+                <div key={item} className="rounded-bp-md border border-white/8 bg-white/[0.02] px-4 py-4 text-sm text-white/66">
                   <Check className="mr-2 inline h-4 w-4 text-brand-green" />
                   {item}
                 </div>
               ))}
             </div>
           </div>
-          <div className="mx-auto w-full max-w-[380px] rounded-[46px] border border-brand-green/16 bg-[#020403] p-4 shadow-[0_0_80px_rgba(0,255,157,0.16)]">
-            <div className="rounded-[36px] border border-white/8 bg-[#07100c] p-5">
+          <div className="mx-auto w-full max-w-[380px] rounded-bp-lg border border-brand-green/16 bg-brand-black p-4 shadow-[0_0_80px_rgba(0,255,157,0.16)]">
+            <div className="rounded-bp-lg border border-white/8 bg-brand-surface p-5">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-white/45">Good evening</p>
@@ -488,7 +482,7 @@ export default function Home() {
                 </div>
                 <Bell className="h-5 w-5 text-brand-green" />
               </div>
-              <div className="mt-6 rounded-[28px] border border-brand-green/20 bg-brand-green/10 p-5">
+              <div className="mt-6 rounded-bp-lg border border-brand-green/20 bg-brand-green/10 p-5">
                 <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-brand-green">Active Verification</p>
                 <p className="mt-3 font-mono text-2xl text-white">+1 415 555 0182</p>
                 <p className="mt-2 text-sm text-white/56">New Telegram code received.</p>
@@ -496,10 +490,10 @@ export default function Home() {
               <div className="mt-5 grid grid-cols-2 gap-3">
                 {[[Phone, 'Verify'], [CalendarDays, 'Rentals'], [Wifi, 'eSIM'], [MessageCircle, 'Inbox']].map(([Icon, label]) => {
                   const AppIcon = Icon as LucideIcon;
-                  return <div key={label as string} className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4 text-center"><AppIcon className="mx-auto h-5 w-5 text-brand-green" /><p className="mt-2 text-xs font-semibold text-white">{label as string}</p></div>;
+                  return <div key={label as string} className="rounded-bp-md border border-white/8 bg-white/[0.03] p-4 text-center"><AppIcon className="mx-auto h-5 w-5 text-brand-green" /><p className="mt-2 text-xs font-semibold text-white">{label as string}</p></div>;
                 })}
               </div>
-              <div className="mt-6 flex justify-around rounded-[24px] border border-white/8 bg-black/28 px-2 py-3">
+              <div className="mt-6 flex justify-around rounded-bp-lg border border-white/8 bg-black/28 px-2 py-3">
                 {['Dashboard', 'Calls', 'Contacts', 'Activity', 'Settings'].map((tab, index) => (
                   <span key={tab} className={`text-[10px] font-semibold ${index === 0 ? 'text-brand-green' : 'text-white/34'}`}>{tab}</span>
                 ))}
@@ -512,13 +506,13 @@ export default function Home() {
       <section className="relative py-20 md:py-24">
         <div className="mx-auto max-w-7xl px-5 sm:px-6 xl:px-8">
           <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="bp-card rounded-[38px] p-7 md:p-9">
+            <div className="bp-card rounded-bp-lg p-7 md:p-9">
               <Eyebrow>UI System</Eyebrow>
               <h2 className="text-5xl font-semibold uppercase leading-[0.95] text-white md:text-7xl">A controlled interface, not a generic SaaS skin.</h2>
               <p className="mt-6 text-base leading-8 text-white/60">Buttons, inputs, cards, tabs, and modals follow an 8pt spacing system, 8/12/16px radii, 200-300ms transitions, glow-on-hover, and 0.97 active press feedback.</p>
               <div className="mt-8 flex flex-wrap gap-3">
                 {['Primary Button', 'Secondary Button', 'Ghost Button', 'Inputs', 'Cards', 'Tabs', 'Modals'].map((item) => (
-                  <span key={item} className="rounded-full border border-white/10 bg-white/[0.025] px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-white/54">
+                  <span key={item} className="rounded-bp border border-white/10 bg-white/[0.025] px-4 py-2 font-mono text-[10px] uppercase text-white/54">
                     {item}
                   </span>
                 ))}
@@ -526,7 +520,7 @@ export default function Home() {
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               {designTokens.map(([name, value, use]) => (
-                <div key={name} className="rounded-[30px] border border-white/8 bg-white/[0.025] p-6">
+                <div key={name} className="rounded-bp-lg border border-white/8 bg-white/[0.025] p-6">
                   <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/42">{name}</p>
                   <p className="bp-metal-text mt-4 font-mono text-2xl font-semibold">{value}</p>
                   <p className="mt-4 text-sm leading-6 text-white/58">{use}</p>
@@ -548,21 +542,21 @@ export default function Home() {
           </div>
           <div className="mt-12 grid gap-5 md:grid-cols-3">
             {appStoreFrames.map(([title, text], index) => (
-              <div key={title} className="rounded-[42px] border border-brand-green/14 bg-[#020403] p-4 shadow-[0_0_80px_rgba(0,255,157,0.1)]">
-                <div className="min-h-[520px] rounded-[32px] border border-white/8 bg-[radial-gradient(circle_at_top,rgba(0,255,157,0.16),rgba(1,50,32,0.38)_34%,rgba(0,0,0,0.92)_72%)] p-5">
+              <div key={title} className="rounded-bp-lg border border-brand-green/14 bg-brand-black p-4 shadow-[0_0_80px_rgba(0,255,157,0.1)]">
+                <div className="min-h-[520px] rounded-bp-lg border border-white/8 bg-[linear-gradient(180deg,rgba(0,255,157,0.12),rgba(1,50,32,0.38)_34%,rgba(0,0,0,0.92)_72%)] p-5">
                   <div className="mx-auto h-6 w-24 rounded-full bg-black/50" />
                   <div className="mt-12 font-mono text-[10px] uppercase tracking-[0.26em] text-brand-green">Burner Point</div>
-                  <h3 className="mt-5 text-4xl font-black uppercase leading-[0.9] tracking-[-0.04em] text-white">{title}</h3>
+                  <h3 className="mt-5 text-4xl font-black uppercase leading-[0.9] text-white">{title}</h3>
                   <p className="mt-5 text-sm leading-7 text-white/62">{text}</p>
                   <div className="mt-10 space-y-3">
                     {['Real SIM-backed', 'No logs policy', index === 2 ? 'WiFi/data calling' : 'Instant activation'].map((item) => (
-                      <div key={item} className="rounded-2xl border border-white/8 bg-black/28 px-4 py-4 text-sm text-white/72">
+                      <div key={item} className="rounded-bp-md border border-white/8 bg-black/28 px-4 py-4 text-sm text-white/72">
                         <Check className="mr-2 inline h-4 w-4 text-brand-green" />
                         {item}
                       </div>
                     ))}
                   </div>
-                  <div className="mt-10 rounded-[24px] border border-brand-green/18 bg-brand-green/10 p-4 font-mono text-sm text-brand-green">
+                  <div className="mt-10 rounded-bp-lg border border-brand-green/18 bg-brand-green/10 p-4 font-mono text-sm text-brand-green">
                     +1 415 555 0182
                   </div>
                 </div>
@@ -577,7 +571,7 @@ export default function Home() {
           <Eyebrow>GStack Quality Pass</Eyebrow>
           <div className="grid gap-4 md:grid-cols-5">
             {qualityScores.map(([name, score, note]) => (
-              <div key={name} className="rounded-[28px] border border-white/8 bg-white/[0.025] p-5">
+              <div key={name} className="rounded-bp-lg border border-white/8 bg-white/[0.025] p-5">
                 <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/42">{name}</p>
                 <p className="mt-4 font-mono text-4xl text-brand-green">{score}</p>
                 <p className="mt-4 text-xs leading-6 text-white/52">{note}</p>
@@ -596,7 +590,7 @@ export default function Home() {
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {useCases.map((item) => (
-              <div key={item} className="rounded-[24px] border border-white/8 bg-white/[0.02] px-5 py-5 font-mono text-sm uppercase tracking-[0.14em] text-white/70">
+              <div key={item} className="rounded-bp-lg border border-white/8 bg-white/[0.02] px-5 py-5 font-mono text-sm uppercase text-white/70">
                 {item}
               </div>
             ))}
@@ -606,16 +600,16 @@ export default function Home() {
 
       <section className="relative py-20 md:py-28">
         <div className="mx-auto max-w-5xl px-5 text-center sm:px-6 xl:px-8">
-          <div className="rounded-[42px] border border-brand-green/12 bg-[linear-gradient(135deg,rgba(0,255,157,0.13),rgba(5,8,7,0.96)_62%)] p-8 md:p-12">
+          <div className="rounded-bp-lg border border-brand-green/12 bg-[linear-gradient(135deg,rgba(0,255,157,0.13),rgba(0,0,0,0.96)_62%)] p-8 md:p-12">
             <Eyebrow>Get Started Today</Eyebrow>
             <h2 className="text-5xl font-semibold uppercase leading-[0.94] text-white md:text-8xl">Get Your Number</h2>
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-white/60">Your first private number takes less than a minute. Create an account and keep your personal line out of the open internet.</p>
             <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
-              <Link href="/auth/signup" className="bp-button-glow inline-flex min-h-12 items-center justify-center rounded-2xl bg-brand-green px-8 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac]">
+              <Link href="/auth/signup" className="bp-primary-action inline-flex min-h-12 items-center justify-center px-8 py-4 text-sm font-semibold uppercase">
                 Get Your Number
                 <ArrowRight className="ml-3 h-4 w-4" />
               </Link>
-              <Link href="/pricing" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/10 px-8 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-white/82 transition hover:border-brand-green/35 hover:text-white">
+              <Link href="/pricing" className="bp-secondary-action inline-flex min-h-12 items-center justify-center px-8 py-4 text-sm font-semibold uppercase">
                 View Pricing
               </Link>
             </div>

@@ -8,6 +8,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import axios from 'axios';
 import { API_BASE_URL } from '../../lib/config';
 import { clearApiSession, getApiAccessToken } from '../../lib/auth';
+import { BRAND } from '../../lib/brand';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -61,7 +62,7 @@ export default function ProfileScreen() {
         {/* Wallet */}
         <View style={s.walletCard}>
           <Text style={s.walletLabel}>Wallet Balance</Text>
-          <Text style={s.walletBalance}>₦{((user?.walletBalanceKobo || 0) / 100).toLocaleString()}</Text>
+          <Text style={s.walletBalance}>NGN {((user?.walletBalanceKobo || 0) / 100).toLocaleString()}</Text>
         </View>
 
         {/* Referral */}
@@ -71,7 +72,7 @@ export default function ProfileScreen() {
               <Text style={s.referralLabel}>Your Referral Code</Text>
               <Text style={s.referralCode}>{user.referralCode}</Text>
             </View>
-            <Copy size={18} color="#00FF9D"/>
+            <Copy size={18} color={BRAND.colors.cyberGreen}/>
           </TouchableOpacity>
         )}
 
@@ -79,16 +80,16 @@ export default function ProfileScreen() {
         <View style={s.menu}>
           {menuItems.map((item) => (
             <TouchableOpacity key={item.label} style={s.menuItem} onPress={item.action}>
-              <item.icon size={18} color="#666"/>
+              <item.icon size={18} color={BRAND.colors.muted}/>
               <Text style={s.menuLabel}>{item.label}</Text>
-              <ChevronRight size={16} color="#444"/>
+              <ChevronRight size={16} color={BRAND.colors.metalStart}/>
             </TouchableOpacity>
           ))}
         </View>
 
         {/* Logout */}
         <TouchableOpacity style={s.logoutBtn} onPress={logout}>
-          <LogOut size={18} color="#FF4444"/>
+          <LogOut size={18} color={BRAND.colors.danger}/>
           <Text style={s.logoutText}>Sign Out</Text>
         </TouchableOpacity>
 
@@ -99,22 +100,22 @@ export default function ProfileScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0A' },
+  container: { flex: 1, backgroundColor: BRAND.colors.black },
   header: { alignItems: 'center', padding: 24, paddingBottom: 16 },
-  avatar: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#00FF9D20', borderWidth: 2, borderColor: '#00FF9D40', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  avatarText: { color: '#00FF9D', fontSize: 28, fontWeight: 'bold' },
-  name: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
-  email: { color: '#666', fontSize: 13, marginTop: 4 },
-  walletCard: { marginHorizontal: 16, marginBottom: 12, backgroundColor: '#111', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#2A2A2A' },
-  walletLabel: { color: '#666', fontSize: 12, marginBottom: 4 },
-  walletBalance: { color: '#00FF9D', fontSize: 28, fontWeight: 'bold', fontFamily: 'monospace' },
-  referralCard: { marginHorizontal: 16, marginBottom: 12, backgroundColor: '#00FF9D08', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#00FF9D30', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  referralLabel: { color: '#666', fontSize: 11, marginBottom: 4 },
-  referralCode: { color: '#00FF9D', fontSize: 20, fontWeight: 'bold', fontFamily: 'monospace', letterSpacing: 2 },
-  menu: { marginHorizontal: 16, backgroundColor: '#111', borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#2A2A2A', marginBottom: 12 },
-  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#1A1A1A' },
-  menuLabel: { flex: 1, color: '#fff', fontSize: 14 },
-  logoutBtn: { marginHorizontal: 16, backgroundColor: '#FF444410', borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#FF444430', marginBottom: 16 },
-  logoutText: { color: '#FF4444', fontWeight: '600', fontSize: 15 },
-  version: { color: '#333', fontSize: 11, textAlign: 'center', marginBottom: 24 },
+  avatar: { width: 72, height: 72, borderRadius: 36, backgroundColor: `${BRAND.colors.cyberGreen}20`, borderWidth: 2, borderColor: `${BRAND.colors.cyberGreen}40`, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  avatarText: { color: BRAND.colors.cyberGreen, fontSize: 28, fontWeight: '900' },
+  name: { color: BRAND.colors.white, fontSize: 20, fontWeight: '900' },
+  email: { color: BRAND.colors.muted, fontSize: 13, marginTop: 4 },
+  walletCard: { marginHorizontal: 16, marginBottom: 12, backgroundColor: BRAND.colors.surface, borderRadius: BRAND.radii.lg, padding: 16, borderWidth: 1, borderColor: BRAND.colors.border },
+  walletLabel: { color: BRAND.colors.muted, fontSize: 12, marginBottom: 4 },
+  walletBalance: { color: BRAND.colors.cyberGreen, fontSize: 28, fontWeight: '900', fontFamily: BRAND.typography.mono },
+  referralCard: { marginHorizontal: 16, marginBottom: 12, backgroundColor: `${BRAND.colors.cyberGreen}08`, borderRadius: BRAND.radii.lg, padding: 16, borderWidth: 1, borderColor: `${BRAND.colors.cyberGreen}30`, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  referralLabel: { color: BRAND.colors.muted, fontSize: 11, marginBottom: 4 },
+  referralCode: { color: BRAND.colors.cyberGreen, fontSize: 20, fontWeight: '900', fontFamily: BRAND.typography.mono },
+  menu: { marginHorizontal: 16, backgroundColor: BRAND.colors.surface, borderRadius: BRAND.radii.lg, overflow: 'hidden', borderWidth: 1, borderColor: BRAND.colors.border, marginBottom: 12 },
+  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: BRAND.colors.border },
+  menuLabel: { flex: 1, color: BRAND.colors.white, fontSize: 14 },
+  logoutBtn: { marginHorizontal: 16, backgroundColor: `${BRAND.colors.danger}10`, borderRadius: BRAND.radii.sm, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: `${BRAND.colors.danger}30`, marginBottom: 16 },
+  logoutText: { color: BRAND.colors.danger, fontWeight: '700', fontSize: 15 },
+  version: { color: BRAND.colors.muted, fontSize: 11, textAlign: 'center', marginBottom: 24 },
 });

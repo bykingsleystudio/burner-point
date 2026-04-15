@@ -6,6 +6,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import axios from 'axios';
 import { API_BASE_URL } from '../../lib/config';
 import { getApiAccessToken } from '../../lib/auth';
+import { BRAND } from '../../lib/brand';
 
 export default function MessagesScreen() {
   const { getToken } = useAuth();
@@ -31,7 +32,7 @@ export default function MessagesScreen() {
 
   if (loading) return (
     <SafeAreaView style={s.container}>
-      <ActivityIndicator color="#00FF9D" style={{ marginTop: 40 }}/>
+      <ActivityIndicator color={BRAND.colors.cyberGreen} style={{ marginTop: 40 }}/>
     </SafeAreaView>
   );
 
@@ -57,7 +58,7 @@ export default function MessagesScreen() {
         inverted
         ListEmptyComponent={
           <View style={s.empty}>
-            <MessageSquare size={28} color="#333"/>
+            <MessageSquare size={28} color={BRAND.colors.muted}/>
             <Text style={s.emptyText}>No messages yet</Text>
           </View>
         }
@@ -65,13 +66,13 @@ export default function MessagesScreen() {
           <View style={[s.bubble, m.direction === 'outbound' ? s.bubbleOut : s.bubbleIn]}>
             {m.extractedOtp && (
               <View style={s.otpBadge}>
-                <Zap size={12} color="#00FF9D"/>
+                <Zap size={12} color={BRAND.colors.cyberGreen}/>
                 <Text style={s.otpText}>{m.extractedOtp}</Text>
               </View>
             )}
             {m.isSpam && (
               <View style={s.spamBadge}>
-                <Shield size={10} color="#FF4444"/>
+                <Shield size={10} color={BRAND.colors.danger}/>
                 <Text style={s.spamText}> Spam</Text>
               </View>
             )}
@@ -85,23 +86,23 @@ export default function MessagesScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0A' },
+  container: { flex: 1, backgroundColor: BRAND.colors.black },
   header: { padding: 20, paddingBottom: 8 },
-  title: { color: '#fff', fontSize: 22, fontWeight: 'bold' },
+  title: { color: BRAND.colors.white, fontSize: 22, fontWeight: '900' },
   numList: { maxHeight: 44, marginBottom: 8 },
-  numTab: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: '#111', borderWidth: 1, borderColor: '#2A2A2A' },
-  numTabActive: { backgroundColor: '#00FF9D15', borderColor: '#00FF9D40' },
-  numTabText: { color: '#666', fontSize: 12, fontFamily: 'monospace' },
-  numTabTextActive: { color: '#00FF9D' },
+  numTab: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: BRAND.radii.sm, backgroundColor: BRAND.colors.surface, borderWidth: 1, borderColor: BRAND.colors.border },
+  numTabActive: { backgroundColor: `${BRAND.colors.cyberGreen}15`, borderColor: `${BRAND.colors.cyberGreen}40` },
+  numTabText: { color: BRAND.colors.muted, fontSize: 12, fontFamily: BRAND.typography.mono },
+  numTabTextActive: { color: BRAND.colors.cyberGreen },
   bubble: { maxWidth: '80%', borderRadius: 16, padding: 12, marginBottom: 8 },
-  bubbleIn: { backgroundColor: '#1A1A1A', alignSelf: 'flex-start', borderWidth: 1, borderColor: '#2A2A2A' },
-  bubbleOut: { backgroundColor: '#00FF9D15', alignSelf: 'flex-end' },
-  bubbleText: { color: '#fff', fontSize: 14, lineHeight: 20 },
-  bubbleTime: { color: '#666', fontSize: 10, marginTop: 4 },
-  otpBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#00FF9D10', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, marginBottom: 6, gap: 4 },
-  otpText: { color: '#00FF9D', fontWeight: 'bold', fontSize: 18, fontFamily: 'monospace' },
+  bubbleIn: { backgroundColor: BRAND.colors.surface, alignSelf: 'flex-start', borderWidth: 1, borderColor: BRAND.colors.border },
+  bubbleOut: { backgroundColor: `${BRAND.colors.cyberGreen}15`, alignSelf: 'flex-end' },
+  bubbleText: { color: BRAND.colors.white, fontSize: 14, lineHeight: 20 },
+  bubbleTime: { color: BRAND.colors.muted, fontSize: 10, marginTop: 4 },
+  otpBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: `${BRAND.colors.cyberGreen}10`, borderRadius: BRAND.radii.sm, paddingHorizontal: 8, paddingVertical: 4, marginBottom: 6, gap: 4 },
+  otpText: { color: BRAND.colors.cyberGreen, fontWeight: '900', fontSize: 18, fontFamily: BRAND.typography.mono },
   spamBadge: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-  spamText: { color: '#FF4444', fontSize: 10 },
+  spamText: { color: BRAND.colors.danger, fontSize: 10 },
   empty: { alignItems: 'center', marginTop: 60 },
-  emptyText: { color: '#666', fontSize: 14, marginTop: 10 },
+  emptyText: { color: BRAND.colors.muted, fontSize: 14, marginTop: 10 },
 });

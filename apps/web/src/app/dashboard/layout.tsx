@@ -11,26 +11,29 @@ import {
   LayoutDashboard, MessageSquare, Phone, PhoneIncoming,
   Voicemail, ShieldCheck, Clock, CreditCard, Key,
   HelpCircle, Wifi, Smartphone, Globe, Shield, LogOut,
-  Menu, X, Bell, ChevronRight, Settings,
+  Menu, X, Bell, Settings, Ticket, LockKeyhole,
 } from 'lucide-react';
 import clsx from 'clsx';
 
 const NAV = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Overview' },
   { href: '/dashboard/inbox', icon: MessageSquare, label: 'Inbox' },
+  { href: '/dashboard/messages', icon: MessageSquare, label: 'Messages & Photos' },
   { href: '/dashboard/numbers', icon: Phone, label: 'Numbers' },
   { href: '/dashboard/calls', icon: PhoneIncoming, label: 'Calls' },
   { href: '/dashboard/voicemail', icon: Voicemail, label: 'Voicemail' },
   { href: '/dashboard/verification', icon: ShieldCheck, label: 'Verification' },
   { href: '/dashboard/rentals', icon: Clock, label: 'Rentals' },
-  { href: '/dashboard/credits', icon: CreditCard, label: 'Buy Credits' },
-  { href: '/dashboard/api', icon: Key, label: 'API' },
+  { href: '/dashboard/billing', icon: CreditCard, label: 'Credits & Billing' },
+  { href: '/dashboard/developer', icon: Key, label: 'API & Developer' },
   null, // divider
   { href: '/dashboard/vpn', icon: Wifi, label: 'VPN', badge: 'Beta' },
   { href: '/dashboard/esim', icon: Smartphone, label: 'eSIM', badge: 'Beta' },
   { href: '/dashboard/proxies', icon: Globe, label: 'Proxies', badge: 'Soon' },
   null,
   { href: '/dashboard/support', icon: HelpCircle, label: 'Support' },
+  { href: '/dashboard/support/tickets', icon: Ticket, label: 'Support Tickets' },
+  { href: '/dashboard/security', icon: LockKeyhole, label: 'Security & 2FA' },
   { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ];
 
@@ -74,8 +77,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setSessionReady(true);
       } catch (error: any) {
         if (cancelled) return;
-        toast.error(error.response?.data?.message || 'Unable to start your Burner Point API session.');
+        const message = error.response?.data?.message || 'Unable to start your Burner Point API session.';
+        toast.error(message);
         clearApiSession();
+        if (error.response?.status === 400 && /complete|terms|privacy|phone/i.test(message)) {
+          router.push('/onboarding');
+        }
         setSessionReady(true);
       }
     }
@@ -118,7 +125,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!isLoaded || !sessionReady) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-brand-black text-white">
-        <div className="rounded-3xl border border-brand-green/20 bg-brand-green/10 px-6 py-5 text-center">
+        <div className="rounded-bp-lg border border-brand-green/20 bg-brand-green/10 px-6 py-5 text-center">
           <p className="font-mono text-xs uppercase tracking-[0.24em] text-brand-green">Burner Point</p>
           <p className="mt-2 text-sm text-white/60">Securing your Clerk session...</p>
         </div>
@@ -155,7 +162,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="flex-1 overflow-y-auto py-2 px-2">
           {NAV.map((item, i) => {
             if (!item) return <div key={i} className="my-2 border-t border-brand-border"/>;
-            const active = pathname === item.href;
+            const active = pathname === item.href || (
+              item.href !== '/dashboard' &&
+              item.href !== '/dashboard/support' &&
+              pathname.startsWith(`${item.href}/`)
+            );
             return (
               <Link key={item.href} href={item.href}
                 className={clsx(

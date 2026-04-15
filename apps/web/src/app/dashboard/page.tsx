@@ -2,8 +2,9 @@
 import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useAuthStore } from '@/store';
-import api from '@/lib/api';
-import { Phone, MessageSquare, CreditCard, TrendingUp, Shield, Zap, Globe, Lock, Wifi, Radio } from 'lucide-react';
+import api, { platformApi, type PlatformStackSnapshot, type StackIntegrationStatus } from '@/lib/api';
+import { Phone, MessageSquare, CreditCard, TrendingUp, Shield, Zap, Globe, Lock, Wifi, Radio, Server, Database, Activity } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 interface Stats { totalNumbers: number; totalMessages: number; walletBalanceKobo: number; activeNumbers: number; }
 
@@ -11,6 +12,7 @@ export default function DashboardPage() {
   const { user } = useAuthStore();
   const { user: clerkUser } = useUser();
   const [stats, setStats] = useState<Stats>({ totalNumbers: 0, totalMessages: 0, walletBalanceKobo: 0, activeNumbers: 0 });
+  const [stack, setStack] = useState<PlatformStackSnapshot | null>(null);
 
   useEffect(() => {
     Promise.all([api.get('/numbers'), api.get('/users/me/wallet')])
@@ -23,6 +25,7 @@ export default function DashboardPage() {
           walletBalanceKobo: walletRes.data.balanceKobo,
         });
       }).catch(() => {});
+    platformApi.stack().then((res) => setStack(res.data)).catch(() => setStack(null));
   }, []);
 
   const cards = [
@@ -45,6 +48,20 @@ export default function DashboardPage() {
     { href: '/dashboard/proxies', label: 'Proxies', icon: Globe, text: 'Location-aware routing' },
     { href: '/dashboard/vpn', label: 'VPN', icon: Lock, text: 'Built-in privacy protection' },
   ];
+
+  const stackHighlights = stack?.integrations.filter((integration) => [
+    'vercel',
+    'railway',
+    'neon',
+    'clerk',
+    'twilio-verify',
+    'paystack',
+    'paddle',
+    'nowpayments',
+    'oneglobal',
+    'brightdata',
+    'wireguard',
+  ].includes(integration.id)) ?? [];
 
   return (
     <div className="space-y-8">
@@ -104,6 +121,55 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      <div className="rounded-bp-lg border border-brand-border bg-brand-surface p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <div className="flex items-center gap-2 text-brand-green">
+              <Server size={16} />
+              <p className="text-xs font-semibold uppercase">Production stack</p>
+            </div>
+            <h2 className="mt-2 text-lg font-bold">Source-of-truth infrastructure</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-brand-muted">
+              Vercel web, Railway API, Neon Postgres, Clerk auth, Expo mobile delivery, and backend-only providers for telecom, payments, eSIM, proxies, VPN, AI, analytics, and storage.
+            </p>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center sm:min-w-[280px]">
+            <StackMetric icon={Activity} label="Configured" value={stack ? stack.summary.configured + stack.summary.ready : 0} />
+            <StackMetric icon={Database} label="Planned" value={stack ? stack.summary.planned : 0} />
+            <StackMetric icon={Shield} label="Deferred" value={stack ? stack.summary.deferred : 0} />
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {stackHighlights.length ? (
+            stackHighlights.map((integration) => (
+              <div key={integration.id} className="rounded-bp-md border border-white/8 bg-black/25 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold">{integration.name}</p>
+                  <span className={`rounded-bp px-2 py-1 text-[10px] font-semibold uppercase ${statusClass(integration.status)}`}>
+                    {statusLabel(integration.status)}
+                  </span>
+                </div>
+                <p className="mt-2 text-xs leading-5 text-brand-muted">{integration.role}</p>
+              </div>
+            ))
+          ) : (
+            Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="h-24 animate-pulse rounded-bp-md border border-brand-border bg-black/20" />
+            ))
+          )}
+        </div>
+
+        {stack ? (
+          <div className="mt-4 flex flex-wrap gap-2 text-xs text-brand-muted">
+            <span className="rounded-bp border border-white/8 px-3 py-2">Payments: {stack.policies.primaryPayments.join(', ')}</span>
+            <span className="rounded-bp border border-white/8 px-3 py-2">Conversation: {stack.policies.conversationScope}</span>
+            <span className="rounded-bp border border-white/8 px-3 py-2">Verification: {stack.policies.verificationScope}</span>
+            <span className="rounded-bp border border-white/8 px-3 py-2">Mobile payments: {stack.policies.mobileExternalPaymentsEnabled ? 'external enabled' : 'web checkout only'}</span>
+          </div>
+        ) : null}
+      </div>
+
       {/* Feature highlights */}
       <div className="bg-brand-card border border-brand-border rounded-2xl p-6">
         <h2 className="text-sm font-semibold mb-4">Why Burner Point</h2>
@@ -123,6 +189,38 @@ export default function DashboardPage() {
       </div>
     </div>
   );
+}
+
+function StackMetric({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: number }) {
+  return (
+    <div className="rounded-bp-md border border-white/8 bg-black/25 p-3">
+      <Icon size={14} className="mx-auto text-brand-green" />
+      <p className="mt-2 text-xl font-bold">{value}</p>
+      <p className="mt-1 text-[10px] uppercase text-brand-muted">{label}</p>
+    </div>
+  );
+}
+
+function statusLabel(status: StackIntegrationStatus) {
+  return status.replace('_', ' ');
+}
+
+function statusClass(status: StackIntegrationStatus) {
+  switch (status) {
+    case 'ready':
+    case 'configured':
+      return 'border border-brand-green/30 bg-brand-green/10 text-brand-green';
+    case 'partial':
+      return 'border border-brand-neon/30 bg-brand-neon/10 text-brand-neon';
+    case 'planned':
+      return 'border border-white/10 bg-white/[0.03] text-white/60';
+    case 'deferred':
+      return 'border border-white/10 bg-white/[0.03] text-white/40';
+    case 'disabled':
+      return 'border border-red-400/20 bg-red-400/10 text-red-300';
+    default:
+      return 'border border-red-400/20 bg-red-400/10 text-red-300';
+  }
 }
 
 function getGreeting() {

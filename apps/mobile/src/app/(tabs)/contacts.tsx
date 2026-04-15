@@ -1,6 +1,7 @@
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Phone, Plus, Search, ShieldCheck, Users } from 'lucide-react-native';
+import { BRAND } from '../../lib/brand';
 
 const contacts = [
   ['Marketplace Buyer', '+1 415 555 0182', 'Verified route'],
@@ -18,17 +19,17 @@ export default function ContactsScreen() {
             <Text style={s.title}>Private address book.</Text>
           </View>
           <TouchableOpacity style={s.addButton} activeOpacity={0.78} onPress={() => Alert.alert('Add contact', 'Create a private contact alias for calls and SMS.')}>
-            <Plus size={20} color="#000000" />
+            <Plus size={20} color={BRAND.colors.black} />
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity style={s.search} activeOpacity={0.78} onPress={() => Alert.alert('Search', 'Search contacts by alias, number, or country code.')}>
-          <Search size={17} color="#00FF9D" />
+          <Search size={17} color={BRAND.colors.cyberGreen} />
           <Text style={s.searchText}>Search private contacts</Text>
         </TouchableOpacity>
 
         <View style={s.privacyCard}>
-          <ShieldCheck size={20} color="#00FF9D" />
+          <ShieldCheck size={20} color={BRAND.colors.cyberGreen} />
           <View style={{ flex: 1 }}>
             <Text style={s.privacyTitle}>Aliases over exposure</Text>
             <Text style={s.privacyText}>Keep real names optional. Route every conversation through the burner number you choose.</Text>
@@ -39,7 +40,7 @@ export default function ContactsScreen() {
         {contacts.map(([name, number, tag]) => (
           <TouchableOpacity key={name} style={s.contactRow} activeOpacity={0.78}>
             <View style={s.avatar}>
-              <Users size={16} color="#00FF9D" />
+              <Users size={16} color={BRAND.colors.cyberGreen} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={s.contactName}>{name}</Text>
@@ -52,7 +53,7 @@ export default function ContactsScreen() {
         ))}
 
         <TouchableOpacity style={s.callHint} activeOpacity={0.78} onPress={() => Alert.alert('Call flow', 'Calls open in the native call screen with haptic feedback and safe-area controls.')}>
-          <Phone size={18} color="#00FF9D" />
+          <Phone size={18} color={BRAND.colors.cyberGreen} />
           <Text style={s.callHintText}>Tap a contact to call, message, or assign a burner route.</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -61,24 +62,24 @@ export default function ContactsScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000000' },
+  container: { flex: 1, backgroundColor: BRAND.colors.black },
   content: { padding: 20, paddingBottom: 32 },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  kicker: { color: '#00FF9D', fontSize: 11, fontWeight: '900', letterSpacing: 2.4, textTransform: 'uppercase' },
-  title: { color: '#FFFFFF', fontSize: 34, lineHeight: 35, fontWeight: '900', textTransform: 'uppercase', marginTop: 10 },
-  addButton: { width: 50, height: 50, borderRadius: 18, backgroundColor: '#00FF9D', alignItems: 'center', justifyContent: 'center' },
-  search: { minHeight: 54, marginTop: 24, borderRadius: 18, borderWidth: 1, borderColor: '#123425', backgroundColor: '#07140F', flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16 },
-  searchText: { color: '#6F8177', fontSize: 14 },
-  privacyCard: { marginTop: 14, flexDirection: 'row', gap: 12, borderRadius: 24, padding: 16, backgroundColor: '#00FF9D0A', borderWidth: 1, borderColor: '#00FF9D28' },
-  privacyTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '900' },
-  privacyText: { color: '#8EA097', fontSize: 12, lineHeight: 18, marginTop: 4 },
-  sectionTitle: { color: '#5B6A61', fontSize: 11, fontWeight: '900', letterSpacing: 2, textTransform: 'uppercase', marginTop: 28, marginBottom: 12 },
-  contactRow: { flexDirection: 'row', alignItems: 'center', borderRadius: 20, padding: 14, backgroundColor: '#07140F', borderWidth: 1, borderColor: '#123425', marginBottom: 10 },
-  avatar: { width: 42, height: 42, borderRadius: 16, backgroundColor: '#00FF9D12', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  contactName: { color: '#FFFFFF', fontSize: 14, fontWeight: '900' },
-  contactNumber: { color: '#6F8177', fontFamily: 'monospace', fontSize: 12, marginTop: 3 },
-  tag: { borderRadius: 999, backgroundColor: '#00FF9D12', borderWidth: 1, borderColor: '#00FF9D28', paddingHorizontal: 8, paddingVertical: 5 },
-  tagText: { color: '#00FF9D', fontSize: 9, fontWeight: '900', textTransform: 'uppercase' },
-  callHint: { marginTop: 12, flexDirection: 'row', gap: 10, borderRadius: 22, padding: 16, backgroundColor: '#03110B', borderWidth: 1, borderColor: '#123425' },
-  callHintText: { flex: 1, color: '#8EA097', fontSize: 12, lineHeight: 18 },
+  kicker: { color: BRAND.colors.cyberGreen, fontSize: 11, fontWeight: '900', textTransform: 'uppercase' },
+  title: { color: BRAND.colors.white, fontSize: 34, lineHeight: 35, fontWeight: '900', textTransform: 'uppercase', marginTop: 10 },
+  addButton: { width: 50, height: 50, borderRadius: BRAND.radii.sm, backgroundColor: BRAND.colors.cyberGreen, alignItems: 'center', justifyContent: 'center' },
+  search: { minHeight: 54, marginTop: 24, borderRadius: BRAND.radii.sm, borderWidth: 1, borderColor: BRAND.colors.border, backgroundColor: BRAND.colors.surface, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16 },
+  searchText: { color: BRAND.colors.muted, fontSize: 14 },
+  privacyCard: { marginTop: 14, flexDirection: 'row', gap: 12, borderRadius: BRAND.radii.lg, padding: 16, backgroundColor: `${BRAND.colors.cyberGreen}0A`, borderWidth: 1, borderColor: `${BRAND.colors.cyberGreen}28` },
+  privacyTitle: { color: BRAND.colors.white, fontSize: 14, fontWeight: '900' },
+  privacyText: { color: BRAND.colors.metalStart, fontSize: 12, lineHeight: 18, marginTop: 4 },
+  sectionTitle: { color: BRAND.colors.muted, fontSize: 11, fontWeight: '900', textTransform: 'uppercase', marginTop: 28, marginBottom: 12 },
+  contactRow: { flexDirection: 'row', alignItems: 'center', borderRadius: BRAND.radii.lg, padding: 14, backgroundColor: BRAND.colors.surface, borderWidth: 1, borderColor: BRAND.colors.border, marginBottom: 10 },
+  avatar: { width: 42, height: 42, borderRadius: BRAND.radii.md, backgroundColor: `${BRAND.colors.cyberGreen}12`, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  contactName: { color: BRAND.colors.white, fontSize: 14, fontWeight: '900' },
+  contactNumber: { color: BRAND.colors.muted, fontFamily: BRAND.typography.mono, fontSize: 12, marginTop: 3 },
+  tag: { borderRadius: BRAND.radii.sm, backgroundColor: `${BRAND.colors.cyberGreen}12`, borderWidth: 1, borderColor: `${BRAND.colors.cyberGreen}28`, paddingHorizontal: 8, paddingVertical: 5 },
+  tagText: { color: BRAND.colors.cyberGreen, fontSize: 9, fontWeight: '900', textTransform: 'uppercase' },
+  callHint: { marginTop: 12, flexDirection: 'row', gap: 10, borderRadius: BRAND.radii.lg, padding: 16, backgroundColor: BRAND.colors.dark, borderWidth: 1, borderColor: BRAND.colors.border },
+  callHintText: { flex: 1, color: BRAND.colors.metalStart, fontSize: 12, lineHeight: 18 },
 });

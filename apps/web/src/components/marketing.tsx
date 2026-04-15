@@ -86,7 +86,7 @@ const icons: Record<IconKey, LucideIcon> = {
 
 export function Eyebrow({ children }: { children: ReactNode }) {
   return (
-    <div className="mb-4 inline-flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.34em] text-brand-green">
+    <div className="bp-label mb-4 inline-flex items-center gap-3 font-mono text-[10px] text-brand-green">
       <span className="h-px w-8 bg-brand-green/80" />
       <span>{children}</span>
     </div>
@@ -96,12 +96,12 @@ export function Eyebrow({ children }: { children: ReactNode }) {
 export function BurnerLogo({ compact = false }: { compact?: boolean }) {
   return (
     <Link href="/" className="group inline-flex items-center gap-3" aria-label="Burner Point home">
-      <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-brand-green/25 bg-brand-green/10 shadow-[0_0_32px_rgba(0,255,157,0.18)] transition group-hover:scale-105 group-hover:bg-brand-green/20">
+      <span className="flex h-10 w-10 items-center justify-center rounded-bp-md border border-brand-green/25 bg-brand-green/10 shadow-[0_0_32px_rgba(0,255,157,0.18)] transition group-hover:scale-105 group-hover:bg-brand-green/20">
         <Image src="/assets/logo-mark.svg" alt="" width={24} height={24} priority />
       </span>
       {!compact ? (
-        <span className="font-mono text-base font-semibold uppercase tracking-[0.22em] text-white">
-          Burner <span className="text-brand-green">Point</span>
+        <span className="bp-brand-wordmark bp-metal-text text-base">
+          Burner Point
         </span>
       ) : null}
     </Link>
@@ -120,7 +120,7 @@ function MenuIcon() {
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-50 border-b border-white/8 bg-[#050807]/82 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-brand-border/80 bg-brand-black/88 backdrop-blur-xl">
       <div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-4 px-5 sm:px-6 xl:px-8">
         <BurnerLogo />
         <nav className="hidden items-center gap-5 text-sm text-white/58 xl:flex" aria-label="Primary">
@@ -132,54 +132,54 @@ export function SiteHeader() {
         </nav>
         <div className="hidden items-center gap-3 lg:flex">
           <Show when="signed-out">
-            <Link href="/auth/login" className="rounded-xl border border-white/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/82 transition hover:border-brand-green/45 hover:text-white">
+            <Link href="/auth/login" className="bp-secondary-action px-4 py-3 text-xs font-semibold uppercase">
               Sign In
             </Link>
-            <Link href="/auth/signup" className="bp-button-glow rounded-xl bg-brand-green px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac]">
+            <Link href="/auth/signup" className="bp-primary-action px-4 py-3 text-xs font-semibold uppercase">
               Get Started
             </Link>
           </Show>
           <Show when="signed-in">
-            <Link href="/dashboard" className="rounded-xl border border-white/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/82 transition hover:border-brand-green/45 hover:text-white">
+            <Link href="/dashboard" className="bp-secondary-action px-4 py-3 text-xs font-semibold uppercase">
               Dashboard
             </Link>
             <UserButton />
           </Show>
-          <Link href="/api/docs" className="rounded-xl border border-brand-green/20 bg-brand-green/8 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-brand-green transition hover:bg-brand-green/15">
+          <Link href="/api/docs" className="rounded-bp border border-brand-green/20 bg-brand-green/8 px-4 py-3 text-xs font-semibold uppercase text-brand-green transition hover:bg-brand-green/15">
             View API Docs
           </Link>
         </div>
         <details className="group relative lg:hidden [&_summary::-webkit-details-marker]:hidden">
-          <summary className="flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-white transition hover:border-brand-green/35 hover:text-brand-green">
+          <summary className="flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center rounded-bp-md border border-white/10 bg-white/[0.03] text-white transition hover:border-brand-green/35 hover:text-brand-green">
             <span className="sr-only">Open navigation</span>
             <MenuIcon />
           </summary>
-          <div className="absolute right-0 mt-3 w-[min(88vw,360px)] rounded-[28px] border border-white/10 bg-[#07100c]/98 p-4 shadow-[0_26px_80px_rgba(0,0,0,0.48)]">
+          <div className="absolute right-0 mt-3 w-[min(88vw,360px)] rounded-bp-lg border border-brand-border bg-brand-surface/98 p-4 shadow-[0_26px_80px_rgba(0,0,0,0.48)]">
             <div className="grid gap-2">
               {primaryNav.map((item) => (
-                <Link key={item.href} href={item.href} className="rounded-2xl px-4 py-3 text-sm font-semibold text-white/78 transition hover:bg-brand-green/10 hover:text-brand-green">
+                <Link key={item.href} href={item.href} className="rounded-bp px-4 py-3 text-sm font-semibold text-white/78 transition hover:bg-brand-green/10 hover:text-brand-green">
                   {item.label}
                 </Link>
               ))}
             </div>
             <div className="mt-4 grid gap-2 border-t border-white/8 pt-4">
               <Show when="signed-out">
-                <Link href="/auth/login" className="rounded-2xl border border-white/10 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-white/82">
+                <Link href="/auth/login" className="rounded-bp border border-white/10 px-4 py-3 text-center text-xs font-semibold uppercase text-white/82">
                   Sign In
                 </Link>
-                <Link href="/auth/signup" className="rounded-2xl bg-brand-green px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-black">
+                <Link href="/auth/signup" className="rounded-bp bg-brand-green px-4 py-3 text-center text-xs font-semibold uppercase text-black">
                   Get Started
                 </Link>
               </Show>
               <Show when="signed-in">
-                <Link href="/dashboard" className="rounded-2xl border border-white/10 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-white/82">
+                <Link href="/dashboard" className="rounded-bp border border-white/10 px-4 py-3 text-center text-xs font-semibold uppercase text-white/82">
                   Dashboard
                 </Link>
-                <div className="flex justify-center rounded-2xl border border-white/10 px-4 py-3">
+                <div className="flex justify-center rounded-bp border border-white/10 px-4 py-3">
                   <UserButton />
                 </div>
               </Show>
-              <Link href="/api/docs" className="rounded-2xl border border-brand-green/20 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-brand-green">View API Docs</Link>
+              <Link href="/api/docs" className="rounded-bp border border-brand-green/20 px-4 py-3 text-center text-xs font-semibold uppercase text-brand-green">View API Docs</Link>
             </div>
           </div>
         </details>
@@ -221,13 +221,13 @@ export function SiteFooter() {
             ))}
           </div>
         </div>
-        <div className="mt-12 rounded-[28px] border border-white/8 bg-white/[0.02] p-5">
+        <div className="bp-panel mt-12 p-5">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/36">Social Media</p>
               <div className="mt-4 flex flex-wrap gap-3">
                 {socialLinks.map((item) => (
-                  <a key={item.label} href={item.href} target="_blank" rel="noreferrer" aria-label={item.label} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-black/25 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-white/70 transition hover:-translate-y-0.5 hover:border-brand-green/40 hover:text-brand-green">
+                  <a key={item.label} href={item.href} target="_blank" rel="noreferrer" aria-label={item.label} className="flex h-11 w-11 items-center justify-center rounded-bp border border-white/10 bg-black/25 font-mono text-[10px] font-semibold uppercase text-white/70 transition hover:-translate-y-0.5 hover:border-brand-green/40 hover:text-brand-green">
                     {item.short}
                   </a>
                 ))}
@@ -256,8 +256,8 @@ export function MarketingShell({ children }: { children: ReactNode }) {
     <main className="relative min-h-screen overflow-hidden bg-brand-black text-white">
       <div className="pointer-events-none fixed inset-0">
         <div className="bp-grid-bg absolute inset-0 opacity-70" />
-        <div className="absolute inset-x-0 top-0 h-[560px] bg-[radial-gradient(circle_at_top,rgba(0,255,157,0.15),transparent_64%)]" />
-        <div className="absolute bottom-0 right-0 h-[520px] w-[520px] bg-[radial-gradient(circle,rgba(0,255,157,0.08),transparent_68%)]" />
+        <div className="absolute inset-x-0 top-0 h-[560px] bg-[linear-gradient(180deg,rgba(1,50,32,0.62),rgba(0,0,0,0))]" />
+        <div className="absolute inset-x-0 bottom-0 h-[420px] bg-[linear-gradient(0deg,rgba(1,50,32,0.32),rgba(0,0,0,0))]" />
       </div>
       <div className="relative z-10">
         <SiteHeader />
@@ -286,10 +286,10 @@ export function FeatureCard({ card }: { card: MarketingCard }) {
   const content = (
     <article
       id={card.anchorId}
-      className="bp-card group h-full scroll-mt-28 rounded-[30px] p-7 transition duration-300 hover:-translate-y-1 hover:border-brand-green/24 hover:shadow-[0_34px_90px_rgba(0,255,157,0.11)]"
+      className="bp-card group h-full scroll-mt-28 rounded-bp-lg p-7 transition duration-300 hover:-translate-y-1 hover:border-brand-green/24 hover:shadow-[0_34px_90px_rgba(0,255,157,0.11)]"
     >
       <div className="flex items-start justify-between gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/8 bg-white/[0.03]">
+        <div className="flex h-14 w-14 items-center justify-center rounded-bp-md border border-white/8 bg-white/[0.03]">
           <Icon className="h-6 w-6 text-brand-green" />
         </div>
         {card.meta ? <span className="rounded-full border border-brand-green/18 bg-brand-green/8 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-brand-green/90">{card.meta}</span> : null}
@@ -322,7 +322,7 @@ export function MarketingPage({ page }: { page: MarketingPageContent }) {
                 {page.primaryCta ? (
                   <CtaLink
                     href={page.primaryCta.href}
-                    className="bp-button-glow inline-flex min-h-12 items-center justify-center rounded-2xl bg-brand-green px-7 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac]"
+                    className="bp-primary-action inline-flex min-h-12 items-center justify-center px-7 py-4 text-sm font-semibold uppercase"
                   >
                     {page.primaryCta.label}
                     <ArrowRight className="ml-3 h-4 w-4" />
@@ -331,7 +331,7 @@ export function MarketingPage({ page }: { page: MarketingPageContent }) {
                 {page.secondaryCta ? (
                   <CtaLink
                     href={page.secondaryCta.href}
-                    className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/10 px-7 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-white/82 transition hover:border-brand-green/35 hover:text-white"
+                    className="bp-secondary-action inline-flex min-h-12 items-center justify-center px-7 py-4 text-sm font-semibold uppercase"
                   >
                     {page.secondaryCta.label}
                   </CtaLink>
@@ -339,8 +339,8 @@ export function MarketingPage({ page }: { page: MarketingPageContent }) {
               </div>
             ) : null}
           </div>
-          <div className="bp-card rounded-[40px] p-7 md:p-8">
-            <div className="rounded-[32px] border border-brand-green/15 bg-[#050807] p-6">
+          <div className="bp-card rounded-bp-lg p-7 md:p-8">
+            <div className="rounded-bp-lg border border-brand-green/15 bg-brand-black p-6">
               <div className="flex items-center justify-between">
                 <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-brand-green">Burner Point</div>
                 <ShieldCheck className="h-5 w-5 text-brand-green" />
@@ -350,7 +350,7 @@ export function MarketingPage({ page }: { page: MarketingPageContent }) {
               {page.highlights?.length ? (
                 <div className="mt-7 space-y-3">
                   {page.highlights.map((item) => (
-                    <div key={item} className="flex items-center gap-3 rounded-2xl border border-white/7 bg-white/[0.025] px-4 py-3">
+                    <div key={item} className="flex items-center gap-3 rounded-bp-md border border-white/7 bg-white/[0.025] px-4 py-3">
                       <span className="h-2.5 w-2.5 rounded-full bg-brand-green shadow-[0_0_14px_rgba(0,255,157,0.8)]" />
                       <span className="text-sm text-white/72">{item}</span>
                     </div>
@@ -363,8 +363,8 @@ export function MarketingPage({ page }: { page: MarketingPageContent }) {
       </section>
       <div className="bp-divider" />
       {page.cards?.length ? <section className="relative py-20 md:py-24"><div className="mx-auto grid max-w-7xl gap-5 px-5 sm:px-6 md:grid-cols-2 xl:grid-cols-3 xl:px-8">{page.cards.map((card) => <FeatureCard key={`${page.slug}-${card.title}`} card={card} />)}</div></section> : null}
-      {page.sections?.length ? <section className="relative py-20 md:py-24"><div className="mx-auto grid max-w-7xl gap-5 px-5 sm:px-6 lg:grid-cols-2 xl:px-8">{page.sections.map((section) => <article key={section.title} className="bp-card rounded-[34px] p-7 md:p-8"><h2 className="font-mono text-xl font-semibold uppercase tracking-[0.12em] text-white">{section.title}</h2><p className="mt-5 text-base leading-8 text-white/60">{section.text}</p>{section.items?.length ? <div className="mt-6"><BulletList items={section.items} /></div> : null}</article>)}</div></section> : null}
-      {page.faqs?.length ? <section className="relative py-20 md:py-24"><div className="mx-auto max-w-5xl px-5 sm:px-6 xl:px-8"><Eyebrow>Answers</Eyebrow><div className="space-y-4">{page.faqs.map((faq) => <details key={faq.question} className="bp-card group rounded-[24px] p-6"><summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-mono text-sm font-semibold uppercase tracking-[0.14em] text-white [&::-webkit-details-marker]:hidden"><span>{faq.question}</span><span className="flex h-8 w-8 flex-none items-center justify-center rounded-full border border-brand-green/15 bg-brand-green/10 text-brand-green transition group-open:rotate-45">+</span></summary><p className="pt-5 text-sm leading-7 text-white/58">{faq.answer}</p></details>)}</div></div></section> : null}
+      {page.sections?.length ? <section className="relative py-20 md:py-24"><div className="mx-auto grid max-w-7xl gap-5 px-5 sm:px-6 lg:grid-cols-2 xl:px-8">{page.sections.map((section) => <article key={section.title} className="bp-card rounded-bp-lg p-7 md:p-8"><h2 className="font-mono text-xl font-semibold uppercase text-white">{section.title}</h2><p className="mt-5 text-base leading-8 text-white/60">{section.text}</p>{section.items?.length ? <div className="mt-6"><BulletList items={section.items} /></div> : null}</article>)}</div></section> : null}
+      {page.faqs?.length ? <section className="relative py-20 md:py-24"><div className="mx-auto max-w-5xl px-5 sm:px-6 xl:px-8"><Eyebrow>Answers</Eyebrow><div className="space-y-4">{page.faqs.map((faq) => <details key={faq.question} className="bp-card group rounded-bp-lg p-6"><summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-mono text-sm font-semibold uppercase text-white [&::-webkit-details-marker]:hidden"><span>{faq.question}</span><span className="flex h-8 w-8 flex-none items-center justify-center rounded-bp border border-brand-green/15 bg-brand-green/10 text-brand-green transition group-open:rotate-45">+</span></summary><p className="pt-5 text-sm leading-7 text-white/58">{faq.answer}</p></details>)}</div></div></section> : null}
       {page.slug === 'contact' ? <ContactFormSection /> : null}
     </MarketingShell>
   );
@@ -374,21 +374,21 @@ function ContactFormSection() {
   return (
     <section className="relative pb-20 md:pb-28">
       <div className="mx-auto grid max-w-7xl gap-6 px-5 sm:px-6 lg:grid-cols-[0.85fr_1.15fr] xl:px-8">
-        <div className="bp-card rounded-[34px] p-7">
+        <div className="bp-card rounded-bp-lg p-7">
           <h2 className="font-mono text-xl font-semibold uppercase tracking-[0.14em] text-white">Support Channels</h2>
           <div className="mt-6 space-y-3 text-sm text-white/60">
-            <a href="mailto:info.burnerpoint@gmail.com" className="block rounded-2xl border border-white/8 bg-white/[0.02] px-4 py-4 transition hover:border-brand-green/35 hover:text-brand-green">Email: info.burnerpoint@gmail.com</a>
-            <a href="https://t.me/burnerpoint" className="block rounded-2xl border border-white/8 bg-white/[0.02] px-4 py-4 transition hover:border-brand-green/35 hover:text-brand-green">Telegram: https://t.me/burnerpoint</a>
-            <a href="https://t.me/burnerpointapp" className="block rounded-2xl border border-white/8 bg-white/[0.02] px-4 py-4 transition hover:border-brand-green/35 hover:text-brand-green">Telegram App: https://t.me/burnerpointapp</a>
+            <a href="mailto:info.burnerpoint@gmail.com" className="block rounded-bp-md border border-white/8 bg-white/[0.02] px-4 py-4 transition hover:border-brand-green/35 hover:text-brand-green">Email: info.burnerpoint@gmail.com</a>
+            <a href="https://t.me/burnerpoint" className="block rounded-bp-md border border-white/8 bg-white/[0.02] px-4 py-4 transition hover:border-brand-green/35 hover:text-brand-green">Telegram: https://t.me/burnerpoint</a>
+            <a href="https://t.me/burnerpointapp" className="block rounded-bp-md border border-white/8 bg-white/[0.02] px-4 py-4 transition hover:border-brand-green/35 hover:text-brand-green">Telegram App: https://t.me/burnerpointapp</a>
           </div>
         </div>
-        <form action="mailto:info.burnerpoint@gmail.com" method="post" encType="text/plain" className="bp-card rounded-[34px] p-7">
+        <form action="mailto:info.burnerpoint@gmail.com" method="post" encType="text/plain" className="bp-card rounded-bp-lg p-7">
           <div className="grid gap-4 md:grid-cols-2">
-            <label className="text-sm text-white/70">Name<input name="name" required className="mt-2 w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-4 text-white outline-none transition placeholder:text-white/28 focus:border-brand-green/45" placeholder="Your name" /></label>
-            <label className="text-sm text-white/70">Email<input name="email" type="email" required className="mt-2 w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-4 text-white outline-none transition placeholder:text-white/28 focus:border-brand-green/45" placeholder="you@example.com" /></label>
+            <label className="text-sm text-white/70">Name<input name="name" required className="mt-2 w-full rounded-bp-md border border-white/10 bg-black/35 px-4 py-4 text-white outline-none transition placeholder:text-white/28 focus:border-brand-green/45" placeholder="Your name" /></label>
+            <label className="text-sm text-white/70">Email<input name="email" type="email" required className="mt-2 w-full rounded-bp-md border border-white/10 bg-black/35 px-4 py-4 text-white outline-none transition placeholder:text-white/28 focus:border-brand-green/45" placeholder="you@example.com" /></label>
           </div>
-          <label className="mt-4 block text-sm text-white/70">Message<textarea name="message" required rows={6} className="mt-2 w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-4 text-white outline-none transition placeholder:text-white/28 focus:border-brand-green/45" placeholder="Tell us what you need help with..." /></label>
-          <button type="submit" className="bp-button-glow mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-brand-green px-7 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] md:w-auto">
+          <label className="mt-4 block text-sm text-white/70">Message<textarea name="message" required rows={6} className="mt-2 w-full rounded-bp-md border border-white/10 bg-black/35 px-4 py-4 text-white outline-none transition placeholder:text-white/28 focus:border-brand-green/45" placeholder="Tell us what you need help with..." /></label>
+          <button type="submit" className="bp-primary-action mt-5 inline-flex min-h-12 w-full items-center justify-center px-7 py-4 text-sm font-semibold uppercase md:w-auto">
             Send Support Email
             <ArrowRight className="ml-3 h-4 w-4" />
           </button>

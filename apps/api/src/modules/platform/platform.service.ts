@@ -1,0 +1,174 @@
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import {
+  CORE_PAYMENT_GATEWAYS,
+  SECONDARY_PAYMENT_GATEWAYS,
+  STACK_REGISTRY,
+  StackCategory,
+  StackIntegrationDefinition,
+} from './platform-registry';
+
+export type StackIntegrationStatus =
+  | 'ready'
+  | 'configured'
+  | 'partial'
+  | 'missing_env'
+  | 'planned'
+  | 'deferred'
+  | 'disabled';
+
+export interface StackIntegrationSnapshot extends Omit<StackIntegrationDefinition, 'requiredEnv' | 'optionalEnv'> {
+  status: StackIntegrationStatus;
+  requiredEnv: Array<{ name: string; configured: boolean }>;
+  optionalEnv: Array<{ name: string; configured: boolean }>;
+}
+
+export interface PlatformStackSnapshot {
+  product: 'Burner Point';
+  generatedAt: string;
+  environment: string;
+  policies: {
+    webHosting: 'Vercel';
+    apiHosting: 'Railway';
+    database: 'Neon Postgres';
+    mobileDelivery: 'Expo / EAS';
+    primaryPayments: readonly string[];
+    secondaryPayments: readonly string[];
+    secondaryGatewaysEnabled: boolean;
+    mobileExternalPaymentsEnabled: boolean;
+    conversationScope: 'US/Canada only';
+    verificationScope: 'Global SMS and voice';
+    aiKillSwitchEnabled: boolean;
+  };
+  summary: Record<StackIntegrationStatus, number> & { total: number };
+  groups: Record<StackCategory, StackIntegrationSnapshot[]>;
+  integrations: StackIntegrationSnapshot[];
+}
+
+@Injectable()
+export class PlatformService {
+  constructor(private readonly config: ConfigService) {}
+
+  getStack(): PlatformStackSnapshot {
+    const integrations = STACK_REGISTRY.map((definition) => this.toSnapshot(definition));
+    const groups = integrations.reduce((acc, integration) => {
+      acc[integration.category] = acc[integration.category] || [];
+      acc[integration.category].push(integration);
+      return acc;
+    }, {} as Record<StackCategory, StackIntegrationSnapshot[]>);
+
+    return {
+      product: 'Burner Point',
+      generatedAt: new Date().toISOString(),
+      environment: this.config.get<string>('APP_ENV') || this.config.get<string>('NODE_ENV') || 'development',
+      policies: {
+        webHosting: 'Vercel',
+        apiHosting: 'Railway',
+        database: 'Neon Postgres',
+        mobileDelivery: 'Expo / EAS',
+        primaryPayments: CORE_PAYMENT_GATEWAYS,
+        secondaryPayments: SECONDARY_PAYMENT_GATEWAYS,
+        secondaryGatewaysEnabled: this.isTruthy('SECONDARY_GATEWAYS_ENABLED'),
+        mobileExternalPaymentsEnabled: this.isTruthy('MOBILE_EXTERNAL_PAYMENTS_ENABLED'),
+        conversationScope: 'US/Canada only',
+        verificationScope: 'Global SMS and voice',
+        aiKillSwitchEnabled: this.isTruthy('AI_KILL_SWITCH'),
+      },
+      summary: this.buildSummary(integrations),
+      groups,
+      integrations,
+    };
+  }
+
+  getReadiness() {
+    const stack = this.getStack();
+    const blockers = stack.integrations
+      .filter((item) => item.priority !== 'secondary')
+      .filter((item) => ['missing_env', 'partial'].includes(item.status))
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        status: item.status,
+        missingEnv: item.requiredEnv.filter((env) => !env.configured).map((env) => env.name),
+      }));
+
+    return {
+      status: blockers.length ? 'needs_configuration' : 'ready',
+      generatedAt: stack.generatedAt,
+      blockers,
+      policies: stack.policies,
+    };
+  }
+
+  private toSnapshot(definition: StackIntegrationDefinition): StackIntegrationSnapshot {
+    const requiredEnv = (definition.requiredEnv ?? []).map((name) => ({
+      name,
+      configured: this.hasEnv(name),
+    }));
+    const optionalEnv = (definition.optionalEnv ?? []).map((name) => ({
+      name,
+      configured: this.hasEnv(name),
+    }));
+
+    return {
+      ...definition,
+      requiredEnv,
+      optionalEnv,
+      status: this.resolveStatus(definition, requiredEnv),
+    };
+  }
+
+  private resolveStatus(
+    definition: StackIntegrationDefinition,
+    requiredEnv: Array<{ name: string; configured: boolean }>,
+  ): StackIntegrationStatus {
+    if (definition.disabledWhenEnvTrue && this.isTruthy(definition.disabledWhenEnvTrue)) {
+      return 'disabled';
+    }
+
+    if (definition.deferredUnlessEnv && !this.isTruthy(definition.deferredUnlessEnv)) {
+      return 'deferred';
+    }
+
+    if (!requiredEnv.length) {
+      return definition.statusWhenNoEnv ?? 'ready';
+    }
+
+    const configuredCount = requiredEnv.filter((env) => env.configured).length;
+    if (configuredCount === requiredEnv.length) return 'configured';
+    if (configuredCount > 0) return 'partial';
+    return definition.statusWhenNoEnv ?? 'missing_env';
+  }
+
+  private buildSummary(integrations: StackIntegrationSnapshot[]): PlatformStackSnapshot['summary'] {
+    const summary = {
+      total: integrations.length,
+      ready: 0,
+      configured: 0,
+      partial: 0,
+      missing_env: 0,
+      planned: 0,
+      deferred: 0,
+      disabled: 0,
+    };
+
+    for (const integration of integrations) {
+      summary[integration.status] += 1;
+    }
+
+    return summary;
+  }
+
+  private hasEnv(name: string): boolean {
+    const value = this.config.get<string>(name);
+    if (!value) return false;
+    const normalized = value.trim().toLowerCase();
+    return normalized !== 'replace_me' && !normalized.includes('replace_me');
+  }
+
+  private isTruthy(name: string): boolean {
+    return ['true', '1', 'yes', 'on'].includes((this.config.get<string>(name) ?? '').toLowerCase());
+  }
+}
+

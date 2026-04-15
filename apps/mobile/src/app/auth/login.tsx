@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Eye, EyeOff, ShieldCheck, Zap } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as ExpoLinking from 'expo-linking';
 import { useAuth, useSignIn, useSSO } from '@clerk/clerk-expo';
 import { exchangeClerkForApiSession } from '../../lib/auth';
+import { BRAND } from '../../lib/brand';
+import { WEB_APP_URL } from '../../lib/config';
 
 const providers = [
   ['Google', 'oauth_google'],
@@ -178,8 +180,8 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={s.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.inner}>
-        <TouchableOpacity style={s.logo} onPress={() => router.replace('/(tabs)' as any)} activeOpacity={0.8}>
-          <View style={s.logoIcon}><ShieldCheck size={28} color="#03110b" /></View>
+        <TouchableOpacity style={s.logo} onPress={() => Linking.openURL(WEB_APP_URL)} activeOpacity={0.8}>
+          <View style={s.logoIcon}><ShieldCheck size={28} color={BRAND.colors.dark} /></View>
           <Text style={s.logoText}>Burner<Text style={s.green}>Point</Text></Text>
           <Text style={s.logoSub}>Welcome back. Private by design.</Text>
         </TouchableOpacity>
@@ -188,9 +190,9 @@ export default function LoginScreen() {
           {secondFactorStrategy ? (
             <>
               <Text style={s.label}>Clerk 2FA code</Text>
-              <TextInput value={secondFactorCode} onChangeText={setSecondFactorCode} placeholder="Enter verification code" placeholderTextColor="#526157" style={s.input} keyboardType="number-pad" autoCapitalize="none" autoCorrect={false} autoComplete="one-time-code" />
+              <TextInput value={secondFactorCode} onChangeText={setSecondFactorCode} placeholder="Enter verification code" placeholderTextColor={BRAND.colors.muted} style={s.input} keyboardType="number-pad" autoCapitalize="none" autoCorrect={false} autoComplete="one-time-code" />
               <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={verifySecondFactor} disabled={loading} activeOpacity={0.85}>
-                {loading ? <ActivityIndicator color="#03110b" /> : <Text style={s.btnText}>Verify 2FA</Text>}
+                {loading ? <ActivityIndicator color={BRAND.colors.dark} /> : <Text style={s.btnText}>Verify 2FA</Text>}
               </TouchableOpacity>
             </>
           ) : (
@@ -198,9 +200,9 @@ export default function LoginScreen() {
               {authStep === 'reset-request' ? (
                 <>
                   <Text style={s.label}>Email or phone number</Text>
-                  <TextInput value={resetIdentifier} onChangeText={setResetIdentifier} placeholder="you@example.com or +1 415 555 0182" placeholderTextColor="#526157" style={s.input} keyboardType="default" autoCapitalize="none" autoCorrect={false} autoComplete="username" />
+                  <TextInput value={resetIdentifier} onChangeText={setResetIdentifier} placeholder="you@example.com or +1 415 555 0182" placeholderTextColor={BRAND.colors.muted} style={s.input} keyboardType="default" autoCapitalize="none" autoCorrect={false} autoComplete="username" />
                   <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={requestPasswordReset} disabled={loading || !isLoaded} activeOpacity={0.85}>
-                    {loading ? <ActivityIndicator color="#03110b" /> : <Text style={s.btnText}>Send reset code</Text>}
+                    {loading ? <ActivityIndicator color={BRAND.colors.dark} /> : <Text style={s.btnText}>Send reset code</Text>}
                   </TouchableOpacity>
                   <TouchableOpacity onPress={resetAuthState} style={s.resetLink}>
                     <Text style={s.resetText}>Back to sign in</Text>
@@ -209,18 +211,18 @@ export default function LoginScreen() {
               ) : authStep === 'reset-confirm' ? (
                 <>
                   <Text style={s.label}>{resetStrategy === 'reset_password_email_code' ? 'Email reset code' : 'Phone reset code'}</Text>
-                  <TextInput value={resetCode} onChangeText={setResetCode} placeholder="Enter reset code" placeholderTextColor="#526157" style={s.input} keyboardType="number-pad" autoCapitalize="none" autoCorrect={false} autoComplete="one-time-code" />
+                  <TextInput value={resetCode} onChangeText={setResetCode} placeholder="Enter reset code" placeholderTextColor={BRAND.colors.muted} style={s.input} keyboardType="number-pad" autoCapitalize="none" autoCorrect={false} autoComplete="one-time-code" />
 
                   <Text style={s.label}>New password</Text>
                   <View style={s.passwordWrap}>
-                    <TextInput value={newPassword} onChangeText={setNewPassword} placeholder="New password" placeholderTextColor="#526157" style={[s.input, s.passwordInput]} secureTextEntry={!showPassword} autoComplete="new-password" />
+                    <TextInput value={newPassword} onChangeText={setNewPassword} placeholder="New password" placeholderTextColor={BRAND.colors.muted} style={[s.input, s.passwordInput]} secureTextEntry={!showPassword} autoComplete="new-password" />
                     <TouchableOpacity style={s.eye} onPress={() => setShowPassword((value) => !value)}>
-                      {showPassword ? <EyeOff size={18} color="#95A69D" /> : <Eye size={18} color="#95A69D" />}
+                      {showPassword ? <EyeOff size={18} color={BRAND.colors.metalStart} /> : <Eye size={18} color={BRAND.colors.metalStart} />}
                     </TouchableOpacity>
                   </View>
 
                   <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={submitPasswordReset} disabled={loading || !isLoaded} activeOpacity={0.85}>
-                    {loading ? <ActivityIndicator color="#03110b" /> : <Text style={s.btnText}>Reset password</Text>}
+                    {loading ? <ActivityIndicator color={BRAND.colors.dark} /> : <Text style={s.btnText}>Reset password</Text>}
                   </TouchableOpacity>
                   <View style={s.resetActions}>
                     <TouchableOpacity onPress={requestPasswordReset} disabled={loading}>
@@ -234,18 +236,18 @@ export default function LoginScreen() {
               ) : (
                 <>
           <Text style={s.label}>Email or phone number</Text>
-          <TextInput value={identifier} onChangeText={setIdentifier} placeholder="you@example.com or +1 415 555 0182" placeholderTextColor="#526157" style={s.input} keyboardType="default" autoCapitalize="none" autoCorrect={false} autoComplete="username" />
+          <TextInput value={identifier} onChangeText={setIdentifier} placeholder="you@example.com or +1 415 555 0182" placeholderTextColor={BRAND.colors.muted} style={s.input} keyboardType="default" autoCapitalize="none" autoCorrect={false} autoComplete="username" />
 
           <Text style={s.label}>Password</Text>
           <View style={s.passwordWrap}>
-            <TextInput value={password} onChangeText={setPassword} placeholder="Password" placeholderTextColor="#526157" style={[s.input, s.passwordInput]} secureTextEntry={!showPassword} autoComplete="current-password" />
+            <TextInput value={password} onChangeText={setPassword} placeholder="Password" placeholderTextColor={BRAND.colors.muted} style={[s.input, s.passwordInput]} secureTextEntry={!showPassword} autoComplete="current-password" />
             <TouchableOpacity style={s.eye} onPress={() => setShowPassword((value) => !value)}>
-              {showPassword ? <EyeOff size={18} color="#95A69D" /> : <Eye size={18} color="#95A69D" />}
+              {showPassword ? <EyeOff size={18} color={BRAND.colors.metalStart} /> : <Eye size={18} color={BRAND.colors.metalStart} />}
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={login} disabled={loading || !isLoaded} activeOpacity={0.85}>
-            {loading ? <ActivityIndicator color="#03110b" /> : <><Zap size={16} color="#03110b" /><Text style={s.btnText}>Sign In</Text></>}
+            {loading ? <ActivityIndicator color={BRAND.colors.dark} /> : <><Zap size={16} color={BRAND.colors.dark} /><Text style={s.btnText}>Sign In</Text></>}
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setAuthStep('reset-request')} style={s.resetLink}>
             <Text style={s.resetText}>Forgot password?</Text>
@@ -278,30 +280,30 @@ export default function LoginScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#050807' },
+  container: { flex: 1, backgroundColor: BRAND.colors.black },
   inner: { flex: 1, justifyContent: 'center', padding: 22 },
   logo: { alignItems: 'center', marginBottom: 34 },
-  logoIcon: { width: 66, height: 66, borderRadius: 24, backgroundColor: '#00FF9D', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  logoText: { color: '#fff', fontSize: 28, fontWeight: '800', letterSpacing: 1.4 },
-  green: { color: '#00FF9D' },
-  logoSub: { color: '#8A978F', fontSize: 13, marginTop: 8 },
-  form: { backgroundColor: '#0B120F', borderWidth: 1, borderColor: '#1D2A23', borderRadius: 28, padding: 16, gap: 10 },
-  label: { color: '#95A69D', fontSize: 12, fontWeight: '700', marginTop: 2 },
-  input: { minHeight: 52, backgroundColor: '#050807', borderWidth: 1, borderColor: '#203029', borderRadius: 16, paddingHorizontal: 14, color: '#fff', fontSize: 15 },
+  logoIcon: { width: 66, height: 66, borderRadius: BRAND.radii.lg, backgroundColor: BRAND.colors.cyberGreen, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  logoText: { color: BRAND.colors.white, fontSize: 28, fontWeight: '900' },
+  green: { color: BRAND.colors.cyberGreen },
+  logoSub: { color: BRAND.colors.metalStart, fontSize: 13, marginTop: 8 },
+  form: { backgroundColor: BRAND.colors.surface, borderWidth: 1, borderColor: BRAND.colors.border, borderRadius: BRAND.radii.lg, padding: 16, gap: 10 },
+  label: { color: BRAND.colors.metalStart, fontSize: 12, fontWeight: '700', marginTop: 2 },
+  input: { minHeight: 52, backgroundColor: BRAND.colors.black, borderWidth: 1, borderColor: BRAND.colors.border, borderRadius: BRAND.radii.md, paddingHorizontal: 14, color: BRAND.colors.white, fontSize: 15 },
   passwordWrap: { position: 'relative' },
   passwordInput: { paddingRight: 48 },
   eye: { position: 'absolute', right: 8, top: 6, width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  btn: { minHeight: 52, backgroundColor: '#00FF9D', borderRadius: 18, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, marginTop: 4 },
+  btn: { minHeight: 52, backgroundColor: BRAND.colors.cyberGreen, borderRadius: BRAND.radii.sm, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, marginTop: 4 },
   btnDisabled: { opacity: 0.55 },
-  btnText: { color: '#03110b', fontWeight: '800', fontSize: 15, textTransform: 'uppercase', letterSpacing: 1 },
-  or: { color: '#657268', fontSize: 11, textAlign: 'center', marginVertical: 8, textTransform: 'uppercase', letterSpacing: 2 },
+  btnText: { color: BRAND.colors.dark, fontWeight: '900', fontSize: 15, textTransform: 'uppercase' },
+  or: { color: BRAND.colors.muted, fontSize: 11, textAlign: 'center', marginVertical: 8, textTransform: 'uppercase' },
   providerGrid: { gap: 10 },
-  provider: { minHeight: 48, borderRadius: 16, borderWidth: 1, borderColor: '#203029', alignItems: 'center', justifyContent: 'center', backgroundColor: '#09100D' },
-  providerText: { color: '#DDE8E1', fontSize: 13, fontWeight: '700' },
+  provider: { minHeight: 48, borderRadius: BRAND.radii.md, borderWidth: 1, borderColor: BRAND.colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: BRAND.colors.dark },
+  providerText: { color: BRAND.colors.metalEnd, fontSize: 13, fontWeight: '700' },
   registerLink: { alignItems: 'center', paddingTop: 8 },
-  registerText: { color: '#8A978F', fontSize: 14 },
-  registerHighlight: { color: '#00FF9D', fontWeight: '800' },
+  registerText: { color: BRAND.colors.metalStart, fontSize: 14 },
+  registerHighlight: { color: BRAND.colors.cyberGreen, fontWeight: '800' },
   resetLink: { alignItems: 'center', paddingTop: 8 },
-  resetText: { color: '#00FF9D', fontSize: 13, fontWeight: '800' },
+  resetText: { color: BRAND.colors.cyberGreen, fontSize: 13, fontWeight: '800' },
   resetActions: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, paddingTop: 8 },
 });

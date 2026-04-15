@@ -250,16 +250,16 @@ export default function LoginPage() {
       </div>
 
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-xl items-center px-5 py-10">
-        <form onSubmit={handleSubmit(onSubmit)} className="bp-card w-full rounded-[34px] p-5 md:p-7">
-          <div className="rounded-[28px] border border-white/8 bg-black/24 p-5 md:p-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="bp-card w-full rounded-bp-lg p-5 md:p-7">
+          <div className="rounded-bp-lg border border-white/8 bg-black/24 p-5 md:p-6">
             <div className="mb-8 text-center">
               <Link href="/" className="mx-auto inline-flex items-center justify-center gap-3" aria-label="Burner Point home">
-                <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-brand-green/25 bg-brand-green/10">
+                <span className="flex h-12 w-12 items-center justify-center rounded-bp-lg border border-brand-green/25 bg-brand-green/10">
                   <Image src="/assets/logo-mark.svg" alt="" width={28} height={28} />
                 </span>
                 <span className="font-mono text-base font-semibold uppercase tracking-[0.22em]">Burner <span className="text-brand-green">Point</span></span>
               </Link>
-              <div className="mx-auto mt-7 flex h-14 w-14 items-center justify-center rounded-[22px] border border-brand-green/25 bg-brand-green/10">
+              <div className="mx-auto mt-7 flex h-14 w-14 items-center justify-center rounded-bp-lg border border-brand-green/25 bg-brand-green/10">
                 <ShieldCheck className="h-7 w-7 text-brand-green" />
               </div>
               <h1 className="mt-5 text-3xl font-semibold uppercase">Welcome back</h1>
@@ -267,7 +267,7 @@ export default function LoginPage() {
             </div>
 
             {authMode === 'reset-request' ? (
-              <div className="space-y-4 rounded-[24px] border border-brand-green/20 bg-brand-green/[0.04] p-4">
+              <div className="space-y-4 rounded-bp-lg border border-brand-green/20 bg-brand-green/[0.04] p-4">
                 <label className="block text-sm font-medium text-white/70">
                   Email or phone number
                   <input
@@ -280,7 +280,7 @@ export default function LoginPage() {
                     className="auth-input mt-1.5"
                   />
                 </label>
-                <button type="button" disabled={isSubmitting} onClick={startPasswordReset} className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-2xl bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+                <button type="button" disabled={isSubmitting} onClick={startPasswordReset} className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-bp bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
                   {isSubmitting ? 'Sending code...' : 'Send reset code'}
                 </button>
                 <button type="button" onClick={returnToSignIn} className="w-full text-xs font-medium text-white/48 underline-offset-2 transition hover:text-brand-green hover:underline">
@@ -288,7 +288,7 @@ export default function LoginPage() {
                 </button>
               </div>
             ) : authMode === 'reset-code' ? (
-              <div className="space-y-4 rounded-[24px] border border-brand-green/20 bg-brand-green/[0.04] p-4">
+              <div className="space-y-4 rounded-bp-lg border border-brand-green/20 bg-brand-green/[0.04] p-4">
                 <label className="block text-sm font-medium text-white/70">
                   Clerk reset code
                   <input
@@ -301,7 +301,7 @@ export default function LoginPage() {
                     className="auth-input mt-1.5"
                   />
                 </label>
-                <button type="button" disabled={isSubmitting} onClick={verifyPasswordResetCode} className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-2xl bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+                <button type="button" disabled={isSubmitting} onClick={verifyPasswordResetCode} className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-bp bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
                   {isSubmitting ? 'Verifying...' : 'Verify reset code'}
                 </button>
                 <button type="button" onClick={returnToSignIn} className="w-full text-xs font-medium text-white/48 underline-offset-2 transition hover:text-brand-green hover:underline">
@@ -309,7 +309,7 @@ export default function LoginPage() {
                 </button>
               </div>
             ) : authMode === 'reset-password' ? (
-              <div className="space-y-4 rounded-[24px] border border-brand-green/20 bg-brand-green/[0.04] p-4">
+              <div className="space-y-4 rounded-bp-lg border border-brand-green/20 bg-brand-green/[0.04] p-4">
                 <label className="block text-sm font-medium text-white/70">
                   New password
                   <input
@@ -321,7 +321,7 @@ export default function LoginPage() {
                     className="auth-input mt-1.5"
                   />
                 </label>
-                <button type="button" disabled={isSubmitting} onClick={submitNewPassword} className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-2xl bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+                <button type="button" disabled={isSubmitting} onClick={submitNewPassword} className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-bp bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
                   {isSubmitting ? 'Saving password...' : 'Reset password'}
                 </button>
                 <button type="button" onClick={returnToSignIn} className="w-full text-xs font-medium text-white/48 underline-offset-2 transition hover:text-brand-green hover:underline">
@@ -329,7 +329,7 @@ export default function LoginPage() {
                 </button>
               </div>
             ) : secondFactorStrategy ? (
-              <div className="space-y-4 rounded-[24px] border border-brand-green/20 bg-brand-green/[0.04] p-4">
+              <div className="space-y-4 rounded-bp-lg border border-brand-green/20 bg-brand-green/[0.04] p-4">
                 <label className="block text-sm font-medium text-white/70">
                   Clerk 2FA code
                   <input
@@ -342,7 +342,7 @@ export default function LoginPage() {
                     className="auth-input mt-1.5"
                   />
                 </label>
-                <button type="button" disabled={isSubmitting} onClick={verifySecondFactor} className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-2xl bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+                <button type="button" disabled={isSubmitting} onClick={verifySecondFactor} className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-bp bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
                   {isSubmitting ? 'Verifying...' : 'Verify 2FA'}
                 </button>
               </div>
@@ -387,7 +387,7 @@ export default function LoginPage() {
             )}
 
             {!secondFactorStrategy && authMode === 'sign-in' ? (
-              <button type="submit" disabled={isSubmitting} className="bp-button-glow mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+              <button type="submit" disabled={isSubmitting} className="bp-button-glow mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-bp bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
                 {isSubmitting ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" /> : <Zap size={16} />}
                 {isSubmitting ? 'Signing in...' : 'Sign In'}
               </button>
@@ -402,7 +402,7 @@ export default function LoginPage() {
                 </div>
                 <div className="grid gap-3 sm:grid-cols-3">
                   {oauthProviders.map((provider) => (
-                    <button key={provider.label} type="button" onClick={() => startOAuth(provider.strategy)} className="flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.02] px-3 py-3 text-center text-xs font-semibold text-white/76 transition hover:border-brand-green/35 hover:text-brand-green">
+                    <button key={provider.label} type="button" onClick={() => startOAuth(provider.strategy)} className="flex min-h-11 items-center justify-center rounded-bp border border-white/10 bg-white/[0.02] px-3 py-3 text-center text-xs font-semibold text-white/76 transition hover:border-brand-green/35 hover:text-brand-green">
                       {provider.label}
                     </button>
                   ))}

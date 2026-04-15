@@ -10,6 +10,7 @@ import * as Device from 'expo-device';
 import * as WebBrowser from 'expo-web-browser';
 import { View, Text, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { BRAND } from '../lib/brand';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -74,7 +75,7 @@ export default function RootLayout() {
           <Text style={styles.logoText}>BP</Text>
         </View>
         <Text style={styles.splashTitle}>Burner Point</Text>
-        <Text style={styles.splashSub}>Privacy is not a feature.</Text>
+        <Text style={styles.splashSub}>{BRAND.message}</Text>
       </View>
     );
   }
@@ -90,8 +91,8 @@ export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={clerkPublishableKey || ''} tokenCache={tokenCache}>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <StatusBar style="light" backgroundColor="#0A0A0A"/>
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0A0A0A' } }}>
+        <StatusBar style="light" backgroundColor={BRAND.colors.black}/>
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: BRAND.colors.black } }}>
           <Stack.Screen name="auth/login"/>
           <Stack.Screen name="auth/register"/>
           <Stack.Screen name="(tabs)"/>
@@ -103,9 +104,33 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
-  splash: { flex: 1, backgroundColor: '#0A0A0A', alignItems: 'center', justifyContent: 'center' },
-  logoBox: { width: 64, height: 64, borderRadius: 16, backgroundColor: '#00FF9D', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  logoText: { color: '#0A0A0A', fontSize: 24, fontWeight: 'bold' },
-  splashTitle: { color: '#FFFFFF', fontSize: 24, fontWeight: 'bold', marginBottom: 8 },
-  splashSub: { color: '#666666', fontSize: 14 },
+  splash: {
+    flex: 1,
+    backgroundColor: BRAND.colors.black,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+  },
+  logoBox: {
+    width: 64,
+    height: 64,
+    borderRadius: BRAND.radii.lg,
+    backgroundColor: BRAND.colors.cyberGreen,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    shadowColor: BRAND.colors.cyberGreen,
+    shadowOpacity: 0.28,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  logoText: { color: BRAND.colors.black, fontSize: 24, fontWeight: '900' },
+  splashTitle: { color: BRAND.colors.white, fontSize: 24, fontWeight: '900', marginBottom: 8 },
+  splashSub: {
+    color: BRAND.colors.metalEnd,
+    fontSize: 14,
+    lineHeight: 22,
+    maxWidth: 290,
+    textAlign: 'center',
+  },
 });
