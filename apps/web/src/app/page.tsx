@@ -258,7 +258,7 @@ export default function Home() {
                 { href: '/verifications', label: 'Get Verification' },
                 { href: '/rentals', label: 'Rent A Number' },
                 { href: '/pricing', label: 'Start Monthly Plan' },
-                { href: '/auth/signup', label: 'Get Your Number' },
+                { href: '/numbers', label: 'Get Your Number' },
                 { href: '/pricing', label: 'View Pricing' },
               ].map((item) => (
                 <Link

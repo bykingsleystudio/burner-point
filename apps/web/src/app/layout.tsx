@@ -20,12 +20,35 @@ const dmMono = DM_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://burnerpoint.vercel.app'),
   title: 'Burner Point - Private by Design',
   description: 'Privacy-first phone numbers, verifications, rentals, and communication tools.',
+  applicationName: 'Burner Point',
+  manifest: '/manifest.webmanifest',
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/assets/logo-mark.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
+  openGraph: {
+    title: 'Burner Point - Private by Design',
+    description: 'Private phone numbers, OTP verification, rentals, and secure communication infrastructure.',
+    url: 'https://burnerpoint.vercel.app',
+    siteName: 'Burner Point',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Burner Point - Private by Design',
+    description: 'Stay anonymous and connected with private numbers, OTP verification, rentals, and secure communication tools.',
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0A0A0A',
+  themeColor: '#013220',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

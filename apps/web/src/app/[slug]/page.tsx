@@ -15,8 +15,23 @@ export async function generateMetadata({ params }: { params: PublicPageParams })
   const page = getMarketingPage(slug);
   if (!page) return {};
   return {
-    title: `${page.eyebrow} - Burner Point`,
+    title: `${page.title} | Burner Point`,
     description: page.description,
+    alternates: {
+      canonical: `/${slug}`,
+    },
+    openGraph: {
+      title: `${page.title} | Burner Point`,
+      description: page.description,
+      url: `/${slug}`,
+      siteName: 'Burner Point',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary',
+      title: `${page.title} | Burner Point`,
+      description: page.description,
+    },
   };
 }
 

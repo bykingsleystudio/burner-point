@@ -55,7 +55,6 @@ export const footerGroups = [
       { label: 'Blog', href: '/blog' },
       { label: 'Updates', href: '/updates' },
       { label: 'Careers', href: '/careers' },
-      { label: 'Support', href: '/support' },
     ],
   },
   {
@@ -78,13 +77,13 @@ export const footerGroups = [
 ];
 
 export const socialLinks = [
-  { label: 'LinkedIn', short: 'in', href: 'https://www.linkedin.com/company/burnerpoint' },
-  { label: 'Instagram', short: 'ig', href: 'https://www.instagram.com/burnerpoint' },
-  { label: 'TikTok', short: 'tt', href: 'https://www.tiktok.com/@burnerpoint' },
-  { label: 'Twitter/X', short: 'x', href: 'https://x.com/burnerpoint' },
-  { label: 'Telegram', short: 'tg', href: 'https://t.me/burnerpoint' },
-  { label: 'YouTube', short: 'yt', href: 'https://www.youtube.com/@burnerpoint' },
-  { label: 'Facebook', short: 'fb', href: 'https://www.facebook.com/burnerpoint' },
+  { label: 'LinkedIn', short: 'in', href: 'https://www.linkedin.com/company/burnerpointapp' },
+  { label: 'Instagram', short: 'ig', href: 'https://www.instagram.com/burnerpoint.app' },
+  { label: 'TikTok', short: 'tt', href: 'https://www.tiktok.com/@burnerpointapp' },
+  { label: 'Twitter/X', short: 'x', href: 'https://x.com/burnerpointapp' },
+  { label: 'Telegram', short: 'tg', href: 'https://t.me/burnerpointapp' },
+  { label: 'YouTube', short: 'yt', href: 'https://www.youtube.com/@burnerpointapp' },
+  { label: 'Facebook', short: 'fb', href: 'https://www.facebook.com/burnerpoint.app' },
 ];
 
 export const trustBadges: MarketingLink[] = [
@@ -97,8 +96,17 @@ export const trustBadges: MarketingLink[] = [
 const faqItems = [
   ['What is a burner number?', 'A burner number is a temporary or renewable phone number you use instead of exposing your personal number online.'],
   ['Are Burner Point numbers real SIM numbers?', 'Yes. Burner Point is positioned around real SIM-backed numbers for stronger SMS, OTP, and voice verification compatibility.'],
+  ['How does the US/Canada conversation inbox work?', 'Conversation numbers are designed for US and Canada SMS, MMS/photos, calls, voicemail, and WiFi or mobile-data communication from the Burner Point web and mobile apps.'],
+  ['How do verifications work?', 'Choose a service and country, receive a number, submit it to the third-party platform, then wait for the SMS OTP or voice OTP to appear in Burner Point.'],
+  ['What is the difference between renewable and non-renewable rentals?', 'Non-renewable rentals are short-duration numbers for temporary access. Renewable rentals are monthly numbers you can keep active for continuity and account recovery.'],
   ['Can I keep a number after verification?', 'Yes. Use one-time verification, short-term rentals, or renewable monthly plans when you need continuity.'],
   ['Do you support eSIM, proxies, and VPN privacy?', 'Yes. Burner Point includes eSIM purchase, proxy access, and integrated VPN-style privacy protection.'],
+  ['How does eSIM work?', 'Buy a destination-ready data plan, activate the eSIM on a compatible device, and manage travel connectivity without swapping physical SIM cards.'],
+  ['How do proxies work?', 'Proxy access gives you controlled routing through supported regions for privacy-enhanced browsing, testing, and location-aware workflows.'],
+  ['Is the VPN a separate product?', 'No. VPN privacy and protection is an in-platform Burner Point feature designed to reduce exposure while using the platform.'],
+  ['What payment methods are planned?', 'The architecture supports Paystack, Paddle, NOWPayments, and later Flutterwave, Squad by GTCO, Korapay, and OPay once the core revenue flow is stable.'],
+  ['Do you offer refunds?', 'Refund rules depend on number status, provider delivery, and whether a verification or rental has already been consumed. The billing dashboard and support flow should show case-specific guidance.'],
+  ['Is my data private?', 'Burner Point is designed around data minimization, a no-logs posture for sensitive communication content, and operational logging limited to security, billing, fraud prevention, and reliability.'],
   ['How do I reach support?', 'Email info.burnerpoint@gmail.com or message Telegram support at @burnerpoint and @burnerpointapp.'],
 ].map(([question, answer]) => ({ question, answer }));
 
@@ -200,8 +208,8 @@ export const marketingPages: Record<string, MarketingPageContent> = {
       { icon: 'file', meta: 'Privacy - 6 min read', title: 'Why You Should Never Use Your Personal Number Online', text: 'Reduce spam, data brokerage, SIM swap exposure, and unwanted account linkage.', href: '/blog#post-personal-number', anchorId: 'post-personal-number' },
       { icon: 'file', meta: 'Security - 5 min read', title: 'How Burner Numbers Protect Your Identity', text: 'Compartmentalize marketplaces, social apps, and short-term signups.', href: '/blog#post-burner-identity', anchorId: 'post-burner-identity' },
       { icon: 'file', meta: 'Telecom - 7 min read', title: 'Understanding Non-VoIP Numbers', text: 'Why SIM-backed inventory matters for OTP reliability.', href: '/blog#post-nonvoip', anchorId: 'post-nonvoip' },
-      { icon: 'file', meta: 'Communication - 4 min read', title: 'Private Communication for Travel and Remote Work', text: 'Keep access, recovery, and messages portable across countries.', href: '/blog#post-travel-remote', anchorId: 'post-travel-remote' },
-      { icon: 'file', meta: 'Verification - 5 min read', title: 'OTP Hygiene in the Digital Age', text: 'Handle codes and account recovery without exposing your real number.', href: '/blog#post-otp-hygiene', anchorId: 'post-otp-hygiene' },
+      { icon: 'file', meta: 'Anonymous and Connected - 4 min read', title: 'Privacy in the Digital Age: Anonymous and Connected', text: 'Keep access, recovery, and messages portable while reducing identity exposure.', href: '/blog#post-anonymous-connected', anchorId: 'post-anonymous-connected' },
+      { icon: 'file', meta: 'Product Updates - 5 min read', title: 'How Burner Point Handles Secure Communication', text: 'A practical look at private inboxes, provider routing, no-logs posture, and account control.', href: '/blog#post-secure-communication', anchorId: 'post-secure-communication' },
     ],
   },
   updates: {
@@ -213,6 +221,8 @@ export const marketingPages: Record<string, MarketingPageContent> = {
       { icon: 'globe', meta: 'April 2026', title: 'New Country Number Coverage Added', text: 'Expanded SIM-backed availability for additional verification routes and regional area-code selection.' },
       { icon: 'code', meta: 'March 2026', title: 'API Webhook Reliability Improvements', text: 'Improved event naming, retry behavior, and developer dashboard visibility.' },
       { icon: 'smartphone', meta: 'February 2026', title: 'New eSIM Regions Released', text: 'Travel-ready data plans added for more destinations with a faster activation flow.' },
+      { icon: 'wifi', meta: 'January 2026', title: 'Proxy Region and Durability Upgrades', text: 'Improved proxy region selection, active-session health checks, and durability messaging for privacy workflows.' },
+      { icon: 'phone', meta: 'December 2025', title: 'US/Canada WiFi and Data Calling Improvements', text: 'Refined the conversation roadmap for SMS, MMS, calls, voicemail, and photo sharing over WiFi or cellular data.' },
     ],
   },
   careers: {
@@ -228,6 +238,25 @@ export const marketingPages: Record<string, MarketingPageContent> = {
       { icon: 'briefcase', meta: 'Remote', title: 'Privacy Support Advocate', text: 'Help users understand verifications, rentals, eSIM activation, proxies, and security.' },
     ],
   },
+};
+
+marketingPages.numbers = {
+  slug: 'numbers',
+  eyebrow: 'Numbers',
+  title: 'Choose the number strategy that matches your privacy need.',
+  description: 'Search, filter, and activate phone numbers for one-time verification, short-term rentals, renewable rentals, and US/Canada conversation workflows.',
+  primaryCta: { label: 'Get Your Number', href: '/auth/signup' },
+  secondaryCta: { label: 'View Pricing', href: '/pricing' },
+  highlights: ['Search by country and region', 'One-time or renewable access', 'US/Canada conversation support'],
+  cards: [
+    { icon: 'globe', title: 'Global Verification Numbers', text: 'Use country-specific inventory for SMS OTP and voice OTP across supported services.', href: '/verifications', cta: 'Start Verification' },
+    { icon: 'calendar', title: 'Rental Numbers', text: 'Keep a number active for a fixed short window or renew monthly for long-term continuity.', href: '/rentals', cta: 'Rent A Number' },
+    { icon: 'message', title: 'Conversation Numbers', text: 'US/Canada numbers support SMS, MMS/photos, calls, voicemail, contacts, and call history.', href: '/overview', cta: 'See Overview' },
+  ],
+  sections: [
+    { title: 'Search and filters', text: 'The authenticated number experience should support country, area code, service type, renewal mode, provider health, and price filters.' },
+    { title: 'Lifecycle controls', text: 'Every number needs clear status, expiration, renewal, release, usage history, and support escalation states so users always know what will happen next.' },
+  ],
 };
 
 marketingPages.support = {
@@ -250,6 +279,9 @@ marketingPages.help = { slug: 'help', eyebrow: 'Help Center', title: 'Guides for
   { icon: 'book', meta: 'Verifications', title: 'How OTP verification works', text: 'Choose a number, submit it to the platform, then watch the Burner Point inbox for SMS or voice verification delivery.' },
   { icon: 'book', meta: 'Rentals', title: 'Number expiration guide', text: 'Short-term rentals expire after their duration. Monthly rentals can renew for continued account recovery and messaging access.' },
   { icon: 'book', meta: 'Payments', title: 'Payment troubleshooting', text: 'Confirm checkout status, wallet balance, and payment reference before opening a support request.' },
+  { icon: 'book', meta: 'Security', title: 'Account security and 2FA', text: 'Use Clerk-backed email, phone, OAuth, password reset, and optional 2FA controls to keep your Burner Point account protected.' },
+  { icon: 'book', meta: 'API / Developer Tools', title: 'Developer keys and webhooks', text: 'Create scoped API keys, configure webhook endpoints, verify signatures, and process events idempotently.' },
+  { icon: 'book', meta: 'Account & Authentication', title: 'Profile, sign out, and account recovery', text: 'Manage personal details, sessions, notification preferences, support tickets, and recovery paths from settings.' },
 ] };
 marketingPages.contact = { slug: 'contact', eyebrow: 'Contact', title: 'Talk to Burner Point.', description: 'Use the contact form, email support, or Telegram for verification, rental, eSIM, proxy, VPN, API, billing, and partnership questions.', primaryCta: { label: 'Email Support', href: 'mailto:info.burnerpoint@gmail.com' }, secondaryCta: { label: 'Telegram Support', href: 'https://t.me/burnerpoint' }, highlights: ['info.burnerpoint@gmail.com', 'https://t.me/burnerpoint', 'https://t.me/burnerpointapp'] };
 marketingPages.about = { slug: 'about', eyebrow: 'About Burner Point', title: 'We believe privacy should be practical, not performative.', description: 'Burner Point helps people stay reachable without surrendering their personal number everywhere.', highlights: ['Privacy-first infrastructure', 'User-controlled communication', 'Global access without personal exposure'], sections: [
