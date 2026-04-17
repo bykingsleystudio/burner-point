@@ -27,7 +27,7 @@ const heroProof = [
 const howSteps = [
   ['01', 'Choose your number', 'Pick a country and area code, then activate a secure non-VoIP number.'],
   ['02', 'Use it privately', 'Use it for verification, calls, messaging, rentals, or controlled account access.'],
-  ['03', 'Receive instantly', 'View SMS, OTP, voice, MMS, voicemail, and photo activity in one private inbox.'],
+  ['03', 'Receive instantly', 'View SMS, OTP, voice, MMS, voicemail, and audio, photo and video activity in one private inbox.'],
   ['04', 'Expire or keep it', 'Let the number expire when the job is done, or keep it as long as you want.'],
 ];
 
@@ -68,7 +68,7 @@ const offerCards: Array<{ icon: LucideIcon; title: string; text: string; href: s
   {
     icon: MessageSquare,
     title: 'Private Conversation',
-    text: 'Calls, voicemail, text, SMS, MMS, and photo sharing for US and Canada numbers.',
+    text: 'Calls, voicemail, text, SMS, MMS, and audio, photo and video sharing for US and Canada numbers.',
     href: '/rentals',
     cta: 'Rent A Number',
     items: ['Free texting', 'MMS and photos', 'WiFi and data calling'],
@@ -112,7 +112,7 @@ const conversationItems = [
   'SMS / MMS / calls / voicemail',
   'No roaming fees',
   'Cross-platform access',
-  'Calls / voicemail / text / SMS / MMS / photo sharing for USA and Canada',
+  'Calls / voicemail / text / SMS / MMS / audio, photo and video sharing for USA and Canada',
 ];
 
 const useCases = [
@@ -139,7 +139,7 @@ const expandedFeatures: Array<{
     eyebrow: 'Phone Number Rentals & Verifications',
     title: 'Secure access to real mobile numbers for verification and private communication.',
     text:
-      'Use Burner Point for SMS, OTP, voice verification, short-term rentals, long-term rentals, and US/Canada conversation numbers with calls, voicemail, text, SMS, MMS, and photo sharing.',
+      'Use Burner Point for SMS, OTP, voice verification, short-term rentals, long-term rentals, and US/Canada conversation numbers with calls, voicemail, text, SMS, MMS, and audio, photo and video sharing.',
     icon: Phone,
     primaryCta: { label: 'Get Verification', href: '/verifications' },
     secondaryCta: { label: 'Rent A Number', href: '/rentals' },
@@ -150,7 +150,7 @@ const expandedFeatures: Array<{
     ],
     items: [
       'Real mobile numbers backed by SIM inventory',
-      'Calls, voicemail, text, SMS, MMS, and photo sharing for USA and Canada',
+      'Calls, voicemail, text, SMS, MMS, and audio, photo and video sharing for USA and Canada',
       'Short-term rentals, long-term rentals, and multi-country number access',
       'Verification workflows for online registrations, social platforms, marketplaces, and recovery',
     ],
@@ -251,20 +251,15 @@ export default function Home() {
               </span>
             </div>
 
-            <p className="font-mono text-sm font-semibold uppercase text-white/60 md:text-base">
-              Stay Anonymous. <span className="text-brand-green">Stay Connected.</span>
-            </p>
-            <h1 id="home-hero-title" className="bp-headline mt-5 max-w-6xl text-4xl leading-[0.96] text-white sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl 2xl:text-[8rem]">
-              <span className="block">Private by Design.</span>
-              <span className="block text-white/84">Stay Anonymous.</span>
-              <span className="block bp-outline">Stay Connected.</span>
+            <h1 id="home-hero-title" className="bp-headline mt-2 max-w-5xl text-4xl font-black leading-[0.95] text-white sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl">
+              Don&apos;t Want To Give Out Your Phone Number?
+              <span className="mt-2 block text-brand-green">No Problem. Use Ours.</span>
             </h1>
 
             <div className="mt-7 max-w-4xl space-y-4">
-              <h2 className="text-2xl font-black uppercase leading-none text-white sm:text-3xl md:text-5xl">
-                Don&apos;t want to give out your phone number?
-                <span className="block text-brand-green">No problem. Use ours.</span>
-              </h2>
+              <p className="font-mono text-sm font-semibold uppercase tracking-[0.08em] text-white/72 md:text-base">
+                Private by Design. <span className="text-brand-green">Stay Anonymous. Stay Connected.</span>
+              </p>
               <p className="max-w-3xl text-base leading-8 text-white/68 md:text-xl md:leading-9">
                 Generate secure, non-VoIP numbers instantly and stay in control of your communication anytime, anywhere.
               </p>
@@ -297,7 +292,7 @@ export default function Home() {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className="inline-flex min-h-11 items-center justify-center rounded-bp border border-white/10 bg-white/[0.03] px-3 py-3 text-center text-xs font-semibold uppercase text-white/72 transition hover:-translate-y-0.5 hover:border-brand-green/35 hover:text-brand-green hover:shadow-[0_0_28px_rgba(0,255,157,0.12)] sm:px-5"
+                  className="inline-flex min-h-11 items-center justify-center rounded-bp border border-white/10 bg-white/[0.03] px-3 py-3 text-center text-xs font-semibold uppercase text-white/72 transition hover:-translate-y-0.5 hover:border-brand-green/35 hover:text-brand-green sm:px-5"
                 >
                   {item.label}
                 </Link>
@@ -496,7 +491,7 @@ export default function Home() {
               Talk, text, and receive codes over WiFi or data.
             </h2>
             <p className="mt-6 text-base leading-8 text-white/60">
-              Conversation numbers support private communication for USA and Canada, with calls, voicemail, text, SMS, MMS, and photo sharing connected to the same Burner Point identity.
+              Conversation numbers support private communication for USA and Canada, with calls, voicemail, text, SMS, MMS, and audio, photo and video sharing connected to the same Burner Point identity.
             </p>
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
               <Link href="/rentals" className="bp-primary-action inline-flex min-h-12 items-center justify-center px-7 py-4 text-sm font-semibold uppercase">

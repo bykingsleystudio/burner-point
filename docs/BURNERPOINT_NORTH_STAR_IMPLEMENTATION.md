@@ -188,7 +188,7 @@ Required sections:
 - Animated country and number coverage rail with real flag colors and dial codes.
 - How it works in four steps.
 - Phone numbers and verifications.
-- Conversation system for US/Canada calls, SMS, MMS, voicemail, and photo sharing.
+- Conversation system for US/Canada calls, SMS, MMS, voicemail, and audio, photo and video sharing.
 - eSIM purchase.
 - Proxies purchase.
 - Built-in VPN privacy and protection.
@@ -627,7 +627,7 @@ Key points:
 - Real SIM-backed positioning.
 - Non-VoIP value.
 - SMS/OTP/voice.
-- Conversation feature supports calls, voicemail, text, SMS, MMS, and photo sharing for US/Canada.
+- Conversation feature supports calls, voicemail, text, SMS, MMS, and audio, photo and video sharing for US/Canada.
 - Short-term and renewable rentals.
 
 ### eSIM Purchase

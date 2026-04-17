@@ -122,22 +122,28 @@ export function SiteHeader() {
             View API Docs
           </Link>
         </div>
-        <details className="group relative lg:hidden [&_summary::-webkit-details-marker]:hidden">
-          <summary aria-label="Open navigation menu" className="flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center rounded-bp-md border border-white/10 bg-white/[0.03] text-white transition hover:border-brand-green/35 hover:text-brand-green">
-            <span className="sr-only">Open navigation</span>
+        <details className="group relative z-[70] lg:hidden [&_summary::-webkit-details-marker]:hidden">
+          <summary aria-label="Open navigation menu" className="flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center rounded-bp-md border border-white/16 bg-black/95 text-white shadow-[0_12px_34px_rgba(0,0,0,0.45)] transition hover:border-brand-green/45 hover:text-brand-green">
+            <span className="sr-only">Toggle navigation</span>
             <MenuIcon />
           </summary>
-          <div role="navigation" aria-label="Mobile primary navigation" className="fixed inset-x-4 top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-bp-lg border border-brand-border bg-brand-surface/98 p-4 shadow-[0_26px_80px_rgba(0,0,0,0.58)]">
-            <div className="grid grid-cols-2 gap-2">
+          <div role="navigation" aria-label="Mobile primary navigation" className="fixed inset-x-3 top-20 z-[80] max-h-[calc(100vh-6rem)] overflow-y-auto rounded-bp-lg border border-brand-green/25 bg-[#000000]/98 p-4 text-white shadow-[0_28px_90px_rgba(0,0,0,0.72)] backdrop-blur-md supports-[backdrop-filter]:bg-[#013220]/95">
+            <div className="mb-4 flex items-center justify-between border-b border-brand-green/20 pb-3">
+              <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-green">Menu</p>
+              <span className="rounded-bp border border-brand-green/30 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-white/86">
+                Tap menu icon to close
+              </span>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
               {primaryNav.map((item) => (
-                <Link key={item.href} href={item.href} className="flex min-h-11 items-center rounded-bp px-4 py-3 text-sm font-semibold text-white/78 transition hover:bg-brand-green/10 hover:text-brand-green">
+                <Link key={item.href} href={item.href} className="flex min-h-12 items-center rounded-bp border border-white/10 bg-black/25 px-4 py-3 text-sm font-semibold text-white/88 transition hover:bg-brand-green/14 hover:text-brand-green">
                   {item.label}
                 </Link>
               ))}
             </div>
-            <div className="mt-4 grid gap-2 border-t border-white/8 pt-4">
+            <div className="mt-4 grid gap-2 border-t border-brand-green/20 pt-4">
               <Show when="signed-out">
-                <Link href="/auth/login" className="rounded-bp border border-white/10 px-4 py-3 text-center text-xs font-semibold uppercase text-white/82">
+                <Link href="/auth/login" className="rounded-bp border border-white/18 bg-black/30 px-4 py-3 text-center text-xs font-semibold uppercase text-white">
                   Sign In
                 </Link>
                 <Link href="/auth/signup" className="rounded-bp bg-brand-green px-4 py-3 text-center text-xs font-semibold uppercase text-black">
@@ -145,14 +151,14 @@ export function SiteHeader() {
                 </Link>
               </Show>
               <Show when="signed-in">
-                <Link href="/dashboard" className="rounded-bp border border-white/10 px-4 py-3 text-center text-xs font-semibold uppercase text-white/82">
+                <Link href="/dashboard" className="rounded-bp border border-white/18 bg-black/30 px-4 py-3 text-center text-xs font-semibold uppercase text-white">
                   Dashboard
                 </Link>
-                <div className="flex justify-center rounded-bp border border-white/10 px-4 py-3">
+                <div className="flex justify-center rounded-bp border border-white/18 bg-black/30 px-4 py-3">
                   <UserButton />
                 </div>
               </Show>
-              <Link href="/api/docs" className="rounded-bp border border-brand-green/20 px-4 py-3 text-center text-xs font-semibold uppercase text-brand-green">View API Docs</Link>
+              <Link href="/api/docs" className="rounded-bp border border-brand-green/30 bg-brand-green/10 px-4 py-3 text-center text-xs font-semibold uppercase text-brand-green">View API Docs</Link>
             </div>
           </div>
         </details>
