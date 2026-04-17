@@ -26,7 +26,7 @@ export class PhoneNumber {
   @Index()
   number: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'friendly_name', nullable: true })
   friendlyName: string;
 
   @Column({ type: 'enum', enum: NumberStatus, default: NumberStatus.ACTIVE })
@@ -39,68 +39,68 @@ export class PhoneNumber {
   @Column({ type: 'enum', enum: NumberProvider, default: NumberProvider.TWILIO })
   provider: NumberProvider;
 
-  @Column({ nullable: true })
+  @Column({ name: 'provider_number_sid', nullable: true })
   providerNumberSid: string;
 
-  @Column({ type: 'simple-array', default: 'sms' })
+  @Column({ type: 'text', array: true, default: () => "'{sms}'" })
   capabilities: string[];
 
-  @Column({ nullable: true })
+  @Column({ name: 'country_code', nullable: true })
   countryCode: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'area_code', nullable: true })
   areaCode: string;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ name: 'expires_at', type: 'timestamp', nullable: true })
   @Index()
   expiresAt: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ name: 'auto_renew_at', type: 'timestamp', nullable: true })
   autoRenewAt: Date;
 
-  @Column({ default: false })
+  @Column({ name: 'auto_renew', default: false })
   autoRenew: boolean;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ name: 'price_kobo', type: 'int', default: 0 })
   priceKobo: number;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ name: 'renewal_price_kobo', type: 'int', default: 0 })
   renewalPriceKobo: number;
 
-  @Column({ default: 0 })
+  @Column({ name: 'sms_received', default: 0 })
   smsReceived: number;
 
-  @Column({ default: 0 })
+  @Column({ name: 'sms_sent', default: 0 })
   smsSent: number;
 
-  @Column({ default: 0 })
+  @Column({ name: 'calls_received', default: 0 })
   callsReceived: number;
 
-  @Column({ type: 'jsonb', default: {} })
+  @Column({ name: 'forwarding_config', type: 'jsonb', default: {} })
   forwardingConfig: Record<string, unknown>;
 
   @Column({ type: 'jsonb', default: {} })
   metadata: Record<string, unknown>;
 
-  @Column({ nullable: true })
+  @Column({ name: 'workspace_id', nullable: true })
   workspaceId: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'assigned_to_user_id', nullable: true })
   assignedToUserId: string;
 
   @ManyToOne(() => User, (u) => u.phoneNumbers, { onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'userId' })
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ nullable: true })
+  @Column({ name: 'user_id', nullable: true })
   userId: string;
 
   @OneToMany(() => Message, (m) => m.phoneNumber)
   messages: Message[];
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }

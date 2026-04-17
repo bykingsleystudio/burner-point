@@ -20,6 +20,44 @@ export const BRAND = {
     md: 12,
     lg: 16,
   },
+  spacing: {
+    0: 0,
+    1: 4,
+    2: 8,
+    3: 12,
+    4: 16,
+    5: 20,
+    6: 24,
+    8: 32,
+    10: 40,
+    12: 48,
+    16: 64,
+    20: 80,
+    24: 96,
+  },
+  shadows: {
+    card: {
+      shadowColor: '#000000',
+      shadowOpacity: 0.34,
+      shadowRadius: 24,
+      shadowOffset: { width: 0, height: 18 },
+      elevation: 8,
+    },
+    glow: {
+      shadowColor: '#00FF9D',
+      shadowOpacity: 0.24,
+      shadowRadius: 24,
+      shadowOffset: { width: 0, height: 0 },
+      elevation: 6,
+    },
+  },
+  iconSizes: {
+    xs: 14,
+    sm: 16,
+    md: 20,
+    lg: 24,
+    xl: 32,
+  },
   typography: {
     primary: 'Neue Haas Grotesk Display',
     fallback: 'SpaceGrotesk-Regular',
@@ -28,9 +66,11 @@ export const BRAND = {
     mono: 'DMMono-Regular',
   },
   motion: {
+    fastMs: 200,
+    standardMs: 260,
+    expressiveMs: 320,
     quick: 200,
     standard: 260,
     pressScale: 0.97,
   },
 } as const;
-

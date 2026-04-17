@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { ComponentType } from 'react';
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Bell, CalendarDays, CreditCard, Globe2, Lock, MessageSquare, Phone, ShieldCheck, Smartphone, Wifi } from 'lucide-react-native';
+import { Activity, Bell, CalendarDays, CreditCard, Globe2, Lock, MessageSquare, Phone, ShieldCheck, Smartphone, Wifi } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import axios from 'axios';
@@ -10,7 +10,10 @@ import axios from 'axios';
 import { API_BASE_URL } from '../../lib/config';
 import { getApiAccessToken } from '../../lib/auth';
 import { BRAND } from '../../lib/brand';
+import { triggerHaptic } from '../../lib/native-ux';
 type AppIcon = ComponentType<any>;
+
+const HIT_SLOP = { top: 8, right: 8, bottom: 8, left: 8 };
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -41,12 +44,15 @@ export default function HomeScreen() {
 
   const quickActions = [
     { icon: ShieldCheck, label: 'Verify OTP', text: 'New private code', action: () => router.push('/verification' as any) },
+    { icon: Phone, label: 'Calls', text: 'WiFi/data voice', action: () => router.push('/calls' as any) },
+    { icon: MessageSquare, label: 'Inbox', text: 'SMS, MMS, photos', action: () => router.push('/messages' as any) },
     { icon: CalendarDays, label: 'Rentals', text: 'Keep a number', action: () => router.push('/rentals' as any) },
-    { icon: MessageSquare, label: 'Inbox', text: 'SMS and voice', action: () => router.push('/messages' as any) },
+    { icon: Phone, label: 'Numbers', text: 'Active inventory', action: () => router.push('/numbers' as any) },
     { icon: CreditCard, label: 'Billing', text: 'Credits and plans', action: () => router.push('/billing' as any) },
   ];
 
   const platform = [
+    { icon: Activity, label: 'Activity', text: 'Audit timeline', action: () => router.push('/activity' as any) },
     { icon: Smartphone, label: 'eSIM', text: 'Travel data', action: () => router.push('/esim' as any) },
     { icon: Globe2, label: 'Proxies', text: 'Location access', action: () => router.push('/proxies' as any) },
     { icon: Lock, label: 'VPN', text: 'Privacy layer', action: () => router.push('/vpn' as any) },
@@ -60,7 +66,13 @@ export default function HomeScreen() {
             <Text style={s.greeting}>Good {getGreeting()}</Text>
             <Text style={s.name}>{user?.firstName || 'there'}</Text>
           </View>
-          <TouchableOpacity style={s.notification} onPress={() => Alert.alert('Push alerts', 'OTP, number expiration, billing, and security alerts are enabled from the app shell.')}>
+          <TouchableOpacity
+            style={s.notification}
+            onPress={() => { triggerHaptic('selection'); Alert.alert('Push alerts', 'OTP, number expiration, billing, and security alerts are enabled from the app shell.'); }}
+            accessibilityRole="button"
+            accessibilityLabel="Open push alert settings"
+            hitSlop={HIT_SLOP}
+          >
             <Bell size={18} color={BRAND.colors.cyberGreen} />
           </TouchableOpacity>
         </View>
@@ -77,12 +89,12 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <Text style={s.sectionTitle}>Quick Actions</Text>
+        <Text accessibilityRole="header" style={s.sectionTitle}>Quick Actions</Text>
         <View style={s.quickGrid}>
           {quickActions.map((action) => <ActionCard key={action.label} {...action} />)}
         </View>
 
-        <Text style={s.sectionTitle}>Platform Features</Text>
+        <Text accessibilityRole="header" style={s.sectionTitle}>Platform Features</Text>
         <View style={s.platformRow}>
           {platform.map((item) => <PlatformCard key={item.label} {...item} />)}
         </View>
@@ -95,7 +107,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <Text style={s.sectionTitle}>Active Numbers</Text>
+        <Text accessibilityRole="header" style={s.sectionTitle}>Active Numbers</Text>
         {numbers.length > 0 ? numbers.map((number) => (
           <View key={number.id} style={s.numberCard}>
             <View style={s.numberIcon}><Phone size={15} color={BRAND.colors.cyberGreen} /></View>
@@ -106,7 +118,13 @@ export default function HomeScreen() {
             <View style={s.statusBadge}><Text style={s.statusText}>{number.status || 'active'}</Text></View>
           </View>
         )) : (
-          <TouchableOpacity style={s.emptyNumber} onPress={() => router.push('/numbers' as any)}>
+          <TouchableOpacity
+            style={s.emptyNumber}
+            onPress={() => { triggerHaptic('selection'); router.push('/numbers' as any); }}
+            accessibilityRole="button"
+            accessibilityLabel="Get verification or rent a number"
+            hitSlop={HIT_SLOP}
+          >
             <Phone size={24} color={BRAND.colors.cyberGreen} />
             <Text style={s.emptyTitle}>No active number yet</Text>
             <Text style={s.emptyText}>Get verification or rent a number to start.</Text>
@@ -121,7 +139,14 @@ export default function HomeScreen() {
 
 function ActionCard({ icon: Icon, label, text, action }: { icon: AppIcon; label: string; text: string; action: () => void }) {
   return (
-    <TouchableOpacity style={s.quickCard} onPress={action} activeOpacity={0.78}>
+    <TouchableOpacity
+      style={s.quickCard}
+      onPress={() => { triggerHaptic('impact'); action(); }}
+      activeOpacity={0.78}
+      accessibilityRole="button"
+      accessibilityLabel={`${label}: ${text}`}
+      hitSlop={HIT_SLOP}
+    >
       <View style={s.quickIcon}><Icon size={20} color={BRAND.colors.cyberGreen} /></View>
       <Text style={s.quickLabel}>{label}</Text>
       <Text style={s.quickSub}>{text}</Text>
@@ -131,7 +156,14 @@ function ActionCard({ icon: Icon, label, text, action }: { icon: AppIcon; label:
 
 function PlatformCard({ icon: Icon, label, text, action }: { icon: AppIcon; label: string; text: string; action: () => void }) {
   return (
-    <TouchableOpacity style={s.platformCard} activeOpacity={0.78} onPress={action}>
+    <TouchableOpacity
+      style={s.platformCard}
+      activeOpacity={0.78}
+      onPress={() => { triggerHaptic('selection'); action(); }}
+      accessibilityRole="button"
+      accessibilityLabel={`${label}: ${text}`}
+      hitSlop={HIT_SLOP}
+    >
       <Icon size={18} color={BRAND.colors.cyberGreen} />
       <Text style={s.platformLabel}>{label}</Text>
       <Text style={s.platformText}>{text}</Text>
@@ -165,8 +197,8 @@ const s = StyleSheet.create({
   quickIcon: { width: 44, height: 44, borderRadius: BRAND.radii.md, backgroundColor: `${BRAND.colors.cyberGreen}10`, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   quickLabel: { color: BRAND.colors.white, fontSize: 14, fontWeight: '800' },
   quickSub: { color: BRAND.colors.metalStart, fontSize: 12, marginTop: 4 },
-  platformRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 16 },
-  platformCard: { flex: 1, backgroundColor: BRAND.colors.dark, borderRadius: BRAND.radii.lg, padding: 14, borderWidth: 1, borderColor: BRAND.colors.border, minHeight: 112 },
+  platformRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 16 },
+  platformCard: { width: '47.8%', backgroundColor: BRAND.colors.dark, borderRadius: BRAND.radii.lg, padding: 14, borderWidth: 1, borderColor: BRAND.colors.border, minHeight: 112 },
   platformLabel: { color: BRAND.colors.white, fontSize: 13, fontWeight: '800', marginTop: 12 },
   platformText: { color: BRAND.colors.metalStart, fontSize: 11, marginTop: 4 },
   offlineCard: { margin: 20, flexDirection: 'row', gap: 12, backgroundColor: `${BRAND.colors.cyberGreen}08`, borderRadius: BRAND.radii.lg, padding: 16, borderWidth: 1, borderColor: `${BRAND.colors.cyberGreen}25` },

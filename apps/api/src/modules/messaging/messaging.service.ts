@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
 import * as nodemailer from 'nodemailer';
 import { ProviderName, ProviderService, RouteProduct } from '../global/provider.service';
 
@@ -29,7 +30,7 @@ export class MessagingService {
     private configService: ConfigService,
     private providerService: ProviderService,
   ) {
-    // Initialize Resend SMTP transporter
+    // SMTP fallback is kept for resilience; Resend API is preferred when configured.
     this.emailTransporter = nodemailer.createTransport({
       host: this.configService.get('SMTP_HOST'),
       port: parseInt(this.configService.get('SMTP_PORT', '465')),
@@ -45,6 +46,35 @@ export class MessagingService {
 
   async sendEmail(options: EmailOptions): Promise<{ messageId: string }> {
     try {
+      const resendApiKey = this.configService.get<string>('RESEND_API_KEY');
+      if (resendApiKey) {
+        const from = options.from ||
+          this.configService.get<string>('EMAIL_FROM') ||
+          this.configService.get<string>('SMTP_FROM') ||
+          'Burner Point <noreply@burnerpoint.app>';
+        const result = await axios.post(
+          'https://api.resend.com/emails',
+          {
+            from,
+            to: options.to,
+            subject: options.subject,
+            html: options.html,
+            text: options.text,
+          },
+          {
+            timeout: 10000,
+            headers: {
+              Authorization: `Bearer ${resendApiKey}`,
+              'Content-Type': 'application/json',
+            },
+          },
+        );
+
+        const messageId = String(result.data?.id || '');
+        this.logger.log(`Email sent through Resend: ${messageId} to ${options.to}`);
+        return { messageId };
+      }
+
       const mailOptions = {
         from: options.from || this.configService.get('SMTP_FROM'),
         to: options.to,

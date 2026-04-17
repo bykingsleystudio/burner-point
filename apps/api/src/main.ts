@@ -68,12 +68,22 @@ async function bootstrap() {
     .split(',')
     .map((o) => o.trim())
     .filter(Boolean);
+  const derivedOrigins = [
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.WEB_APP_URL,
+    process.env.FRONTEND_URL,
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL.replace(/^https?:\/\//, '')}` : null,
+  ].filter((origin): origin is string => Boolean(origin));
+  const corsOrigins = Array.from(new Set([...allowedOrigins, ...derivedOrigins].map((origin) => origin.replace(/\/+$/, ''))));
+  const allowVercelPreviews = process.env.CORS_ALLOW_VERCEL_PREVIEWS === 'true';
 
   app.enableCors({
     origin: (origin, callback) => {
       // Allow server-to-server requests (no origin header)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
+      const normalizedOrigin = origin.replace(/\/+$/, '');
+      if (corsOrigins.includes(normalizedOrigin)) return callback(null, true);
+      if (allowVercelPreviews && isVercelPreviewOrigin(normalizedOrigin)) return callback(null, true);
       callback(new Error(`CORS: origin ${origin} not allowed`));
     },
     credentials: true,
@@ -134,3 +144,12 @@ bootstrap().catch((err: unknown) => {
   console.error('Fatal bootstrap error:', message);
   process.exit(1);
 });
+
+function isVercelPreviewOrigin(origin: string) {
+  try {
+    const { protocol, hostname } = new URL(origin);
+    return protocol === 'https:' && hostname.endsWith('.vercel.app');
+  } catch {
+    return false;
+  }
+}

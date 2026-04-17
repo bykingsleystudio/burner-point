@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LogOut, Shield, Copy, Share2, Key, HelpCircle, ChevronRight } from 'lucide-react-native';
+import { Activity, CreditCard, LogOut, Shield, Copy, Share2, Key, HelpCircle, ChevronRight } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
@@ -9,6 +9,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '../../lib/config';
 import { clearApiSession, getApiAccessToken } from '../../lib/auth';
 import { BRAND } from '../../lib/brand';
+import { triggerHaptic } from '../../lib/native-ux';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -24,6 +25,7 @@ export default function ProfileScreen() {
   }, [getToken]);
 
   const logout = () => {
+    triggerHaptic('warning');
     Alert.alert('Sign Out', 'Are you sure?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Sign Out', style: 'destructive', onPress: async () => {
@@ -35,6 +37,7 @@ export default function ProfileScreen() {
   };
 
   const copyReferral = async () => {
+    triggerHaptic('success');
     if (user?.referralCode) {
       await Clipboard.setStringAsync(user.referralCode);
       Alert.alert('Copied!', 'Referral code copied to clipboard');
@@ -42,10 +45,12 @@ export default function ProfileScreen() {
   };
 
   const menuItems = [
-    { icon: Key, label: 'API Keys', action: () => {} },
-    { icon: Shield, label: 'Security', action: () => {} },
+    { icon: CreditCard, label: 'Billing', action: () => router.push('/billing' as any) },
+    { icon: Key, label: 'API Keys', action: () => router.push('/developer' as any) },
+    { icon: Shield, label: 'Security & Settings', action: () => router.push('/settings' as any) },
+    { icon: Activity, label: 'Activity', action: () => router.push('/activity' as any) },
     { icon: Share2, label: 'Referral Program', action: copyReferral },
-    { icon: HelpCircle, label: 'Support', action: () => {} },
+    { icon: HelpCircle, label: 'Support', action: () => router.push('/support' as any) },
   ];
 
   return (
@@ -79,7 +84,7 @@ export default function ProfileScreen() {
         {/* Menu */}
         <View style={s.menu}>
           {menuItems.map((item) => (
-            <TouchableOpacity key={item.label} style={s.menuItem} onPress={item.action}>
+            <TouchableOpacity key={item.label} style={s.menuItem} onPress={() => { triggerHaptic('selection'); item.action(); }}>
               <item.icon size={18} color={BRAND.colors.muted}/>
               <Text style={s.menuLabel}>{item.label}</Text>
               <ChevronRight size={16} color={BRAND.colors.metalStart}/>

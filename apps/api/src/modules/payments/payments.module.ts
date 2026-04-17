@@ -14,9 +14,12 @@ import {
   WalletTransaction,
   CreditPackage,
   WebhookDedup,
+  SubscriptionPlan,
+  UserSubscription,
 } from '../../database/entities/extended-entities';
 import { User } from '../../database/entities/user.entity';
 import { UsersModule } from '../users/users.module';
+import { NumbersModule } from '../numbers/numbers.module';
 
 @Module({
   imports: [
@@ -25,9 +28,12 @@ import { UsersModule } from '../users/users.module';
       WalletTransaction,
       CreditPackage,
       WebhookDedup,
+      SubscriptionPlan,
+      UserSubscription,
       User,
     ]),
     UsersModule,
+    NumbersModule,
   ],
   controllers: [PaymentsController],
   providers: [PaymentsService],

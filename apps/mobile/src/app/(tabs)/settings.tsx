@@ -8,6 +8,7 @@ import { clearApiSession } from '../../lib/auth';
 import { BRAND } from '../../lib/brand';
 import { WEB_APP_URL } from '../../lib/config';
 import { BURNER_POINT_STACK } from '../../lib/stack';
+import { triggerHaptic } from '../../lib/native-ux';
 
 const settings = [
   { label: 'Profile', text: 'Name, email, phone, and account identity', Icon: User, href: '/profile' },
@@ -24,6 +25,7 @@ export default function SettingsScreen() {
   const { user } = useUser();
 
   const logout = () => {
+    triggerHaptic('warning');
     Alert.alert('Sign out', 'End this Burner Point session?', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -61,7 +63,10 @@ export default function SettingsScreen() {
               key={label}
               style={s.menuItem}
               activeOpacity={0.78}
-              onPress={() => (externalUrl ? Linking.openURL(externalUrl) : href ? router.push(href as any) : Alert.alert(label, text))}
+              onPress={() => {
+                triggerHaptic('selection');
+                return externalUrl ? Linking.openURL(externalUrl) : href ? router.push(href as any) : Alert.alert(label, text);
+              }}
             >
               <View style={s.menuIcon}>
                 <Icon size={17} color={BRAND.colors.cyberGreen} />

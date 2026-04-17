@@ -1,11 +1,16 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
+import { createHmac, timingSafeEqual } from 'crypto';
 import { Repository } from 'typeorm';
+import { verifyWebhook } from '@clerk/backend/webhooks';
 import { Message, MessageDirection, MessageStatus, MessageType } from '../../database/entities/message.entity';
 import { Call, CallDirection, CallStatus, WebhookDedup } from '../../database/entities/extended-entities';
 import { PhoneNumber } from '../../database/entities/phone-number.entity';
 import { EventsGateway } from '../gateway/events.gateway';
 import { AiService } from '../ai/ai.service';
+
+type ProviderWebhookSource = 'bandwidth' | 'oneglobal' | 'brightdata' | 'wireguard';
 
 @Injectable()
 export class WebhooksService {
@@ -21,6 +26,7 @@ export class WebhooksService {
     @InjectRepository(WebhookDedup) private dedupRepo: Repository<WebhookDedup>,
     private eventsGateway: EventsGateway,
     private aiService: AiService,
+    private configService: ConfigService,
   ) {}
 
   async handleInboundSms(payload: Record<string, string>) {
@@ -276,6 +282,100 @@ export class WebhooksService {
     return { success: true };
   }
 
+  async handleProviderWebhook(
+    source: ProviderWebhookSource,
+    payload: Record<string, unknown>,
+    headers: Record<string, string>,
+    rawBody?: Buffer,
+  ) {
+    const secretEnv = this.getProviderWebhookSecretEnv(source);
+    const secret = this.configuredSecret(secretEnv);
+    const verified = secret ? this.verifyGenericSignature(source, headers, rawBody, secret) : false;
+
+    if (!secret) {
+      this.logger.warn(`${source} webhook accepted without signature verification because ${secretEnv} is not configured`);
+    }
+
+    const eventType = this.getProviderEventType(payload);
+    const providerEventId = this.getProviderEventId(payload, headers) || `${Date.now()}`;
+    const eventId = `${source}:${providerEventId}:${eventType}`;
+    const duplicate = await this.storeWebhookEvent(eventId, source, eventType, {
+      ...payload,
+      verified,
+    });
+
+    this.logger.log(`${source} webhook ${duplicate ? 'deduplicated' : 'stored'}: ${eventType}`);
+    return {
+      success: true,
+      source,
+      eventId: providerEventId,
+      eventType,
+      duplicate,
+      verified,
+    };
+  }
+
+  async handleClerkWebhook(
+    payload: Record<string, unknown>,
+    headers: Record<string, string>,
+    rawBody: Buffer | undefined,
+    url: string,
+  ) {
+    const secret =
+      this.configuredSecret('CLERK_WEBHOOK_SECRET') ||
+      this.configuredSecret('CLERK_WEBHOOK_SIGNING_SECRET');
+    let verified = false;
+    let verifiedPayload = payload;
+
+    if (secret) {
+      if (!rawBody) throw new BadRequestException('Missing raw body for Clerk webhook verification');
+
+      try {
+        const requestHeaders = new Headers();
+        Object.entries(headers || {}).forEach(([key, value]) => {
+          if (value !== undefined) requestHeaders.set(key, String(value));
+        });
+        const event = await verifyWebhook(
+          new Request(url, {
+            method: 'POST',
+            headers: requestHeaders,
+            body: rawBody.toString('utf8'),
+          }),
+          { signingSecret: secret },
+        );
+        verifiedPayload = event as unknown as Record<string, unknown>;
+        verified = true;
+      } catch (error) {
+        this.logger.warn(`Clerk webhook verification failed: ${error instanceof Error ? error.message : String(error)}`);
+        throw new BadRequestException('Invalid Clerk webhook signature');
+      }
+    } else {
+      this.logger.warn('Clerk webhook accepted without signature verification because CLERK_WEBHOOK_SECRET is not configured');
+    }
+
+    const eventType = this.asString(verifiedPayload.type ?? verifiedPayload.event) || 'clerk.webhook';
+    const data = verifiedPayload.data as Record<string, unknown> | undefined;
+    const providerEventId =
+      this.asString(verifiedPayload.id) ||
+      this.asString(data?.id) ||
+      this.headerValue(headers, 'svix-id') ||
+      `${Date.now()}`;
+    const eventId = `clerk:${providerEventId}:${eventType}`;
+    const duplicate = await this.storeWebhookEvent(eventId, 'clerk', eventType, {
+      ...verifiedPayload,
+      verified,
+    });
+
+    return {
+      success: true,
+      source: 'clerk',
+      eventId: providerEventId,
+      eventType,
+      duplicate,
+      verified,
+    };
+  }
+
   private async persistInboundProviderSms(params: {
     provider: string;
     eventId: string;
@@ -375,6 +475,113 @@ export class WebhooksService {
   private normalizePhone(value: string): string {
     if (!value) return '';
     return value.startsWith('+') ? value : `+${value}`;
+  }
+
+  private getProviderWebhookSecretEnv(source: ProviderWebhookSource): string {
+    const env: Record<ProviderWebhookSource, string> = {
+      bandwidth: 'BANDWIDTH_WEBHOOK_SECRET',
+      oneglobal: 'ONEGLOBAL_WEBHOOK_SECRET',
+      brightdata: 'BRIGHTDATA_WEBHOOK_SECRET',
+      wireguard: 'WIREGUARD_WEBHOOK_SECRET',
+    };
+    return env[source];
+  }
+
+  private configuredSecret(name: string): string | undefined {
+    const value = this.configService.get<string>(name);
+    if (!value) return undefined;
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'replace_me' || normalized.includes('replace_me')) return undefined;
+    return value;
+  }
+
+  private verifyGenericSignature(
+    source: ProviderWebhookSource,
+    headers: Record<string, string>,
+    rawBody: Buffer | undefined,
+    secret: string,
+  ): boolean {
+    if (!rawBody) throw new BadRequestException(`Missing raw body for ${source} webhook verification`);
+
+    const signature = this.readSignatureHeader(source, headers);
+    if (!signature) throw new BadRequestException(`Missing ${source} webhook signature`);
+
+    const body = rawBody.toString('utf8');
+    const sha256 = createHmac('sha256', secret).update(body).digest('hex');
+    const sha512 = createHmac('sha512', secret).update(body).digest('hex');
+    const candidates = [sha256, `sha256=${sha256}`, sha512, `sha512=${sha512}`];
+    const normalizedSignature = this.extractSignatureValue(signature);
+    const verified = candidates.some((candidate) => this.safeCompare(candidate, normalizedSignature));
+
+    if (!verified) throw new BadRequestException(`Invalid ${source} webhook signature`);
+    return true;
+  }
+
+  private readSignatureHeader(source: ProviderWebhookSource, headers: Record<string, string>): string {
+    const names = [
+      'x-burnerpoint-signature',
+      'x-signature',
+      'x-webhook-signature',
+      `x-${source}-signature`,
+      'x-bandwidth-signature',
+      'x-oneglobal-signature',
+      'x-brightdata-signature',
+      'x-wireguard-signature',
+    ];
+    for (const name of names) {
+      const value = this.headerValue(headers, name);
+      if (value) return value;
+    }
+    return '';
+  }
+
+  private extractSignatureValue(signature: string): string {
+    const value = signature.trim();
+    const versioned = value
+      .split(',')
+      .map((part) => part.trim())
+      .find((part) => part.startsWith('v1=') || part.startsWith('sha256=') || part.startsWith('sha512='));
+    if (!versioned) return value;
+    return versioned.startsWith('v1=') ? versioned.slice(3) : versioned;
+  }
+
+  private safeCompare(expected: string, actual: string): boolean {
+    const expectedBuffer = Buffer.from(expected);
+    const actualBuffer = Buffer.from(actual);
+    if (expectedBuffer.length !== actualBuffer.length) return false;
+    return timingSafeEqual(expectedBuffer, actualBuffer);
+  }
+
+  private getProviderEventId(payload: Record<string, unknown>, headers: Record<string, string>): string {
+    return (
+      this.headerValue(headers, 'x-event-id') ||
+      this.headerValue(headers, 'x-request-id') ||
+      this.headerValue(headers, 'x-webhook-id') ||
+      this.asString(payload.id) ||
+      this.asString(payload.eventId) ||
+      this.asString(payload.event_id) ||
+      this.asString(payload.messageId) ||
+      this.asString(payload.message_id) ||
+      this.asString(payload.payment_id)
+    );
+  }
+
+  private getProviderEventType(payload: Record<string, unknown>): string {
+    return (
+      this.asString(payload.type) ||
+      this.asString(payload.event) ||
+      this.asString(payload.eventType) ||
+      this.asString(payload.event_type) ||
+      this.asString(payload.status) ||
+      'provider.webhook'
+    );
+  }
+
+  private headerValue(headers: Record<string, string>, name: string): string {
+    const direct = headers[name] || headers[name.toLowerCase()] || headers[name.toUpperCase()];
+    if (direct) return String(direct);
+    const found = Object.entries(headers || {}).find(([key]) => key.toLowerCase() === name.toLowerCase());
+    return found ? String(found[1]) : '';
   }
 
   private asString(value: unknown): string {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import toast from 'react-hot-toast';
 import { Clock, Phone, Plus, RefreshCw, Search, Trash2 } from 'lucide-react';
@@ -29,6 +29,9 @@ export default function NumbersPage() {
   const [available, setAvailable] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
   const [provisioning, setProvisioning] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
 
   useEffect(() => {
     setLoading(true);
@@ -72,6 +75,21 @@ export default function NumbersPage() {
     }
   };
 
+  const filteredNumbers = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    return numbers.filter((number: any) => {
+      const matchesStatus = statusFilter === 'all' || number.status === statusFilter;
+      const matchesType = typeFilter === 'all' || number.type === typeFilter;
+      const matchesQuery = !normalized || [number.number, number.countryCode, number.type, number.status]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalized));
+      return matchesStatus && matchesType && matchesQuery;
+    });
+  }, [numbers, query, statusFilter, typeFilter]);
+
+  const visibleTypes = useMemo(() => Array.from(new Set(numbers.map((number: any) => number.type).filter(Boolean))), [numbers]);
+  const visibleStatuses = useMemo(() => Array.from(new Set(numbers.map((number: any) => number.status).filter(Boolean))), [numbers]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
@@ -106,8 +124,35 @@ export default function NumbersPage() {
           </button>
         </div>
       ) : (
-        <div className="grid gap-3">
-          {numbers.map((n) => (
+        <div className="space-y-4">
+          <div className="rounded-bp-lg border border-brand-border bg-brand-card p-4">
+            <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto]">
+              <label className="relative block">
+                <span className="sr-only">Search active numbers</span>
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-green" />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search number, country, type, or status"
+                  className="bp-input pl-11"
+                />
+              </label>
+              <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="bp-input lg:w-44" aria-label="Filter by number status">
+                <option value="all">All statuses</option>
+                {visibleStatuses.map((status) => <option key={status} value={status}>{status}</option>)}
+              </select>
+              <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)} className="bp-input lg:w-52" aria-label="Filter by number type">
+                <option value="all">All number types</option>
+                {visibleTypes.map((numberType) => <option key={numberType} value={numberType}>{numberType}</option>)}
+              </select>
+            </div>
+            <p className="mt-3 text-xs text-brand-muted">
+              Showing {filteredNumbers.length} of {numbers.length} numbers across verification, rentals, and conversation workflows.
+            </p>
+          </div>
+
+          <div className="grid gap-3">
+          {filteredNumbers.map((n) => (
             <div key={n.id} className="flex items-center gap-4 rounded-lg border border-brand-border bg-brand-card p-4">
               <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-brand-green/10">
                 <Phone size={16} className="text-brand-green" />
@@ -134,6 +179,13 @@ export default function NumbersPage() {
               </div>
             </div>
           ))}
+          {filteredNumbers.length === 0 ? (
+            <div className="rounded-bp-lg border border-brand-border bg-brand-card p-8 text-center">
+              <Search size={24} className="mx-auto text-brand-muted" />
+              <p className="mt-3 text-sm text-brand-muted">No numbers match the current filters.</p>
+            </div>
+          ) : null}
+          </div>
         </div>
       )}
 

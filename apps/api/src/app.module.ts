@@ -32,6 +32,7 @@ import { GlobalModule } from './modules/global/global.module';
 import { SeoModule } from './modules/seo/seo.module';
 import { MessagingModule } from './modules/messaging/messaging.module';
 import { PlatformModule } from './modules/platform/platform.module';
+import { IntegrationsModule } from './modules/integrations/integrations.module';
 
 // ── Security middleware ───────────────────────────────────────────────────────
 import { SecurityMiddleware } from './middleware/security.middleware';
@@ -101,6 +102,7 @@ import { SecurityMiddleware } from './middleware/security.middleware';
     // Global infrastructure (Redis, ProviderService)
     GlobalModule,
     PlatformModule,        // Safe stack registry + readiness status
+    IntegrationsModule,    // Backend-only provider contracts, analytics, storage, eSIM/proxy/VPN adapters
 
     // Feature modules — all 10 services connected
     AuthModule,
@@ -120,7 +122,7 @@ import { SecurityMiddleware } from './middleware/security.middleware';
     EnterpriseModule,      // Workspaces, RBAC, audit logs
     GrowthModule,          // Referrals + rewards
     SeoModule,             // SEO: sitemap, robots.txt, structured data
-    MessagingModule,       // Email: Resend SMTP (welcome, payment, OTP)
+    MessagingModule,       // Email: Resend API with SMTP fallback (welcome, payment, OTP)
   ],
 })
 export class AppModule implements NestModule {

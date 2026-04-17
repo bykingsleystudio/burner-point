@@ -60,7 +60,7 @@ export default function InboxPage() {
           <button key={n.id} onClick={() => setSelectedNumberId(n.id)}
             className={clsx('w-full text-left px-3 py-2.5 rounded-xl text-sm mb-1 transition-all', selectedNumberId === n.id ? 'bg-brand-green/10 text-brand-green' : 'text-brand-muted hover:text-white hover:bg-brand-card')}>
             <p className="font-mono font-medium text-xs">{n.number}</p>
-            <p className="text-[10px] mt-0.5 opacity-70">{n.countryCode} · {n.status}</p>
+            <p className="text-[10px] mt-0.5 opacity-70">{n.countryCode} - {n.status}</p>
           </button>
         ))}
         {numbers.length === 0 && (

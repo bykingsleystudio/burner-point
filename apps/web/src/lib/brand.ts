@@ -27,7 +27,42 @@ export const burnerPointBrand = {
     md: '12px',
     lg: '16px',
   },
+  spacing: {
+    0: '0',
+    1: '4px',
+    2: '8px',
+    3: '12px',
+    4: '16px',
+    5: '20px',
+    6: '24px',
+    8: '32px',
+    10: '40px',
+    12: '48px',
+    16: '64px',
+    20: '80px',
+    24: '96px',
+  },
+  shadows: {
+    card: '0 30px 70px rgba(0,0,0,0.34)',
+    elevated: '0 34px 100px rgba(0,0,0,0.46)',
+    focus: '0 0 0 4px rgba(0,255,157,0.08)',
+  },
+  glow: {
+    sm: '0 0 18px rgba(0,255,157,0.16)',
+    md: '0 0 32px rgba(0,255,157,0.22)',
+    lg: '0 0 48px rgba(0,255,157,0.28)',
+  },
+  iconSizes: {
+    xs: 14,
+    sm: 16,
+    md: 20,
+    lg: 24,
+    xl: 32,
+  },
   motion: {
+    fastMs: 200,
+    standardMs: 260,
+    expressiveMs: 320,
     quick: '200ms ease-in-out',
     standard: '260ms ease-in-out',
     pressScale: 0.97,
@@ -36,4 +71,3 @@ export const burnerPointBrand = {
 } as const;
 
 export const BRAND = burnerPointBrand;
-

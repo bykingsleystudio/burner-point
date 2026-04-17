@@ -120,6 +120,10 @@ export interface InitPaymentParams {
   gateway: PaymentGatewayId;
   rentalDays?: number; // Only for rental payments
   packageId?: string;
+  planId?: string;
+  phoneNumber?: string;
+  countryCode?: string;
+  numberType?: 'burner' | 'rental' | 'verification' | 'enterprise';
   clientPlatform?: 'web' | 'mobile';
 }
 
@@ -128,6 +132,9 @@ export interface PaymentResponse {
   reference: string;
   amount: number;
   currency: string;
+  gateway?: PaymentGatewayId;
+  paymentType?: PaymentType;
+  expiresAt?: string;
 }
 
 export const paymentsApi = {
@@ -137,11 +144,25 @@ export const paymentsApi = {
   history: () => api.get('/payments/history'),
 };
 
+export const billingApi = {
+  ledger: (page = 1, limit = 20) => api.get('/billing/ledger', { params: { page, limit } }),
+  plans: () => api.get('/billing/plans'),
+  subscription: () => api.get('/billing/subscription'),
+};
+
 export const phoneAuthApi = {
   send: (data: { phoneNumber: string; channel: 'sms' | 'call' }) =>
-    api.post<{ success: boolean; channel: string; expiresInMinutes: number }>('/phone-auth/send', data),
+    api.post<{
+      success: boolean;
+      channel: string;
+      phoneNumber: string;
+      status: 'pending';
+      expiresInMinutes: number;
+      expiresAt: string;
+      attemptsRemaining: number;
+    }>('/phone-auth/send', data),
   verify: (data: { phoneNumber: string; code: string }) =>
-    api.post<{ success: boolean; phoneNumber: string }>('/phone-auth/verify', data),
+    api.post<{ success: boolean; phoneNumber: string; status: 'approved'; redirectTo: string }>('/phone-auth/verify', data),
 };
 
 export type StackIntegrationStatus =
@@ -218,4 +239,5 @@ export const developerApi = {
   webhooks: () => api.get('/developer/webhooks'),
   createWebhook: (data: { name: string; url: string; events: string[] }) =>
     api.post('/developer/webhooks', data),
+  deleteWebhook: (id: string) => api.delete(`/developer/webhooks/${id}`),
 };

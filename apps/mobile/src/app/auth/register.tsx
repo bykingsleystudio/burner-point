@@ -9,6 +9,7 @@ import { Check, ShieldCheck } from 'lucide-react-native';
 import { exchangeClerkForApiSession } from '../../lib/auth';
 import { BRAND } from '../../lib/brand';
 import { WEB_APP_URL } from '../../lib/config';
+import { triggerHaptic } from '../../lib/native-ux';
 
 const providers = [
   ['Google', 'oauth_google'],
@@ -92,6 +93,7 @@ export default function RegisterScreen() {
   };
 
   const createAccount = async () => {
+    triggerHaptic('impact');
     if (!isLoaded || !validateProfile()) return;
     if (!strongPasswordPattern.test(form.password)) {
       Alert.alert('Stronger password required', 'Use 8 or more characters with uppercase, lowercase, and a number.');
@@ -118,6 +120,7 @@ export default function RegisterScreen() {
   };
 
   const verifyEmail = async () => {
+    triggerHaptic('impact');
     if (!isLoaded || !pendingVerification || !verificationCode.trim()) return;
     setLoading(true);
     try {
@@ -136,6 +139,7 @@ export default function RegisterScreen() {
   };
 
   const oauth = async (strategy: (typeof providers)[number][1]) => {
+    triggerHaptic('selection');
     if (!validateProfile()) return;
     try {
       const { createdSessionId, setActive: setOAuthActive } = await startSSOFlow({
@@ -226,7 +230,7 @@ function Input(props: ComponentProps<typeof TextInput> & { label: string }) {
 
 function PolicyCheck({ checked, onPress, text }: { checked: boolean; onPress: () => void; text: string }) {
   return (
-    <TouchableOpacity style={s.policyRow} onPress={onPress} activeOpacity={0.75}>
+    <TouchableOpacity style={s.policyRow} onPress={() => { triggerHaptic('selection'); onPress(); }} activeOpacity={0.75}>
       <View style={[s.checkbox, checked && s.checkboxOn]}>{checked ? <Check size={12} color={BRAND.colors.dark} /> : null}</View>
       <Text style={s.policyText}>{text}</Text>
     </TouchableOpacity>

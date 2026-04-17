@@ -17,20 +17,20 @@ export class User {
   @Column({ unique: true, nullable: true })
   email: string;
 
-  @Column({ nullable: true, select: false })
+  @Column({ name: 'password_hash', nullable: true, select: false })
   passwordHash: string;
 
-  @Column({ nullable: true, unique: true })
+  @Column({ name: 'phone_number', nullable: true, unique: true })
   @Index()
   phoneNumber: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'first_name', nullable: true })
   firstName: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'last_name', nullable: true })
   lastName: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'avatar_url', nullable: true })
   avatarUrl: string;
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
@@ -39,25 +39,25 @@ export class User {
   @Column({ type: 'enum', enum: UserStatus, default: UserStatus.PENDING })
   status: UserStatus;
 
-  @Column({ type: 'enum', enum: KycStatus, default: KycStatus.NONE })
+  @Column({ name: 'kyc_status', type: 'enum', enum: KycStatus, default: KycStatus.NONE })
   kycStatus: KycStatus;
 
-  @Column({ type: 'bigint', default: 0 })
+  @Column({ name: 'wallet_balance_kobo', type: 'bigint', default: 0 })
   walletBalanceKobo: number;
 
-  @Column({ type: 'bigint', default: 0 })
+  @Column({ name: 'lifetime_spend_kobo', type: 'bigint', default: 0 })
   lifetimeSpendKobo: number;
 
-  @Column({ default: false })
+  @Column({ name: 'email_verified', default: false })
   emailVerified: boolean;
 
-  @Column({ default: false })
+  @Column({ name: 'phone_verified', default: false })
   phoneVerified: boolean;
 
-  @Column({ default: false })
+  @Column({ name: 'two_factor_enabled', default: false })
   twoFactorEnabled: boolean;
 
-  @Column({ nullable: true, select: false })
+  @Column({ name: 'two_factor_secret', nullable: true, select: false })
   twoFactorSecret: string;
 
   @Column({ nullable: true })
@@ -69,43 +69,43 @@ export class User {
   @Column({ type: 'jsonb', default: {} })
   preferences: Record<string, unknown>;
 
-  @Column({ nullable: true })
+  @Column({ name: 'google_id', nullable: true })
   googleId: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'apple_id', nullable: true })
   appleId: string;
 
-  @Column({ unique: true, nullable: true })
+  @Column({ name: 'referral_code', unique: true, nullable: true })
   referralCode: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'referred_by_user_id', nullable: true })
   referredByUserId: string;
 
-  @Column({ default: 0 })
+  @Column({ name: 'referral_count', default: 0 })
   referralCount: number;
 
-  @Column({ default: 0 })
+  @Column({ name: 'failed_login_attempts', default: 0 })
   failedLoginAttempts: number;
 
-  @Column({ nullable: true, type: 'timestamp' })
+  @Column({ name: 'locked_until', nullable: true, type: 'timestamp' })
   lockedUntil: Date;
 
-  @Column({ nullable: true, type: 'timestamp' })
+  @Column({ name: 'last_login_at', nullable: true, type: 'timestamp' })
   lastLoginAt: Date;
 
-  @Column({ nullable: true })
+  @Column({ name: 'last_login_ip', nullable: true })
   lastLoginIp: string;
 
-  @Column({ type: 'jsonb', default: [] })
+  @Column({ name: 'trusted_devices', type: 'jsonb', default: [] })
   trustedDevices: Array<{ deviceId: string; name: string; addedAt: string }>;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @Column({ nullable: true, type: 'timestamp' })
+  @Column({ name: 'deleted_at', nullable: true, type: 'timestamp' })
   deletedAt: Date;
 
   @OneToMany(() => PhoneNumber, (pn) => pn.user)

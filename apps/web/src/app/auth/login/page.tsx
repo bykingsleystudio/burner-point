@@ -243,15 +243,15 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-brand-black text-white">
+    <main className="relative min-h-screen min-h-[100dvh] overflow-x-hidden bg-brand-black text-white">
       <div className="pointer-events-none fixed inset-0">
         <div className="bp-grid-bg absolute inset-0 opacity-70" />
         <div className="absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(circle_at_top,rgba(0,255,157,0.14),transparent_64%)]" />
       </div>
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-xl items-center px-5 py-10">
-        <form onSubmit={handleSubmit(onSubmit)} className="bp-card w-full rounded-bp-lg p-5 md:p-7">
-          <div className="rounded-bp-lg border border-white/8 bg-black/24 p-5 md:p-6">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-xl items-start px-4 py-6 sm:px-5 md:items-center md:py-10">
+        <form onSubmit={handleSubmit(onSubmit)} className="bp-card w-full rounded-bp-lg p-4 sm:p-5 md:p-7">
+          <div className="rounded-bp-lg border border-white/8 bg-black/24 p-4 sm:p-5 md:p-6">
             <div className="mb-8 text-center">
               <Link href="/" className="mx-auto inline-flex items-center justify-center gap-3" aria-label="Burner Point home">
                 <span className="flex h-12 w-12 items-center justify-center rounded-bp-lg border border-brand-green/25 bg-brand-green/10">
@@ -262,7 +262,7 @@ export default function LoginPage() {
               <div className="mx-auto mt-7 flex h-14 w-14 items-center justify-center rounded-bp-lg border border-brand-green/25 bg-brand-green/10">
                 <ShieldCheck className="h-7 w-7 text-brand-green" />
               </div>
-              <h1 className="mt-5 text-3xl font-semibold uppercase">Welcome back</h1>
+              <h1 className="mt-5 text-2xl font-semibold uppercase sm:text-3xl">Welcome back</h1>
               <p className="mt-2 text-sm text-white/52">Sign in with Clerk using your email address or phone number.</p>
             </div>
 
@@ -276,6 +276,7 @@ export default function LoginPage() {
                     type="text"
                     inputMode="text"
                     autoComplete="username"
+                    enterKeyHint="next"
                     placeholder="you@example.com or +1 415 555 0182"
                     className="auth-input mt-1.5"
                   />
@@ -297,6 +298,7 @@ export default function LoginPage() {
                     type="text"
                     inputMode="numeric"
                     autoComplete="one-time-code"
+                    enterKeyHint="done"
                     placeholder="Enter reset code"
                     className="auth-input mt-1.5"
                   />
@@ -317,6 +319,7 @@ export default function LoginPage() {
                     onChange={(event) => setResetPassword(event.target.value)}
                     type="password"
                     autoComplete="new-password"
+                    enterKeyHint="done"
                     placeholder="Enter a new password"
                     className="auth-input mt-1.5"
                   />
@@ -338,6 +341,7 @@ export default function LoginPage() {
                     type="text"
                     inputMode="numeric"
                     autoComplete="one-time-code"
+                    enterKeyHint="done"
                     placeholder="Enter verification code"
                     className="auth-input mt-1.5"
                   />
@@ -355,6 +359,7 @@ export default function LoginPage() {
                   type="text"
                   inputMode="text"
                   autoComplete="username"
+                  enterKeyHint="next"
                   placeholder="you@example.com or +1 415 555 0182"
                   className="auth-input mt-1.5"
                 />
@@ -368,10 +373,11 @@ export default function LoginPage() {
                     {...register('password')}
                     type={showPw ? 'text' : 'password'}
                     autoComplete="current-password"
+                    enterKeyHint="done"
                     placeholder="Password"
                     className="auth-input pr-12"
                   />
-                  <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-white/44 transition hover:bg-white/5 hover:text-white">
+                  <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-bp-md text-white/44 transition hover:bg-white/5 hover:text-white">
                     {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
@@ -379,7 +385,7 @@ export default function LoginPage() {
               </label>
 
               <div className="text-right">
-                <button type="button" onClick={() => setAuthMode('reset-request')} className="text-xs font-medium text-brand-green/90 underline-offset-2 hover:underline">
+                <button type="button" onClick={() => setAuthMode('reset-request')} className="inline-flex min-h-11 items-center text-xs font-medium text-brand-green/90 underline-offset-2 hover:underline">
                   Forgot password?
                 </button>
               </div>
@@ -402,7 +408,7 @@ export default function LoginPage() {
                 </div>
                 <div className="grid gap-3 sm:grid-cols-3">
                   {oauthProviders.map((provider) => (
-                    <button key={provider.label} type="button" onClick={() => startOAuth(provider.strategy)} className="flex min-h-11 items-center justify-center rounded-bp border border-white/10 bg-white/[0.02] px-3 py-3 text-center text-xs font-semibold text-white/76 transition hover:border-brand-green/35 hover:text-brand-green">
+                    <button key={provider.label} type="button" onClick={() => startOAuth(provider.strategy)} className="flex min-h-12 items-center justify-center rounded-bp border border-white/10 bg-white/[0.02] px-3 py-3 text-center text-xs font-semibold text-white/76 transition hover:border-brand-green/35 hover:text-brand-green">
                       {provider.label}
                     </button>
                   ))}

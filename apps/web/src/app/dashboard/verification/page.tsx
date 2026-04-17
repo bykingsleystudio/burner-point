@@ -1,8 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { CheckCircle2, PhoneCall, ShieldCheck, Smartphone, TimerReset } from 'lucide-react';
+import { CheckCircle2, CreditCard, Globe2, PhoneCall, ShieldCheck, Smartphone, TimerReset } from 'lucide-react';
 import { phoneAuthApi } from '@/lib/api';
 
 type Channel = 'sms' | 'call';
@@ -206,6 +207,39 @@ export default function VerificationPage() {
           ) : null}
         </aside>
       </div>
+
+      <section className="rounded-2xl border border-brand-border bg-brand-card p-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-brand-green">Verification purchase flow</p>
+            <h2 className="mt-2 text-2xl font-black uppercase leading-none text-white">
+              Buy credits, choose platform, receive the code.
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-brand-muted">
+              Product verifications should debit wallet credits after the user selects country, service, delivery route, and number. Provider calls stay server-side and the inbox shows SMS, OTP, or voice delivery state.
+            </p>
+          </div>
+          <Link href="/dashboard/credits" className="bp-primary-action inline-flex min-h-12 items-center justify-center px-6 py-4 text-sm font-semibold uppercase tracking-[0.16em]">
+            Buy Verification Credits
+          </Link>
+        </div>
+        <div className="mt-6 grid gap-3 md:grid-cols-3">
+          {[
+            [Globe2, 'Country and service', 'Choose destination, platform, and provider route before reserving inventory.'],
+            [CreditCard, 'Credit-backed checkout', 'Verification starts from $0.99+ and should reconcile through wallet ledger events.'],
+            [ShieldCheck, 'Private delivery', 'SMS, OTP, and voice results stay tied to the selected Burner Point number.'],
+          ].map(([Icon, title, text]) => {
+            const ItemIcon = Icon as typeof Globe2;
+            return (
+              <article key={String(title)} className="rounded-xl border border-white/8 bg-black/20 p-4">
+                <ItemIcon className="h-5 w-5 text-brand-green" />
+                <h3 className="mt-4 text-sm font-semibold uppercase tracking-[0.12em] text-white">{String(title)}</h3>
+                <p className="mt-2 text-sm leading-6 text-brand-muted">{String(text)}</p>
+              </article>
+            );
+          })}
+        </div>
+      </section>
     </div>
   );
 }

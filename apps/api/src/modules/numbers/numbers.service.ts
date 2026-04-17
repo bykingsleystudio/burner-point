@@ -92,6 +92,72 @@ export class NumbersService {
     return saved;
   }
 
+  async assignPaidNumber(
+    userId: string,
+    phoneNumber: string,
+    type: NumberType,
+    countryCode: string,
+    options: {
+      durationDays?: number;
+      paymentReference: string;
+      priceKobo: number;
+      autoRenew?: boolean;
+    },
+  ) {
+    const country = countryCode.toUpperCase();
+    if (type !== NumberType.VERIFICATION && !['US', 'CA'].includes(country)) {
+      throw new BadRequestException('Conversation rentals are available for US and Canada only');
+    }
+
+    const { sid, number, provider } = await this.providerService.purchaseNumber(phoneNumber, country);
+    const durationDays = options.durationDays ?? NUMBER_DURATION_DAYS[type] ?? 1;
+    const expiresAt = durationDays > 0
+      ? new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000)
+      : null;
+
+    const paidNumber = this.numberRepo.create({
+      number,
+      status: NumberStatus.ACTIVE,
+      type,
+      provider: this.mapNumberProvider(provider),
+      providerNumberSid: sid,
+      countryCode: country,
+      userId,
+      assignedToUserId: userId,
+      priceKobo: options.priceKobo,
+      renewalPriceKobo: options.priceKobo,
+      expiresAt,
+      autoRenew: Boolean(options.autoRenew),
+      capabilities: ['sms', 'mms', 'voice'],
+      metadata: {
+        paymentReference: options.paymentReference,
+        assignmentSource: 'payment_webhook',
+      },
+    });
+
+    const saved = await this.numberRepo.save(paidNumber);
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const balance = Number(user?.walletBalanceKobo ?? 0);
+
+    await this.txRepo.save(this.txRepo.create({
+      userId,
+      type: TransactionType.NUMBER_PURCHASE,
+      status: TransactionStatus.COMPLETED,
+      amountKobo: 0,
+      balanceBeforeKobo: balance,
+      balanceAfterKobo: balance,
+      description: `Assigned paid ${type} number ${number}`,
+      referenceId: saved.id,
+      externalReference: options.paymentReference,
+      metadata: {
+        chargeKobo: options.priceKobo,
+        paymentReference: options.paymentReference,
+      },
+    }));
+
+    return saved;
+  }
+
   async getUserNumbers(userId: string) {
     return this.numberRepo.find({
       where: { userId },

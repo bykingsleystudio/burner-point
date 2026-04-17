@@ -14,6 +14,7 @@ import axios from 'axios';
 
 import { API_BASE_URL, WEB_BILLING_URL } from '../../lib/config';
 import { BRAND } from '../../lib/brand';
+import { triggerHaptic } from '../../lib/native-ux';
 
 type GatewayId = 'paystack' | 'paddle' | 'nowpayments';
 
@@ -44,6 +45,7 @@ export default function CreditsScreen() {
   }, []);
 
   const pay = async () => {
+    triggerHaptic('impact');
     if (!selectedPkg) {
       Alert.alert('Select Package', 'Please select a credit package first');
       return;
@@ -86,7 +88,7 @@ export default function CreditsScreen() {
         }
         renderItem={({ item: pkg }) => (
           <TouchableOpacity
-            onPress={() => setSelectedPkg(pkg)}
+            onPress={() => { triggerHaptic('selection'); setSelectedPkg(pkg); }}
             style={[s.card, selectedPkg?.id === pkg.id && s.cardSelected]}
             activeOpacity={0.78}
           >
@@ -154,7 +156,7 @@ function GatewayPicker({
         return (
           <TouchableOpacity
             key={gw.id}
-            onPress={() => onChange(gw.id)}
+            onPress={() => { triggerHaptic('selection'); onChange(gw.id); }}
             style={[s.gwBtn, active && s.gwBtnActive]}
             activeOpacity={0.78}
           >

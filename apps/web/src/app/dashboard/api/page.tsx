@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { Copy, Key, Plus, Trash2 } from 'lucide-react';
+import { Copy, Key, Plus, Trash2, Webhook } from 'lucide-react';
 import { developerApi } from '@/lib/api';
 
 export default function ApiPage() {
@@ -50,6 +51,21 @@ export default function ApiPage() {
           <code className="font-mono text-brand-green">{process.env.NEXT_PUBLIC_API_URL}</code>
         </p>
       </div>
+
+      <Link
+        href="/dashboard/webhooks"
+        className="flex items-start gap-3 rounded-bp-lg border border-brand-green/16 bg-brand-green/[0.045] p-4 transition hover:border-brand-green/32 hover:bg-brand-green/[0.075]"
+      >
+        <span className="flex h-10 w-10 flex-none items-center justify-center rounded-bp border border-brand-green/20 bg-black/20">
+          <Webhook className="h-5 w-5 text-brand-green" />
+        </span>
+        <span>
+          <span className="block text-sm font-semibold uppercase text-white">Manage Webhooks</span>
+          <span className="mt-1 block text-sm leading-6 text-brand-muted">
+            Configure signed delivery for messages, calls, number lifecycle, verification, payment, and subscription events.
+          </span>
+        </span>
+      </Link>
 
       {revealedKey ? (
         <div className="rounded-lg border border-brand-green/30 bg-brand-green/10 p-4">

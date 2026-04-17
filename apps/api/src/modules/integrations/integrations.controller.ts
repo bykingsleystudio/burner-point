@@ -1,0 +1,148 @@
+import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { IsIn, IsInt, IsObject, IsOptional, IsString, Max, Min } from 'class-validator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import {
+  CaptureAnalyticsEventInput,
+  EsimOrderInput,
+  EsimPlansInput,
+  IntegrationsService,
+  ProxyOrderInput,
+  UploadIntentInput,
+  VpnSessionInput,
+} from './integrations.service';
+
+class CaptureAnalyticsEventDto implements CaptureAnalyticsEventInput {
+  @IsString()
+  event: string;
+
+  @IsOptional()
+  @IsObject()
+  properties?: Record<string, unknown>;
+
+  @IsOptional()
+  @IsString()
+  distinctId?: string;
+}
+
+class UploadIntentDto implements UploadIntentInput {
+  @IsIn(['mms', 'voicemail', 'support_attachment', 'document', 'export'])
+  purpose: UploadIntentInput['purpose'];
+
+  @IsString()
+  fileName: string;
+
+  @IsString()
+  contentType: string;
+
+  @IsInt()
+  @Min(1)
+  @Max(50 * 1024 * 1024)
+  byteSize: number;
+}
+
+class EsimPlansDto implements EsimPlansInput {
+  @IsString()
+  countryCode: string;
+
+  @IsOptional()
+  @IsString()
+  region?: string;
+}
+
+class EsimOrderDto implements EsimOrderInput {
+  @IsString()
+  planId: string;
+
+  @IsString()
+  countryCode: string;
+
+  @IsOptional()
+  @IsString()
+  iccid?: string;
+}
+
+class ProxyOrderDto implements ProxyOrderInput {
+  @IsString()
+  region: string;
+
+  @IsIn(['residential', 'mobile'])
+  type: ProxyOrderInput['type'];
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(365)
+  durationDays?: number;
+}
+
+class VpnSessionDto implements VpnSessionInput {
+  @IsString()
+  deviceName: string;
+
+  @IsOptional()
+  @IsString()
+  region?: string;
+}
+
+@ApiTags('integrations')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@Controller('integrations')
+export class IntegrationsController {
+  constructor(private readonly integrationsService: IntegrationsService) {}
+
+  @Get('catalog')
+  @ApiOperation({ summary: 'Get backend-only integration catalog without secret values' })
+  catalog() {
+    return this.integrationsService.getCatalog();
+  }
+
+  @Get('contracts')
+  @ApiOperation({ summary: 'Get documented backend endpoint contracts for all integrations' })
+  contracts() {
+    return this.integrationsService.getContracts();
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get one backend integration contract' })
+  integration(@Param('id') id: string) {
+    return this.integrationsService.getIntegration(id);
+  }
+
+  @Post('analytics/events')
+  @ApiOperation({ summary: 'Capture a product analytics event through the backend' })
+  captureEvent(@Req() req: { user: { id: string } }, @Body() dto: CaptureAnalyticsEventDto) {
+    return this.integrationsService.captureAnalyticsEvent(req.user.id, dto);
+  }
+
+  @Post('storage/upload-intents')
+  @ApiOperation({ summary: 'Create a backend-controlled private object upload intent' })
+  uploadIntent(@Req() req: { user: { id: string } }, @Body() dto: UploadIntentDto) {
+    return this.integrationsService.createUploadIntent(req.user.id, dto);
+  }
+
+  @Post('esim/plans')
+  @ApiOperation({ summary: 'Query configured 1GLOBAL eSIM plans through the backend' })
+  esimPlans(@Req() req: { user: { id: string } }, @Body() dto: EsimPlansDto) {
+    return this.integrationsService.requestEsimPlans(req.user.id, dto);
+  }
+
+  @Post('esim/orders')
+  @ApiOperation({ summary: 'Create configured 1GLOBAL eSIM order through the backend' })
+  esimOrder(@Req() req: { user: { id: string } }, @Body() dto: EsimOrderDto) {
+    return this.integrationsService.createEsimOrder(req.user.id, dto);
+  }
+
+  @Post('proxies/orders')
+  @ApiOperation({ summary: 'Create configured Bright Data proxy order through the backend' })
+  proxyOrder(@Req() req: { user: { id: string } }, @Body() dto: ProxyOrderDto) {
+    return this.integrationsService.createProxyOrder(req.user.id, dto);
+  }
+
+  @Post('vpn/sessions')
+  @ApiOperation({ summary: 'Create configured WireGuard VPN session through the backend' })
+  vpnSession(@Req() req: { user: { id: string } }, @Body() dto: VpnSessionDto) {
+    return this.integrationsService.createVpnSession(req.user.id, dto);
+  }
+}

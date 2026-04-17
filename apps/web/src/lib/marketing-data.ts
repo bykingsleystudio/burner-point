@@ -19,7 +19,7 @@ export type IconKey =
 
 export type MarketingLink = { label: string; href: string };
 export type MarketingCard = { title: string; text: string; meta?: string; href?: string; cta?: string; icon?: IconKey; anchorId?: string };
-export type MarketingSection = { title: string; text: string; items?: string[] };
+export type MarketingSection = { title: string; text: string; items?: string[]; meta?: string; anchorId?: string };
 export type MarketingPageContent = {
   slug: string;
   eyebrow: string;
@@ -77,37 +77,38 @@ export const footerGroups = [
 ];
 
 export const socialLinks = [
-  { label: 'LinkedIn', short: 'in', href: 'https://www.linkedin.com/company/burnerpointapp' },
-  { label: 'Instagram', short: 'ig', href: 'https://www.instagram.com/burnerpoint.app' },
-  { label: 'TikTok', short: 'tt', href: 'https://www.tiktok.com/@burnerpointapp' },
-  { label: 'Twitter/X', short: 'x', href: 'https://x.com/burnerpointapp' },
-  { label: 'Telegram', short: 'tg', href: 'https://t.me/burnerpointapp' },
-  { label: 'YouTube', short: 'yt', href: 'https://www.youtube.com/@burnerpointapp' },
-  { label: 'Facebook', short: 'fb', href: 'https://www.facebook.com/burnerpoint.app' },
+  { label: 'Instagram', short: 'ig', handle: '@burnerpoint.app', href: 'https://www.instagram.com/burnerpoint.app' },
+  { label: 'Facebook', short: 'fb', handle: '@burnerpoint.app', href: 'https://www.facebook.com/burnerpoint.app' },
+  { label: 'LinkedIn', short: 'in', handle: '@burnerpointapp', href: 'https://www.linkedin.com/company/burnerpointapp' },
+  { label: 'TikTok', short: 'tt', handle: '@burnerpointapp', href: 'https://www.tiktok.com/@burnerpointapp' },
+  { label: 'Twitter/X', short: 'x', handle: '@burnerpointapp', href: 'https://x.com/burnerpointapp' },
+  { label: 'Telegram', short: 'tg', handle: '@burnerpointapp', href: 'https://t.me/burnerpointapp' },
+  { label: 'YouTube', short: 'yt', handle: '@burnerpointapp', href: 'https://www.youtube.com/@burnerpointapp' },
 ];
 
 export const trustBadges: MarketingLink[] = [
-  { label: '256-bit AES', href: '/security' },
+  { label: '256-bit AES Encryption', href: '/security' },
   { label: 'No Logs Policy', href: '/privacy' },
   { label: 'GDPR Compliant', href: '/privacy' },
   { label: 'Real SIM Numbers', href: '/verifications' },
 ];
 
 const faqItems = [
-  ['What is a burner number?', 'A burner number is a temporary or renewable phone number you use instead of exposing your personal number online.'],
-  ['Are Burner Point numbers real SIM numbers?', 'Yes. Burner Point is positioned around real SIM-backed numbers for stronger SMS, OTP, and voice verification compatibility.'],
-  ['How does the US/Canada conversation inbox work?', 'Conversation numbers are designed for US and Canada SMS, MMS/photos, calls, voicemail, and WiFi or mobile-data communication from the Burner Point web and mobile apps.'],
-  ['How do verifications work?', 'Choose a service and country, receive a number, submit it to the third-party platform, then wait for the SMS OTP or voice OTP to appear in Burner Point.'],
-  ['What is the difference between renewable and non-renewable rentals?', 'Non-renewable rentals are short-duration numbers for temporary access. Renewable rentals are monthly numbers you can keep active for continuity and account recovery.'],
-  ['Can I keep a number after verification?', 'Yes. Use one-time verification, short-term rentals, or renewable monthly plans when you need continuity.'],
-  ['Do you support eSIM, proxies, and VPN privacy?', 'Yes. Burner Point includes eSIM purchase, proxy access, and integrated VPN-style privacy protection.'],
-  ['How does eSIM work?', 'Buy a destination-ready data plan, activate the eSIM on a compatible device, and manage travel connectivity without swapping physical SIM cards.'],
-  ['How do proxies work?', 'Proxy access gives you controlled routing through supported regions for privacy-enhanced browsing, testing, and location-aware workflows.'],
-  ['Is the VPN a separate product?', 'No. VPN privacy and protection is an in-platform Burner Point feature designed to reduce exposure while using the platform.'],
-  ['What payment methods are planned?', 'The architecture supports Paystack, Paddle, NOWPayments, and later Flutterwave, Squad by GTCO, Korapay, and OPay once the core revenue flow is stable.'],
-  ['Do you offer refunds?', 'Refund rules depend on number status, provider delivery, and whether a verification or rental has already been consumed. The billing dashboard and support flow should show case-specific guidance.'],
-  ['Is my data private?', 'Burner Point is designed around data minimization, a no-logs posture for sensitive communication content, and operational logging limited to security, billing, fraud prevention, and reliability.'],
-  ['How do I reach support?', 'Email info.burnerpoint@gmail.com or message Telegram support at @burnerpoint and @burnerpointapp.'],
+  ['What is a burner number?', 'A burner number is a temporary or renewable phone number you use instead of exposing your personal number online. Burner Point numbers are designed for account verification, controlled communication, rentals, recovery, and everyday privacy separation.'],
+  ['Are Burner Point numbers real mobile numbers?', 'Burner Point is positioned around real mobile and SIM-backed number access so SMS, OTP, and voice verification flows have stronger acceptance than generic VoIP-only numbers. Availability still depends on country, carrier, service, and inventory.'],
+  ['How does the US/Canada conversation inbox work?', 'Conversation numbers are designed for US and Canada messaging and calling. A supported number can receive or send text, SMS, MMS, photo messages, calls, and voicemail over WiFi or cellular data from Burner Point web and mobile apps.'],
+  ['How do verifications work?', 'Choose a country, service, and available number, submit that number to the third-party platform, and watch Burner Point for SMS OTP or voice OTP delivery. Codes remain tied to the number and verification workflow.'],
+  ['How do rentals work?', 'Rentals give you a number for a defined window. Use short-term rentals for temporary access, or monthly rentals when you need continuity for repeat verifications, recovery messages, or communication history.'],
+  ['What is the difference between renewable and non-renewable numbers?', 'Non-renewable numbers are short-duration rentals built for temporary access. Renewable numbers can stay active month to month for account recovery, repeat messaging, and longer-running private communication.'],
+  ['Can I keep a number after verification?', 'Yes. You can use a one-time verification, rent a number for a fixed window, or keep a renewable monthly number when the platform account needs ongoing access or recovery.'],
+  ['How does eSIM work?', 'Buy a destination-ready data plan, activate the eSIM on a compatible device, and manage travel connectivity without swapping physical SIM cards. Burner Point positions eSIM as connectivity inside the same privacy account.'],
+  ['How do proxies work?', 'Proxy access gives you controlled routing through supported regions for privacy-enhanced browsing, localization, testing, and account separation. Provider credentials are handled through backend-only integrations.'],
+  ['Is VPN protection a separate product?', 'No. VPN privacy and protection is an in-platform Burner Point feature. It is designed to reduce exposure while using Burner Point services, not to operate as a standalone VPN brand.'],
+  ['What payment methods does Burner Point support?', 'The product architecture supports Paystack, Paddle, and NOWPayments for core revenue flows, with Flutterwave, Squad by GTCO, Korapay, and OPay deferred until core payment stability is proven.'],
+  ['How do refunds and billing work?', 'Refund eligibility depends on the product, provider delivery, whether a verification or rental was consumed, payment status, and number lifecycle. Billing surfaces should show references, status, credits, receipts, and support paths.'],
+  ['What is required to create an account?', 'Account creation requires first name, last name, email, phone number, password, Terms acceptance, and Privacy Policy acceptance. Clerk powers the primary authentication flow with email, phone, OAuth, password reset, and optional 2FA.'],
+  ['How does Burner Point handle privacy and data?', 'Burner Point is designed around data minimization, private access control, a no-logs posture for sensitive privacy workflows, and operational telemetry limited to security, billing, fraud prevention, support, and reliability.'],
+  ['How do I reach support?', 'Email info.burnerpoint@gmail.com or message Telegram support at @burnerpoint and @burnerpointapp for account, verification, rental, billing, eSIM, proxy, VPN, or API help.'],
 ].map(([question, answer]) => ({ question, answer }));
 
 export const marketingPages: Record<string, MarketingPageContent> = {
@@ -204,12 +205,51 @@ export const marketingPages: Record<string, MarketingPageContent> = {
     eyebrow: 'Blog',
     title: 'Practical privacy writing for real-world telecom decisions.',
     description: 'Guides for safer registrations, better communication separation, and stronger privacy habits.',
+    primaryCta: { label: 'Start Privately', href: '/auth/signup' },
+    secondaryCta: { label: 'Open Help Center', href: '/help' },
     cards: [
       { icon: 'file', meta: 'Privacy - 6 min read', title: 'Why You Should Never Use Your Personal Number Online', text: 'Reduce spam, data brokerage, SIM swap exposure, and unwanted account linkage.', href: '/blog#post-personal-number', anchorId: 'post-personal-number' },
-      { icon: 'file', meta: 'Security - 5 min read', title: 'How Burner Numbers Protect Your Identity', text: 'Compartmentalize marketplaces, social apps, and short-term signups.', href: '/blog#post-burner-identity', anchorId: 'post-burner-identity' },
-      { icon: 'file', meta: 'Telecom - 7 min read', title: 'Understanding Non-VoIP Numbers', text: 'Why SIM-backed inventory matters for OTP reliability.', href: '/blog#post-nonvoip', anchorId: 'post-nonvoip' },
+      { icon: 'file', meta: 'Communication - 5 min read', title: 'How Burner Numbers Protect Your Identity', text: 'Compartmentalize marketplaces, social apps, business communication, and short-term signups.', href: '/blog#post-burner-identity', anchorId: 'post-burner-identity' },
+      { icon: 'file', meta: 'Security - 7 min read', title: 'Understanding Non-VoIP Numbers', text: 'Why SIM-backed inventory matters for OTP reliability, recovery, and trust.', href: '/blog#post-nonvoip', anchorId: 'post-nonvoip' },
       { icon: 'file', meta: 'Anonymous and Connected - 4 min read', title: 'Privacy in the Digital Age: Anonymous and Connected', text: 'Keep access, recovery, and messages portable while reducing identity exposure.', href: '/blog#post-anonymous-connected', anchorId: 'post-anonymous-connected' },
       { icon: 'file', meta: 'Product Updates - 5 min read', title: 'How Burner Point Handles Secure Communication', text: 'A practical look at private inboxes, provider routing, no-logs posture, and account control.', href: '/blog#post-secure-communication', anchorId: 'post-secure-communication' },
+    ],
+    sections: [
+      {
+        anchorId: 'post-personal-number',
+        meta: 'Privacy - 6 min read',
+        title: 'Why You Should Never Use Your Personal Number Online',
+        text: 'Your personal phone number is one of the most persistent identifiers you own. Once it appears in sign-up forms, marketplaces, dating apps, social platforms, and recovery flows, it can connect your accounts, location patterns, contact graph, and real-world identity. Burner Point exists so users can keep that personal line private while still receiving the messages, codes, and calls they need.',
+        items: ['Reduce spam, data broker enrichment, and unwanted account linkage', 'Keep short-term registrations separate from your long-term identity', 'Use temporary or renewable numbers when a platform needs phone access but not your personal number'],
+      },
+      {
+        anchorId: 'post-burner-identity',
+        meta: 'Communication - 5 min read',
+        title: 'How Burner Numbers Protect Your Identity',
+        text: 'A burner number creates a controlled communication boundary. Instead of giving every service the same personal line, you can assign a separate number to a marketplace listing, business workflow, travel need, online registration, or social account. That boundary gives you a cleaner way to pause, renew, expire, or support a communication channel without exposing your primary number.',
+        items: ['Separate business, personal, dating, travel, and platform activity', 'Keep SMS, calls, voicemail, MMS, and photo messages attached to the right number', 'Let a temporary identity expire when the risk or need is gone'],
+      },
+      {
+        anchorId: 'post-nonvoip',
+        meta: 'Security - 7 min read',
+        title: 'Understanding Non-VoIP Numbers',
+        text: 'Non-VoIP numbers are positioned around real mobile-number infrastructure rather than generic internet-only calling identities. Many services apply stricter checks to phone numbers during OTP, recovery, and anti-abuse flows. That is why Burner Point emphasizes real SIM-backed access, provider quality, country selection, and verification reliability instead of treating every phone number as interchangeable.',
+        items: ['Real mobile number access can improve acceptance for SMS and voice verification', 'Country, carrier, service, and route quality still matter for delivery', 'Backend-only provider abstraction keeps telecom credentials out of web and mobile clients'],
+      },
+      {
+        anchorId: 'post-anonymous-connected',
+        meta: 'Anonymous and Connected - 4 min read',
+        title: 'Privacy in the Digital Age: Anonymous and Connected',
+        text: 'Privacy should not require disappearing from the services you need. Burner Point is designed around a simpler idea: stay reachable while reducing exposure. Users can receive codes, keep recovery access, use eSIM connectivity, route with proxies, and protect sessions without turning a personal phone number into the key that ties everything together.',
+        items: ['Stay reachable without handing every platform your primary number', 'Use numbers, eSIM, proxies, and built-in protection from one account', 'Keep control over expiration, renewal, billing, and support paths'],
+      },
+      {
+        anchorId: 'post-secure-communication',
+        meta: 'Product Updates - 5 min read',
+        title: 'How Burner Point Handles Secure Communication',
+        text: 'Secure communication requires more than a clean interface. Burner Point routes third-party provider work through the backend, keeps service secrets server-side, limits sensitive telemetry, and designs communication modules around scoped access. The goal is a telecom-grade experience where SMS, OTP, voice, MMS, voicemail, and support workflows feel controlled from the first action.',
+        items: ['Frontend and mobile clients call Burner Point APIs, not provider secrets directly', 'Conversation activity is tied to number ownership and account sessions', 'Audit logging, rate limits, and abuse controls protect the platform while keeping user-facing copy clear'],
+      },
     ],
   },
   updates: {
@@ -217,12 +257,21 @@ export const marketingPages: Record<string, MarketingPageContent> = {
     eyebrow: 'Product Updates',
     title: 'Recent shipping notes from the Burner Point platform.',
     description: 'A lightweight changelog for number coverage, developer tooling, eSIM regions, and privacy infrastructure improvements.',
+    primaryCta: { label: 'Get Started', href: '/auth/signup' },
+    secondaryCta: { label: 'View API Docs', href: '/api/docs' },
     cards: [
-      { icon: 'globe', meta: 'April 2026', title: 'New Country Number Coverage Added', text: 'Expanded SIM-backed availability for additional verification routes and regional area-code selection.' },
-      { icon: 'code', meta: 'March 2026', title: 'API Webhook Reliability Improvements', text: 'Improved event naming, retry behavior, and developer dashboard visibility.' },
-      { icon: 'smartphone', meta: 'February 2026', title: 'New eSIM Regions Released', text: 'Travel-ready data plans added for more destinations with a faster activation flow.' },
-      { icon: 'wifi', meta: 'January 2026', title: 'Proxy Region and Durability Upgrades', text: 'Improved proxy region selection, active-session health checks, and durability messaging for privacy workflows.' },
-      { icon: 'phone', meta: 'December 2025', title: 'US/Canada WiFi and Data Calling Improvements', text: 'Refined the conversation roadmap for SMS, MMS, calls, voicemail, and photo sharing over WiFi or cellular data.' },
+      { icon: 'globe', meta: 'April 2026', title: 'New Country Number Coverage Added', text: 'Expanded SIM-backed availability for additional verification routes and regional area-code selection.', href: '/updates#update-country-numbers', anchorId: 'update-country-numbers' },
+      { icon: 'code', meta: 'March 2026', title: 'API Webhook Reliability Improvements', text: 'Improved event naming, retry behavior, idempotency guidance, and developer dashboard visibility.', href: '/updates#update-api-improvements', anchorId: 'update-api-improvements' },
+      { icon: 'smartphone', meta: 'February 2026', title: 'New eSIM Regions Released', text: 'Travel-ready data plans added for more destinations with a faster activation flow.', href: '/updates#update-esim-regions', anchorId: 'update-esim-regions' },
+      { icon: 'wifi', meta: 'January 2026', title: 'New Proxy Region and Durability Upgrades', text: 'Improved proxy region selection, active-session health checks, and durability messaging for privacy workflows.', href: '/updates#update-proxy-durability', anchorId: 'update-proxy-durability' },
+      { icon: 'phone', meta: 'December 2025', title: 'US/Canada WiFi and Cellular Data Communication Improvements', text: 'Refined the conversation roadmap for SMS, MMS, calls, voicemail, and photo sharing over WiFi or cellular data.', href: '/updates#update-conversation-usca', anchorId: 'update-conversation-usca' },
+    ],
+    sections: [
+      { anchorId: 'update-country-numbers', meta: 'April 2026', title: 'New Country Number Coverage Added', text: 'Burner Point expanded number coverage planning for additional country routes and area-code selection. The product direction prioritizes SIM-backed access, verification reliability, provider health, and clear user controls before exposing inventory broadly.', items: ['More route planning for SMS and voice verification', 'Sharper country and area-code inventory display', 'Support-ready states for unavailable or degraded routes'] },
+      { anchorId: 'update-api-improvements', meta: 'March 2026', title: 'API Improvements for Developers', text: 'The developer surface now emphasizes scoped API keys, webhook contracts, retry behavior, and idempotent event processing. This makes it easier to build verification, number provisioning, message, payment, and lifecycle automations without direct provider exposure.', items: ['Clearer webhook event names and signature guidance', 'Improved API docs entry point and dashboard routing', 'Backend-only provider model for Twilio, payments, eSIM, proxies, and VPN workflows'] },
+      { anchorId: 'update-esim-regions', meta: 'February 2026', title: 'New eSIM Regions Released', text: 'Burner Point added more complete eSIM content and product routing around destination-ready data plans. The experience focuses on instant activation, compatible device guidance, multi-country coverage, and plan visibility.', items: ['Travel-ready data plan positioning', 'Activation and usage state framework', 'Support path for eSIM install and connectivity issues'] },
+      { anchorId: 'update-proxy-durability', meta: 'January 2026', title: 'New Proxy Region and Durability Improvements', text: 'Proxy purchase and management now has clearer product language for residential/mobile proxy access, region control, session durability, masked credentials, and provider health. This keeps proxy access practical without exposing provider secrets to users or client bundles.', items: ['Region and proxy type framework', 'Durability, rotation, and health messaging', 'Backend-only credential handling'] },
+      { anchorId: 'update-conversation-usca', meta: 'December 2025', title: 'WiFi and Cellular Data Communication Improvements for USA/Canada', text: 'The conversation roadmap now clarifies support for US/Canada calls, voicemail, text, SMS, MMS, and photo sharing over WiFi or cellular data. The goal is a cross-platform communication layer connected to rentals and numbers.', items: ['Calls, voicemail, SMS, MMS, and photo sharing context', 'Cross-platform inbox direction for web and mobile', 'No-roaming-fee communication positioning'] },
     ],
   },
   careers: {
@@ -231,11 +280,19 @@ export const marketingPages: Record<string, MarketingPageContent> = {
     title: 'Build the future of private communication.',
     description: 'Join a remote-friendly team building secure, privacy-first digital infrastructure for global users.',
     primaryCta: { label: 'Contact Careers', href: 'mailto:info.burnerpoint@gmail.com?subject=Burner%20Point%20Careers' },
-    highlights: ['Remote-friendly roles', 'Privacy-first mission', 'Product, engineering, and support opportunities'],
+    secondaryCta: { label: 'Read About Us', href: '/about' },
+    highlights: ['Remote-friendly opportunities', 'Privacy-first mission', 'Telecom, security, product, and support craftsmanship'],
     cards: [
       { icon: 'briefcase', meta: 'Remote', title: 'Frontend Product Engineer', text: 'Own polished web and mobile experiences for onboarding, number management, and privacy workflows.' },
       { icon: 'briefcase', meta: 'Remote', title: 'Telecom Operations Specialist', text: 'Manage number inventory, provider quality, delivery reliability, and escalations.' },
       { icon: 'briefcase', meta: 'Remote', title: 'Privacy Support Advocate', text: 'Help users understand verifications, rentals, eSIM activation, proxies, and security.' },
+    ],
+    sections: [
+      { title: 'Mission', text: 'Burner Point exists to give people practical control over communication identity. The work spans product design, telecom operations, backend integrations, security, billing, support, and mobile delivery.', items: ['Make privacy usable for everyday registrations and communication', 'Build trustworthy telecom-grade workflows', 'Keep sensitive provider logic secure and server-side'] },
+      { title: 'Why work at Burner Point', text: 'This is product craft with real infrastructure behind it. The team designs for trust, user control, reliable delivery, and calm interfaces that do not feel like generic SaaS templates.', items: ['Privacy-first product decisions', 'Direct impact across web, mobile, API, and telecom operations', 'High bar for polish, reliability, and user safety'] },
+      { title: 'Remote opportunities', text: 'Burner Point is structured for remote-friendly collaboration across engineering, product, design, support, telecom operations, security, and developer relations.', items: ['Async documentation and clear ownership', 'Production-minded execution over performative process', 'Respect for focused work and deep craft'] },
+      { title: 'Example roles', text: 'Current and future roles align around the systems needed to ship a privacy-focused telecommunications platform.', items: ['Frontend Product Engineer', 'Backend Integrations Engineer', 'Telecom Operations Specialist', 'Privacy Support Advocate', 'Developer Relations Engineer'] },
+      { title: 'Culture', text: 'The culture is privacy-aware, customer-conscious, and craft-heavy. Burner Point values direct communication, careful systems thinking, strong security instincts, and interfaces that help users feel in control.', items: ['Privacy before hype', 'Telecom reliability before vanity metrics', 'Product craftsmanship before templates'] },
     ],
   },
 };
@@ -273,21 +330,89 @@ marketingPages.support = {
     { icon: 'help', title: 'Help Center', text: 'Use guides for setup, authentication, numbers, rentals, and payments.', href: '/help', cta: 'Read Guides' },
   ],
 };
-marketingPages.faq = { slug: 'faq', eyebrow: 'FAQ', title: 'Answers before you need a support ticket.', description: 'Common questions about verifications, phone rentals, eSIM, proxies, VPN protection, account setup, and support.', primaryCta: { label: 'Open Help Center', href: '/help' }, secondaryCta: { label: 'Contact Support', href: '/contact' }, faqs: faqItems };
-marketingPages.help = { slug: 'help', eyebrow: 'Help Center', title: 'Guides for account setup, authentication, and service usage.', description: 'Setup steps and troubleshooting for verifications, rentals, payments, eSIM, proxies, and VPN protection.', primaryCta: { label: 'Contact Support', href: '/contact' }, secondaryCta: { label: 'Telegram Support', href: 'https://t.me/burnerpoint' }, cards: [
-  { icon: 'book', meta: 'Getting Started', title: 'How to create your Burner Point account', text: 'Use first name, last name, email, phone number, and a strong password. SSO can start with Google, Apple iCloud, or Microsoft Outlook when configured.' },
-  { icon: 'book', meta: 'Verifications', title: 'How OTP verification works', text: 'Choose a number, submit it to the platform, then watch the Burner Point inbox for SMS or voice verification delivery.' },
-  { icon: 'book', meta: 'Rentals', title: 'Number expiration guide', text: 'Short-term rentals expire after their duration. Monthly rentals can renew for continued account recovery and messaging access.' },
-  { icon: 'book', meta: 'Payments', title: 'Payment troubleshooting', text: 'Confirm checkout status, wallet balance, and payment reference before opening a support request.' },
-  { icon: 'book', meta: 'Security', title: 'Account security and 2FA', text: 'Use Clerk-backed email, phone, OAuth, password reset, and optional 2FA controls to keep your Burner Point account protected.' },
-  { icon: 'book', meta: 'API / Developer Tools', title: 'Developer keys and webhooks', text: 'Create scoped API keys, configure webhook endpoints, verify signatures, and process events idempotently.' },
-  { icon: 'book', meta: 'Account & Authentication', title: 'Profile, sign out, and account recovery', text: 'Manage personal details, sessions, notification preferences, support tickets, and recovery paths from settings.' },
-] };
+marketingPages.faq = {
+  slug: 'faq',
+  eyebrow: 'FAQ',
+  title: 'Answers before you need a support ticket.',
+  description: 'Clear answers about burner numbers, conversation inbox, verifications, rentals, eSIM, proxies, VPN protection, payments, account setup, refunds, billing, privacy, and data handling.',
+  primaryCta: { label: 'Open Help Center', href: '/help' },
+  secondaryCta: { label: 'Contact Support', href: '/contact' },
+  faqs: faqItems,
+};
+
+marketingPages.help = {
+  slug: 'help',
+  eyebrow: 'Help Center',
+  title: 'Guides for account setup, authentication, and service usage.',
+  description: 'Structured help for getting started, verifications, rentals, payments, security, API tools, account access, and authentication.',
+  primaryCta: { label: 'Contact Support', href: '/contact' },
+  secondaryCta: { label: 'Telegram Support', href: 'https://t.me/burnerpoint' },
+  cards: [
+    { icon: 'book', meta: 'Getting Started', title: 'Create your Burner Point account', text: 'Required profile fields, Terms acceptance, Privacy Policy acceptance, and first-dashboard orientation.', href: '/help#help-getting-started', anchorId: 'help-getting-started' },
+    { icon: 'book', meta: 'Verifications', title: 'Receive SMS, OTP, and voice codes', text: 'Choose country and service, activate a number, submit it to the platform, and monitor delivery.', href: '/help#help-verifications', anchorId: 'help-verifications' },
+    { icon: 'book', meta: 'Rentals', title: 'Manage temporary and renewable numbers', text: 'Understand expiration, renewal, release, conversation support, and recovery planning.', href: '/help#help-rentals', anchorId: 'help-rentals' },
+    { icon: 'book', meta: 'Payments', title: 'Credits, purchases, receipts, and references', text: 'Troubleshoot checkout status, wallet credits, subscriptions, and payment gateway references.', href: '/help#help-payments', anchorId: 'help-payments' },
+    { icon: 'book', meta: 'Security', title: 'Account security, sessions, and 2FA', text: 'Use Clerk-backed email, phone, password reset, OAuth, active sessions, and optional multifactor authentication.', href: '/help#help-security', anchorId: 'help-security' },
+    { icon: 'book', meta: 'API / Developer Tools', title: 'API keys, webhooks, and signatures', text: 'Create scoped keys, configure webhook endpoints, verify events, and process retries idempotently.', href: '/help#help-api', anchorId: 'help-api' },
+    { icon: 'book', meta: 'Account & Authentication', title: 'Profile, sign out, and recovery', text: 'Manage account details, support tickets, notification preferences, and recovery paths.', href: '/help#help-account-auth', anchorId: 'help-account-auth' },
+  ],
+  sections: [
+    { anchorId: 'help-getting-started', meta: 'Getting Started', title: 'Getting Started', text: 'Create a Burner Point account with first name, last name, email, phone number, password, Terms acceptance, and Privacy Policy acceptance. After sign-up, complete onboarding so telecom, billing, support, and dashboard features have the account context they need.', items: ['Use a real email and phone number for recovery', 'Complete Clerk email or phone verification when prompted', 'Start with Get Verification, Rent A Number, or Buy Credits from the dashboard'] },
+    { anchorId: 'help-verifications', meta: 'Verifications', title: 'Verifications', text: 'Verification workflows let you choose a country, service, and number, then receive SMS OTP or voice OTP through Burner Point. Delivery depends on provider route quality, platform rules, and available inventory.', items: ['Select service and country before purchasing', 'Watch the inbox for SMS or voice code delivery', 'Open support with the service, number, and payment reference if delivery fails'] },
+    { anchorId: 'help-rentals', meta: 'Rentals', title: 'Rentals', text: 'Rentals are for users who need a number beyond a single OTP. Non-renewable rentals are short-term. Renewable rentals are monthly and better for account recovery, repeat verification, messaging, and US/Canada conversation flows.', items: ['Track expiration before losing access', 'Renew monthly numbers before they lapse', 'Use conversation-supported numbers for calls, voicemail, SMS, MMS, and photos where available'] },
+    { anchorId: 'help-payments', meta: 'Payments', title: 'Payments', text: 'Credits and billing should show gateway status, product assignment, receipts, references, wallet updates, and subscriptions. Paystack, Paddle, and NOWPayments are the core payment paths, with secondary gateways deferred until core stability.', items: ['Save checkout and payment references', 'Wait for webhook confirmation before expecting assignment', 'Contact support if payment succeeded but credits or inventory did not update'] },
+    { anchorId: 'help-security', meta: 'Security', title: 'Security', text: 'Burner Point uses Clerk as the primary authentication provider. Users can sign in with email or phone, reset passwords, use OAuth providers when configured, manage active sessions, and enable optional 2FA from the security page.', items: ['Use strong passwords and 2FA for sensitive accounts', 'Review active sessions after password resets', 'Never share OTP, API keys, recovery links, or support attachments publicly'] },
+    { anchorId: 'help-api', meta: 'API / Developer Tools', title: 'API / Developer Tools', text: 'Developer tools let teams create scoped API keys, configure webhook destinations, and automate private verification and number workflows. Provider API keys remain server-side in Burner Point infrastructure.', items: ['Copy raw API keys once and store them securely', 'Verify webhook signatures and process events idempotently', 'Use support for production access, delivery anomalies, and billing references'] },
+    { anchorId: 'help-account-auth', meta: 'Account & Authentication', title: 'Account & Authentication', text: 'Account settings cover profile details, sign out, support tickets, notifications, security controls, and recovery. A complete profile helps support resolve verification, rental, payment, eSIM, proxy, and VPN issues without asking for unnecessary personal data.', items: ['Keep profile email and phone current', 'Use sign out on shared devices', 'Open tickets with scoped context rather than sensitive unrelated information'] },
+  ],
+};
 marketingPages.contact = { slug: 'contact', eyebrow: 'Contact', title: 'Talk to Burner Point.', description: 'Use the contact form, email support, or Telegram for verification, rental, eSIM, proxy, VPN, API, billing, and partnership questions.', primaryCta: { label: 'Email Support', href: 'mailto:info.burnerpoint@gmail.com' }, secondaryCta: { label: 'Telegram Support', href: 'https://t.me/burnerpoint' }, highlights: ['info.burnerpoint@gmail.com', 'https://t.me/burnerpoint', 'https://t.me/burnerpointapp'] };
-marketingPages.about = { slug: 'about', eyebrow: 'About Burner Point', title: 'We believe privacy should be practical, not performative.', description: 'Burner Point helps people stay reachable without surrendering their personal number everywhere.', highlights: ['Privacy-first infrastructure', 'User-controlled communication', 'Global access without personal exposure'], sections: [
-  { title: 'Our values', text: 'We build for anonymity, reliability, transparency, and user control. The best privacy tools should feel easy enough to use every day.', items: ['Minimize exposure', 'Design for trust', 'Keep users in control'] },
-  { title: 'Our platform', text: 'Burner Point combines SIM-backed numbers, verifications, rentals, eSIM purchase, proxies, and integrated VPN protection under one cohesive identity layer.' },
-] };
+marketingPages.about = {
+  slug: 'about',
+  eyebrow: 'About Burner Point',
+  title: 'Control communication without exposing identity.',
+  description: 'Burner Point exists to give users practical control over communication identity. People should be able to verify accounts, receive messages, stay reachable, travel, route privately, and recover access without turning their personal number into a permanent public identifier.',
+  primaryCta: { label: 'Get Started', href: '/auth/signup' },
+  secondaryCta: { label: 'Careers', href: '/careers' },
+  highlights: ['Private by Design', 'Stay Anonymous', 'Stay Connected'],
+  cards: [
+    { icon: 'shield', title: 'Mission', text: 'Give users secure communication access without requiring personal-number exposure.' },
+    { icon: 'phone', title: 'Audience', text: 'Built for privacy-minded individuals, operators, travelers, teams, developers, and support-heavy workflows.' },
+    { icon: 'lock', title: 'Trust Model', text: 'Keep provider secrets server-side, minimize sensitive data, and make every account action clear.' },
+  ],
+  sections: [
+    {
+      title: 'Why Burner Point exists',
+      text: 'A phone number has become an identity key. It is used for signups, recovery, fraud checks, messaging, shipping, marketplaces, dating, support, work, travel, and payments. Burner Point gives users a controlled layer between their personal number and the platforms that ask for phone access.',
+      items: ['Reduce personal-number exposure', 'Separate short-term accounts from long-term identity', 'Keep communication reachable without surrendering control'],
+    },
+    {
+      title: 'Mission',
+      text: 'Burner Point is building privacy-focused telecommunications infrastructure for real users, not a novelty burner app. The mission is to make secure number access, verification, rentals, eSIM connectivity, proxies, and built-in protection feel reliable enough for everyday use.',
+      items: ['Private by Design', 'Stay Anonymous', 'Stay Connected'],
+    },
+    {
+      title: 'Who we serve',
+      text: 'Burner Point serves people and teams who need communication access without unnecessary exposure. That includes online registrations, marketplaces, business communication, travel connectivity, developer automations, private social accounts, and support workflows.',
+      items: ['Privacy-minded individuals', 'Travelers and remote workers', 'Founders, operators, developers, and support teams'],
+    },
+    {
+      title: 'Values',
+      text: 'The product is shaped around user control, reliability, transparency, security, and restraint. Burner Point should feel premium and calm because privacy tools work best when users can understand what is happening and trust the next action.',
+      items: ['Minimize exposure', 'Design for trust', 'Explain status clearly', 'Build secure defaults'],
+    },
+    {
+      title: 'Product philosophy',
+      text: 'Burner Point brings together phone numbers, verification, rentals, conversation tools, eSIM, proxies, VPN-style protection, billing, support, and developer APIs under one cohesive identity-control layer. Each module should feel connected, but every sensitive integration belongs behind the backend.',
+      items: ['Telecom-grade workflows over generic SaaS patterns', 'Backend-only provider integrations', 'Clear lifecycle states for every number, payment, message, and support path'],
+    },
+    {
+      title: 'Craft standard',
+      text: 'Burner Point is designed to feel minimal, secure, and intentional across desktop web, mobile web, and native app experiences. The interface should help users make confident decisions without clutter, hype, or unclear privacy tradeoffs.',
+      items: ['Dark-mode dominant visual language', 'High-trust copy and predictable controls', 'Production-ready accessibility, performance, and observability'],
+    },
+  ],
+};
 marketingPages.terms = { slug: 'terms', eyebrow: 'Legal', title: 'Terms of Service.', description: 'These product-facing terms summarize expected usage for Burner Point services and should be reviewed with counsel before production launch.', sections: [
   { title: 'Acceptable use', text: 'Burner Point is intended for lawful privacy, verification, communication, travel, and developer workflows. Abuse, fraud, harassment, spam, and platform misuse are prohibited.' },
   { title: 'Service availability', text: 'Telecommunications delivery depends on carriers, country coverage, provider inventory, and platform-specific acceptance rules.' },

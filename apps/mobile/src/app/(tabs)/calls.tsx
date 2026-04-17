@@ -1,8 +1,9 @@
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, Vibration, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MessageSquare, Phone, ShieldCheck, Wifi } from 'lucide-react-native';
 import { BRAND } from '../../lib/brand';
+import { triggerHaptic } from '../../lib/native-ux';
 
 const recentCalls = [
   ['+1 415 555 0182', 'Outbound over WiFi', '2m 14s'],
@@ -14,7 +15,7 @@ export default function CallsScreen() {
   const router = useRouter();
 
   const startCall = () => {
-    Vibration.vibrate(35);
+    triggerHaptic('impact');
     router.push({ pathname: '/call/active', params: { from: '+1 415 555 0182', to: 'Private contact' } } as any);
   };
 
@@ -39,12 +40,12 @@ export default function CallsScreen() {
         </View>
 
         <View style={s.actions}>
-          <TouchableOpacity style={s.action} activeOpacity={0.78} onPress={() => Alert.alert('Message', 'Open a private SMS/MMS thread from the inbox.')}>
+          <TouchableOpacity style={s.action} activeOpacity={0.78} onPress={() => { triggerHaptic('selection'); router.push('/messages' as any); }}>
             <MessageSquare size={20} color={BRAND.colors.cyberGreen} />
             <Text style={s.actionTitle}>Message</Text>
             <Text style={s.actionText}>SMS and MMS photos</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={s.action} activeOpacity={0.78} onPress={() => Alert.alert('Voicemail', 'Voicemail routing is handled inside your conversation inbox.')}>
+          <TouchableOpacity style={s.action} activeOpacity={0.78} onPress={() => { triggerHaptic('selection'); router.push('/voicemail' as any); }}>
             <ShieldCheck size={20} color={BRAND.colors.cyberGreen} />
             <Text style={s.actionTitle}>Voicemail</Text>
             <Text style={s.actionText}>Private call backup</Text>

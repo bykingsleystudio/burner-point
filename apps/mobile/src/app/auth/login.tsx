@@ -8,6 +8,7 @@ import { useAuth, useSignIn, useSSO } from '@clerk/clerk-expo';
 import { exchangeClerkForApiSession } from '../../lib/auth';
 import { BRAND } from '../../lib/brand';
 import { WEB_APP_URL } from '../../lib/config';
+import { triggerHaptic } from '../../lib/native-ux';
 
 const providers = [
   ['Google', 'oauth_google'],
@@ -51,6 +52,7 @@ export default function LoginScreen() {
   };
 
   const login = async () => {
+    triggerHaptic('impact');
     if (!isLoaded) return;
     if (!identifier || !password) {
       Alert.alert('Required fields', 'Enter your email or phone number and password.');
@@ -81,6 +83,7 @@ export default function LoginScreen() {
   };
 
   const requestPasswordReset = async () => {
+    triggerHaptic('selection');
     if (!isLoaded || !resetIdentifier.trim()) {
       Alert.alert('Account identifier required', 'Enter the email address or phone number on your Clerk account.');
       return;
@@ -111,6 +114,7 @@ export default function LoginScreen() {
   };
 
   const submitPasswordReset = async () => {
+    triggerHaptic('impact');
     if (!isLoaded || !resetCode.trim() || !newPassword) {
       Alert.alert('Reset details required', 'Enter the reset code and your new password.');
       return;
@@ -142,6 +146,7 @@ export default function LoginScreen() {
   };
 
   const verifySecondFactor = async () => {
+    triggerHaptic('impact');
     if (!isLoaded || !secondFactorStrategy || !secondFactorCode.trim()) return;
     setLoading(true);
     try {
@@ -162,6 +167,7 @@ export default function LoginScreen() {
   };
 
   const oauth = async (strategy: (typeof providers)[number][1]) => {
+    triggerHaptic('selection');
     try {
       const { createdSessionId, setActive: setOAuthActive } = await startSSOFlow({
         strategy,

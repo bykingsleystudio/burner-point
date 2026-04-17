@@ -4,12 +4,17 @@ import { ArrowLeft, ArrowRight, ShieldCheck } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
 import { BRAND } from '../lib/brand';
+import { triggerHaptic } from '../lib/native-ux';
+import { MetricCard, NativeButton, NativeCard, SectionLabel } from './design-system';
 import type { MobileModuleAction, MobileProductModule } from '../lib/product-modules';
+
+const HIT_SLOP = { top: 8, right: 8, bottom: 8, left: 8 };
 
 export function ProductModuleScreen({ module }: { module: MobileProductModule }) {
   const router = useRouter();
 
   const runAction = async (action: MobileModuleAction) => {
+    triggerHaptic(action.href ? 'impact' : 'selection');
     if (!action.href) {
       Alert.alert(action.label, action.message ?? module.status);
       return;
@@ -25,7 +30,14 @@ export function ProductModuleScreen({ module }: { module: MobileProductModule })
     <SafeAreaView style={s.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.content}>
         <View style={s.topbar}>
-          <TouchableOpacity onPress={() => router.back()} style={s.backButton} activeOpacity={0.78}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={s.backButton}
+            activeOpacity={0.78}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            hitSlop={HIT_SLOP}
+          >
             <ArrowLeft size={18} color={BRAND.colors.white} />
           </TouchableOpacity>
           <Text style={s.topbarTitle}>Burner Point</Text>
@@ -43,51 +55,47 @@ export function ProductModuleScreen({ module }: { module: MobileProductModule })
           <Text style={s.status}>{module.status}</Text>
 
           <View style={s.actions}>
-            <TouchableOpacity style={s.primaryButton} onPress={() => runAction(module.primaryAction)} activeOpacity={0.82}>
-              <Text style={s.primaryText}>{module.primaryAction.label}</Text>
-              <ArrowRight size={16} color={BRAND.colors.black} />
-            </TouchableOpacity>
+            <NativeButton label={module.primaryAction.label} onPress={() => runAction(module.primaryAction)} icon={<ArrowRight size={16} color={BRAND.colors.black} />} />
             {module.secondaryAction ? (
-              <TouchableOpacity style={s.secondaryButton} onPress={() => runAction(module.secondaryAction!)} activeOpacity={0.78}>
-                <Text style={s.secondaryText}>{module.secondaryAction.label}</Text>
-              </TouchableOpacity>
+              <NativeButton label={module.secondaryAction.label} onPress={() => runAction(module.secondaryAction!)} variant="secondary" />
             ) : null}
           </View>
         </View>
 
         <View style={s.statsRow}>
           {module.stats.map((stat) => (
-            <View key={stat.label} style={s.statCard}>
-              <Text style={s.statValue}>{stat.value}</Text>
-              <Text style={s.statLabel}>{stat.label}</Text>
-            </View>
+            <MetricCard key={stat.label} label={stat.label} value={stat.value} />
           ))}
         </View>
 
-        <Text style={s.sectionLabel}>Module Controls</Text>
+        <SectionLabel>Module Controls</SectionLabel>
         <View style={s.cards}>
           {module.cards.map((card) => (
-            <View key={card.title} style={s.card}>
+            <NativeCard key={card.title}>
               <Text style={s.cardMeta}>{card.meta}</Text>
               <Text style={s.cardTitle}>{card.title}</Text>
               <Text style={s.cardText}>{card.text}</Text>
-            </View>
+            </NativeCard>
           ))}
         </View>
 
-        <Text style={s.sectionLabel}>Workflow</Text>
-        <View style={s.workflow}>
-          {module.workflow.map((step, index) => (
-            <View key={step} style={s.workflowRow}>
-              <Text style={s.stepNumber}>{index + 1}</Text>
-              <Text style={s.stepText}>{step}</Text>
-            </View>
-          ))}
+        <SectionLabel>Workflow</SectionLabel>
+        <View style={s.cards}>
+          <NativeCard>
+            {module.workflow.map((step, index) => (
+              <View key={step} style={s.workflowRow}>
+                <Text style={s.stepNumber}>{index + 1}</Text>
+                <Text style={s.stepText}>{step}</Text>
+              </View>
+            ))}
+          </NativeCard>
         </View>
 
-        <View style={s.note}>
-          <Text style={s.noteLabel}>Security Note</Text>
-          <Text style={s.noteText}>{module.note}</Text>
+        <View style={s.cards}>
+          <NativeCard>
+            <Text style={s.noteLabel}>Security Note</Text>
+            <Text style={s.noteText}>{module.note}</Text>
+          </NativeCard>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -133,49 +141,11 @@ const s = StyleSheet.create({
   description: { color: BRAND.colors.metalStart, fontSize: 14, lineHeight: 22, marginTop: 12 },
   status: { color: BRAND.colors.cyberGreen, fontSize: 12, fontWeight: '800', marginTop: 14 },
   actions: { gap: 10, marginTop: 20 },
-  primaryButton: {
-    minHeight: 50,
-    borderRadius: BRAND.radii.sm,
-    backgroundColor: BRAND.colors.cyberGreen,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 8,
-  },
-  primaryText: { color: BRAND.colors.black, fontSize: 13, fontWeight: '900', textTransform: 'uppercase' },
-  secondaryButton: {
-    minHeight: 48,
-    borderRadius: BRAND.radii.sm,
-    borderWidth: 1,
-    borderColor: BRAND.colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secondaryText: { color: BRAND.colors.white, fontSize: 12, fontWeight: '800', textTransform: 'uppercase' },
   statsRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 20 },
-  statCard: {
-    flex: 1,
-    borderRadius: BRAND.radii.md,
-    borderWidth: 1,
-    borderColor: BRAND.colors.border,
-    backgroundColor: BRAND.colors.dark,
-    padding: 12,
-  },
-  statValue: { color: BRAND.colors.cyberGreen, fontFamily: BRAND.typography.mono, fontSize: 18, fontWeight: '900' },
-  statLabel: { color: BRAND.colors.muted, fontSize: 9, fontWeight: '900', marginTop: 5, textTransform: 'uppercase' },
-  sectionLabel: { color: BRAND.colors.muted, fontSize: 10, fontWeight: '900', marginHorizontal: 20, marginTop: 20, marginBottom: 10, textTransform: 'uppercase' },
   cards: { paddingHorizontal: 20, gap: 10 },
-  card: {
-    borderRadius: BRAND.radii.lg,
-    borderWidth: 1,
-    borderColor: BRAND.colors.border,
-    backgroundColor: BRAND.colors.surface,
-    padding: 16,
-  },
   cardMeta: { color: BRAND.colors.cyberGreen, fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
   cardTitle: { color: BRAND.colors.white, fontSize: 15, fontWeight: '900', marginTop: 8 },
   cardText: { color: BRAND.colors.metalStart, fontSize: 13, lineHeight: 20, marginTop: 6 },
-  workflow: { marginHorizontal: 20, borderRadius: BRAND.radii.lg, borderWidth: 1, borderColor: BRAND.colors.border, backgroundColor: BRAND.colors.surface, padding: 14, gap: 12 },
   workflowRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
   stepNumber: {
     width: 28,
@@ -191,14 +161,6 @@ const s = StyleSheet.create({
     fontWeight: '900',
   },
   stepText: { flex: 1, color: BRAND.colors.white, fontSize: 13, lineHeight: 20 },
-  note: {
-    margin: 20,
-    padding: 16,
-    borderRadius: BRAND.radii.lg,
-    borderWidth: 1,
-    borderColor: `${BRAND.colors.cyberGreen}25`,
-    backgroundColor: `${BRAND.colors.cyberGreen}08`,
-  },
   noteLabel: { color: BRAND.colors.cyberGreen, fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
   noteText: { color: BRAND.colors.metalEnd, fontSize: 12, lineHeight: 20, marginTop: 8 },
 });

@@ -1,19 +1,31 @@
 import { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MessageSquare, Zap, Shield } from 'lucide-react-native';
+import { MessageSquare, Phone, UserRound, Voicemail, Zap, Shield } from 'lucide-react-native';
 import { useAuth } from '@clerk/clerk-expo';
+import { useRouter } from 'expo-router';
 import axios from 'axios';
 import { API_BASE_URL } from '../../lib/config';
 import { getApiAccessToken } from '../../lib/auth';
 import { BRAND } from '../../lib/brand';
+import { triggerHaptic } from '../../lib/native-ux';
+
+const HIT_SLOP = { top: 8, right: 8, bottom: 8, left: 8 };
 
 export default function MessagesScreen() {
+  const router = useRouter();
   const { getToken } = useAuth();
   const [numbers, setNumbers] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const loadMessagesForNumber = async (phoneNumberId: string) => {
+    const token = await getApiAccessToken(getToken);
+    const h = { Authorization: `Bearer ${token}` };
+    const msgRes = await axios.get(`${API_BASE_URL}/messages?phoneNumberId=${phoneNumberId}`, { headers: h });
+    setMessages(msgRes.data);
+  };
 
   useEffect(() => {
     (async () => {
@@ -23,29 +35,64 @@ export default function MessagesScreen() {
       setNumbers(numsRes.data);
       if (numsRes.data.length) {
         setSelectedId(numsRes.data[0].id);
-        const msgRes = await axios.get(`${API_BASE_URL}/messages?phoneNumberId=${numsRes.data[0].id}`, { headers: h });
-        setMessages(msgRes.data);
+        await loadMessagesForNumber(numsRes.data[0].id);
       }
       setLoading(false);
     })().catch(() => setLoading(false));
   }, [getToken]);
 
+  const chooseNumber = async (id: string) => {
+    triggerHaptic('selection');
+    setSelectedId(id);
+    await loadMessagesForNumber(id).catch(() => {});
+  };
+
   if (loading) return (
     <SafeAreaView style={s.container}>
-      <ActivityIndicator color={BRAND.colors.cyberGreen} style={{ marginTop: 40 }}/>
+      <ActivityIndicator color={BRAND.colors.cyberGreen} style={{ marginTop: 40 }} accessibilityLabel="Loading conversation inbox" />
     </SafeAreaView>
   );
 
   return (
     <SafeAreaView style={s.container}>
-      <View style={s.header}><Text style={s.title}>Inbox</Text></View>
+      <View style={s.header}>
+        <Text style={s.kicker}>Conversation</Text>
+        <Text accessibilityRole="header" style={s.title}>Inbox</Text>
+        <Text style={s.subtitle}>SMS, MMS, photos, calls, voicemail, and contacts stay attached to your private numbers.</Text>
+      </View>
+
+      <View style={s.modeGrid}>
+        {[
+          { label: 'Calls', text: 'WiFi/Data', Icon: Phone, href: '/calls' },
+          { label: 'Voicemail', text: 'Missed calls', Icon: Voicemail, href: '/voicemail' },
+          { label: 'Contacts', text: 'Private book', Icon: UserRound, href: '/contacts' },
+        ].map(({ label, text, Icon, href }) => (
+          <TouchableOpacity
+            key={label}
+            style={s.modeCard}
+            activeOpacity={0.78}
+            onPress={() => { triggerHaptic('impact'); router.push(href as any); }}
+            accessibilityRole="button"
+            accessibilityLabel={`${label}: ${text}`}
+            hitSlop={HIT_SLOP}
+          >
+            <Icon size={18} color={BRAND.colors.cyberGreen} />
+            <Text style={s.modeTitle}>{label}</Text>
+            <Text style={s.modeText}>{text}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
       {/* Number tabs */}
       <FlatList horizontal data={numbers} keyExtractor={(n) => n.id}
         style={s.numList} showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
         renderItem={({ item: n }) => (
-          <TouchableOpacity onPress={() => setSelectedId(n.id)}
+          <TouchableOpacity onPress={() => chooseNumber(n.id)}
+            accessibilityRole="button"
+            accessibilityLabel={`Select number ${n.number}`}
+            accessibilityState={{ selected: selectedId === n.id }}
+            hitSlop={HIT_SLOP}
             style={[s.numTab, selectedId === n.id && s.numTabActive]}>
             <Text style={[s.numTabText, selectedId === n.id && s.numTabTextActive]}>{n.number}</Text>
           </TouchableOpacity>
@@ -88,7 +135,13 @@ export default function MessagesScreen() {
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: BRAND.colors.black },
   header: { padding: 20, paddingBottom: 8 },
-  title: { color: BRAND.colors.white, fontSize: 22, fontWeight: '900' },
+  kicker: { color: BRAND.colors.cyberGreen, fontSize: 11, fontWeight: '900', textTransform: 'uppercase' },
+  title: { color: BRAND.colors.white, fontSize: 30, lineHeight: 32, fontWeight: '900', textTransform: 'uppercase', marginTop: 8 },
+  subtitle: { color: BRAND.colors.metalStart, fontSize: 13, lineHeight: 20, marginTop: 8 },
+  modeGrid: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginTop: 8, marginBottom: 12 },
+  modeCard: { flex: 1, minHeight: 104, borderRadius: BRAND.radii.lg, borderWidth: 1, borderColor: BRAND.colors.border, backgroundColor: BRAND.colors.surface, padding: 12 },
+  modeTitle: { color: BRAND.colors.white, fontSize: 13, fontWeight: '900', marginTop: 12 },
+  modeText: { color: BRAND.colors.muted, fontSize: 11, marginTop: 3 },
   numList: { maxHeight: 44, marginBottom: 8 },
   numTab: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: BRAND.radii.sm, backgroundColor: BRAND.colors.surface, borderWidth: 1, borderColor: BRAND.colors.border },
   numTabActive: { backgroundColor: `${BRAND.colors.cyberGreen}15`, borderColor: `${BRAND.colors.cyberGreen}40` },

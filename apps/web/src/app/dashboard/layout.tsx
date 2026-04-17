@@ -11,21 +11,25 @@ import {
   LayoutDashboard, MessageSquare, Phone, PhoneIncoming,
   Voicemail, ShieldCheck, Clock, CreditCard, Key,
   HelpCircle, Wifi, Smartphone, Globe, Shield, LogOut,
-  Menu, X, Bell, Settings, Ticket, LockKeyhole,
+  Menu, X, Bell, Settings, Ticket, LockKeyhole, Users, Repeat2, Webhook,
 } from 'lucide-react';
 import clsx from 'clsx';
+import { BpLoadingState } from '@/components/design-system';
 
 const NAV = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Overview' },
   { href: '/dashboard/inbox', icon: MessageSquare, label: 'Inbox' },
   { href: '/dashboard/messages', icon: MessageSquare, label: 'Messages & Photos' },
+  { href: '/dashboard/contacts', icon: Users, label: 'Contacts' },
   { href: '/dashboard/numbers', icon: Phone, label: 'Numbers' },
   { href: '/dashboard/calls', icon: PhoneIncoming, label: 'Calls' },
   { href: '/dashboard/voicemail', icon: Voicemail, label: 'Voicemail' },
   { href: '/dashboard/verification', icon: ShieldCheck, label: 'Verification' },
   { href: '/dashboard/rentals', icon: Clock, label: 'Rentals' },
   { href: '/dashboard/billing', icon: CreditCard, label: 'Credits & Billing' },
+  { href: '/dashboard/subscriptions', icon: Repeat2, label: 'Subscriptions' },
   { href: '/dashboard/developer', icon: Key, label: 'API & Developer' },
+  { href: '/dashboard/webhooks', icon: Webhook, label: 'Webhooks' },
   null, // divider
   { href: '/dashboard/vpn', icon: Wifi, label: 'VPN', badge: 'Beta' },
   { href: '/dashboard/esim', icon: Smartphone, label: 'eSIM', badge: 'Beta' },
@@ -74,6 +78,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setApiSession(data.accessToken, data.refreshToken);
         setAuth(data.user, data.accessToken, data.refreshToken);
         setAccessToken(data.accessToken);
+        if (data.user?.phoneNumber && data.user?.phoneVerified === false) {
+          sessionStorage.setItem('burnerPointPendingPhone', data.user.phoneNumber);
+          router.replace('/auth/phone-verify?redirect=/dashboard');
+          return;
+        }
         setSessionReady(true);
       } catch (error: any) {
         if (cancelled) return;
@@ -125,20 +134,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!isLoaded || !sessionReady) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-brand-black text-white">
-        <div className="rounded-bp-lg border border-brand-green/20 bg-brand-green/10 px-6 py-5 text-center">
-          <p className="font-mono text-xs uppercase tracking-[0.24em] text-brand-green">Burner Point</p>
-          <p className="mt-2 text-sm text-white/60">Securing your Clerk session...</p>
+        <div className="w-full max-w-md px-5">
+          <BpLoadingState label="Securing your Clerk session..." />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-brand-black overflow-hidden">
+    <div className="flex h-[100dvh] overflow-hidden bg-brand-black">
       {/* Sidebar */}
       <aside className={clsx(
-        'flex-shrink-0 flex flex-col bg-brand-dark border-r border-brand-border transition-all duration-300 z-30',
-        sidebarOpen ? 'w-56' : 'w-0 overflow-hidden'
+        'fixed inset-y-0 left-0 z-30 flex w-72 max-w-[86vw] flex-shrink-0 flex-col border-r border-brand-border bg-brand-dark shadow-[24px_0_70px_rgba(0,0,0,0.55)] transition-all duration-300 md:relative md:max-w-none md:shadow-none',
+        sidebarOpen ? 'translate-x-0 md:w-56' : '-translate-x-full md:w-0 md:translate-x-0 md:overflow-hidden'
       )}>
         {/* Logo */}
         <div className="flex items-center gap-2 px-4 h-16 border-b border-brand-border">
@@ -170,7 +178,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             return (
               <Link key={item.href} href={item.href}
                 className={clsx(
-                  'flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-0.5 transition-all group',
+                  'mb-0.5 flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all group',
                   active ? 'bg-brand-green/10 text-brand-green' : 'text-brand-muted hover:text-white hover:bg-brand-card'
                 )}>
                 <item.icon size={15} className={active ? 'text-brand-green' : ''}/>
@@ -187,7 +195,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* User */}
         <div className="border-t border-brand-border px-3 py-3">
-          <div className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-brand-card cursor-pointer group">
+          <div className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-2 py-2 hover:bg-brand-card group">
             <div className="w-7 h-7 rounded-full bg-brand-green/20 border border-brand-green/30 flex items-center justify-center flex-shrink-0">
               <span className="text-xs font-bold text-brand-green">{(user?.firstName || clerkUser?.firstName || 'B')?.[0]?.toUpperCase()}</span>
             </div>
@@ -195,18 +203,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <p className="text-xs font-medium truncate">{user?.firstName || clerkUser?.firstName}</p>
               <p className="text-[10px] text-brand-muted truncate">{user?.email || clerkUser?.primaryEmailAddress?.emailAddress}</p>
             </div>
-            <button onClick={logout} className="text-brand-muted hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100">
+            <button onClick={logout} className="flex h-9 w-9 items-center justify-center rounded-bp text-brand-muted opacity-100 transition-colors hover:text-red-400 md:opacity-0 md:group-hover:opacity-100">
               <LogOut size={13}/>
             </button>
           </div>
         </div>
       </aside>
+      {sidebarOpen ? (
+        <button
+          type="button"
+          aria-label="Close dashboard navigation"
+          onClick={toggleSidebar}
+          className="fixed inset-0 z-20 bg-black/58 backdrop-blur-sm md:hidden"
+        />
+      ) : null}
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Topbar */}
-        <header className="h-16 border-b border-brand-border flex items-center gap-4 px-6 flex-shrink-0">
-          <button onClick={toggleSidebar} className="text-brand-muted hover:text-white transition-colors">
+        <header className="flex h-16 flex-shrink-0 items-center gap-3 border-b border-brand-border px-4 md:gap-4 md:px-6">
+          <button onClick={toggleSidebar} className="flex min-h-11 min-w-11 items-center justify-center rounded-bp text-brand-muted transition-colors hover:bg-brand-card hover:text-white">
             {sidebarOpen ? <X size={18}/> : <Menu size={18}/>}
           </button>
           <div className="flex-1">
@@ -214,12 +230,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {pathname.split('/').pop()?.replace('-', ' ') || 'Dashboard'}
             </h2>
           </div>
-          <button className="text-brand-muted hover:text-white transition-colors">
+          <button className="flex min-h-11 min-w-11 items-center justify-center rounded-bp text-brand-muted transition-colors hover:bg-brand-card hover:text-white">
             <Bell size={18}/>
           </button>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
           {children}
         </main>
       </div>

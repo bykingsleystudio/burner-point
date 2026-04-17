@@ -293,7 +293,7 @@ export const STACK_REGISTRY: StackIntegrationDefinition[] = [
     role: 'Primary Nigerian/local card and bank payment gateway',
     productSurface: 'Credits, rentals, one-time purchases',
     requiredEnv: ['PAYSTACK_SECRET_KEY'],
-    optionalEnv: ['PAYSTACK_WEBHOOK_SECRET', 'PAYSTACK_PUBLIC_KEY'],
+    optionalEnv: ['PAYSTACK_WEBHOOK_SECRET', 'PAYSTACK_PUBLIC_KEY', 'PAYMENT_USD_TO_NGN_RATE'],
   },
   {
     id: 'paddle',
@@ -438,7 +438,7 @@ export const STACK_REGISTRY: StackIntegrationDefinition[] = [
     role: 'eSIM purchase, provisioning, and webhooks',
     productSurface: 'eSIM catalog and active eSIM management',
     requiredEnv: ['ONEGLOBAL_API_KEY'],
-    optionalEnv: ['ONEGLOBAL_BASE_URL', 'ONEGLOBAL_WEBHOOK_SECRET'],
+    optionalEnv: ['ONEGLOBAL_BASE_URL', 'ONEGLOBAL_PLANS_PATH', 'ONEGLOBAL_ORDER_PATH', 'ONEGLOBAL_WEBHOOK_SECRET'],
     statusWhenNoEnv: 'planned',
   },
   {
@@ -450,7 +450,7 @@ export const STACK_REGISTRY: StackIntegrationDefinition[] = [
     role: 'Residential/mobile proxy purchase and management',
     productSurface: 'Proxy catalog, credentials, location control',
     requiredEnv: ['BRIGHTDATA_API_KEY'],
-    optionalEnv: ['BRIGHTDATA_CUSTOMER_ID', 'BRIGHTDATA_ZONE', 'BRIGHTDATA_WEBHOOK_SECRET'],
+    optionalEnv: ['BRIGHTDATA_BASE_URL', 'BRIGHTDATA_CUSTOMER_ID', 'BRIGHTDATA_ZONE', 'BRIGHTDATA_PROXY_ORDER_PATH', 'BRIGHTDATA_WEBHOOK_SECRET'],
     statusWhenNoEnv: 'planned',
   },
   {
@@ -462,8 +462,7 @@ export const STACK_REGISTRY: StackIntegrationDefinition[] = [
     role: 'Self-hosted in-platform VPN privacy protection',
     productSurface: 'VPN toggle, server selection, device config lifecycle',
     requiredEnv: ['WIREGUARD_PRIVATE_KEY', 'WIREGUARD_ENDPOINT'],
-    optionalEnv: ['WIREGUARD_CONTROL_API_KEY'],
+    optionalEnv: ['WIREGUARD_CONTROL_BASE_URL', 'WIREGUARD_CONTROL_API_KEY', 'WIREGUARD_SESSION_PATH', 'WIREGUARD_WEBHOOK_SECRET'],
     statusWhenNoEnv: 'planned',
   },
 ];
-

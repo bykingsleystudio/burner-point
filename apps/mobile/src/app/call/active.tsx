@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Vibration } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mic, MicOff, Volume2, PhoneOff, Pause } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { BRAND } from '../../lib/brand';
+import { triggerHaptic } from '../../lib/native-ux';
 
 export default function ActiveCallScreen() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export default function ActiveCallScreen() {
 
     // Call timer
     timerRef.current = setInterval(() => setDuration((d) => d + 1), 1000);
-    Vibration.vibrate([0, 200, 100, 200]);
+    triggerHaptic('success');
 
     return () => {
       pulse.stop();
@@ -42,8 +43,23 @@ export default function ActiveCallScreen() {
   };
 
   const hangUp = () => {
-    Vibration.vibrate(100);
+    triggerHaptic('warning');
     router.back();
+  };
+
+  const toggleMuted = () => {
+    triggerHaptic('selection');
+    setMuted((value) => !value);
+  };
+
+  const toggleSpeaker = () => {
+    triggerHaptic('selection');
+    setSpeaker((value) => !value);
+  };
+
+  const toggleHeld = () => {
+    triggerHaptic('selection');
+    setHeld((value) => !value);
   };
 
   return (
@@ -66,15 +82,15 @@ export default function ActiveCallScreen() {
       {/* Controls */}
       <View style={s.controls}>
         <View style={s.controlRow}>
-          <TouchableOpacity style={[s.controlBtn, muted && s.controlActive]} onPress={() => setMuted(!muted)}>
+          <TouchableOpacity style={[s.controlBtn, muted && s.controlActive]} onPress={toggleMuted}>
             {muted ? <MicOff size={22} color={BRAND.colors.danger}/> : <Mic size={22} color={BRAND.colors.white}/>}
             <Text style={[s.controlLabel, muted && s.controlLabelActive]}>{muted ? 'Unmute' : 'Mute'}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[s.controlBtn, speaker && s.controlActive]} onPress={() => setSpeaker(!speaker)}>
+          <TouchableOpacity style={[s.controlBtn, speaker && s.controlActive]} onPress={toggleSpeaker}>
             <Volume2 size={22} color={speaker ? BRAND.colors.cyberGreen : BRAND.colors.white}/>
             <Text style={[s.controlLabel, speaker && {color: BRAND.colors.cyberGreen}]}>Speaker</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[s.controlBtn, held && s.controlActive]} onPress={() => setHeld(!held)}>
+          <TouchableOpacity style={[s.controlBtn, held && s.controlActive]} onPress={toggleHeld}>
             <Pause size={22} color={held ? BRAND.colors.neonGreen : BRAND.colors.white}/>
             <Text style={[s.controlLabel, held && { color: BRAND.colors.neonGreen }]}>{held ? 'Resume' : 'Hold'}</Text>
           </TouchableOpacity>

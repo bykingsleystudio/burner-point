@@ -200,6 +200,7 @@ export class AuthService {
     const unsafeMetadata = clerkUser.unsafeMetadata || {};
     const email = this.normalizeEmail(primaryEmail);
     const phoneNumber = primaryPhone ? this.normalizePhoneNumber(primaryPhone) : undefined;
+    const clerkPhoneVerified = this.isVerifiedClerkPhone(clerkUser, phoneNumber);
     const firstName = (profile?.firstName || clerkUser.firstName || 'Burner').trim();
     const lastName = (profile?.lastName || clerkUser.lastName || 'Point').trim();
     const country = profile?.country || unsafeMetadata.country || 'NG';
@@ -250,12 +251,13 @@ export class AuthService {
         referralCode: this.generateReferralCode(),
         status: UserStatus.ACTIVE,
         emailVerified: this.isVerifiedClerkEmail(clerkUser, email),
-        phoneVerified: Boolean(phoneNumber),
+        phoneVerified: clerkPhoneVerified,
         lastLoginAt: new Date(),
         lastLoginIp: ip,
         preferences,
       });
     } else {
+      const phoneChanged = Boolean(effectivePhoneNumber && user.phoneNumber && user.phoneNumber !== effectivePhoneNumber);
       user.email = user.email || email;
       user.phoneNumber = user.phoneNumber || effectivePhoneNumber;
       user.firstName = firstName || user.firstName;
@@ -263,7 +265,7 @@ export class AuthService {
       user.country = user.country || country;
       user.status = user.status === UserStatus.PENDING ? UserStatus.ACTIVE : user.status;
       user.emailVerified = user.emailVerified || this.isVerifiedClerkEmail(clerkUser, email);
-      user.phoneVerified = user.phoneVerified || Boolean(phoneNumber);
+      user.phoneVerified = phoneChanged ? clerkPhoneVerified : (user.phoneVerified || clerkPhoneVerified);
       user.lastLoginAt = new Date();
       user.lastLoginIp = ip;
       user.preferences = preferences;
@@ -346,5 +348,13 @@ export class AuthService {
   private isVerifiedClerkEmail(clerkUser: any, email: string): boolean {
     const emailRecord = clerkUser.emailAddresses?.find((entry: any) => entry.emailAddress === email);
     return emailRecord?.verification?.status === 'verified';
+  }
+
+  private isVerifiedClerkPhone(clerkUser: any, phoneNumber?: string): boolean {
+    if (!phoneNumber) return false;
+    const phoneRecord = clerkUser.phoneNumbers?.find(
+      (entry: any) => this.normalizePhoneNumber(entry.phoneNumber ?? '') === phoneNumber,
+    );
+    return phoneRecord?.verification?.status === 'verified';
   }
 }

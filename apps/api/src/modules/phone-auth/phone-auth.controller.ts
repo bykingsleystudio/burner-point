@@ -2,6 +2,7 @@ import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PhoneAuthService } from './phone-auth.service';
 import { IsString, IsIn, Matches, Length } from 'class-validator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 class SendOtpDto {
   @Matches(/^\+[1-9]\d{6,14}$/, { message: 'phoneNumber must be a valid E.164 phone number' })
@@ -22,6 +23,8 @@ class VerifyOtpDto {
 }
 
 @ApiTags('phone-auth')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('phone-auth')
 export class PhoneAuthController {
   constructor(private service: PhoneAuthService) {}
@@ -29,12 +32,12 @@ export class PhoneAuthController {
   @Post('send')
   @ApiOperation({ summary: 'Send OTP to phone number via Twilio Verify' })
   send(@Body() dto: SendOtpDto, @Req() req) {
-    return this.service.sendOtp(dto.phoneNumber, dto.channel, req.ip);
+    return this.service.sendOtp(req.user.id, dto.phoneNumber, dto.channel, req.ip);
   }
 
   @Post('verify')
   @ApiOperation({ summary: 'Verify OTP code' })
-  verify(@Body() dto: VerifyOtpDto) {
-    return this.service.verifyOtp(dto.phoneNumber, dto.code);
+  verify(@Body() dto: VerifyOtpDto, @Req() req) {
+    return this.service.verifyOtp(req.user.id, dto.phoneNumber, dto.code);
   }
 }

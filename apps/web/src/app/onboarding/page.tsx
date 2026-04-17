@@ -44,6 +44,11 @@ export default function OnboardingPage() {
       const { data } = await authApi.exchangeClerkToken(clerkToken, form);
       setApiSession(data.accessToken, data.refreshToken);
       toast.success('Profile secured.');
+      if (data.user?.phoneNumber && !data.user?.phoneVerified) {
+        sessionStorage.setItem('burnerPointPendingPhone', data.user.phoneNumber);
+        router.push('/auth/phone-verify?redirect=/dashboard');
+        return;
+      }
       router.push('/dashboard');
     } catch (err: any) {
       toast.error(err.response?.data?.message || err.message || 'Onboarding failed');
@@ -53,11 +58,11 @@ export default function OnboardingPage() {
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-brand-black px-5 py-10 text-white">
+    <main className="relative min-h-screen min-h-[100dvh] overflow-x-hidden bg-brand-black px-4 py-6 text-white sm:px-5 md:py-10">
       <div className="bp-grid-bg pointer-events-none fixed inset-0 opacity-60" />
-      <section className="relative z-10 mx-auto flex min-h-[calc(100vh-5rem)] max-w-2xl items-center">
-        <div className="bp-card w-full rounded-bp-lg p-5 md:p-7">
-          <div className="rounded-bp-lg border border-white/8 bg-black/24 p-5 md:p-6">
+      <section className="relative z-10 mx-auto flex min-h-[calc(100vh-3rem)] max-w-2xl items-start md:min-h-[calc(100vh-5rem)] md:items-center">
+        <div className="bp-card w-full rounded-bp-lg p-4 sm:p-5 md:p-7">
+          <div className="rounded-bp-lg border border-white/8 bg-black/24 p-4 sm:p-5 md:p-6">
             <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
               <span className="flex h-11 w-11 items-center justify-center rounded-bp-lg border border-brand-green/25 bg-brand-green/10">
                 <Image src="/assets/logo-mark.svg" alt="" width={26} height={26} />
@@ -65,31 +70,31 @@ export default function OnboardingPage() {
               <span className="font-mono text-sm font-semibold uppercase tracking-[0.2em]">Burner <span className="text-brand-green">Point</span></span>
             </Link>
             <p className="mt-8 font-mono text-[11px] uppercase tracking-[0.28em] text-brand-green">Required onboarding</p>
-            <h1 className="mt-3 text-3xl font-semibold uppercase">Finish your Clerk profile</h1>
+            <h1 className="mt-3 text-2xl font-semibold uppercase sm:text-3xl">Finish your Clerk profile</h1>
             <p className="mt-3 text-sm leading-6 text-white/52">Burner Point requires a complete local profile before telecom, billing, and support features are enabled.</p>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <Field label="First name">
-                <input value={form.firstName} onChange={(event) => setField('firstName')(event.target.value)} className="auth-input" autoComplete="given-name" />
+                <input value={form.firstName} onChange={(event) => setField('firstName')(event.target.value)} className="auth-input" autoComplete="given-name" autoCapitalize="words" enterKeyHint="next" />
               </Field>
               <Field label="Last name">
-                <input value={form.lastName} onChange={(event) => setField('lastName')(event.target.value)} className="auth-input" autoComplete="family-name" />
+                <input value={form.lastName} onChange={(event) => setField('lastName')(event.target.value)} className="auth-input" autoComplete="family-name" autoCapitalize="words" enterKeyHint="next" />
               </Field>
               <Field label="Email address">
-                <input value={form.email} onChange={(event) => setField('email')(event.target.value)} type="email" className="auth-input" autoComplete="email" />
+                <input value={form.email} onChange={(event) => setField('email')(event.target.value)} type="email" inputMode="email" className="auth-input" autoComplete="email" autoCapitalize="none" enterKeyHint="next" />
               </Field>
               <Field label="Phone number">
-                <input value={form.phoneNumber} onChange={(event) => setField('phoneNumber')(event.target.value)} type="tel" className="auth-input" autoComplete="tel" placeholder="+1 415 555 0182" />
+                <input value={form.phoneNumber} onChange={(event) => setField('phoneNumber')(event.target.value)} type="tel" inputMode="tel" className="auth-input" autoComplete="tel" enterKeyHint="done" placeholder="+1 415 555 0182" />
               </Field>
             </div>
 
             <div className="mt-6 space-y-3 rounded-bp-lg border border-white/8 bg-white/[0.02] p-4">
-              <label className="flex cursor-pointer items-start gap-3 text-sm text-white/70">
-                <input checked={form.acceptTerms} onChange={(event) => setField('acceptTerms')(event.target.checked)} type="checkbox" className="mt-1 h-4 w-4 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
+              <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm text-white/70">
+                <input checked={form.acceptTerms} onChange={(event) => setField('acceptTerms')(event.target.checked)} type="checkbox" className="mt-1 h-5 w-5 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
                 <span>I accept the <Link href="/terms" className="text-brand-green hover:underline">Terms of Service</Link>.</span>
               </label>
-              <label className="flex cursor-pointer items-start gap-3 text-sm text-white/70">
-                <input checked={form.acceptPrivacy} onChange={(event) => setField('acceptPrivacy')(event.target.checked)} type="checkbox" className="mt-1 h-4 w-4 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
+              <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm text-white/70">
+                <input checked={form.acceptPrivacy} onChange={(event) => setField('acceptPrivacy')(event.target.checked)} type="checkbox" className="mt-1 h-5 w-5 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
                 <span>I accept the <Link href="/privacy" className="text-brand-green hover:underline">Privacy Policy</Link>.</span>
               </label>
             </div>

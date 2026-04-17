@@ -380,11 +380,55 @@ Returns JSON-LD structured data object.
 
 ---
 
-## Twilio Webhook Receivers (called by Twilio, not frontend)
+## 11. Backend Integration Contracts
+
+All third-party provider calls route through the BurnerPoint backend. Clients never call provider APIs directly and never receive provider secrets.
+
+### GET /integrations/catalog  [AUTH REQUIRED]
+Returns safe integration readiness for Twilio, Infobip, Vonage, Bandwidth, OpenAI, 1GLOBAL, Bright Data, WireGuard, Paystack, Flutterwave, Squad, Korapay, OPay, Paddle, NOWPayments, Resend, Clerk, Neon, Sentry, Railway, DBeaver, S3, PostHog, and Expo. Secret values are never returned.
+
+### GET /integrations/contracts  [AUTH REQUIRED]
+Returns the backend endpoint contract map for every integration.
+
+### GET /integrations/:id  [AUTH REQUIRED]
+Returns one safe backend integration contract.
+
+### POST /integrations/analytics/events  [AUTH REQUIRED]
+Captures sensitive product analytics through server-side PostHog.
+
+### POST /integrations/storage/upload-intents  [AUTH REQUIRED]
+Creates a backend-controlled private upload intent. S3 credentials stay server-side.
+
+### POST /integrations/esim/plans  [AUTH REQUIRED]
+Queries the configured 1GLOBAL eSIM plans endpoint through the backend.
+
+### POST /integrations/esim/orders  [AUTH REQUIRED]
+Creates a configured 1GLOBAL eSIM order through the backend.
+
+### POST /integrations/proxies/orders  [AUTH REQUIRED]
+Creates a configured Bright Data proxy order through the backend.
+
+### POST /integrations/vpn/sessions  [AUTH REQUIRED]
+Creates a configured WireGuard VPN session through the backend control plane.
+
+---
+
+## Provider Webhook Receivers (called by providers, not frontend)
 
 ### POST /webhooks/twilio/sms
 ### POST /webhooks/twilio/voice
 ### POST /webhooks/twilio/status
+### POST /webhooks/twilio/recording
+### POST /webhooks/twilio/verify
+### ALL /webhooks/vonage/inbound
+### ALL /webhooks/vonage/status
+### POST /webhooks/infobip/inbound
+### POST /webhooks/infobip/status
+### POST /webhooks/bandwidth
+### POST /webhooks/oneglobal
+### POST /webhooks/brightdata
+### POST /webhooks/wireguard
+### POST /webhooks/clerk
 
 ---
 
@@ -416,6 +460,8 @@ Returns JSON-LD structured data object.
 
 | Information               | Frontend | Backend |
 |--------------------------|----------|---------|
+| Direct provider API calls | Never    | Always through BurnerPoint API |
+| Provider secret values    | Never    | Server-side only |
 | NEXT_PUBLIC_API_URL       | ✅       | —       |
 | NEXT_PUBLIC_PADDLE_CLIENT_TOKEN | ✅ | ✅     |
 | All other API keys        | ❌       | ✅ only |
@@ -429,3 +475,6 @@ Returns JSON-LD structured data object.
 
 The frontend never calls Twilio, OpenAI, Paystack, Flutterwave, Paddle, or
 NOWPayments directly. All calls route through the BurnerPoint backend.
+
+This also applies to Infobip, Vonage, Bandwidth, 1GLOBAL, Bright Data,
+WireGuard, Resend, Neon, S3-compatible storage, and private PostHog capture.

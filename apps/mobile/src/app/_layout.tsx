@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ClerkProvider } from '@clerk/clerk-expo';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
@@ -8,8 +8,10 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import * as WebBrowser from 'expo-web-browser';
-import { View, Text, StyleSheet } from 'react-native';
+import Constants from 'expo-constants';
+import { Platform, View, Text, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { BRAND } from '../lib/brand';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -33,7 +35,19 @@ async function registerForPushNotifications() {
     finalStatus = status;
   }
   if (finalStatus !== 'granted') return null;
-  const token = await Notifications.getExpoPushTokenAsync();
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('burner-point-default', {
+      name: 'Burner Point alerts',
+      importance: Notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: BRAND.colors.cyberGreen,
+    });
+  }
+
+  const projectId =
+    Constants.expoConfig?.extra?.eas?.projectId ??
+    Constants.easConfig?.projectId;
+  const token = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
   return token.data;
 }
 
@@ -68,6 +82,17 @@ export default function RootLayout() {
     })();
   }, []);
 
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+      const route = response.notification.request.content.data?.route;
+      if (typeof route === 'string' && route.startsWith('/')) {
+        router.push(route as any);
+      }
+    });
+
+    return () => subscription.remove();
+  }, []);
+
   if (!loaded) {
     return (
       <View style={styles.splash}>
@@ -91,13 +116,22 @@ export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={clerkPublishableKey || ''} tokenCache={tokenCache}>
       <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
         <StatusBar style="light" backgroundColor={BRAND.colors.black}/>
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: BRAND.colors.black } }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: BRAND.colors.black },
+            animation: Platform.OS === 'ios' ? 'default' : 'fade_from_bottom',
+          }}
+        >
+          <Stack.Screen name="onboarding"/>
           <Stack.Screen name="auth/login"/>
           <Stack.Screen name="auth/register"/>
           <Stack.Screen name="(tabs)"/>
           <Stack.Screen name="call/active" options={{ presentation: 'fullScreenModal' }}/>
         </Stack>
+        </SafeAreaProvider>
       </GestureHandlerRootView>
     </ClerkProvider>
   );

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useAuthStore } from '@/store';
 import api, { platformApi, type PlatformStackSnapshot, type StackIntegrationStatus } from '@/lib/api';
-import { Phone, MessageSquare, CreditCard, TrendingUp, Shield, Zap, Globe, Lock, Wifi, Radio, Server, Database, Activity } from 'lucide-react';
+import { Phone, MessageSquare, CreditCard, TrendingUp, Shield, Zap, Globe, Lock, Wifi, Radio, Server, Database, Activity, Users, Repeat2, Webhook } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 interface Stats { totalNumbers: number; totalMessages: number; walletBalanceKobo: number; activeNumbers: number; }
@@ -44,6 +44,9 @@ export default function DashboardPage() {
 
   const controlModules = [
     { href: '/dashboard/rentals', label: 'Rentals', icon: Radio, text: 'Temporary and renewable number access' },
+    { href: '/dashboard/contacts', label: 'Contacts', icon: Users, text: 'Private address book and aliases' },
+    { href: '/dashboard/subscriptions', label: 'Subscriptions', icon: Repeat2, text: 'Monthly plan and renewal state' },
+    { href: '/dashboard/webhooks', label: 'Webhooks', icon: Webhook, text: 'Signed developer event delivery' },
     { href: '/dashboard/esim', label: 'eSIM', icon: Wifi, text: 'Travel-ready data connectivity' },
     { href: '/dashboard/proxies', label: 'Proxies', icon: Globe, text: 'Location-aware routing' },
     { href: '/dashboard/vpn', label: 'VPN', icon: Lock, text: 'Built-in privacy protection' },

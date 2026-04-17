@@ -155,12 +155,12 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-brand-black text-white">
+    <main className="relative min-h-screen min-h-[100dvh] overflow-x-hidden bg-brand-black text-white">
       <div className="pointer-events-none fixed inset-0">
         <div className="bp-grid-bg absolute inset-0 opacity-70" />
         <div className="absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(circle_at_top,rgba(0,255,157,0.14),transparent_64%)]" />
       </div>
-      <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-6xl items-center gap-10 px-5 py-10 md:grid-cols-[0.9fr_1.1fr] md:px-8">
+      <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-6xl items-start gap-8 px-4 py-6 sm:px-5 md:grid-cols-[0.9fr_1.1fr] md:items-center md:px-8 md:py-10">
         <section className="hidden md:block">
           <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
             <span className="flex h-11 w-11 items-center justify-center rounded-bp-lg border border-brand-green/25 bg-brand-green/10">
@@ -182,8 +182,8 @@ export default function RegisterPage() {
           </div>
         </section>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="bp-card rounded-bp-lg p-5 md:p-7">
-          <div className="rounded-bp-lg border border-white/8 bg-black/24 p-5 md:p-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="bp-card rounded-bp-lg p-4 sm:p-5 md:p-7">
+          <div className="rounded-bp-lg border border-white/8 bg-black/24 p-4 sm:p-5 md:p-6">
             <div className="mb-6 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-bp-lg border border-brand-green/25 bg-brand-green/10">
@@ -194,14 +194,14 @@ export default function RegisterPage() {
               <span className="rounded-full border border-brand-green/20 bg-brand-green/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">Clerk protected</span>
             </div>
 
-            <h2 className="text-3xl font-semibold uppercase">Create account</h2>
+            <h2 className="text-2xl font-semibold uppercase sm:text-3xl">Create account</h2>
             <p className="mt-2 text-sm leading-6 text-white/52">Private by design. Stay anonymous. Stay connected.</p>
 
             {pendingVerification ? (
               <div className="mt-6 rounded-bp-lg border border-brand-green/20 bg-brand-green/[0.04] p-4">
                 <label className="block text-sm font-medium text-white/70">
                   {pendingVerification === 'email' ? 'Email verification code' : 'Phone verification code'}
-                  <input value={verificationCode} onChange={(event) => setVerificationCode(event.target.value)} inputMode="numeric" autoComplete="one-time-code" placeholder="Enter Clerk code" className="auth-input mt-1.5" />
+                  <input value={verificationCode} onChange={(event) => setVerificationCode(event.target.value)} inputMode="numeric" autoComplete="one-time-code" enterKeyHint="done" placeholder="Enter Clerk code" className="auth-input mt-1.5" />
                 </label>
                 <button type="button" disabled={isSubmitting} onClick={verifyEmail} className="bp-button-glow mt-4 flex min-h-12 w-full items-center justify-center rounded-bp bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
                   {isSubmitting ? 'Verifying...' : 'Verify and continue'}
@@ -211,10 +211,10 @@ export default function RegisterPage() {
               <>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
                   <Field label="First name" error={errors.firstName?.message}>
-                    <input {...register('firstName')} autoComplete="given-name" placeholder="Kingsley" className="auth-input" />
+                    <input {...register('firstName')} autoComplete="given-name" autoCapitalize="words" enterKeyHint="next" placeholder="Kingsley" className="auth-input" />
                   </Field>
                   <Field label="Last name" error={errors.lastName?.message}>
-                    <input {...register('lastName')} autoComplete="family-name" placeholder="Doe" className="auth-input" />
+                    <input {...register('lastName')} autoComplete="family-name" autoCapitalize="words" enterKeyHint="next" placeholder="Doe" className="auth-input" />
                   </Field>
                 </div>
 
@@ -225,26 +225,26 @@ export default function RegisterPage() {
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field label="Email address" error={errors.email?.message}>
-                      <input {...register('email')} type="email" inputMode="email" autoComplete="email" placeholder="you@example.com" className="auth-input" />
+                      <input {...register('email')} type="email" inputMode="email" autoComplete="email" autoCapitalize="none" enterKeyHint="next" placeholder="you@example.com" className="auth-input" />
                     </Field>
                     <Field label="Phone number" error={errors.phoneNumber?.message}>
-                      <input {...register('phoneNumber')} type="tel" inputMode="tel" autoComplete="tel" placeholder="+1 415 555 0182" className="auth-input" />
+                      <input {...register('phoneNumber')} type="tel" inputMode="tel" autoComplete="tel" enterKeyHint="next" placeholder="+1 415 555 0182" className="auth-input" />
                     </Field>
                   </div>
                 </div>
 
                 <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_0.7fr]">
                   <Field label="Password" error={errors.password?.message}>
-                    <input {...register('password')} type="password" autoComplete="new-password" placeholder="Min 8 chars, mixed case + number" className="auth-input" />
+                    <input {...register('password')} type="password" autoComplete="new-password" enterKeyHint="next" placeholder="Min 8 chars, mixed case + number" className="auth-input" />
                   </Field>
                   <Field label="Referral code">
-                    <input {...register('referralCode')} placeholder="ABC1234" className="auth-input font-mono" />
+                    <input {...register('referralCode')} autoCapitalize="characters" enterKeyHint="done" placeholder="ABC1234" className="auth-input font-mono" />
                   </Field>
                 </div>
 
                 <div className="mt-6 space-y-3 rounded-bp-lg border border-white/8 bg-white/[0.02] p-4">
-                  <label className="flex cursor-pointer items-start gap-3 text-sm text-white/70">
-                    <input type="checkbox" {...register('acceptTerms')} className="mt-1 h-4 w-4 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
+                  <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm text-white/70">
+                    <input type="checkbox" {...register('acceptTerms')} className="mt-1 h-5 w-5 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
                     <span>
                       I accept the{' '}
                       <Link href="/terms" className="text-brand-green underline-offset-2 hover:underline">
@@ -254,8 +254,8 @@ export default function RegisterPage() {
                     </span>
                   </label>
                   {errors.acceptTerms ? <p className="text-xs text-red-300">{errors.acceptTerms.message}</p> : null}
-                  <label className="flex cursor-pointer items-start gap-3 text-sm text-white/70">
-                    <input type="checkbox" {...register('acceptPrivacy')} className="mt-1 h-4 w-4 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
+                  <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm text-white/70">
+                    <input type="checkbox" {...register('acceptPrivacy')} className="mt-1 h-5 w-5 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
                     <span>
                       I accept the{' '}
                       <Link href="/privacy" className="text-brand-green underline-offset-2 hover:underline">
@@ -280,7 +280,7 @@ export default function RegisterPage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               {oauthProviders.map((provider) => (
-                <button key={provider.label} type="button" onClick={() => startOAuth(provider.strategy)} className="flex min-h-11 items-center justify-center rounded-bp border border-white/10 bg-white/[0.02] px-3 py-3 text-center text-xs font-semibold text-white/76 transition hover:border-brand-green/35 hover:text-brand-green">
+                <button key={provider.label} type="button" onClick={() => startOAuth(provider.strategy)} className="flex min-h-12 items-center justify-center rounded-bp border border-white/10 bg-white/[0.02] px-3 py-3 text-center text-xs font-semibold text-white/76 transition hover:border-brand-green/35 hover:text-brand-green">
                   {provider.label}
                 </button>
               ))}

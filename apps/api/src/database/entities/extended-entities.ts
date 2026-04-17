@@ -15,6 +15,7 @@ export enum TransactionType {
   NUMBER_RENEWAL = 'number_renewal', SMS_SEND = 'sms_send',
   CALL_CHARGE = 'call_charge', REFERRAL_BONUS = 'referral_bonus',
   REFUND = 'refund', ADJUSTMENT = 'adjustment',
+  SUBSCRIPTION_PURCHASE = 'subscription_purchase',
 }
 export enum TransactionStatus { PENDING = 'pending', COMPLETED = 'completed', FAILED = 'failed', REVERSED = 'reversed' }
 export enum PaymentGateway { FLUTTERWAVE = 'flutterwave', PAYSTACK = 'paystack', SQUAD = 'squad', KORAPAY = 'korapay', OPAY = 'opay', PADDLE = 'paddle', NOWPAYMENTS = 'nowpayments' }
@@ -24,12 +25,12 @@ export class WalletTransaction {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ name: 'user_id' })
   @Index()
   userId: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' })
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
   @Column({ type: 'enum', enum: TransactionType })
@@ -38,22 +39,22 @@ export class WalletTransaction {
   @Column({ type: 'enum', enum: TransactionStatus, default: TransactionStatus.PENDING })
   status: TransactionStatus;
 
-  @Column({ type: 'bigint' })
+  @Column({ name: 'amount_kobo', type: 'bigint' })
   amountKobo: number;
 
-  @Column({ type: 'bigint' })
+  @Column({ name: 'balance_before_kobo', type: 'bigint' })
   balanceBeforeKobo: number;
 
-  @Column({ type: 'bigint' })
+  @Column({ name: 'balance_after_kobo', type: 'bigint' })
   balanceAfterKobo: number;
 
   @Column({ nullable: true })
   description: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'reference_id', nullable: true })
   referenceId: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'external_reference', nullable: true })
   externalReference: string;
 
   @Column({ type: 'enum', enum: PaymentGateway, nullable: true })
@@ -62,10 +63,10 @@ export class WalletTransaction {
   @Column({ type: 'jsonb', default: {} })
   metadata: Record<string, unknown>;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }
 
@@ -74,13 +75,13 @@ export class PaymentSession {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ name: 'user_id' })
   userId: string;
 
   @Column({ type: 'enum', enum: PaymentGateway })
   gateway: PaymentGateway;
 
-  @Column({ type: 'bigint' })
+  @Column({ name: 'amount_kobo', type: 'bigint' })
   amountKobo: number;
 
   @Column({ default: 'NGN' })
@@ -90,31 +91,31 @@ export class PaymentSession {
   @Index()
   reference: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'gateway_reference', nullable: true })
   gatewayReference: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'checkout_url', nullable: true })
   checkoutUrl: string;
 
   @Column({ default: 'pending' })
   status: string;
 
-  @Column({ type: 'jsonb', default: {} })
+  @Column({ name: 'gateway_response', type: 'jsonb', default: {} })
   gatewayResponse: Record<string, unknown>;
 
   @Column({ type: 'jsonb', default: {} })
   metadata: Record<string, unknown>;
 
-  @Column({ nullable: true, type: 'timestamp' })
+  @Column({ name: 'paid_at', nullable: true, type: 'timestamp' })
   paidAt: Date;
 
-  @Column({ nullable: true, type: 'timestamp' })
+  @Column({ name: 'expires_at', nullable: true, type: 'timestamp' })
   expiresAt: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }
 
@@ -132,25 +133,25 @@ export class SubscriptionPlan {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'bigint' })
+  @Column({ name: 'price_kobo_monthly', type: 'bigint' })
   priceKoboMonthly: number;
 
-  @Column({ type: 'bigint' })
+  @Column({ name: 'price_kobo_yearly', type: 'bigint' })
   priceKoboYearly: number;
 
   @Column({ type: 'jsonb', default: {} })
   features: Record<string, unknown>;
 
-  @Column({ default: true })
+  @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
-  @Column({ default: 0 })
+  @Column({ name: 'sort_order', default: 0 })
   sortOrder: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }
 
@@ -159,34 +160,38 @@ export class UserSubscription {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ name: 'user_id' })
   userId: string;
 
-  @Column()
+  @Column({ name: 'plan_id' })
   planId: string;
+
+  @ManyToOne(() => SubscriptionPlan, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'plan_id' })
+  plan: SubscriptionPlan;
 
   @Column({ default: 'active' })
   status: string;
 
-  @Column({ default: 'monthly' })
+  @Column({ name: 'billing_cycle', default: 'monthly' })
   billingCycle: string;
 
-  @Column({ type: 'timestamp' })
+  @Column({ name: 'current_period_start', type: 'timestamp' })
   currentPeriodStart: Date;
 
-  @Column({ type: 'timestamp' })
+  @Column({ name: 'current_period_end', type: 'timestamp' })
   currentPeriodEnd: Date;
 
-  @Column({ nullable: true })
+  @Column({ name: 'cancel_at', nullable: true })
   cancelAt: Date;
 
   @Column({ type: 'jsonb', default: {} })
   metadata: Record<string, unknown>;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }
 
@@ -195,14 +200,14 @@ export class WebhookDedup {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
+  @Column({ name: 'event_id', unique: true })
   @Index()
   eventId: string;
 
   @Column()
   source: string;
 
-  @Column()
+  @Column({ name: 'event_type' })
   eventType: string;
 
   @Column({ type: 'jsonb', default: {} })
@@ -211,7 +216,7 @@ export class WebhookDedup {
   @Column({ default: 'processed' })
   status: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'processed_at' })
   processedAt: Date;
 }
 
@@ -577,14 +582,22 @@ export class PhoneOtpSession {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ name: 'user_id', nullable: true })
+  @Index()
+  userId: string;
+
+  @ManyToOne(() => User, { onDelete: 'CASCADE', nullable: true })
+  @JoinColumn({ name: 'user_id' })
+  user: User;
+
+  @Column({ name: 'phone_number' })
   @Index()
   phoneNumber: string;
 
   @Column()
   channel: string; // sms | call | whatsapp
 
-  @Column({ nullable: true })
+  @Column({ name: 'verification_sid', nullable: true })
   verificationSid: string;
 
   @Column({ default: 'pending' })
@@ -593,16 +606,16 @@ export class PhoneOtpSession {
   @Column({ default: 0 })
   attempts: number;
 
-  @Column({ nullable: true })
+  @Column({ name: 'ip_address', nullable: true })
   ipAddress: string;
 
-  @Column({ type: 'timestamp' })
+  @Column({ name: 'expires_at', type: 'timestamp' })
   expiresAt: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }
 
@@ -616,30 +629,30 @@ export class CreditPackage {
   @Column()
   name: string;
 
-  @Column({ type: 'bigint' })
+  @Column({ name: 'amount_kobo', type: 'bigint' })
   amountKobo: number;
 
-  @Column({ type: 'bigint' })
+  @Column({ name: 'bonus_kobo', type: 'bigint' })
   bonusKobo: number;
 
-  @Column({ type: 'bigint' })
+  @Column({ name: 'price_kobo', type: 'bigint' })
   priceKobo: number;
 
-  @Column({ type: 'jsonb', default: [] })
+  @Column({ name: 'available_gateways', type: 'text', array: true, default: () => "'{}'" })
   availableGateways: string[];
 
-  @Column({ default: true })
+  @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
-  @Column({ default: false })
+  @Column({ name: 'is_featured', default: false })
   isFeatured: boolean;
 
-  @Column({ default: 0 })
+  @Column({ name: 'sort_order', default: 0 })
   sortOrder: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }

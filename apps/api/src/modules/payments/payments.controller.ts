@@ -23,7 +23,8 @@ import { Request } from 'express';
 import { PaymentsService, PaymentType } from './payments.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PaymentGateway } from '../../database/entities/extended-entities';
-import { IsEnum, IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsEnum, IsIn, IsInt, IsOptional, IsString, Matches, Max, Min } from 'class-validator';
+import { NumberType } from '../../database/entities/phone-number.entity';
 
 class InitPaymentDto {
   @IsOptional()
@@ -43,6 +44,22 @@ class InitPaymentDto {
   @IsOptional()
   @IsString()
   packageId?: string;
+
+  @IsOptional()
+  @IsString()
+  planId?: string;
+
+  @IsOptional()
+  @Matches(/^\+[1-9]\d{6,14}$/)
+  phoneNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  countryCode?: string;
+
+  @IsOptional()
+  @IsEnum(NumberType)
+  numberType?: NumberType;
 
   @IsOptional()
   @IsIn(['web', 'mobile'])
@@ -68,6 +85,12 @@ export class PaymentsController {
       dto.rentalDays,
       dto.packageId,
       dto.clientPlatform,
+      {
+        planId: dto.planId,
+        phoneNumber: dto.phoneNumber,
+        countryCode: dto.countryCode,
+        numberType: dto.numberType,
+      },
     );
   }
 
@@ -102,8 +125,12 @@ export class PaymentsController {
   @Post('webhook/nowpayments')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'NOWPayments IPN webhook' })
-  webhookNowPayments(@Body() body: Record<string, unknown>) {
-    return this.service.handleNowPaymentsWebhook(body);
+  webhookNowPayments(
+    @Body() body: Record<string, unknown>,
+    @Headers() headers: Record<string, string>,
+    @Req() req: RawBodyRequest<Request>,
+  ) {
+    return this.service.handleNowPaymentsWebhook(body, headers, req.rawBody);
   }
 
   // ─── Nigerian Gateway Webhooks (placeholders for now) ───────────────────
