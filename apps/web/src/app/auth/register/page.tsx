@@ -206,7 +206,7 @@ export default function RegisterPage() {
         <div className="bp-grid-bg absolute inset-0 opacity-70" />
         <div className="absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(circle_at_top,rgba(0,255,157,0.14),transparent_64%)]" />
       </div>
-      <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-[78rem] items-center gap-6 px-3 py-3 sm:px-4 md:px-6 md:py-4 lg:grid-cols-[0.82fr_1fr] xl:px-8">
+      <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-[78rem] items-center gap-5 px-3 py-3 sm:px-4 md:px-6 md:py-4 lg:grid-cols-[0.82fr_1fr] xl:px-8">
         <section className="hidden lg:block">
           <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
             <span className="flex h-10 w-10 items-center justify-center rounded-bp-md border border-brand-green/25 bg-brand-green/10">
@@ -230,10 +230,10 @@ export default function RegisterPage() {
 
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="bp-card rounded-bp-lg p-3.5 sm:p-4 md:p-5 [&_input.auth-input]:min-h-11 [&_input.auth-input]:px-3.5 [&_input.auth-input]:py-3"
+          className="bp-card rounded-bp-lg p-3 sm:p-4 md:p-5 [&_input.auth-input]:min-h-10 [&_input.auth-input]:px-3 [&_input.auth-input]:py-2.5 md:[&_input.auth-input]:min-h-11 md:[&_input.auth-input]:px-3.5 md:[&_input.auth-input]:py-3"
         >
-          <div className="rounded-bp-lg border border-white/8 bg-black/24 p-4 sm:p-4 md:p-5">
-            <div className="mb-5">
+          <div className="rounded-bp-lg border border-white/8 bg-black/24 p-3.5 sm:p-4 md:p-5">
+            <div className="mb-4">
               <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-bp-md border border-brand-green/25 bg-brand-green/10">
                   <Image src="/assets/logo-mark.svg" alt="" width={24} height={24} />
@@ -242,11 +242,11 @@ export default function RegisterPage() {
               </Link>
             </div>
 
-            <h2 className="text-[1.85rem] font-semibold uppercase leading-none sm:text-[2rem]">Create account</h2>
-            <p className="mt-2 text-sm leading-5 text-white/52">Private by design. Stay anonymous. Stay connected.</p>
+            <h2 className="text-[1.7rem] font-semibold uppercase leading-none sm:text-[1.85rem]">Create account</h2>
+            <p className="mt-1.5 text-[13px] leading-5 text-white/52 sm:text-sm">Private by design. Stay anonymous. Stay connected.</p>
 
             {pendingVerification ? (
-              <div className="mt-5 rounded-bp-lg border border-brand-green/20 bg-brand-green/[0.04] p-3.5 md:p-4">
+              <div className="mt-4 rounded-bp-lg border border-brand-green/20 bg-brand-green/[0.04] p-3.5 md:p-4">
                 <label className="block text-sm font-medium text-white/70">
                   {pendingVerification === 'email' ? 'Email verification code' : 'Phone verification code'}
                   <input value={verificationCode} onChange={(event) => setVerificationCode(event.target.value)} inputMode="numeric" autoComplete="one-time-code" enterKeyHint="done" placeholder="Enter verification code" className="auth-input mt-1.5" />
@@ -257,7 +257,7 @@ export default function RegisterPage() {
               </div>
             ) : (
               <>
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="mt-4 grid grid-cols-2 gap-2.5">
                   <Field label="First name" error={errors.firstName?.message}>
                     <input {...register('firstName')} autoComplete="given-name" autoCapitalize="words" enterKeyHint="next" placeholder="Kingsley" className="auth-input" />
                   </Field>
@@ -266,12 +266,12 @@ export default function RegisterPage() {
                   </Field>
                 </div>
 
-                <div className="mt-4 rounded-bp-lg border border-white/8 bg-white/[0.02] p-3.5 md:p-4">
+                <div className="mt-3 rounded-bp-lg border border-white/8 bg-white/[0.02] p-3 md:p-4">
                   <div className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.2em] text-brand-green">
                     <Mail className="h-4 w-4" />
                     Required Contact
                   </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-2 gap-2.5">
                     <Field label="Email address" error={errors.email?.message}>
                       <input {...register('email')} type="email" inputMode="email" autoComplete="email" autoCapitalize="none" enterKeyHint="next" placeholder="you@example.com" className="auth-input" />
                     </Field>
@@ -281,7 +281,7 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_0.7fr]">
+                <div className="mt-3 grid gap-2.5 grid-cols-[1fr_0.72fr]">
                   <Field label="Password" error={errors.password?.message}>
                     <input {...register('password')} type="password" autoComplete="new-password" enterKeyHint="next" placeholder="Min 8 chars, mixed case + number" className="auth-input" />
                   </Field>
@@ -290,7 +290,7 @@ export default function RegisterPage() {
                   </Field>
                 </div>
 
-                <div className="mt-4 rounded-bp-lg border border-white/8 bg-white/[0.02] p-3.5 md:p-4">
+                <div className="mt-3 rounded-bp-lg border border-white/8 bg-white/[0.02] p-3 md:p-4">
                   <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm leading-6 text-white/70">
                     <input
                       checked={policyAccepted}
@@ -313,18 +313,18 @@ export default function RegisterPage() {
                   {policyError ? <p className="mt-2 text-xs text-red-300">{policyError}</p> : null}
                 </div>
 
-                <button type="submit" disabled={isSubmitting} className="bp-button-glow mt-4 flex min-h-11 w-full items-center justify-center rounded-bp bg-brand-green px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+                <button type="submit" disabled={isSubmitting} className="bp-button-glow mt-3 flex min-h-11 w-full items-center justify-center rounded-bp bg-brand-green px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
                   {isSubmitting ? 'Creating account...' : 'Create account'}
                 </button>
               </>
             )}
 
-            <div className="my-4 flex items-center gap-3">
+            <div className="my-3.5 flex items-center gap-3">
               <span className="h-px flex-1 bg-white/8" />
               <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/34">or continue with</span>
               <span className="h-px flex-1 bg-white/8" />
             </div>
-            <div className="grid gap-2 md:grid-cols-3">
+            <div className="grid grid-cols-3 gap-2">
               {oauthProviders.map((provider) => (
                 <AuthProviderButton key={provider.label} provider={provider.label} onClick={() => startOAuth(provider.strategy)} disabled={isSubmitting} className="md:h-full" />
               ))}

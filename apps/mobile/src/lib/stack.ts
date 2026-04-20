@@ -13,7 +13,7 @@ export const BURNER_POINT_STACK = [
   },
   {
     label: 'Auth',
-    value: 'Clerk',
+    value: 'Clerk + Twilio Verify',
   },
   {
     label: 'Mobile',
@@ -32,4 +32,3 @@ export const BURNER_POINT_STACK = [
     value: 'WireGuard, Bright Data, 1GLOBAL',
   },
 ] as const;
-

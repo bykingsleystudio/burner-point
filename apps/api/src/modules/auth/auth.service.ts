@@ -276,22 +276,6 @@ export class AuthService {
     return { ...tokens, user };
   }
 
-  async getOAuthRedirect(provider: string) {
-    const providerConfig: Record<string, { label: string; env: string }> = {
-      google: { label: 'Google', env: 'GOOGLE_OAUTH_URL' },
-      apple: { label: 'Apple iCloud', env: 'APPLE_OAUTH_URL' },
-      microsoft: { label: 'Microsoft Outlook', env: 'MICROSOFT_OAUTH_URL' },
-    };
-    const config = providerConfig[provider.toLowerCase()];
-    if (!config) throw new BadRequestException('Unsupported OAuth provider');
-
-    const redirectUrl = this.configService.get<string>(config.env);
-    if (!redirectUrl) {
-      throw new BadRequestException(`${config.label} OAuth is not configured. Set ${config.env}.`);
-    }
-    return redirectUrl;
-  }
-
   async validateUser(identifier: string, password: string): Promise<User | null> {
     const normalizedIdentifier = this.normalizeLoginIdentifier(identifier);
     const where = normalizedIdentifier.includes('@')

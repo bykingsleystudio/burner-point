@@ -52,7 +52,7 @@ export default function SettingsScreen() {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={s.name}>{user?.fullName || 'Burner Point user'}</Text>
-            <Text style={s.email}>{user?.primaryEmailAddress?.emailAddress || 'Secure Clerk session'}</Text>
+            <Text style={s.email}>{user?.primaryEmailAddress?.emailAddress || 'Secure account session'}</Text>
           </View>
         </View>
 

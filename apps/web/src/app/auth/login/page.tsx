@@ -292,18 +292,18 @@ export default function LoginPage() {
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[34rem] items-center px-3 py-3 sm:px-4 md:py-4">
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="bp-card w-full rounded-bp-lg p-3.5 sm:p-4 md:p-5 [&_input.auth-input]:min-h-11 [&_input.auth-input]:px-3.5 [&_input.auth-input]:py-3"
+          className="bp-card w-full rounded-bp-lg p-3 sm:p-4 md:p-5 [&_input.auth-input]:min-h-10 [&_input.auth-input]:px-3 [&_input.auth-input]:py-2.5 md:[&_input.auth-input]:min-h-11 md:[&_input.auth-input]:px-3.5 md:[&_input.auth-input]:py-3"
         >
-          <div className="rounded-bp-lg border border-white/8 bg-black/24 p-4 sm:p-4 md:p-5">
-            <div className="mb-6 text-center">
+          <div className="rounded-bp-lg border border-white/8 bg-black/24 p-3.5 sm:p-4 md:p-5">
+            <div className="mb-5 text-center">
               <Link href="/" className="mx-auto inline-flex items-center justify-center gap-3" aria-label="Burner Point home">
                 <span className="flex h-10 w-10 items-center justify-center rounded-bp-md border border-brand-green/25 bg-brand-green/10">
                   <Image src="/assets/logo-mark.svg" alt="" width={24} height={24} />
                 </span>
                 <span className="font-mono text-sm font-semibold uppercase tracking-[0.2em]">Burner <span className="text-brand-green">Point</span></span>
               </Link>
-              <h1 className="mt-5 text-[1.85rem] font-semibold uppercase leading-none sm:text-[2rem]">Welcome back</h1>
-              <p className="mt-2 text-sm leading-5 text-white/52">Use your email address or phone number to access your Burner Point workspace.</p>
+              <h1 className="mt-4 text-[1.7rem] font-semibold uppercase leading-none sm:text-[1.85rem]">Welcome back</h1>
+              <p className="mt-1.5 text-[13px] leading-5 text-white/52 sm:text-sm">Use your email address or phone number to access your Burner Point workspace.</p>
             </div>
 
             {authMode === 'reset-request' ? (
@@ -391,7 +391,7 @@ export default function LoginPage() {
                 </button>
               </div>
             ) : (
-            <div className="space-y-3.5">
+            <div className="space-y-3">
               <label className="block text-sm font-medium text-white/70">
                 Email or phone number
                 <input
@@ -433,7 +433,7 @@ export default function LoginPage() {
             )}
 
             {!secondFactorStrategy && authMode === 'sign-in' ? (
-              <button type="submit" disabled={isSubmitting} className="bp-button-glow mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-bp bg-brand-green px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+              <button type="submit" disabled={isSubmitting} className="bp-button-glow mt-3.5 flex min-h-11 w-full items-center justify-center gap-2 rounded-bp bg-brand-green px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
                 {isSubmitting ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" /> : <Zap size={16} />}
                 {isSubmitting ? 'Signing in...' : 'Sign In'}
               </button>
@@ -441,12 +441,12 @@ export default function LoginPage() {
 
             {authMode === 'sign-in' ? (
               <>
-              <div className="my-4 flex items-center gap-3">
+              <div className="my-3.5 flex items-center gap-3">
                 <span className="h-px flex-1 bg-white/8" />
                 <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/34">or continue with</span>
                 <span className="h-px flex-1 bg-white/8" />
               </div>
-                <div className="grid gap-2 md:grid-cols-3">
+                <div className="grid grid-cols-3 gap-2">
                   {oauthProviders.map((provider) => (
                     <AuthProviderButton key={provider.label} provider={provider.label} onClick={() => startOAuth(provider.strategy)} disabled={isSubmitting} className="md:h-full" />
                   ))}

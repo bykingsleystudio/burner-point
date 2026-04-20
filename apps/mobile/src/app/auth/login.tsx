@@ -5,6 +5,8 @@ import { Eye, EyeOff, ShieldCheck, Zap } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as ExpoLinking from 'expo-linking';
 import { useAuth, useSignIn, useSSO } from '@clerk/clerk-expo';
+
+import { AuthProviderButton } from '../../components/auth-provider-button';
 import { exchangeClerkForApiSession } from '../../lib/auth';
 import { BRAND } from '../../lib/brand';
 import { WEB_APP_URL } from '../../lib/config';
@@ -36,9 +38,13 @@ export default function LoginScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [resetStrategy, setResetStrategy] = useState<ResetPasswordStrategy>('reset_password_email_code');
 
-  const finishClerkSession = async (sessionId: string) => {
+  const finishBurnerSession = async (sessionId: string) => {
     await setActive({ session: sessionId });
-    await exchangeClerkForApiSession(getToken);
+    const data = await exchangeClerkForApiSession(getToken);
+    if (data.user?.phoneNumber && data.user.phoneVerified === false) {
+      router.replace({ pathname: '/auth/phone-verify', params: { redirect: '/(tabs)' } } as any);
+      return;
+    }
     router.replace('/(tabs)' as any);
   };
 
@@ -58,6 +64,7 @@ export default function LoginScreen() {
       Alert.alert('Required fields', 'Enter your email or phone number and password.');
       return;
     }
+
     setLoading(true);
     try {
       const result = await signIn.create({ identifier, password });
@@ -67,16 +74,18 @@ export default function LoginScreen() {
           await signIn.prepareSecondFactor(factor);
         }
         setSecondFactorStrategy(factor?.strategy || 'totp');
-        Alert.alert('2FA required', 'Enter your Clerk verification code to continue.');
+        Alert.alert('Two-factor required', 'Enter your verification code to continue.');
         return;
       }
+
       if (result.status !== 'complete' || !result.createdSessionId) {
-        Alert.alert('Verification required', 'Additional Clerk verification is required before this session can continue.');
+        Alert.alert('Verification required', 'Another verification step is required before this session can continue.');
         return;
       }
-      await finishClerkSession(result.createdSessionId);
+
+      await finishBurnerSession(result.createdSessionId);
     } catch (error: any) {
-      Alert.alert('Login failed', error.errors?.[0]?.longMessage || error.errors?.[0]?.message || 'Check your credentials');
+      Alert.alert('Sign in failed', error.errors?.[0]?.longMessage || error.errors?.[0]?.message || 'Check your credentials and try again.');
     } finally {
       setLoading(false);
     }
@@ -85,7 +94,7 @@ export default function LoginScreen() {
   const requestPasswordReset = async () => {
     triggerHaptic('selection');
     if (!isLoaded || !resetIdentifier.trim()) {
-      Alert.alert('Account identifier required', 'Enter the email address or phone number on your Clerk account.');
+      Alert.alert('Account identifier required', 'Enter the email address or phone number on this Burner Point account.');
       return;
     }
 
@@ -103,9 +112,12 @@ export default function LoginScreen() {
       setResetCode('');
       setNewPassword('');
       setAuthStep('reset-confirm');
-      Alert.alert('Reset code sent', strategy === 'reset_password_email_code'
-        ? 'Check your email for the Clerk password reset code.'
-        : 'Check your phone for the Clerk password reset code.');
+      Alert.alert(
+        'Reset code sent',
+        strategy === 'reset_password_email_code'
+          ? 'Check your email for the password reset code.'
+          : 'Check your phone for the password reset code.',
+      );
     } catch (error: any) {
       Alert.alert('Reset failed', error.errors?.[0]?.longMessage || error.errors?.[0]?.message || 'Unable to send a reset code.');
     } finally {
@@ -133,11 +145,11 @@ export default function LoginScreen() {
       });
 
       if (result.status === 'complete' && result.createdSessionId) {
-        await finishClerkSession(result.createdSessionId);
+        await finishBurnerSession(result.createdSessionId);
         return;
       }
 
-      Alert.alert('Reset not complete', 'Clerk needs another verification step before sign-in can finish.');
+      Alert.alert('Reset not complete', 'Another verification step is required before sign-in can finish.');
     } catch (error: any) {
       Alert.alert('Reset failed', error.errors?.[0]?.longMessage || error.errors?.[0]?.message || 'Unable to reset your password.');
     } finally {
@@ -148,19 +160,22 @@ export default function LoginScreen() {
   const verifySecondFactor = async () => {
     triggerHaptic('impact');
     if (!isLoaded || !secondFactorStrategy || !secondFactorCode.trim()) return;
+
     setLoading(true);
     try {
       const result = await signIn.attemptSecondFactor({
         strategy: secondFactorStrategy as any,
         code: secondFactorCode.trim(),
       });
+
       if (result.status === 'complete' && result.createdSessionId) {
-        await finishClerkSession(result.createdSessionId);
+        await finishBurnerSession(result.createdSessionId);
         return;
       }
-      Alert.alert('Not complete', 'Check the code and try again.');
+
+      Alert.alert('Verification incomplete', 'Check the code and try again.');
     } catch (error: any) {
-      Alert.alert('2FA failed', error.errors?.[0]?.message || 'Unable to verify your second factor.');
+      Alert.alert('Verification failed', error.errors?.[0]?.message || 'Unable to verify this code.');
     } finally {
       setLoading(false);
     }
@@ -175,110 +190,174 @@ export default function LoginScreen() {
       });
       if (createdSessionId && setOAuthActive) {
         await setOAuthActive({ session: createdSessionId });
-        await exchangeClerkForApiSession(getToken);
+        const data = await exchangeClerkForApiSession(getToken);
+        if (data.user?.phoneNumber && data.user.phoneVerified === false) {
+          router.replace({ pathname: '/auth/phone-verify', params: { redirect: '/(tabs)' } } as any);
+          return;
+        }
         router.replace('/(tabs)' as any);
       }
     } catch (error: any) {
-      Alert.alert('OAuth failed', error.errors?.[0]?.message || 'Unable to continue with this provider.');
+      Alert.alert('Provider sign-in failed', error.errors?.[0]?.message || 'Unable to continue with this provider.');
     }
   };
 
   return (
     <SafeAreaView style={s.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={s.inner}>
-        <TouchableOpacity style={s.logo} onPress={() => Linking.openURL(WEB_APP_URL)} activeOpacity={0.8}>
-          <View style={s.logoIcon}><ShieldCheck size={28} color={BRAND.colors.dark} /></View>
+        <TouchableOpacity style={s.logo} onPress={() => Linking.openURL(WEB_APP_URL)} activeOpacity={0.82}>
+          <View style={s.logoIcon}>
+            <ShieldCheck size={24} color={BRAND.colors.dark} />
+          </View>
           <Text style={s.logoText}>Burner<Text style={s.green}>Point</Text></Text>
-          <Text style={s.logoSub}>Welcome back. Private By Design.</Text>
+          <Text style={s.logoSub}>Secure access for private communication.</Text>
         </TouchableOpacity>
 
         <View style={s.form}>
+          <Text style={s.kicker}>Sign in</Text>
+          <Text style={s.title}>Welcome back.</Text>
+          <Text style={s.sub}>Use your email address or phone number to get into Burner Point.</Text>
+
           {secondFactorStrategy ? (
             <>
-              <Text style={s.label}>Clerk 2FA code</Text>
-              <TextInput value={secondFactorCode} onChangeText={setSecondFactorCode} placeholder="Enter verification code" placeholderTextColor={BRAND.colors.muted} style={s.input} keyboardType="number-pad" autoCapitalize="none" autoCorrect={false} autoComplete="one-time-code" />
+              <Text style={s.label}>Two-factor code</Text>
+              <TextInput
+                value={secondFactorCode}
+                onChangeText={setSecondFactorCode}
+                placeholder="Enter verification code"
+                placeholderTextColor={BRAND.colors.muted}
+                style={s.input}
+                keyboardType="number-pad"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="one-time-code"
+              />
               <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={verifySecondFactor} disabled={loading} activeOpacity={0.85}>
-                {loading ? <ActivityIndicator color={BRAND.colors.dark} /> : <Text style={s.btnText}>Verify 2FA</Text>}
+                {loading ? <ActivityIndicator color={BRAND.colors.dark} /> : <Text style={s.btnText}>Verify</Text>}
               </TouchableOpacity>
+            </>
+          ) : authStep === 'reset-request' ? (
+            <>
+              <Text style={s.label}>Email or phone number</Text>
+              <TextInput
+                value={resetIdentifier}
+                onChangeText={setResetIdentifier}
+                placeholder="you@example.com or +1 415 555 0182"
+                placeholderTextColor={BRAND.colors.muted}
+                style={s.input}
+                keyboardType="default"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="username"
+              />
+              <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={requestPasswordReset} disabled={loading || !isLoaded} activeOpacity={0.85}>
+                {loading ? <ActivityIndicator color={BRAND.colors.dark} /> : <Text style={s.btnText}>Send reset code</Text>}
+              </TouchableOpacity>
+              <TouchableOpacity onPress={resetAuthState} style={s.textLink}>
+                <Text style={s.textLinkLabel}>Back to sign in</Text>
+              </TouchableOpacity>
+            </>
+          ) : authStep === 'reset-confirm' ? (
+            <>
+              <Text style={s.label}>{resetStrategy === 'reset_password_email_code' ? 'Email reset code' : 'Phone reset code'}</Text>
+              <TextInput
+                value={resetCode}
+                onChangeText={setResetCode}
+                placeholder="Enter reset code"
+                placeholderTextColor={BRAND.colors.muted}
+                style={s.input}
+                keyboardType="number-pad"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="one-time-code"
+              />
+
+              <Text style={s.label}>New password</Text>
+              <View style={s.passwordWrap}>
+                <TextInput
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  placeholder="New password"
+                  placeholderTextColor={BRAND.colors.muted}
+                  style={[s.input, s.passwordInput]}
+                  secureTextEntry={!showPassword}
+                  autoComplete="new-password"
+                />
+                <TouchableOpacity style={s.eye} onPress={() => setShowPassword((value) => !value)}>
+                  {showPassword ? <EyeOff size={18} color={BRAND.colors.metalStart} /> : <Eye size={18} color={BRAND.colors.metalStart} />}
+                </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={submitPasswordReset} disabled={loading || !isLoaded} activeOpacity={0.85}>
+                {loading ? <ActivityIndicator color={BRAND.colors.dark} /> : <Text style={s.btnText}>Reset password</Text>}
+              </TouchableOpacity>
+              <View style={s.resetActions}>
+                <TouchableOpacity onPress={requestPasswordReset} disabled={loading}>
+                  <Text style={s.textLinkLabel}>Resend code</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={resetAuthState}>
+                  <Text style={s.textLinkLabel}>Back to sign in</Text>
+                </TouchableOpacity>
+              </View>
             </>
           ) : (
             <>
-              {authStep === 'reset-request' ? (
-                <>
-                  <Text style={s.label}>Email or phone number</Text>
-                  <TextInput value={resetIdentifier} onChangeText={setResetIdentifier} placeholder="you@example.com or +1 415 555 0182" placeholderTextColor={BRAND.colors.muted} style={s.input} keyboardType="default" autoCapitalize="none" autoCorrect={false} autoComplete="username" />
-                  <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={requestPasswordReset} disabled={loading || !isLoaded} activeOpacity={0.85}>
-                    {loading ? <ActivityIndicator color={BRAND.colors.dark} /> : <Text style={s.btnText}>Send reset code</Text>}
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={resetAuthState} style={s.resetLink}>
-                    <Text style={s.resetText}>Back to sign in</Text>
-                  </TouchableOpacity>
-                </>
-              ) : authStep === 'reset-confirm' ? (
-                <>
-                  <Text style={s.label}>{resetStrategy === 'reset_password_email_code' ? 'Email reset code' : 'Phone reset code'}</Text>
-                  <TextInput value={resetCode} onChangeText={setResetCode} placeholder="Enter reset code" placeholderTextColor={BRAND.colors.muted} style={s.input} keyboardType="number-pad" autoCapitalize="none" autoCorrect={false} autoComplete="one-time-code" />
+              <Text style={s.label}>Email or phone number</Text>
+              <TextInput
+                value={identifier}
+                onChangeText={setIdentifier}
+                placeholder="you@example.com or +1 415 555 0182"
+                placeholderTextColor={BRAND.colors.muted}
+                style={s.input}
+                keyboardType="default"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="username"
+              />
 
-                  <Text style={s.label}>New password</Text>
-                  <View style={s.passwordWrap}>
-                    <TextInput value={newPassword} onChangeText={setNewPassword} placeholder="New password" placeholderTextColor={BRAND.colors.muted} style={[s.input, s.passwordInput]} secureTextEntry={!showPassword} autoComplete="new-password" />
-                    <TouchableOpacity style={s.eye} onPress={() => setShowPassword((value) => !value)}>
-                      {showPassword ? <EyeOff size={18} color={BRAND.colors.metalStart} /> : <Eye size={18} color={BRAND.colors.metalStart} />}
-                    </TouchableOpacity>
-                  </View>
+              <Text style={s.label}>Password</Text>
+              <View style={s.passwordWrap}>
+                <TextInput
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Password"
+                  placeholderTextColor={BRAND.colors.muted}
+                  style={[s.input, s.passwordInput]}
+                  secureTextEntry={!showPassword}
+                  autoComplete="current-password"
+                />
+                <TouchableOpacity style={s.eye} onPress={() => setShowPassword((value) => !value)}>
+                  {showPassword ? <EyeOff size={18} color={BRAND.colors.metalStart} /> : <Eye size={18} color={BRAND.colors.metalStart} />}
+                </TouchableOpacity>
+              </View>
 
-                  <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={submitPasswordReset} disabled={loading || !isLoaded} activeOpacity={0.85}>
-                    {loading ? <ActivityIndicator color={BRAND.colors.dark} /> : <Text style={s.btnText}>Reset password</Text>}
-                  </TouchableOpacity>
-                  <View style={s.resetActions}>
-                    <TouchableOpacity onPress={requestPasswordReset} disabled={loading}>
-                      <Text style={s.resetText}>Resend code</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={resetAuthState}>
-                      <Text style={s.resetText}>Back to sign in</Text>
-                    </TouchableOpacity>
-                  </View>
-                </>
-              ) : (
-                <>
-          <Text style={s.label}>Email or phone number</Text>
-          <TextInput value={identifier} onChangeText={setIdentifier} placeholder="you@example.com or +1 415 555 0182" placeholderTextColor={BRAND.colors.muted} style={s.input} keyboardType="default" autoCapitalize="none" autoCorrect={false} autoComplete="username" />
+              <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={login} disabled={loading || !isLoaded} activeOpacity={0.85}>
+                {loading ? (
+                  <ActivityIndicator color={BRAND.colors.dark} />
+                ) : (
+                  <>
+                    <Zap size={16} color={BRAND.colors.dark} />
+                    <Text style={s.btnText}>Sign In</Text>
+                  </>
+                )}
+              </TouchableOpacity>
 
-          <Text style={s.label}>Password</Text>
-          <View style={s.passwordWrap}>
-            <TextInput value={password} onChangeText={setPassword} placeholder="Password" placeholderTextColor={BRAND.colors.muted} style={[s.input, s.passwordInput]} secureTextEntry={!showPassword} autoComplete="current-password" />
-            <TouchableOpacity style={s.eye} onPress={() => setShowPassword((value) => !value)}>
-              {showPassword ? <EyeOff size={18} color={BRAND.colors.metalStart} /> : <Eye size={18} color={BRAND.colors.metalStart} />}
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity onPress={() => setAuthStep('reset-request')} style={s.textLink}>
+                <Text style={s.textLinkLabel}>Forgot password?</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={login} disabled={loading || !isLoaded} activeOpacity={0.85}>
-            {loading ? <ActivityIndicator color={BRAND.colors.dark} /> : <><Zap size={16} color={BRAND.colors.dark} /><Text style={s.btnText}>Sign In</Text></>}
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setAuthStep('reset-request')} style={s.resetLink}>
-            <Text style={s.resetText}>Forgot password?</Text>
-          </TouchableOpacity>
-                </>
-              )}
-            </>
-          )}
-
-          {authStep === 'sign-in' && !secondFactorStrategy ? (
-            <>
               <Text style={s.or}>or continue with</Text>
-              <View style={s.providerGrid}>
+              <View style={s.providerRow}>
                 {providers.map(([label, strategy]) => (
-                  <TouchableOpacity key={label} style={s.provider} onPress={() => oauth(strategy)} activeOpacity={0.75}>
-                    <Text style={s.providerText}>{label}</Text>
-                  </TouchableOpacity>
+                  <AuthProviderButton key={label} provider={label} onPress={() => oauth(strategy)} disabled={loading || !isLoaded} />
                 ))}
               </View>
 
-              <TouchableOpacity onPress={() => router.push('/auth/register' as any)} style={s.registerLink}>
+              <TouchableOpacity onPress={() => router.push('/auth/register' as any)} style={s.textLink}>
                 <Text style={s.registerText}>No account? <Text style={s.registerHighlight}>Create one free</Text></Text>
               </TouchableOpacity>
             </>
-          ) : null}
+          )}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -287,29 +366,63 @@ export default function LoginScreen() {
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: BRAND.colors.black },
-  inner: { flex: 1, justifyContent: 'center', padding: 22 },
-  logo: { alignItems: 'center', marginBottom: 34 },
-  logoIcon: { width: 66, height: 66, borderRadius: BRAND.radii.lg, backgroundColor: BRAND.colors.cyberGreen, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  logoText: { color: BRAND.colors.white, fontSize: 28, fontWeight: '900' },
+  inner: { flex: 1, justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 12 },
+  logo: { alignItems: 'center', marginBottom: 14 },
+  logoIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: BRAND.radii.md,
+    backgroundColor: BRAND.colors.cyberGreen,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  logoText: { color: BRAND.colors.white, fontSize: 24, fontWeight: '900' },
   green: { color: BRAND.colors.cyberGreen },
-  logoSub: { color: BRAND.colors.metalStart, fontSize: 13, marginTop: 8 },
-  form: { backgroundColor: BRAND.colors.surface, borderWidth: 1, borderColor: BRAND.colors.border, borderRadius: BRAND.radii.lg, padding: 16, gap: 10 },
-  label: { color: BRAND.colors.metalStart, fontSize: 12, fontWeight: '700', marginTop: 2 },
-  input: { minHeight: 52, backgroundColor: BRAND.colors.black, borderWidth: 1, borderColor: BRAND.colors.border, borderRadius: BRAND.radii.md, paddingHorizontal: 14, color: BRAND.colors.white, fontSize: 15 },
+  logoSub: { color: BRAND.colors.metalStart, fontSize: 12, marginTop: 4 },
+  form: {
+    backgroundColor: BRAND.colors.surface,
+    borderWidth: 1,
+    borderColor: BRAND.colors.border,
+    borderRadius: BRAND.radii.lg,
+    padding: 14,
+    gap: 8,
+    ...BRAND.shadows.card,
+  },
+  kicker: { color: BRAND.colors.cyberGreen, fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
+  title: { color: BRAND.colors.white, fontSize: 28, lineHeight: 28, fontWeight: '900', textTransform: 'uppercase' },
+  sub: { color: BRAND.colors.metalStart, fontSize: 13, lineHeight: 18, marginBottom: 2 },
+  label: { color: BRAND.colors.metalStart, fontSize: 11, fontWeight: '700', marginTop: 2 },
+  input: {
+    minHeight: 48,
+    backgroundColor: BRAND.colors.black,
+    borderWidth: 1,
+    borderColor: BRAND.colors.border,
+    borderRadius: BRAND.radii.md,
+    paddingHorizontal: 12,
+    color: BRAND.colors.white,
+    fontSize: 14,
+  },
   passwordWrap: { position: 'relative' },
-  passwordInput: { paddingRight: 48 },
-  eye: { position: 'absolute', right: 8, top: 6, width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  btn: { minHeight: 52, backgroundColor: BRAND.colors.cyberGreen, borderRadius: BRAND.radii.sm, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, marginTop: 4 },
+  passwordInput: { paddingRight: 44 },
+  eye: { position: 'absolute', right: 6, top: 4, width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  btn: {
+    minHeight: 50,
+    backgroundColor: BRAND.colors.cyberGreen,
+    borderRadius: BRAND.radii.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
   btnDisabled: { opacity: 0.55 },
-  btnText: { color: BRAND.colors.dark, fontWeight: '900', fontSize: 15, textTransform: 'uppercase' },
-  or: { color: BRAND.colors.muted, fontSize: 11, textAlign: 'center', marginVertical: 8, textTransform: 'uppercase' },
-  providerGrid: { gap: 10 },
-  provider: { minHeight: 48, borderRadius: BRAND.radii.md, borderWidth: 1, borderColor: BRAND.colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: BRAND.colors.dark },
-  providerText: { color: BRAND.colors.metalEnd, fontSize: 13, fontWeight: '700' },
-  registerLink: { alignItems: 'center', paddingTop: 8 },
-  registerText: { color: BRAND.colors.metalStart, fontSize: 14 },
+  btnText: { color: BRAND.colors.dark, fontWeight: '900', fontSize: 14, textTransform: 'uppercase' },
+  textLink: { alignItems: 'center', paddingTop: 4 },
+  textLinkLabel: { color: BRAND.colors.cyberGreen, fontSize: 12, fontWeight: '800' },
+  or: { color: BRAND.colors.muted, fontSize: 10, textAlign: 'center', marginTop: 2, textTransform: 'uppercase' },
+  providerRow: { flexDirection: 'row', gap: 8, marginTop: 2 },
+  registerText: { color: BRAND.colors.metalStart, fontSize: 13 },
   registerHighlight: { color: BRAND.colors.cyberGreen, fontWeight: '800' },
-  resetLink: { alignItems: 'center', paddingTop: 8 },
-  resetText: { color: BRAND.colors.cyberGreen, fontSize: 13, fontWeight: '800' },
-  resetActions: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, paddingTop: 8 },
+  resetActions: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, paddingTop: 4 },
 });

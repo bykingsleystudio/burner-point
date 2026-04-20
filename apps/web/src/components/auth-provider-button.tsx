@@ -18,16 +18,16 @@ export function AuthProviderButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`group flex min-h-11 w-full items-center gap-3 rounded-bp border border-white/10 bg-black/30 px-3.5 py-2.5 text-left text-[13px] font-semibold leading-tight text-white transition duration-[220ms] ease-out hover:border-brand-green/35 hover:bg-brand-green/[0.04] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 md:min-h-[70px] md:px-3.5 md:py-3 ${className}`}
+      className={`group flex min-h-[56px] w-full items-center gap-2.5 rounded-bp border border-white/10 bg-black/30 px-3 py-2 text-left text-[13px] font-semibold leading-tight text-white transition duration-[220ms] ease-out hover:border-brand-green/35 hover:bg-brand-green/[0.04] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 md:min-h-[70px] md:gap-3 md:px-3.5 md:py-3 ${className}`}
       aria-label={`Continue with ${provider}`}
     >
       <span className="flex items-center gap-3">
         <ProviderLogo provider={provider} />
         <span className="flex flex-col leading-none">
-          <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-white/42">
+          <span className="hidden text-[10px] font-medium uppercase tracking-[0.14em] text-white/42 md:block">
             Continue with
           </span>
-          <span className="mt-1 text-[13px] font-semibold text-white sm:text-sm">{provider}</span>
+          <span className="text-[12px] font-semibold text-white sm:text-[13px] md:mt-1 md:text-sm">{provider}</span>
         </span>
       </span>
     </button>
@@ -36,7 +36,7 @@ export function AuthProviderButton({
 
 function ProviderLogo({ provider }: { provider: ProviderName }) {
   return (
-    <span className="flex h-9 w-9 items-center justify-center rounded-bp-md border border-white/10 bg-white/[0.03]">
+    <span className="flex h-8 w-8 items-center justify-center rounded-bp-md border border-white/10 bg-white/[0.03] md:h-9 md:w-9">
       {provider === 'Google' ? <GoogleLogo /> : provider === 'Apple' ? <AppleLogo /> : <MicrosoftLogo />}
     </span>
   );
