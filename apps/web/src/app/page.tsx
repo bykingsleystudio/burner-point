@@ -284,10 +284,12 @@ export default function Home() {
           <div className="bp-reveal lg:col-span-7">
             <h1
               id="home-hero-title"
-              className="bp-headline max-w-5xl text-[2.25rem] font-black leading-[0.98] tracking-tight text-white min-[375px]:text-[2.4rem] min-[390px]:text-[2.55rem] min-[430px]:text-[2.75rem] sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl"
+              className="bp-headline max-w-5xl text-[2rem] font-black leading-[0.98] tracking-tight text-white min-[360px]:text-[2.15rem] min-[390px]:text-[2.3rem] min-[430px]:text-[2.5rem] sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl"
             >
-              <span className="block">Don&apos;t Want To Give Out Your Phone Number?</span>
-              <span className="mt-2 block text-brand-green sm:mt-3">No Problem. Use Ours.</span>
+              <span className="block">Don&apos;t Want To Give Out</span>
+              <span className="block">Your Phone Number?</span>
+              <span className="mt-2 block text-brand-green sm:mt-3">No Problem.</span>
+              <span className="block text-brand-green">Use Ours.</span>
             </h1>
 
             <div className="mt-6 max-w-4xl space-y-4">
@@ -297,7 +299,7 @@ export default function Home() {
                 </span>
                 <span className="text-brand-green">Private By Design.</span>
               </p>
-              <p className="max-w-3xl text-base leading-7 text-white/70 md:text-xl md:leading-9">
+              <p className="max-w-[15.5rem] text-base leading-7 text-white/70 min-[360px]:max-w-[17rem] min-[390px]:max-w-[19rem] min-[430px]:max-w-[21rem] md:max-w-3xl md:text-xl md:leading-9">
                 Generate secure, non-VoIP numbers instantly and stay in control of your communication anytime, anywhere.
               </p>
             </div>
@@ -307,12 +309,15 @@ export default function Home() {
                 Get Started
                 <ArrowRight className="ml-3 h-4 w-4" />
               </Link>
+              <Link href="/auth/login" className="bp-secondary-action inline-flex min-h-[52px] items-center justify-center px-8 py-4 text-sm font-semibold uppercase transition duration-[220ms] ease-out active:scale-[0.98]">
+                Sign In
+              </Link>
               <Link href="/overview" className="bp-secondary-action inline-flex min-h-[52px] items-center justify-center px-8 py-4 text-sm font-semibold uppercase transition duration-[220ms] ease-out active:scale-[0.98]">
                 Learn More
               </Link>
             </div>
 
-            <p className="mt-6 max-w-3xl font-mono text-[13px] font-semibold uppercase leading-6 tracking-wide text-brand-green md:text-sm">
+            <p className="mt-6 max-w-[15.5rem] text-[11px] font-semibold uppercase leading-5 tracking-[0.12em] text-brand-green min-[360px]:max-w-[17rem] min-[390px]:max-w-[19rem] min-[430px]:max-w-[21rem] md:max-w-3xl md:font-mono md:text-sm md:leading-6 md:tracking-[0.16em]">
               Receive SMS, Voice, and OTP verifications from 900+ platforms worldwide.
             </p>
 
@@ -422,6 +427,9 @@ export default function Home() {
           <div className="col-span-3 flex justify-end gap-3">
             <Link href="/auth/signup" className="bp-primary-action inline-flex min-h-11 items-center justify-center px-5 py-3 text-xs font-semibold uppercase">
               Get Started
+            </Link>
+            <Link href="/auth/login" className="bp-secondary-action inline-flex min-h-11 items-center justify-center px-5 py-3 text-xs font-semibold uppercase">
+              Sign In
             </Link>
             <Link href="/api/docs" className="bp-secondary-action inline-flex min-h-11 items-center justify-center px-5 py-3 text-xs font-semibold uppercase">
               API Docs

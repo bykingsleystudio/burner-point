@@ -40,7 +40,7 @@ export default function PhoneVerifyPage() {
     async function prepareApiSession() {
       try {
         const clerkToken = await getToken();
-        if (!clerkToken) throw new Error('Missing Clerk session token');
+        if (!clerkToken) throw new Error('Missing secure session token');
 
         const pendingPhone = typeof window !== 'undefined' ? sessionStorage.getItem('burnerPointPendingPhone') : null;
         const { data } = await authApi.exchangeClerkToken(clerkToken, {

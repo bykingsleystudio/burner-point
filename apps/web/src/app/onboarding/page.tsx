@@ -19,8 +19,7 @@ export default function OnboardingPage() {
     email: user?.primaryEmailAddress?.emailAddress || '',
     phoneNumber: user?.primaryPhoneNumber?.phoneNumber || '',
     country: 'NG',
-    acceptTerms: false,
-    acceptPrivacy: false,
+    acceptPolicies: false,
   });
 
   const setField = (key: keyof typeof form) => (value: string | boolean) => {
@@ -32,7 +31,7 @@ export default function OnboardingPage() {
       toast.error('First name, last name, email, and phone number are required.');
       return;
     }
-    if (!form.acceptTerms || !form.acceptPrivacy) {
+    if (!form.acceptPolicies) {
       toast.error('Accept the Terms of Service and Privacy Policy to continue.');
       return;
     }
@@ -40,8 +39,12 @@ export default function OnboardingPage() {
     setLoading(true);
     try {
       const clerkToken = await getToken();
-      if (!clerkToken) throw new Error('No Clerk session token');
-      const { data } = await authApi.exchangeClerkToken(clerkToken, form);
+      if (!clerkToken) throw new Error('No secure session token');
+      const { data } = await authApi.exchangeClerkToken(clerkToken, {
+        ...form,
+        acceptTerms: true,
+        acceptPrivacy: true,
+      });
       setApiSession(data.accessToken, data.refreshToken);
       toast.success('Profile secured.');
       if (data.user?.phoneNumber && !data.user?.phoneVerified) {
@@ -70,7 +73,7 @@ export default function OnboardingPage() {
               <span className="font-mono text-sm font-semibold uppercase tracking-[0.2em]">Burner <span className="text-brand-green">Point</span></span>
             </Link>
             <p className="mt-8 font-mono text-[11px] uppercase tracking-[0.28em] text-brand-green">Required onboarding</p>
-            <h1 className="mt-3 text-2xl font-semibold uppercase sm:text-3xl">Finish your Clerk profile</h1>
+            <h1 className="mt-3 text-2xl font-semibold uppercase sm:text-3xl">Finish your Burner Point profile</h1>
             <p className="mt-3 text-sm leading-6 text-white/52">Burner Point requires a complete local profile before telecom, billing, and support features are enabled.</p>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -88,14 +91,10 @@ export default function OnboardingPage() {
               </Field>
             </div>
 
-            <div className="mt-6 space-y-3 rounded-bp-lg border border-white/8 bg-white/[0.02] p-4">
-              <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm text-white/70">
-                <input checked={form.acceptTerms} onChange={(event) => setField('acceptTerms')(event.target.checked)} type="checkbox" className="mt-1 h-5 w-5 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
-                <span>I accept the <Link href="/terms" className="text-brand-green hover:underline">Terms of Service</Link>.</span>
-              </label>
-              <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm text-white/70">
-                <input checked={form.acceptPrivacy} onChange={(event) => setField('acceptPrivacy')(event.target.checked)} type="checkbox" className="mt-1 h-5 w-5 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
-                <span>I accept the <Link href="/privacy" className="text-brand-green hover:underline">Privacy Policy</Link>.</span>
+            <div className="mt-6 rounded-bp-lg border border-white/8 bg-white/[0.02] p-4">
+              <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm leading-6 text-white/70">
+                <input checked={form.acceptPolicies} onChange={(event) => setField('acceptPolicies')(event.target.checked)} type="checkbox" className="mt-1 h-5 w-5 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
+                <span>By continuing, you accept the <Link href="/terms" className="text-brand-green hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-brand-green hover:underline">Privacy Policy</Link>.</span>
               </label>
             </div>
 

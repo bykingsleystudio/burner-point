@@ -5,7 +5,7 @@ import { useUser } from '@clerk/nextjs';
 import { Bell, KeyRound, LockKeyhole, ShieldCheck, UserRound } from 'lucide-react';
 
 const settings = [
-  { title: 'Security and 2FA', text: 'Manage Clerk session controls, MFA, password, and trusted devices.', icon: ShieldCheck, href: '/dashboard/security' },
+  { title: 'Security and 2FA', text: 'Manage session controls, MFA, password, and trusted devices.', icon: ShieldCheck, href: '/dashboard/security' },
   { title: 'API keys', text: 'Create scoped keys and webhook destinations for developer workflows.', icon: KeyRound, href: '/dashboard/api' },
   { title: 'Notifications', text: 'OTP, rental expiration, billing, and account security alerts.', icon: Bell, href: '/dashboard/support' },
   { title: 'Privacy defaults', text: 'Keep no-logs posture, reduced exposure, and security checks top of mind.', icon: LockKeyhole, href: '/privacy' },
@@ -25,7 +25,7 @@ export default function SettingsPage() {
             <div>
               <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-brand-green">Settings and profile</p>
               <h1 className="mt-1 text-2xl font-bold">{user?.fullName || 'Burner Point user'}</h1>
-              <p className="mt-1 text-sm text-brand-muted">{user?.primaryEmailAddress?.emailAddress || 'Secure Clerk session'}</p>
+              <p className="mt-1 text-sm text-brand-muted">{user?.primaryEmailAddress?.emailAddress || 'Secure Burner Point session'}</p>
             </div>
           </div>
           <Link href="/dashboard/support" className="flex min-h-11 items-center justify-center rounded-xl border border-white/10 px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white/72 hover:border-brand-green/35 hover:text-white">

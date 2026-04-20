@@ -133,7 +133,7 @@ export default function DashboardPage() {
             </div>
             <h2 className="mt-2 text-lg font-bold">Source-of-truth infrastructure</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-brand-muted">
-              Vercel web, Railway API, Neon Postgres, Clerk auth, Expo mobile delivery, and backend-only providers for telecom, payments, eSIM, proxies, VPN, AI, analytics, and storage.
+              Vercel web, Railway API, Neon Postgres, managed authentication, Expo mobile delivery, and backend-only providers for telecom, payments, eSIM, proxies, VPN, AI, analytics, and storage.
             </p>
           </div>
           <div className="grid grid-cols-3 gap-2 text-center sm:min-w-[280px]">

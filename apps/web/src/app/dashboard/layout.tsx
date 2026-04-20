@@ -67,7 +67,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       setSessionReady(false);
       try {
         const clerkToken = await getToken();
-        if (!clerkToken) throw new Error('Missing Clerk session token');
+        if (!clerkToken) throw new Error('Missing secure session token');
         const { data } = await authApi.exchangeClerkToken(clerkToken, {
           firstName: clerkUser?.firstName,
           lastName: clerkUser?.lastName,
@@ -135,7 +135,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
       <div className="flex min-h-screen items-center justify-center bg-brand-black text-white">
         <div className="w-full max-w-md px-5">
-          <BpLoadingState label="Securing your Clerk session..." />
+          <BpLoadingState label="Securing your Burner Point session..." />
         </div>
       </div>
     );

@@ -116,11 +116,11 @@ export function SiteHeader() {
         </nav>
         <div className="hidden items-center gap-3 lg:flex">
           <Show when="signed-out">
-            <Link href="/auth/login" className="bp-secondary-action px-4 py-3 text-xs font-semibold uppercase">
-              Sign In
-            </Link>
             <Link href="/auth/signup" className="bp-primary-action px-4 py-3 text-xs font-semibold uppercase">
               Get Started
+            </Link>
+            <Link href="/auth/login" className="bp-secondary-action px-4 py-3 text-xs font-semibold uppercase">
+              Sign In
             </Link>
           </Show>
           <Show when="signed-in">
@@ -174,11 +174,11 @@ export function SiteHeader() {
             </div>
             <div className="mt-4 grid gap-2 border-t border-brand-green/25 pt-4">
               <Show when="signed-out">
-                <Link href="/auth/login" onClick={closeMobileNav} className="rounded-bp border border-white/20 bg-black px-4 py-3 text-center text-xs font-semibold uppercase text-white transition duration-[220ms] ease-out active:scale-[0.98]">
-                  Sign In
-                </Link>
                 <Link href="/auth/signup" onClick={closeMobileNav} className="rounded-bp bg-brand-green px-4 py-3 text-center text-xs font-semibold uppercase text-black transition duration-[220ms] ease-out active:scale-[0.98]">
                   Get Started
+                </Link>
+                <Link href="/auth/login" onClick={closeMobileNav} className="rounded-bp border border-white/20 bg-black px-4 py-3 text-center text-xs font-semibold uppercase text-white transition duration-[220ms] ease-out active:scale-[0.98]">
+                  Sign In
                 </Link>
               </Show>
               <Show when="signed-in">

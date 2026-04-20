@@ -10,6 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { Check, Mail } from 'lucide-react';
+import { AuthProviderButton } from '@/components/auth-provider-button';
 
 const schema = z.object({
   firstName: z.string().min(1, 'First name is required').max(50),
@@ -29,8 +30,8 @@ const FEATURES = ['Real SIM-backed numbers', 'OTP and voice verification', 'eSIM
 
 const oauthProviders = [
   { label: 'Google', strategy: 'oauth_google' },
-  { label: 'Apple iCloud', strategy: 'oauth_apple' },
-  { label: 'Microsoft Outlook', strategy: 'oauth_microsoft' },
+  { label: 'Apple', strategy: 'oauth_apple' },
+  { label: 'Microsoft', strategy: 'oauth_microsoft' },
 ] as const;
 
 type PendingVerification = 'email' | 'phone';
@@ -41,13 +42,35 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [pendingVerification, setPendingVerification] = useState<PendingVerification | null>(null);
   const [verificationCode, setVerificationCode] = useState('');
-  const isSubmitting = loading || fetchStatus === 'fetching';
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const authReady = Boolean(signUp);
+  const isSubmitting = loading || fetchStatus === 'fetching' || !authReady;
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    clearErrors,
+    formState: { errors },
+  } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { country: 'NG', acceptTerms: false, acceptPrivacy: false },
   });
+  const policyAccepted = watch('acceptTerms') && watch('acceptPrivacy');
+  const policyError = errors.acceptTerms?.message || errors.acceptPrivacy?.message;
+
+  const togglePolicies = (checked: boolean) => {
+    setValue('acceptTerms', checked, { shouldValidate: true, shouldDirty: true });
+    setValue('acceptPrivacy', checked, { shouldValidate: true, shouldDirty: true });
+    if (checked) {
+      clearErrors(['acceptTerms', 'acceptPrivacy']);
+    }
+  };
 
   const finishSignUp = async () => {
+    if (!signUp) {
+      throw new Error('Authentication is still loading.');
+    }
+
     const { error } = await signUp.finalize({
       navigate: ({ session, decorateUrl }) => {
         const destination = session?.currentTask ? '/onboarding' : '/dashboard';
@@ -66,6 +89,10 @@ export default function RegisterPage() {
   };
 
   const continueSignUpVerification = async () => {
+    if (!signUp) {
+      throw new Error('Authentication is still loading.');
+    }
+
     if (signUp.status === 'complete') {
       await finishSignUp();
       toast.success('Account created. Welcome to Burner Point.');
@@ -76,7 +103,7 @@ export default function RegisterPage() {
       const { error } = await signUp.verifications.sendEmailCode();
       if (error) throw error;
       setPendingVerification('email');
-      toast.success('Check your email for the Clerk verification code.');
+      toast.success('Check your email for the verification code.');
       return;
     }
 
@@ -84,14 +111,19 @@ export default function RegisterPage() {
       const { error } = await signUp.verifications.sendPhoneCode();
       if (error) throw error;
       setPendingVerification('phone');
-      toast.success('Check your phone for the Clerk verification code.');
+      toast.success('Check your phone for the verification code.');
       return;
     }
 
-    toast.error('Clerk needs more information before this account can be completed.');
+    toast.error('More verification is required before this account can be completed.');
   };
 
   const onSubmit = async (data: FormData) => {
+    if (!signUp) {
+      toast.error('Authentication is still loading.');
+      return;
+    }
+
     setLoading(true);
     try {
       const { error } = await signUp.create({
@@ -119,6 +151,11 @@ export default function RegisterPage() {
   };
 
   const verifyEmail = async () => {
+    if (!signUp) {
+      toast.error('Authentication is still loading.');
+      return;
+    }
+
     if (!pendingVerification || !verificationCode.trim()) return;
     setLoading(true);
     try {
@@ -141,12 +178,21 @@ export default function RegisterPage() {
   };
 
   const startOAuth = async (strategy: (typeof oauthProviders)[number]['strategy']) => {
+    if (!signUp) {
+      toast.error('Authentication is still loading.');
+      return;
+    }
+    if (!policyAccepted) {
+      toast.error('By continuing, accept the Terms of Service and Privacy Policy.');
+      return;
+    }
+
     try {
       const { error } = await signUp.sso({
         strategy,
         redirectUrl: '/onboarding',
         redirectCallbackUrl: '/sso-callback',
-        unsafeMetadata: { authSource: 'web_signup', acceptTerms: false, acceptPrivacy: false },
+        unsafeMetadata: { authSource: 'web_signup', acceptTerms: true, acceptPrivacy: true },
       });
       if (error) throw error;
     } catch (err) {
@@ -169,7 +215,7 @@ export default function RegisterPage() {
             <span className="font-mono text-lg font-semibold uppercase tracking-[0.22em]">Burner <span className="text-brand-green">Point</span></span>
           </Link>
           <h1 className="mt-10 text-5xl font-semibold uppercase leading-[0.95]">Create a private identity layer before the internet asks for your number.</h1>
-          <p className="mt-6 max-w-md text-base leading-8 text-white/58">Clerk powers account security. Burner Point still requires first name, last name, email, and phone number for account recovery and verification support.</p>
+          <p className="mt-6 max-w-md text-base leading-8 text-white/58">Burner Point keeps sign-up direct, secure, and controlled while collecting the account details needed for recovery, verification, and private communication support.</p>
           <div className="mt-8 space-y-3">
             {FEATURES.map((item) => (
               <div key={item} className="flex items-center gap-3">
@@ -184,14 +230,13 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit(onSubmit)} className="bp-card rounded-bp-lg p-4 sm:p-5 md:p-7">
           <div className="rounded-bp-lg border border-white/8 bg-black/24 p-4 sm:p-5 md:p-6">
-            <div className="mb-6 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-6">
               <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-bp-lg border border-brand-green/25 bg-brand-green/10">
                   <Image src="/assets/logo-mark.svg" alt="" width={26} height={26} />
                 </span>
                 <span className="font-mono text-sm font-semibold uppercase tracking-[0.2em]">Burner <span className="text-brand-green">Point</span></span>
               </Link>
-              <span className="rounded-full border border-brand-green/20 bg-brand-green/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">Clerk protected</span>
             </div>
 
             <h2 className="text-2xl font-semibold uppercase sm:text-3xl">Create account</h2>
@@ -201,7 +246,7 @@ export default function RegisterPage() {
               <div className="mt-6 rounded-bp-lg border border-brand-green/20 bg-brand-green/[0.04] p-4">
                 <label className="block text-sm font-medium text-white/70">
                   {pendingVerification === 'email' ? 'Email verification code' : 'Phone verification code'}
-                  <input value={verificationCode} onChange={(event) => setVerificationCode(event.target.value)} inputMode="numeric" autoComplete="one-time-code" enterKeyHint="done" placeholder="Enter Clerk code" className="auth-input mt-1.5" />
+                  <input value={verificationCode} onChange={(event) => setVerificationCode(event.target.value)} inputMode="numeric" autoComplete="one-time-code" enterKeyHint="done" placeholder="Enter verification code" className="auth-input mt-1.5" />
                 </label>
                 <button type="button" disabled={isSubmitting} onClick={verifyEmail} className="bp-button-glow mt-4 flex min-h-12 w-full items-center justify-center rounded-bp bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
                   {isSubmitting ? 'Verifying...' : 'Verify and continue'}
@@ -242,29 +287,27 @@ export default function RegisterPage() {
                   </Field>
                 </div>
 
-                <div className="mt-6 space-y-3 rounded-bp-lg border border-white/8 bg-white/[0.02] p-4">
-                  <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm text-white/70">
-                    <input type="checkbox" {...register('acceptTerms')} className="mt-1 h-5 w-5 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
+                <div className="mt-6 rounded-bp-lg border border-white/8 bg-white/[0.02] p-4">
+                  <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm leading-6 text-white/70">
+                    <input
+                      checked={policyAccepted}
+                      onChange={(event) => togglePolicies(event.target.checked)}
+                      type="checkbox"
+                      className="mt-1 h-5 w-5 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green"
+                    />
                     <span>
-                      I accept the{' '}
+                      By continuing, you accept the{' '}
                       <Link href="/terms" className="text-brand-green underline-offset-2 hover:underline">
                         Terms of Service
-                      </Link>
-                      .
-                    </span>
-                  </label>
-                  {errors.acceptTerms ? <p className="text-xs text-red-300">{errors.acceptTerms.message}</p> : null}
-                  <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm text-white/70">
-                    <input type="checkbox" {...register('acceptPrivacy')} className="mt-1 h-5 w-5 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
-                    <span>
-                      I accept the{' '}
+                      </Link>{' '}
+                      and{' '}
                       <Link href="/privacy" className="text-brand-green underline-offset-2 hover:underline">
                         Privacy Policy
                       </Link>
                       .
                     </span>
                   </label>
-                  {errors.acceptPrivacy ? <p className="text-xs text-red-300">{errors.acceptPrivacy.message}</p> : null}
+                  {policyError ? <p className="mt-2 text-xs text-red-300">{policyError}</p> : null}
                 </div>
 
                 <button type="submit" disabled={isSubmitting} className="bp-button-glow mt-5 flex min-h-12 w-full items-center justify-center rounded-bp bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
@@ -278,11 +321,9 @@ export default function RegisterPage() {
               <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/34">or continue with</span>
               <span className="h-px flex-1 bg-white/8" />
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3">
               {oauthProviders.map((provider) => (
-                <button key={provider.label} type="button" onClick={() => startOAuth(provider.strategy)} className="flex min-h-12 items-center justify-center rounded-bp border border-white/10 bg-white/[0.02] px-3 py-3 text-center text-xs font-semibold text-white/76 transition hover:border-brand-green/35 hover:text-brand-green">
-                  {provider.label}
-                </button>
+                <AuthProviderButton key={provider.label} provider={provider.label} onClick={() => startOAuth(provider.strategy)} disabled={isSubmitting} />
               ))}
             </div>
 

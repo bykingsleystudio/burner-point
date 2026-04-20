@@ -9,7 +9,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
-import { Eye, EyeOff, ShieldCheck, Zap } from 'lucide-react';
+import { Eye, EyeOff, Zap } from 'lucide-react';
+import { AuthProviderButton } from '@/components/auth-provider-button';
 
 const schema = z.object({
   identifier: z.string().min(3, 'Enter your email address or phone number'),
@@ -20,8 +21,8 @@ type FormData = z.infer<typeof schema>;
 
 const oauthProviders = [
   { label: 'Google', strategy: 'oauth_google' },
-  { label: 'Apple iCloud', strategy: 'oauth_apple' },
-  { label: 'Microsoft Outlook', strategy: 'oauth_microsoft' },
+  { label: 'Apple', strategy: 'oauth_apple' },
+  { label: 'Microsoft', strategy: 'oauth_microsoft' },
 ] as const;
 
 type SecondFactorStrategy = 'email_code' | 'phone_code' | 'totp' | 'backup_code';
@@ -40,13 +41,18 @@ export default function LoginPage() {
   const [resetCode, setResetCode] = useState('');
   const [resetPassword, setResetPassword] = useState('');
   const [resetMethod, setResetMethod] = useState<ResetPasswordMethod>('email');
-  const isSubmitting = loading || fetchStatus === 'fetching';
+  const authReady = Boolean(signIn);
+  const isSubmitting = loading || fetchStatus === 'fetching' || !authReady;
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
   const finishSignIn = async () => {
+    if (!signIn) {
+      throw new Error('Authentication is still loading.');
+    }
+
     const { error } = await signIn.finalize({
       navigate: ({ session, decorateUrl }) => {
         if (session?.currentTask) {
@@ -69,6 +75,10 @@ export default function LoginPage() {
   };
 
   const prepareSecondFactor = async () => {
+    if (!signIn) {
+      throw new Error('Authentication is still loading.');
+    }
+
     const factor = signIn.supportedSecondFactors?.[0] as { strategy?: SecondFactorStrategy } | undefined;
     const strategy = factor?.strategy ?? 'totp';
 
@@ -83,7 +93,7 @@ export default function LoginPage() {
     }
 
     setSecondFactorStrategy(strategy);
-    toast.success('Enter your Clerk 2FA code to continue.');
+    toast.success('Enter your two-factor code to continue.');
   };
 
   const completeOrContinueSignIn = async () => {
@@ -102,6 +112,11 @@ export default function LoginPage() {
   };
 
   const onSubmit = async (data: FormData) => {
+    if (!signIn) {
+      toast.error('Authentication is still loading.');
+      return;
+    }
+
     setLoading(true);
     try {
       const { error } = await signIn.password({
@@ -119,6 +134,11 @@ export default function LoginPage() {
   };
 
   const startPasswordReset = async () => {
+    if (!signIn) {
+      toast.error('Authentication is still loading.');
+      return;
+    }
+
     const identifier = resetIdentifier.trim();
     if (identifier.length < 3) {
       toast.error('Enter your account email address or phone number.');
@@ -140,7 +160,7 @@ export default function LoginPage() {
 
       setResetMethod(method);
       setAuthMode('reset-code');
-      toast.success(`Check your ${method === 'email' ? 'email' : 'phone'} for the Clerk reset code.`);
+      toast.success(`Check your ${method === 'email' ? 'email' : 'phone'} for the reset code.`);
     } catch (err) {
       toast.error(getClerkErrorMessage(err, 'Unable to send password reset code'));
     } finally {
@@ -149,6 +169,11 @@ export default function LoginPage() {
   };
 
   const verifyPasswordResetCode = async () => {
+    if (!signIn) {
+      toast.error('Authentication is still loading.');
+      return;
+    }
+
     const code = resetCode.trim();
     if (!code) return;
 
@@ -171,6 +196,11 @@ export default function LoginPage() {
   };
 
   const submitNewPassword = async () => {
+    if (!signIn) {
+      toast.error('Authentication is still loading.');
+      return;
+    }
+
     if (resetPassword.length < 8) {
       toast.error('New password must be at least 8 characters.');
       return;
@@ -204,6 +234,11 @@ export default function LoginPage() {
   };
 
   const verifySecondFactor = async () => {
+    if (!signIn) {
+      toast.error('Authentication is still loading.');
+      return;
+    }
+
     if (!secondFactorStrategy || !secondFactorCode.trim()) return;
     setLoading(true);
     try {
@@ -230,6 +265,11 @@ export default function LoginPage() {
   };
 
   const startOAuth = async (strategy: (typeof oauthProviders)[number]['strategy']) => {
+    if (!signIn) {
+      toast.error('Authentication is still loading.');
+      return;
+    }
+
     try {
       const { error } = await signIn.sso({
         strategy,
@@ -259,11 +299,8 @@ export default function LoginPage() {
                 </span>
                 <span className="font-mono text-base font-semibold uppercase tracking-[0.22em]">Burner <span className="text-brand-green">Point</span></span>
               </Link>
-              <div className="mx-auto mt-7 flex h-14 w-14 items-center justify-center rounded-bp-lg border border-brand-green/25 bg-brand-green/10">
-                <ShieldCheck className="h-7 w-7 text-brand-green" />
-              </div>
-              <h1 className="mt-5 text-2xl font-semibold uppercase sm:text-3xl">Welcome back</h1>
-              <p className="mt-2 text-sm text-white/52">Sign in with Clerk using your email address or phone number.</p>
+              <h1 className="mt-7 text-2xl font-semibold uppercase sm:text-3xl">Welcome back</h1>
+              <p className="mt-2 text-sm leading-6 text-white/52">Use your email address or phone number to access your Burner Point workspace.</p>
             </div>
 
             {authMode === 'reset-request' ? (
@@ -291,7 +328,7 @@ export default function LoginPage() {
             ) : authMode === 'reset-code' ? (
               <div className="space-y-4 rounded-bp-lg border border-brand-green/20 bg-brand-green/[0.04] p-4">
                 <label className="block text-sm font-medium text-white/70">
-                  Clerk reset code
+                  Reset code
                   <input
                     value={resetCode}
                     onChange={(event) => setResetCode(event.target.value)}
@@ -334,7 +371,7 @@ export default function LoginPage() {
             ) : secondFactorStrategy ? (
               <div className="space-y-4 rounded-bp-lg border border-brand-green/20 bg-brand-green/[0.04] p-4">
                 <label className="block text-sm font-medium text-white/70">
-                  Clerk 2FA code
+                  Two-factor code
                   <input
                     value={secondFactorCode}
                     onChange={(event) => setSecondFactorCode(event.target.value)}
@@ -401,16 +438,14 @@ export default function LoginPage() {
 
             {authMode === 'sign-in' ? (
               <>
-                <div className="my-6 flex items-center gap-3">
-                  <span className="h-px flex-1 bg-white/8" />
-                  <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/34">or continue with</span>
-                  <span className="h-px flex-1 bg-white/8" />
-                </div>
-                <div className="grid gap-3 sm:grid-cols-3">
+              <div className="my-6 flex items-center gap-3">
+                <span className="h-px flex-1 bg-white/8" />
+                <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/34">or continue with</span>
+                <span className="h-px flex-1 bg-white/8" />
+              </div>
+                <div className="grid gap-3">
                   {oauthProviders.map((provider) => (
-                    <button key={provider.label} type="button" onClick={() => startOAuth(provider.strategy)} className="flex min-h-12 items-center justify-center rounded-bp border border-white/10 bg-white/[0.02] px-3 py-3 text-center text-xs font-semibold text-white/76 transition hover:border-brand-green/35 hover:text-brand-green">
-                      {provider.label}
-                    </button>
+                    <AuthProviderButton key={provider.label} provider={provider.label} onClick={() => startOAuth(provider.strategy)} disabled={isSubmitting} />
                   ))}
                 </div>
 
