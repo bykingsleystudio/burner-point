@@ -83,28 +83,28 @@ const icons: Record<IconKey, LucideIcon> = {
 export const dashboardModules: Record<string, DashboardModuleContent> = {
   messages: {
     eyebrow: 'Conversation Inbox',
-    title: 'SMS, MMS, photos, and private message threads.',
+    title: 'SMS, secure media, and private message threads.',
     description:
-      'Keep text conversations attached to the Burner Point number that received them. The module is designed for US/Canada SMS, MMS, photo messaging, call context, and WiFi/data communication history.',
+      'Keep text conversations attached to the Burner Point number that received them. The module is designed for US/Canada SMS, secure audio, photo and video sharing, call context, and WiFi & Data communication history.',
     status: 'Threaded communication',
     primaryAction: { label: 'Open Inbox', href: '/dashboard/inbox' },
     secondaryAction: { label: 'Manage Numbers', href: '/dashboard/numbers' },
     stats: [
       { label: 'Media', value: 'MMS' },
-      { label: 'Photos', value: 'Private' },
+      { label: 'Media', value: 'Private' },
       { label: 'Region', value: 'US/CA' },
     ],
     cards: [
       { icon: 'message', title: 'Threaded SMS', text: 'Read inbound and outbound messages by number, contact, service, and delivery status.', meta: 'Text' },
-      { icon: 'image', title: 'MMS and Photos', text: 'Attach protected media metadata to each conversation without public upload exposure.', meta: 'Media' },
+      { icon: 'image', title: 'Audio, Photo and Video', text: 'Attach protected media metadata to each conversation without public upload exposure.', meta: 'Media' },
       { icon: 'phone', title: 'Voice Context', text: 'Connect call activity and voicemail to the same communication timeline.', meta: 'Calls' },
     ],
-    workflow: ['Select a conversation number', 'Open the active contact or service thread', 'Send or receive SMS, MMS, and photos', 'Preserve delivery, spam, and OTP context'],
-    note: 'Messaging, MMS, photo storage, and provider callbacks must be normalized by the backend before anything reaches the client. Twilio secrets stay server-side.',
+    workflow: ['Select a conversation number', 'Open the active contact or service thread', 'Send or receive SMS plus audio, photo and video', 'Preserve delivery, spam, and OTP context'],
+    note: 'Messaging, audio, photo and video storage, and provider callbacks must be normalized by the backend before anything reaches the client. Twilio secrets stay server-side.',
   },
   calls: {
     eyebrow: 'US/Canada Conversation',
-    title: 'Private calls over WiFi and mobile data.',
+    title: 'Private calls over WiFi & Data.',
     description:
       'Run voice conversations from a Burner Point number without exposing your personal line. Calls are designed for US and Canada conversation numbers with voicemail and activity history.',
     status: 'Conversation infrastructure',
@@ -112,12 +112,12 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
     secondaryAction: { label: 'Manage Numbers', href: '/dashboard/numbers' },
     stats: [
       { label: 'Region', value: 'US/CA' },
-      { label: 'Transport', value: 'WiFi/Data' },
+      { label: 'Transport', value: 'WiFi & Data' },
       { label: 'Identity', value: 'Separated' },
     ],
     cards: [
       { icon: 'phone', title: 'Call Routing', text: 'Route inbound and outbound voice through assigned conversation numbers.', meta: 'Voice' },
-      { icon: 'wifi', title: 'No Roaming Exposure', text: 'Use WiFi or cellular data so private communication stays portable.', meta: 'Data' },
+      { icon: 'wifi', title: 'No Roaming Exposure', text: 'Use WiFi & Data so private communication stays portable.', meta: 'Data' },
       { icon: 'shield', title: 'Number Separation', text: 'Keep business, marketplace, dating, and travel calls away from your real number.', meta: 'Privacy' },
     ],
     workflow: ['Select an active US/CA conversation number', 'Choose or enter a contact', 'Start the call over data', 'Store call activity and voicemail status'],

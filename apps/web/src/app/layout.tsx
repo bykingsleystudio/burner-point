@@ -1,16 +1,20 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { ClerkProvider } from '@clerk/nextjs';
-import { Space_Grotesk, DM_Mono } from 'next/font/google';
+import { Inter, DM_Mono } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
 import { BRAND } from '@/lib/brand';
+import {
+  baseStructuredData,
+  buildMetadata,
+  siteDescription,
+  siteName,
+  siteUrl,
+} from '@/lib/seo';
 import './globals.css';
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://burnerpoint.vercel.app';
-
-const spaceGrotesk = Space_Grotesk({
+const inter = Inter({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
   variable: '--font-sans',
   display: 'swap',
 });
@@ -22,12 +26,29 @@ const dmMono = DM_Mono({
   display: 'swap',
 });
 
+const verification: NonNullable<Metadata['verification']> = {
+  ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
+  ...(process.env.BING_SITE_VERIFICATION ? { other: { 'msvalidate.01': process.env.BING_SITE_VERIFICATION } } : {}),
+};
+
 export const metadata: Metadata = {
+  ...buildMetadata({
+    route: '/',
+    title: 'Private by Design. Stay Anonymous. Stay Connected.',
+    description: siteDescription,
+  }),
   metadataBase: new URL(siteUrl),
-  title: 'Burner Point - Private by Design',
-  description: 'Privacy-first phone numbers, OTP verification, rentals, eSIM, proxies, and secure communication tools.',
-  applicationName: 'Burner Point',
+  title: {
+    default: `${siteName} - Private by Design`,
+    template: `%s | ${siteName}`,
+  },
+  applicationName: siteName,
   manifest: '/manifest.webmanifest',
+  authors: [{ name: siteName, url: siteUrl }],
+  creator: siteName,
+  publisher: siteName,
+  category: 'Communication',
+  verification,
   icons: {
     icon: [
       { url: '/icon.svg', type: 'image/svg+xml' },
@@ -36,44 +57,14 @@ export const metadata: Metadata = {
     shortcut: '/icon.svg',
     apple: '/icon.svg',
   },
-  openGraph: {
-    title: 'Burner Point - Private by Design',
-    description: 'Private phone numbers, OTP verification, rentals, eSIM, proxies, and secure communication infrastructure.',
-    url: siteUrl,
-    siteName: 'Burner Point',
-    type: 'website',
-    images: [{ url: '/assets/logo.svg', width: 1200, height: 630, alt: 'Burner Point' }],
+  appleWebApp: {
+    capable: true,
+    title: siteName,
+    statusBarStyle: 'black-translucent',
   },
-  twitter: {
-    card: 'summary',
-    title: 'Burner Point - Private by Design',
-    description: 'Stay anonymous and connected with private numbers, OTP verification, rentals, and secure communication tools.',
+  formatDetection: {
+    telephone: false,
   },
-};
-
-const organizationJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Organization',
-  name: 'Burner Point',
-  url: siteUrl,
-  logo: `${siteUrl}/assets/logo.svg`,
-  sameAs: [
-    'https://www.instagram.com/burnerpoint.app',
-    'https://www.facebook.com/burnerpoint.app',
-    'https://www.linkedin.com/company/burnerpointapp',
-    'https://www.tiktok.com/@burnerpointapp',
-    'https://x.com/burnerpointapp',
-    'https://t.me/burnerpointapp',
-    'https://www.youtube.com/@burnerpointapp',
-  ],
-  contactPoint: [
-    {
-      '@type': 'ContactPoint',
-      email: 'info.burnerpoint@gmail.com',
-      contactType: 'customer support',
-      url: `${siteUrl}/contact`,
-    },
-  ],
 };
 
 export const viewport: Viewport = {
@@ -82,13 +73,13 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${spaceGrotesk.variable} ${dmMono.variable}`}>
+    <html lang="en" className={`${inter.variable} ${dmMono.variable}`}>
       <body className="min-h-screen bg-brand-black font-sans antialiased text-white">
         <ClerkProvider>
           <script
             type="application/ld+json"
             suppressHydrationWarning
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(baseStructuredData()) }}
           />
           {children}
           <Toaster

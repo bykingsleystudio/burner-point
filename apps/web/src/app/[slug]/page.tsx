@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { MarketingPage } from '@/components/marketing';
 import { getMarketingPage, marketingPages } from '@/lib/marketing-data';
+import { buildMarketingMetadata, pageStructuredData } from '@/lib/seo';
 
 type PublicPageParams = Promise<{ slug: string }>;
 
@@ -14,30 +15,21 @@ export async function generateMetadata({ params }: { params: PublicPageParams })
   const { slug } = await params;
   const page = getMarketingPage(slug);
   if (!page) return {};
-  return {
-    title: `${page.title} | Burner Point`,
-    description: page.description,
-    alternates: {
-      canonical: `/${slug}`,
-    },
-    openGraph: {
-      title: `${page.title} | Burner Point`,
-      description: page.description,
-      url: `/${slug}`,
-      siteName: 'Burner Point',
-      type: 'website',
-    },
-    twitter: {
-      card: 'summary',
-      title: `${page.title} | Burner Point`,
-      description: page.description,
-    },
-  };
+  return buildMarketingMetadata(page);
 }
 
 export default async function PublicPage({ params }: { params: PublicPageParams }) {
   const { slug } = await params;
   const page = getMarketingPage(slug);
   if (!page || page.slug === 'api' || page.slug === 'api-docs') notFound();
-  return <MarketingPage page={page} />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(pageStructuredData(page)) }}
+      />
+      <MarketingPage page={page} />
+    </>
+  );
 }

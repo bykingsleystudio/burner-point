@@ -69,7 +69,7 @@ export default function ContactsPage() {
               Private address book.
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-brand-muted">
-              Save aliases, assign routes, and keep calls, SMS, MMS, photos, and voicemail tied to the burner number you choose.
+              Save aliases, assign routes, and keep calls, SMS, secure audio, photo and video sharing, and voicemail tied to the burner number you choose.
             </p>
           </div>
           <button
@@ -152,7 +152,7 @@ export default function ContactsPage() {
           <ShieldCheck className="h-6 w-6 text-brand-green" />
           <h2 className="mt-4 text-sm font-semibold uppercase tracking-[0.14em] text-white">Implementation Direction</h2>
           <div className="mt-4 space-y-3 text-sm leading-6 text-white/64">
-            <p>Contacts should store aliases first, with legal names optional. Each contact can be assigned a preferred Burner Point number for calls, SMS, MMS, photos, and voicemail.</p>
+            <p>Contacts should store aliases first, with legal names optional. Each contact can be assigned a preferred Burner Point number for calls, SMS, secure audio, photo and video sharing, and voicemail.</p>
             <p>Production backend should add contacts, contact notes, route preference, blocked state, last activity, and audit events before enabling sync across web and mobile.</p>
           </div>
         </aside>

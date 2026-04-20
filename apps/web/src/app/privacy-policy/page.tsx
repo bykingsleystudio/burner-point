@@ -1,12 +1,20 @@
 import { MarketingPage } from '@/components/marketing';
 import { marketingPages } from '@/lib/marketing-data';
+import { buildMarketingMetadata, pageStructuredData } from '@/lib/seo';
 
-export const metadata = {
-  title: 'Privacy Policy | Burner Point',
-  description: marketingPages.privacy.description,
-  alternates: { canonical: '/privacy-policy' },
-};
+const page = { ...marketingPages.privacy, slug: 'privacy-policy' };
+
+export const metadata = buildMarketingMetadata(page, '/privacy-policy');
 
 export default function PrivacyPolicyPage() {
-  return <MarketingPage page={{ ...marketingPages.privacy, slug: 'privacy-policy' }} />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(pageStructuredData(page, '/privacy-policy')) }}
+      />
+      <MarketingPage page={page} />
+    </>
+  );
 }

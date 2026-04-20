@@ -23,7 +23,7 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['Neue Haas Grotesk Display', 'Space Grotesk', 'system-ui', 'sans-serif'],
+        sans: ['Neue Haas Grotesk Display', 'Inter', 'system-ui', 'sans-serif'],
         mono: ['DM Mono', 'monospace'],
       },
       borderRadius: {

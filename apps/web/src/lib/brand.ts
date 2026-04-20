@@ -16,7 +16,7 @@ export const burnerPointBrand = {
   },
   typography: {
     primary: 'Neue Haas Grotesk Display',
-    fallback: 'Space Grotesk',
+    fallback: 'Inter',
     mono: 'DM Mono',
     headlineWeight: 900,
     labelWeight: 600,

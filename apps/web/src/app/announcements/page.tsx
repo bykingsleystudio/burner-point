@@ -1,12 +1,20 @@
 import { MarketingPage } from '@/components/marketing';
 import { marketingPages } from '@/lib/marketing-data';
+import { buildMarketingMetadata, pageStructuredData } from '@/lib/seo';
 
-export const metadata = {
-  title: 'Announcements | Burner Point',
-  description: marketingPages.updates.description,
-  alternates: { canonical: '/announcements' },
-};
+const page = { ...marketingPages.updates, slug: 'announcements', eyebrow: 'Announcements' };
+
+export const metadata = buildMarketingMetadata(page, '/announcements');
 
 export default function AnnouncementsPage() {
-  return <MarketingPage page={{ ...marketingPages.updates, slug: 'announcements', eyebrow: 'Announcements' }} />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(pageStructuredData(page, '/announcements')) }}
+      />
+      <MarketingPage page={page} />
+    </>
+  );
 }

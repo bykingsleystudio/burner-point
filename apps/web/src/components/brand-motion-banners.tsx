@@ -9,16 +9,20 @@ import {
   Smartphone,
   type LucideIcon,
 } from 'lucide-react';
+import { getAllIsoAlpha2Sorted, isoToFlagEmoji } from '@/lib/iso-countries';
+import { TRUSTED_PLATFORMS } from '@/lib/trusted-platforms';
 
-const COVERAGE = [
-  { iso: 'US', flag: '🇺🇸', mot: 'bp-flag-mot-0' },
-  { iso: 'CA', flag: '🇨🇦', mot: 'bp-flag-mot-1' },
-  { iso: 'GB', flag: '🇬🇧', mot: 'bp-flag-mot-2' },
-  { iso: 'DE', flag: '🇩🇪', mot: 'bp-flag-mot-3' },
-  { iso: 'FR', flag: '🇫🇷', mot: 'bp-flag-mot-4' },
-  { iso: 'AU', flag: '🇦🇺', mot: 'bp-flag-mot-5' },
-  { iso: 'JP', flag: '🇯🇵', mot: 'bp-flag-mot-6' },
-  { iso: 'BR', flag: '🇧🇷', mot: 'bp-flag-mot-7' },
+const ALL_ISO_CODES = getAllIsoAlpha2Sorted();
+
+const FLAG_MOT = [
+  'bp-flag-mot-0',
+  'bp-flag-mot-1',
+  'bp-flag-mot-2',
+  'bp-flag-mot-3',
+  'bp-flag-mot-4',
+  'bp-flag-mot-5',
+  'bp-flag-mot-6',
+  'bp-flag-mot-7',
 ] as const;
 
 const SERVICES: Array<{ href: string; label: string; Icon: LucideIcon; mot: string }> = [
@@ -36,17 +40,50 @@ function CoverageStrip() {
     <>
       {[0, 1].map((ring) => (
         <div key={ring} className="flex shrink-0 items-center">
-          {COVERAGE.map((c) => (
-            <div
-              key={`${c.iso}-${ring}`}
-              className="mx-3 inline-flex shrink-0 items-center gap-2.5 rounded-bp-md border border-brand-green/30 bg-[#010806] px-4 py-2.5 shadow-[inset_0_1px_0_rgba(0,255,157,0.12),0_8px_28px_rgba(0,0,0,0.45)]"
-            >
-              <span className={`select-none text-2xl leading-none ${c.mot}`} aria-hidden="true">
-                {c.flag}
-              </span>
-              <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-white/92">{c.iso}</span>
-            </div>
-          ))}
+          {ALL_ISO_CODES.map((iso, i) => {
+            const mot = FLAG_MOT[i % FLAG_MOT.length];
+            const flag = isoToFlagEmoji(iso);
+            return (
+              <div
+                key={`${iso}-${ring}`}
+                className="mx-2 inline-flex shrink-0 items-center gap-2 rounded-bp-md border border-brand-green/28 bg-[#010806] px-3 py-2 shadow-[inset_0_1px_0_rgba(0,255,157,0.1),0_6px_22px_rgba(0,0,0,0.4)] sm:mx-3 sm:px-4 sm:py-2.5"
+              >
+                <span className={`select-none text-xl leading-none sm:text-2xl ${mot}`} aria-hidden="true">
+                  {flag}
+                </span>
+                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white/90 sm:text-[11px]">
+                  {iso}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </>
+  );
+}
+
+function TrustedPlatformsStrip() {
+  return (
+    <>
+      {[0, 1].map((ring) => (
+        <div key={ring} className="flex shrink-0 items-center">
+          {TRUSTED_PLATFORMS.map((p) => {
+            const Icon = p.Icon;
+            return (
+              <div
+                key={`${p.label}-${ring}`}
+                className={`mx-2 inline-flex shrink-0 items-center gap-3 rounded-bp-md border border-white/14 bg-[linear-gradient(155deg,rgba(57,255,20,0.06),rgba(0,0,0,0.94))] px-3 py-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.55)] sm:mx-3 sm:px-4 sm:py-3 ${p.mot}`}
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-bp border border-white/12 bg-black/50 sm:h-10 sm:w-10">
+                  <Icon className="h-5 w-5 text-white/88 sm:h-6 sm:w-6" aria-hidden="true" />
+                </span>
+                <span className="max-w-[7rem] font-mono text-[9px] font-semibold uppercase leading-tight tracking-[0.12em] text-white/78 sm:max-w-none sm:text-[10px] sm:tracking-[0.14em]">
+                  {p.label}
+                </span>
+              </div>
+            );
+          })}
         </div>
       ))}
     </>
@@ -86,12 +123,35 @@ export function BrandMotionBanners() {
         <h2 id="bp-coverage-marquee" className="sr-only">
           Supported country regions
         </h2>
-        <p className="mb-5 text-center font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-brand-green">
+        <p className="mb-2 text-center font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-brand-green">
           Global coverage
         </p>
-        <div className="relative overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_6%,black_94%,transparent)]">
+        <p className="mb-5 text-center text-[11px] text-white/38">
+          {ALL_ISO_CODES.length}+ ISO regions · flag emoji where supported by your device
+        </p>
+        <div className="relative overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_5%,black_95%,transparent)]">
           <div className="bp-coverage-marquee flex w-max">
             <CoverageStrip />
+          </div>
+        </div>
+      </section>
+
+      <section
+        aria-labelledby="bp-trusted-marquee"
+        className="overflow-hidden border-t border-brand-green/22 bg-[linear-gradient(180deg,#000000,#01140d)] py-8 md:py-10"
+      >
+        <h2 id="bp-trusted-marquee" className="sr-only">
+          Representative third-party platforms
+        </h2>
+        <p className="mb-2 text-center font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-[#39FF14]/90">
+          Trusted platforms
+        </p>
+        <p className="mb-5 max-w-2xl mx-auto px-4 text-center text-[11px] leading-relaxed text-white/36">
+          Logos are identifiers only (react-icons: Simple Icons and Font Awesome glyphs). Trademarks belong to their owners. Not affiliated with or endorsed by these services.
+        </p>
+        <div className="relative overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_5%,black_95%,transparent)]">
+          <div className="bp-trusted-marquee flex w-max">
+            <TrustedPlatformsStrip />
           </div>
         </div>
       </section>

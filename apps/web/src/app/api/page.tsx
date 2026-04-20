@@ -1,21 +1,20 @@
 import { MarketingPage } from '@/components/marketing';
 import { getMarketingPage } from '@/lib/marketing-data';
+import { buildMarketingMetadata, pageStructuredData } from '@/lib/seo';
 
-export const metadata = {
-  title: 'Developer API | Burner Point',
-  description: 'Developer API for Burner Point verification and communication workflows.',
-  alternates: {
-    canonical: '/api',
-  },
-  openGraph: {
-    title: 'Developer API | Burner Point',
-    description: 'Developer API for Burner Point verification and communication workflows.',
-    url: '/api',
-    siteName: 'Burner Point',
-    type: 'website',
-  },
-};
+const page = getMarketingPage('api')!;
+
+export const metadata = buildMarketingMetadata(page, '/api');
 
 export default function ApiPage() {
-  return <MarketingPage page={getMarketingPage('api')!} />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(pageStructuredData(page, '/api')) }}
+      />
+      <MarketingPage page={page} />
+    </>
+  );
 }
