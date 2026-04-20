@@ -3,7 +3,7 @@
 import { Show, UserButton } from '@clerk/nextjs';
 import Image from 'next/image';
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
 import {
   ArrowRight,
   Bell,
@@ -13,6 +13,7 @@ import {
   Check,
   Code2,
   CreditCard,
+  X,
   FileText,
   Globe2,
   HelpCircle,
@@ -91,7 +92,17 @@ function MenuIcon() {
   );
 }
 
+function CloseIcon() {
+  return <X className="h-5 w-5" aria-hidden="true" />;
+}
+
 export function SiteHeader() {
+  const mobileNavRef = useRef<HTMLDetailsElement>(null);
+  const closeMobileNav = () => {
+    const el = mobileNavRef.current;
+    if (el) el.open = false;
+  };
+
   return (
     <header className="sticky top-0 z-50 border-b border-brand-border/80 bg-brand-black/88 shadow-[0_18px_70px_rgba(0,0,0,0.34)] backdrop-blur-xl">
       <div className="mx-auto flex min-h-20 max-w-[1680px] items-center justify-between gap-4 px-5 sm:px-6 xl:px-10 2xl:min-h-24">
@@ -122,43 +133,63 @@ export function SiteHeader() {
             View API Docs
           </Link>
         </div>
-        <details className="group relative z-[70] lg:hidden [&_summary::-webkit-details-marker]:hidden">
-          <summary aria-label="Open navigation menu" className="flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center rounded-bp-md border border-white/16 bg-black/95 text-white shadow-[0_12px_34px_rgba(0,0,0,0.45)] transition hover:border-brand-green/45 hover:text-brand-green">
+        <details ref={mobileNavRef} className="group relative z-[130] lg:hidden [&_summary::-webkit-details-marker]:hidden">
+          <summary aria-label="Open navigation menu" className="relative z-[135] flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center rounded-bp-md border border-white/16 bg-black text-white shadow-[0_12px_34px_rgba(0,0,0,0.45)] transition duration-[220ms] ease-out hover:border-brand-green/45 hover:text-brand-green active:scale-[0.98]">
             <span className="sr-only">Toggle navigation</span>
-            <MenuIcon />
+            <span className="group-open:hidden"><MenuIcon /></span>
+            <span className="hidden group-open:flex"><CloseIcon /></span>
           </summary>
-          <div role="navigation" aria-label="Mobile primary navigation" className="fixed inset-x-3 top-20 z-[80] max-h-[calc(100vh-6rem)] overflow-y-auto rounded-bp-lg border border-brand-green/25 bg-[#000000]/98 p-4 text-white shadow-[0_28px_90px_rgba(0,0,0,0.72)] backdrop-blur-md supports-[backdrop-filter]:bg-[#013220]/95">
-            <div className="mb-4 flex items-center justify-between border-b border-brand-green/20 pb-3">
+          <div
+            className="fixed inset-0 z-[125] bg-[rgba(0,0,0,0.92)] backdrop-blur-[3px] transition-opacity duration-[220ms] ease-out"
+            aria-hidden="true"
+            onClick={closeMobileNav}
+          />
+          <div
+            role="navigation"
+            aria-label="Mobile primary navigation"
+            className="fixed inset-x-0 top-[4.75rem] z-[140] mx-3 max-h-[min(32rem,calc(100vh-5.5rem))] overflow-y-auto overscroll-contain rounded-bp-lg border border-brand-green/40 bg-[#013220] p-5 text-white shadow-[0_32px_100px_rgba(0,0,0,0.92)] ring-2 ring-black/80 transition duration-[220ms] ease-out"
+          >
+            <div className="mb-4 flex items-center justify-between border-b border-brand-green/25 pb-4">
               <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-green">Menu</p>
-              <span className="rounded-bp border border-brand-green/30 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-white/86">
-                Tap menu icon to close
-              </span>
+              <button
+                type="button"
+                onClick={closeMobileNav}
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-bp-md border border-brand-green/40 bg-black text-brand-green shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition duration-[220ms] ease-out hover:border-brand-green hover:bg-brand-green/10 active:scale-[0.98]"
+                aria-label="Close menu"
+              >
+                <X className="h-5 w-5" aria-hidden="true" />
+              </button>
             </div>
             <div className="grid grid-cols-1 gap-2">
               {primaryNav.map((item) => (
-                <Link key={item.href} href={item.href} className="flex min-h-12 items-center rounded-bp border border-white/10 bg-black/25 px-4 py-3 text-sm font-semibold text-white/88 transition hover:bg-brand-green/14 hover:text-brand-green">
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={closeMobileNav}
+                  className="flex min-h-12 items-center rounded-bp border border-white/14 bg-black px-4 py-3 text-sm font-semibold text-white transition duration-[220ms] ease-out hover:border-brand-green/35 hover:bg-[#011a12] hover:text-brand-green active:scale-[0.98]"
+                >
                   {item.label}
                 </Link>
               ))}
             </div>
-            <div className="mt-4 grid gap-2 border-t border-brand-green/20 pt-4">
+            <div className="mt-4 grid gap-2 border-t border-brand-green/25 pt-4">
               <Show when="signed-out">
-                <Link href="/auth/login" className="rounded-bp border border-white/18 bg-black/30 px-4 py-3 text-center text-xs font-semibold uppercase text-white">
+                <Link href="/auth/login" onClick={closeMobileNav} className="rounded-bp border border-white/20 bg-black px-4 py-3 text-center text-xs font-semibold uppercase text-white transition duration-[220ms] ease-out active:scale-[0.98]">
                   Sign In
                 </Link>
-                <Link href="/auth/signup" className="rounded-bp bg-brand-green px-4 py-3 text-center text-xs font-semibold uppercase text-black">
+                <Link href="/auth/signup" onClick={closeMobileNav} className="rounded-bp bg-brand-green px-4 py-3 text-center text-xs font-semibold uppercase text-black transition duration-[220ms] ease-out active:scale-[0.98]">
                   Get Started
                 </Link>
               </Show>
               <Show when="signed-in">
-                <Link href="/dashboard" className="rounded-bp border border-white/18 bg-black/30 px-4 py-3 text-center text-xs font-semibold uppercase text-white">
+                <Link href="/dashboard" onClick={closeMobileNav} className="rounded-bp border border-white/20 bg-black px-4 py-3 text-center text-xs font-semibold uppercase text-white transition duration-[220ms] ease-out active:scale-[0.98]">
                   Dashboard
                 </Link>
-                <div className="flex justify-center rounded-bp border border-white/18 bg-black/30 px-4 py-3">
+                <div className="flex justify-center rounded-bp border border-white/20 bg-black px-4 py-3">
                   <UserButton />
                 </div>
               </Show>
-              <Link href="/api/docs" className="rounded-bp border border-brand-green/30 bg-brand-green/10 px-4 py-3 text-center text-xs font-semibold uppercase text-brand-green">View API Docs</Link>
+              <Link href="/api/docs" onClick={closeMobileNav} className="rounded-bp border border-brand-green/40 bg-black px-4 py-3 text-center text-xs font-semibold uppercase text-brand-green transition duration-[220ms] ease-out active:scale-[0.98]">View API Docs</Link>
             </div>
           </div>
         </details>

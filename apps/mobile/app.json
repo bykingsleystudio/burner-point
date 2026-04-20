@@ -28,6 +28,10 @@
         "android.permission.USE_BIOMETRIC",
         "android.permission.USE_FINGERPRINT",
         "android.permission.POST_NOTIFICATIONS",
+        "android.permission.VIBRATE",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.POST_NOTIFICATIONS",
         "android.permission.VIBRATE"
       ]
     },
@@ -51,6 +55,12 @@
         "projectId": "2e0ee5c3-8079-4602-b7ee-70226843af8b"
       }
     },
-    "owner": "bykingsleystudio"
+    "owner": "bykingsleystudio",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/2e0ee5c3-8079-4602-b7ee-70226843af8b"
+    }
   }
 }

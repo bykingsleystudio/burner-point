@@ -16,12 +16,45 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { BulletList, Eyebrow, MarketingShell } from '@/components/marketing';
+import { buildMetadata, siteName, siteTagline, siteUrl } from '@/lib/seo';
+
+export const metadata = buildMetadata({
+  route: '/',
+  title: siteTagline,
+  description: 'Generate secure, non-VoIP numbers instantly and stay in control of your communication anytime, anywhere.',
+});
+
+const homeStructuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: `${siteName} - ${siteTagline}`,
+    description: 'Generate secure, non-VoIP numbers instantly and stay in control of your communication anytime, anywhere.',
+    url: siteUrl,
+    isPartOf: {
+      '@type': 'WebSite',
+      name: siteName,
+      url: siteUrl,
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Burner Point core products',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Phone Number Rentals and Verifications', url: `${siteUrl}/verifications` },
+      { '@type': 'ListItem', position: 2, name: 'eSIM Purchase', url: `${siteUrl}/esim` },
+      { '@type': 'ListItem', position: 3, name: 'Proxies Purchase', url: `${siteUrl}/proxies` },
+      { '@type': 'ListItem', position: 4, name: 'VPN Privacy and Protection', url: `${siteUrl}/security` },
+    ],
+  },
+];
 
 const heroProof = [
-  ['900+', 'platforms worldwide'],
+  ['900+', 'Platforms worldwide'],
   ['SMS', 'OTP and messages'],
-  ['Voice', 'call verification'],
-  ['WiFi/Data', 'private conversations'],
+  ['Voice', 'Call verification'],
+  ['WiFi & Data', 'Private communication'],
 ];
 
 const howSteps = [
@@ -37,7 +70,7 @@ const whyBurnerPoint = [
   'Fast, reliable verification delivery',
   'Full privacy with no personal exposure',
   'Built for global access and flexibility',
-  'Communication via WiFi or cellular data',
+  'Communication via WiFi & Data',
 ];
 
 const offerCards: Array<{ icon: LucideIcon; title: string; text: string; href: string; cta: string; items: string[] }> = [
@@ -67,11 +100,11 @@ const offerCards: Array<{ icon: LucideIcon; title: string; text: string; href: s
   },
   {
     icon: MessageSquare,
-    title: 'Private Conversation',
-    text: 'Calls, voicemail, text, SMS, MMS, and audio, photo and video sharing for US and Canada numbers.',
+    title: 'Private Communication',
+    text: 'Calls, voicemail, texting, SMS, and secure audio, photo and video sharing for U.S. and Canada numbers.',
     href: '/rentals',
     cta: 'Rent A Number',
-    items: ['Free texting', 'MMS and photos', 'WiFi and data calling'],
+    items: ['Free texting', 'Audio, photo and video support', 'WiFi & Data calling'],
   },
 ];
 
@@ -108,11 +141,11 @@ const pricing = [
 const conversationItems = [
   'Phone numbers for non-renewable and renewable rentals',
   'Free texting',
-  'WiFi / data calling',
-  'SMS / MMS / calls / voicemail',
+  'WiFi & Data calling',
+  'Texting, SMS, MMS, calls, and voicemail',
   'No roaming fees',
   'Cross-platform access',
-  'Calls / voicemail / text / SMS / MMS / audio, photo and video sharing for USA and Canada',
+  'Calls, voicemail, texting, SMS, and secure audio, photo and video sharing for U.S. and Canada numbers',
 ];
 
 const useCases = [
@@ -139,7 +172,7 @@ const expandedFeatures: Array<{
     eyebrow: 'Phone Number Rentals & Verifications',
     title: 'Secure access to real mobile numbers for verification and private communication.',
     text:
-      'Use Burner Point for SMS, OTP, voice verification, short-term rentals, long-term rentals, and US/Canada conversation numbers with calls, voicemail, text, SMS, MMS, and audio, photo and video sharing.',
+      'Use Burner Point for SMS, OTP, voice verification, short-term rentals, long-term rentals, and US/Canada conversation numbers with calls, voicemail, texting, SMS, and secure audio, photo and video sharing for U.S. and Canada numbers.',
     icon: Phone,
     primaryCta: { label: 'Get Verification', href: '/verifications' },
     secondaryCta: { label: 'Rent A Number', href: '/rentals' },
@@ -150,7 +183,7 @@ const expandedFeatures: Array<{
     ],
     items: [
       'Real mobile numbers backed by SIM inventory',
-      'Calls, voicemail, text, SMS, MMS, and audio, photo and video sharing for USA and Canada',
+      'Calls, voicemail, texting, SMS, and secure audio, photo and video sharing for U.S. and Canada numbers',
       'Short-term rentals, long-term rentals, and multi-country number access',
       'Verification workflows for online registrations, social platforms, marketplaces, and recovery',
     ],
@@ -237,57 +270,61 @@ const sectionAnchors = [
 
 export default function Home() {
   return (
-    <MarketingShell>
+    <>
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(homeStructuredData) }}
+      />
+      <MarketingShell>
       <section id="top" className="relative scroll-mt-28 overflow-hidden" aria-labelledby="home-hero-title">
         <div className="bp-hero-fx" />
-        <div className="mx-auto grid max-w-[1680px] gap-8 px-5 pb-12 pt-10 sm:px-6 md:gap-12 md:pb-20 md:pt-20 lg:grid-cols-12 lg:items-center xl:px-10 2xl:gap-16 2xl:pb-28 2xl:pt-24">
+        <div className="mx-auto grid max-w-[1680px] gap-6 px-5 py-6 sm:px-6 md:gap-12 md:pb-20 md:pt-20 lg:grid-cols-12 lg:items-center lg:gap-8 xl:px-10 2xl:gap-16 2xl:pb-28 2xl:pt-24">
           <div className="bp-reveal lg:col-span-7">
-            <div className="mb-6 flex flex-wrap items-center gap-3">
-              <span className="bp-privacy-stamp bp-label inline-flex rounded-bp border border-brand-green/30 bg-brand-green/10 px-5 py-2 font-mono text-[10px] text-brand-green">
-                Private by Design
-              </span>
-              <span className="bp-label rounded-bp border border-white/10 bg-white/[0.03] px-4 py-2 font-mono text-[10px] text-white/54">
-                Real SIM Numbers
-              </span>
-            </div>
-
-            <h1 id="home-hero-title" className="bp-headline mt-2 max-w-5xl text-4xl font-black leading-[0.95] text-white sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl">
-              Don&apos;t Want To Give Out Your Phone Number?
-              <span className="mt-2 block text-brand-green">No Problem. Use Ours.</span>
+            <h1
+              id="home-hero-title"
+              className="bp-headline max-w-5xl text-[2.25rem] font-black leading-[0.98] tracking-tight text-white min-[375px]:text-[2.4rem] min-[390px]:text-[2.55rem] min-[430px]:text-[2.75rem] sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl"
+            >
+              <span className="block">Don&apos;t Want To Give Out Your Phone Number?</span>
+              <span className="mt-2 block text-brand-green sm:mt-3">No Problem. Use Ours.</span>
             </h1>
 
-            <div className="mt-7 max-w-4xl space-y-4">
-              <p className="font-mono text-sm font-semibold uppercase tracking-[0.08em] text-white/72 md:text-base">
-                Private by Design. <span className="text-brand-green">Stay Anonymous. Stay Connected.</span>
+            <div className="mt-6 max-w-4xl space-y-4">
+              <p className="text-[17px] font-medium leading-7 tracking-normal text-white md:text-xl md:leading-8">
+                <span className="block sm:inline">
+                  Stay Anonymous. Stay Connected.{' '}
+                </span>
+                <span className="text-brand-green">Private By Design.</span>
               </p>
-              <p className="max-w-3xl text-base leading-8 text-white/68 md:text-xl md:leading-9">
+              <p className="max-w-3xl text-base leading-7 text-white/70 md:text-xl md:leading-9">
                 Generate secure, non-VoIP numbers instantly and stay in control of your communication anytime, anywhere.
               </p>
-              <p className="font-mono text-sm uppercase text-brand-green">
-                Receive SMS, Voice, and OTP verifications from 900+ platforms worldwide.
-              </p>
             </div>
 
-            <div className="mt-8 grid grid-cols-2 gap-3 xl:grid-cols-4" role="list" aria-label="Burner Point trust proof points">
-              {heroProof.map(([value, label]) => (
-                <div key={label} role="listitem" className="rounded-bp-md border border-white/8 bg-white/[0.025] px-5 py-4">
-                  <div className="font-mono text-3xl font-semibold text-white md:text-4xl">{value}</div>
-                  <div className="mt-1 font-mono text-[10px] font-semibold uppercase text-white/40">{label}</div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
-              <Link href="/auth/signup" className="bp-primary-action inline-flex min-h-12 items-center justify-center px-8 py-4 text-sm font-semibold uppercase">
+            <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
+              <Link href="/auth/signup" className="bp-primary-action inline-flex min-h-[52px] items-center justify-center px-8 py-4 text-sm font-semibold uppercase transition duration-[220ms] ease-out active:scale-[0.98]">
                 Get Started
                 <ArrowRight className="ml-3 h-4 w-4" />
               </Link>
-              <Link href="/overview" className="bp-secondary-action inline-flex min-h-12 items-center justify-center px-8 py-4 text-sm font-semibold uppercase">
+              <Link href="/overview" className="bp-secondary-action inline-flex min-h-[52px] items-center justify-center px-8 py-4 text-sm font-semibold uppercase transition duration-[220ms] ease-out active:scale-[0.98]">
                 Learn More
               </Link>
             </div>
 
-            <nav className="mt-5 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap" aria-label="Homepage quick actions">
+            <p className="mt-6 max-w-3xl font-mono text-[13px] font-semibold uppercase leading-6 tracking-wide text-brand-green md:text-sm">
+              Receive SMS, Voice, and OTP verifications from 900+ platforms worldwide.
+            </p>
+
+            <div className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4" role="list" aria-label="Burner Point trust proof points">
+              {heroProof.map(([value, label]) => (
+                <div key={label} role="listitem" className="rounded-bp-md border border-white/8 bg-white/[0.025] px-4 py-4 md:px-5">
+                  <div className="font-mono text-2xl font-semibold text-white md:text-4xl">{value}</div>
+                  <div className="mt-1 font-mono text-[10px] font-semibold uppercase text-white/46">{label}</div>
+                </div>
+              ))}
+            </div>
+
+            <nav className="mt-6 hidden grid-cols-2 gap-3 md:grid lg:flex lg:flex-wrap" aria-label="Homepage quick actions">
               {quickActions.map((item) => (
                 <Link
                   key={item.label}
@@ -332,7 +369,7 @@ export default function Home() {
                   {[
                     [Mail, 'SMS and OTP'],
                     [Phone, 'Voice Calls'],
-                    [MessageSquare, 'MMS Photos'],
+                    [MessageSquare, 'Audio, photo & video'],
                     [Voicemail, 'Voicemail'],
                   ].map(([Icon, label]) => {
                     const AppIcon = Icon as LucideIcon;
@@ -488,7 +525,7 @@ export default function Home() {
           <div className="rounded-bp-lg border border-brand-green/14 bg-brand-green/[0.055] p-7 md:p-9 lg:col-span-5">
             <Eyebrow>Conversation Section</Eyebrow>
             <h2 id="conversation-title" className="text-4xl font-black uppercase leading-[0.98] text-white md:text-7xl">
-              Talk, text, and receive codes over WiFi or data.
+              Talk, text, and receive codes over WiFi & Data.
             </h2>
             <p className="mt-6 text-base leading-8 text-white/60">
               Conversation numbers support private communication for USA and Canada, with calls, voicemail, text, SMS, MMS, and audio, photo and video sharing connected to the same Burner Point identity.
@@ -667,6 +704,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-    </MarketingShell>
+      </MarketingShell>
+    </>
   );
 }

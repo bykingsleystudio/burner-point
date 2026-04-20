@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -31,7 +31,7 @@
   --bp-glow-md: 0 0 32px rgba(0, 255, 157, 0.22);
   --bp-motion-fast: 220ms cubic-bezier(0.22, 1, 0.36, 1);
   --bp-motion-standard: 220ms cubic-bezier(0.22, 1, 0.36, 1);
-  --font-brand: 'Neue Haas Grotesk Display', var(--font-sans), system-ui, sans-serif;
+  --font-brand: 'Neue Haas Grotesk Display', Inter, var(--font-sans), system-ui, sans-serif;
   --deep-green: #013220;
   --green: #00FF9D;
   --neon-green: #39FF14;
@@ -302,10 +302,13 @@ select {
   transform: translateZ(0);
 }
 
-.bp-button-glow:active,
-a:active,
-button:active {
-  transform: scale(0.97);
+.bp-button-glow:active {
+  transform: scale(0.98);
+}
+
+.bp-primary-action:active,
+.bp-secondary-action:active {
+  transform: scale(0.98);
 }
 
 .bp-state {
