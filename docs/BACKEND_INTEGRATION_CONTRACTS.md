@@ -46,7 +46,7 @@ The catalog never returns secret values.
 | 1GLOBAL | `/api/webhooks/oneglobal` | HMAC when `ONEGLOBAL_WEBHOOK_SECRET` is configured |
 | Bright Data | `/api/webhooks/brightdata` | HMAC when `BRIGHTDATA_WEBHOOK_SECRET` is configured |
 | WireGuard control plane | `/api/webhooks/wireguard` | HMAC when `WIREGUARD_WEBHOOK_SECRET` is configured |
-| Clerk | `/api/webhooks/clerk` | Standard Webhooks when `CLERK_WEBHOOK_SECRET` is configured |
+| Clerk | `/api/webhooks/clerk` | Standard Webhooks when `CLERK_WEBHOOK_SIGNING_SECRET` is configured |
 | Paystack | `/api/payments/webhook/paystack` | Gateway signature |
 | Paddle | `/api/payments/webhook/paddle` | Gateway signature |
 | NOWPayments | `/api/payments/webhook/nowpayments` | IPN signature |

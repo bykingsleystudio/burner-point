@@ -68,7 +68,7 @@ CLERK_SECRET_KEY=sk_test_or_sk_live_REPLACE_ME
 Clerk webhooks are not required for basic sign-up or sign-in. Add them only when Burner Point needs server-to-server syncing for Clerk events such as `user.created`, `user.updated`, or `user.deleted` without relying on the current `/auth/clerk/exchange` flow. If this is added later, create a Clerk webhook endpoint in the API and configure:
 
 ```env
-CLERK_WEBHOOK_SECRET=whsec_REPLACE_ME
+CLERK_WEBHOOK_SIGNING_SECRET=whsec_REPLACE_ME
 ```
 
 ## Clerk Dashboard Setup

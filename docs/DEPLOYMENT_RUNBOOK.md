@@ -277,7 +277,7 @@ Production setup:
 4. Add Expo/native redirect URLs for the Burner Point scheme.
 5. Configure webhook endpoint on Railway:
    - `https://YOUR_API_DOMAIN/api/webhooks/clerk`
-6. Store `CLERK_SECRET_KEY` and `CLERK_WEBHOOK_SECRET` in Railway.
+6. Store `CLERK_SECRET_KEY` and `CLERK_WEBHOOK_SIGNING_SECRET` in Railway. `CLERK_WEBHOOK_SECRET` is supported as a legacy alias but should not be the primary name.
 7. Store `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` in Vercel.
 8. Store `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` in EAS environment variables, not in `eas.json`.
 
@@ -302,6 +302,7 @@ eas build --platform android --profile production
 Before production:
 
 1. Set EAS env:
+   - `EXPO_PROJECT_ID`
    - `EXPO_PUBLIC_API_URL`
    - `EXPO_PUBLIC_WEB_URL`
    - `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`
@@ -456,7 +457,8 @@ Before public launch:
 9. Sentry projects are receiving events.
 10. PostHog captures server-side events.
 11. Twilio OTP and conversation webhooks pass smoke tests.
-12. Payment webhooks reconcile ledger state.
-13. SEO routes are live and submitted.
-14. App store metadata and policy forms are ready.
-15. Support email, Telegram links, and incident owner contacts are current.
+12. Real browser auth smoke tests have been executed for email/password sign-up, email/password login, Google OAuth, Apple OAuth, and Microsoft OAuth.
+13. Payment webhooks reconcile ledger state.
+14. SEO routes are live and submitted.
+15. App store metadata and policy forms are ready.
+16. Support email, Telegram links, and incident owner contacts are current.

@@ -151,7 +151,7 @@ export const STACK_REGISTRY: StackIntegrationDefinition[] = [
     role: 'Primary authentication and session provider',
     productSurface: 'Sign up, sign in, OAuth, 2FA, token exchange',
     requiredEnv: ['CLERK_SECRET_KEY'],
-    optionalEnv: ['CLERK_WEBHOOK_SECRET', 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY', 'EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY'],
+    optionalEnv: ['CLERK_WEBHOOK_SIGNING_SECRET', 'CLERK_WEBHOOK_SECRET', 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY', 'EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY'],
   },
   {
     id: 'resend',

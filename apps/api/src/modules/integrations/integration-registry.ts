@@ -280,7 +280,7 @@ export const BACKEND_INTEGRATION_CONTRACTS: BackendIntegrationContract[] = [
     category: 'auth',
     backendOnly: true,
     secretEnv: ['CLERK_SECRET_KEY'],
-    optionalEnv: ['CLERK_WEBHOOK_SECRET'],
+    optionalEnv: ['CLERK_WEBHOOK_SIGNING_SECRET', 'CLERK_WEBHOOK_SECRET'],
     publicClientEnv: ['NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY', 'EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY'],
     frontendRule: 'Clients use Clerk publishable keys only; API exchanges Clerk sessions server-side.',
     endpoints: [

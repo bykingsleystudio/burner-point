@@ -16,6 +16,7 @@ import {
   DeploymentCategory,
   DeploymentTargetDefinition,
 } from './deployment-registry';
+import { hasConfiguredEnv } from '../../config/runtime-env';
 
 export type StackIntegrationStatus =
   | 'ready'
@@ -335,10 +336,7 @@ export class PlatformService {
   }
 
   private hasEnv(name: string): boolean {
-    const value = this.config.get<string>(name);
-    if (!value) return false;
-    const normalized = value.trim().toLowerCase();
-    return normalized !== 'replace_me' && !normalized.includes('replace_me');
+    return hasConfiguredEnv(name, this.config);
   }
 
   private isTruthy(name: string): boolean {

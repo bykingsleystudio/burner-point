@@ -32,6 +32,7 @@ import { User } from '../../database/entities/user.entity';
 import { NumberType } from '../../database/entities/phone-number.entity';
 import { UsersService } from '../users/users.service';
 import { NumbersService } from '../numbers/numbers.service';
+import { resolveApiUrl } from '../../config/runtime-env';
 
 export enum PaymentType {
   CREDITS = 'credits',
@@ -1197,7 +1198,7 @@ export class PaymentsService {
   }
 
   private getApiUrl(): string {
-    return (this.configService.get<string>('API_URL') || 'http://localhost:3001/api').replace(/\/+$/, '');
+    return resolveApiUrl(this.configService);
   }
 
   private safeErrorData(error: unknown) {

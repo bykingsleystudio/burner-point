@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import { resolveApiUrl } from '../../../config/runtime-env';
 
 @Injectable()
 export class KorapayAdapter {
@@ -20,7 +21,7 @@ export class KorapayAdapter {
       currency: 'NGN',
       customer: { email: params.email },
       redirect_url: `${this.cfg.get('WEB_URL')}/dashboard/credits?ref=${params.reference}`,
-      notification_url: `${this.cfg.get('APP_URL')}/webhooks/korapay`,
+      notification_url: `${resolveApiUrl(this.cfg)}/payments/webhook/korapay`,
     }, { headers: this.headers });
     return { checkoutUrl: data.data?.checkout_url, reference: params.reference };
   }

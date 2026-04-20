@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import * as crypto from 'crypto';
+import { resolveApiUrl } from '../../../config/runtime-env';
 
 @Injectable()
 export class OpayAdapter {
@@ -17,7 +18,7 @@ export class OpayAdapter {
       productName: 'Credits',
       productDesc: 'BurnerPoint wallet top-up',
       supplierReference: params.reference,
-      callbackUrl: `${this.cfg.get('APP_URL')}/webhooks/opay`,
+      callbackUrl: `${resolveApiUrl(this.cfg)}/payments/webhook/opay`,
       returnUrl: `${this.cfg.get('WEB_URL')}/dashboard/credits?ref=${params.reference}`,
       expireAt: 30,
       userInfo: { userEmail: params.email },

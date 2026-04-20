@@ -17,6 +17,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import helmet from 'helmet';
 import * as express from 'express';
+import { hasConfiguredEnv } from './config/runtime-env';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -70,6 +71,7 @@ async function bootstrap() {
     .filter((origin) => Boolean(origin) && origin !== '*');
   const derivedOrigins = [
     process.env.NEXT_PUBLIC_APP_URL,
+    process.env.WEB_URL,
     process.env.WEB_APP_URL,
     process.env.FRONTEND_URL,
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL.replace(/^https?:\/\//, '')}` : null,
@@ -79,6 +81,9 @@ async function bootstrap() {
 
   if (isProduction && !corsOrigins.length) {
     logger.warn('CORS_ORIGINS is empty in production. Browser clients will be rejected until an explicit origin is configured.');
+  }
+  if (isProduction && !hasConfiguredEnv('CLERK_WEBHOOK_SIGNING_SECRET', process.env)) {
+    logger.warn('CLERK_WEBHOOK_SIGNING_SECRET is missing in production. Clerk webhook verification is disabled.');
   }
 
   app.enableCors({

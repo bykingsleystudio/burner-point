@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import Twilio = require('twilio');
 import { RedisService } from './redis.service';
+import { resolveWebhookBaseUrl } from '../../config/runtime-env';
 
 export enum ProviderName {
   TWILIO = 'twilio',
@@ -42,7 +43,6 @@ export interface ProviderSmsResult {
   routeLabel: string;
 }
 
-const API_WEBHOOK_BASE_PATH = '/api/webhooks';
 const HEALTH_TTL_SECONDS = 300;
 
 @Injectable()
@@ -376,10 +376,7 @@ export class ProviderService {
   }
 
   private getWebhookBaseUrl(): string {
-    const appUrl = this.configService.get<string>('APP_URL');
-    return appUrl
-      ? `${appUrl.replace(/\/$/, '')}${API_WEBHOOK_BASE_PATH}`
-      : API_WEBHOOK_BASE_PATH;
+    return resolveWebhookBaseUrl(this.configService);
   }
 
   private healthKey(provider: ProviderName, product: RouteProduct, countryCode: string): string {

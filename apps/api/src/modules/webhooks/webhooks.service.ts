@@ -9,15 +9,13 @@ import { Call, CallDirection, CallStatus, WebhookDedup } from '../../database/en
 import { PhoneNumber } from '../../database/entities/phone-number.entity';
 import { EventsGateway } from '../gateway/events.gateway';
 import { AiService } from '../ai/ai.service';
+import { resolveClerkWebhookSigningSecret, resolveWebhookBaseUrl } from '../../config/runtime-env';
 
 type ProviderWebhookSource = 'bandwidth' | 'oneglobal' | 'brightdata' | 'wireguard';
 
 @Injectable()
 export class WebhooksService {
   private readonly logger = new Logger(WebhooksService.name);
-
-  private readonly apiWebhookBaseUrl =
-    `${(process.env.APP_URL ?? '').replace(/\/$/, '')}/api/webhooks`;
 
   constructor(
     @InjectRepository(Message) private msgRepo: Repository<Message>,
@@ -28,6 +26,10 @@ export class WebhooksService {
     private aiService: AiService,
     private configService: ConfigService,
   ) {}
+
+  private get apiWebhookBaseUrl(): string {
+    return resolveWebhookBaseUrl(this.configService);
+  }
 
   async handleInboundSms(payload: Record<string, string>) {
     const eventId = payload.MessageSid;
@@ -321,9 +323,7 @@ export class WebhooksService {
     rawBody: Buffer | undefined,
     url: string,
   ) {
-    const secret =
-      this.configuredSecret('CLERK_WEBHOOK_SECRET') ||
-      this.configuredSecret('CLERK_WEBHOOK_SIGNING_SECRET');
+    const secret = resolveClerkWebhookSigningSecret(this.configService);
     let verified = false;
     let verifiedPayload = payload;
 
@@ -350,7 +350,7 @@ export class WebhooksService {
         throw new BadRequestException('Invalid Clerk webhook signature');
       }
     } else {
-      this.logger.warn('Clerk webhook accepted without signature verification because CLERK_WEBHOOK_SECRET is not configured');
+      this.logger.warn('Clerk webhook accepted without signature verification because CLERK_WEBHOOK_SIGNING_SECRET is not configured');
     }
 
     const eventType = this.asString(verifiedPayload.type ?? verifiedPayload.event) || 'clerk.webhook';
