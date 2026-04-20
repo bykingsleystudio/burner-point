@@ -13,8 +13,8 @@ import { triggerHaptic } from '../../lib/native-ux';
 
 const providers = [
   ['Google', 'oauth_google'],
-  ['Apple iCloud', 'oauth_apple'],
-  ['Microsoft Outlook', 'oauth_microsoft'],
+  ['Apple', 'oauth_apple'],
+  ['Microsoft', 'oauth_microsoft'],
 ] as const;
 
 type PendingVerification = 'email' | 'phone';

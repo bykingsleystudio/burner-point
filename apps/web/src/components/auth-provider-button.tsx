@@ -6,25 +6,29 @@ export function AuthProviderButton({
   provider,
   onClick,
   disabled = false,
+  className = '',
 }: {
   provider: ProviderName;
   onClick: () => void;
   disabled?: boolean;
+  className?: string;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="group flex min-h-[52px] w-full items-center justify-between rounded-bp border border-white/10 bg-black/30 px-4 py-3 text-left text-sm font-semibold text-white transition duration-[220ms] ease-out hover:border-brand-green/35 hover:bg-brand-green/[0.04] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+      className={`group flex min-h-11 w-full items-center gap-3 rounded-bp border border-white/10 bg-black/30 px-3.5 py-2.5 text-left text-[13px] font-semibold leading-tight text-white transition duration-[220ms] ease-out hover:border-brand-green/35 hover:bg-brand-green/[0.04] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 md:min-h-[70px] md:px-3.5 md:py-3 ${className}`}
       aria-label={`Continue with ${provider}`}
     >
       <span className="flex items-center gap-3">
         <ProviderLogo provider={provider} />
-        <span>Continue with {provider}</span>
-      </span>
-      <span className="text-[11px] uppercase tracking-[0.16em] text-white/34 transition duration-[220ms] ease-out group-hover:text-brand-green/80">
-        OAuth
+        <span className="flex flex-col leading-none">
+          <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-white/42">
+            Continue with
+          </span>
+          <span className="mt-1 text-[13px] font-semibold text-white sm:text-sm">{provider}</span>
+        </span>
       </span>
     </button>
   );

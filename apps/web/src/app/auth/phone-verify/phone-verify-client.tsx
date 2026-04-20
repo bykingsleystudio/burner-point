@@ -121,30 +121,30 @@ export default function PhoneVerifyPage() {
   };
 
   return (
-    <main className="relative min-h-screen min-h-[100dvh] overflow-x-hidden bg-brand-black px-4 py-6 text-white sm:px-5 md:py-10">
+    <main className="relative min-h-screen min-h-[100dvh] overflow-x-hidden bg-brand-black px-3 py-3 text-white sm:px-4 md:py-4">
       <div className="bp-grid-bg pointer-events-none fixed inset-0 opacity-60" />
-      <section className="relative z-10 mx-auto flex min-h-[calc(100vh-3rem)] max-w-2xl items-start md:min-h-[calc(100vh-5rem)] md:items-center">
-        <div className="bp-card w-full rounded-bp-lg p-4 sm:p-5 md:p-7">
-          <div className="rounded-bp-lg border border-white/8 bg-black/24 p-4 sm:p-5 md:p-6">
+      <section className="relative z-10 mx-auto flex min-h-[calc(100vh-1.5rem)] max-w-2xl items-center">
+        <div className="bp-card w-full rounded-bp-lg p-3.5 sm:p-4 md:p-5 [&_input.auth-input]:min-h-11 [&_input.auth-input]:px-3.5 [&_input.auth-input]:py-3">
+          <div className="rounded-bp-lg border border-white/8 bg-black/24 p-4 sm:p-4 md:p-5">
             <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
-              <span className="flex h-11 w-11 items-center justify-center rounded-bp-lg border border-brand-green/25 bg-brand-green/10">
-                <Image src="/assets/logo-mark.svg" alt="" width={26} height={26} />
+              <span className="flex h-10 w-10 items-center justify-center rounded-bp-md border border-brand-green/25 bg-brand-green/10">
+                <Image src="/assets/logo-mark.svg" alt="" width={24} height={24} />
               </span>
               <span className="font-mono text-sm font-semibold uppercase tracking-[0.2em]">
                 Burner <span className="text-brand-green">Point</span>
               </span>
             </Link>
 
-            <div className="mt-8 flex h-14 w-14 items-center justify-center rounded-bp-lg border border-brand-green/25 bg-brand-green/10">
-              <ShieldCheck className="h-7 w-7 text-brand-green" />
+            <div className="mt-5 flex h-12 w-12 items-center justify-center rounded-bp-md border border-brand-green/25 bg-brand-green/10">
+              <ShieldCheck className="h-6 w-6 text-brand-green" />
             </div>
-            <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.28em] text-brand-green">Twilio Verify</p>
-            <h1 className="mt-3 text-2xl font-semibold uppercase sm:text-3xl">Verify your account phone</h1>
-            <p className="mt-3 text-sm leading-6 text-white/52">
+            <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.22em] text-brand-green">Twilio Verify</p>
+            <h1 className="mt-3 text-[1.8rem] font-semibold uppercase leading-none sm:text-[2rem]">Verify your account phone</h1>
+            <p className="mt-2 text-sm leading-5 text-white/52">
               Burner Point sends OTP through the Railway API using Twilio Verify server-side. No Twilio credentials are bundled into the web app.
             </p>
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-[1fr_0.55fr]">
+            <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_0.55fr]">
               <label className="block text-sm font-medium text-white/70">
                 Account phone number
                 <input
@@ -175,7 +175,7 @@ export default function PhoneVerifyPage() {
                         key={item.id}
                         type="button"
                         onClick={() => setChannel(item.id)}
-                        className={`min-h-12 rounded-bp border px-3 text-xs font-semibold uppercase tracking-[0.12em] transition ${
+                        className={`min-h-11 rounded-bp border px-3 text-xs font-semibold uppercase tracking-[0.12em] transition ${
                           active
                             ? 'border-brand-green bg-brand-green/10 text-brand-green'
                             : 'border-brand-border bg-black/20 text-brand-muted hover:border-brand-green/35 hover:text-white'
@@ -194,14 +194,14 @@ export default function PhoneVerifyPage() {
               type="button"
               onClick={sendCode}
               disabled={loading || step === 'loading-session' || step === 'approved' || !phoneIsValid}
-              className="bp-button-glow mt-5 flex min-h-12 w-full items-center justify-center rounded-bp bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+              className="bp-button-glow mt-4 flex min-h-11 w-full items-center justify-center rounded-bp bg-brand-green px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
               {loading ? 'Sending...' : step === 'sent' ? 'Send another code' : 'Send code'}
               <ArrowRight className="ml-3 h-4 w-4" />
             </button>
 
             {step === 'sent' || step === 'approved' ? (
-              <div className="mt-6 rounded-bp-lg border border-brand-green/18 bg-brand-green/[0.05] p-4">
+              <div className="mt-4 rounded-bp-lg border border-brand-green/18 bg-brand-green/[0.05] p-3.5 md:p-4">
                 <div className="flex flex-wrap items-center gap-3 text-sm text-brand-green">
                   <TimerReset className="h-4 w-4" />
                   {expiresAt ? `Code expires ${new Date(expiresAt).toLocaleTimeString()}` : 'Code sent'}
@@ -232,7 +232,7 @@ export default function PhoneVerifyPage() {
                       type="button"
                       onClick={verifyCode}
                       disabled={loading || !codeIsValid}
-                      className="mt-4 flex min-h-12 w-full items-center justify-center rounded-bp bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                      className="mt-3 flex min-h-11 w-full items-center justify-center rounded-bp bg-brand-green px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                     >
                       {loading ? 'Verifying...' : 'Verify and continue'}
                     </button>
@@ -247,7 +247,7 @@ export default function PhoneVerifyPage() {
               </div>
             ) : null}
 
-            <div className="mt-6 rounded-bp-lg border border-white/8 bg-white/[0.02] p-4 text-xs leading-6 text-white/46">
+            <div className="mt-4 rounded-bp-lg border border-white/8 bg-white/[0.02] p-3.5 text-xs leading-5 text-white/46">
               OTP endpoints are authenticated with the Burner Point API token, rate limited to 5 attempts per 10 minutes, and bound to your local user record before Twilio is called.
             </div>
           </div>

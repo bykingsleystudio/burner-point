@@ -289,22 +289,25 @@ export default function LoginPage() {
         <div className="absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(circle_at_top,rgba(0,255,157,0.14),transparent_64%)]" />
       </div>
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-xl items-start px-4 py-6 sm:px-5 md:items-center md:py-10">
-        <form onSubmit={handleSubmit(onSubmit)} className="bp-card w-full rounded-bp-lg p-4 sm:p-5 md:p-7">
-          <div className="rounded-bp-lg border border-white/8 bg-black/24 p-4 sm:p-5 md:p-6">
-            <div className="mb-8 text-center">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[34rem] items-center px-3 py-3 sm:px-4 md:py-4">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="bp-card w-full rounded-bp-lg p-3.5 sm:p-4 md:p-5 [&_input.auth-input]:min-h-11 [&_input.auth-input]:px-3.5 [&_input.auth-input]:py-3"
+        >
+          <div className="rounded-bp-lg border border-white/8 bg-black/24 p-4 sm:p-4 md:p-5">
+            <div className="mb-6 text-center">
               <Link href="/" className="mx-auto inline-flex items-center justify-center gap-3" aria-label="Burner Point home">
-                <span className="flex h-12 w-12 items-center justify-center rounded-bp-lg border border-brand-green/25 bg-brand-green/10">
-                  <Image src="/assets/logo-mark.svg" alt="" width={28} height={28} />
+                <span className="flex h-10 w-10 items-center justify-center rounded-bp-md border border-brand-green/25 bg-brand-green/10">
+                  <Image src="/assets/logo-mark.svg" alt="" width={24} height={24} />
                 </span>
-                <span className="font-mono text-base font-semibold uppercase tracking-[0.22em]">Burner <span className="text-brand-green">Point</span></span>
+                <span className="font-mono text-sm font-semibold uppercase tracking-[0.2em]">Burner <span className="text-brand-green">Point</span></span>
               </Link>
-              <h1 className="mt-7 text-2xl font-semibold uppercase sm:text-3xl">Welcome back</h1>
-              <p className="mt-2 text-sm leading-6 text-white/52">Use your email address or phone number to access your Burner Point workspace.</p>
+              <h1 className="mt-5 text-[1.85rem] font-semibold uppercase leading-none sm:text-[2rem]">Welcome back</h1>
+              <p className="mt-2 text-sm leading-5 text-white/52">Use your email address or phone number to access your Burner Point workspace.</p>
             </div>
 
             {authMode === 'reset-request' ? (
-              <div className="space-y-4 rounded-bp-lg border border-brand-green/20 bg-brand-green/[0.04] p-4">
+              <div className="space-y-3 rounded-bp-lg border border-brand-green/20 bg-brand-green/[0.04] p-3.5 md:p-4">
                 <label className="block text-sm font-medium text-white/70">
                   Email or phone number
                   <input
@@ -318,7 +321,7 @@ export default function LoginPage() {
                     className="auth-input mt-1.5"
                   />
                 </label>
-                <button type="button" disabled={isSubmitting} onClick={startPasswordReset} className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-bp bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+                <button type="button" disabled={isSubmitting} onClick={startPasswordReset} className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-bp bg-brand-green px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
                   {isSubmitting ? 'Sending code...' : 'Send reset code'}
                 </button>
                 <button type="button" onClick={returnToSignIn} className="w-full text-xs font-medium text-white/48 underline-offset-2 transition hover:text-brand-green hover:underline">
@@ -326,7 +329,7 @@ export default function LoginPage() {
                 </button>
               </div>
             ) : authMode === 'reset-code' ? (
-              <div className="space-y-4 rounded-bp-lg border border-brand-green/20 bg-brand-green/[0.04] p-4">
+              <div className="space-y-3 rounded-bp-lg border border-brand-green/20 bg-brand-green/[0.04] p-3.5 md:p-4">
                 <label className="block text-sm font-medium text-white/70">
                   Reset code
                   <input
@@ -340,7 +343,7 @@ export default function LoginPage() {
                     className="auth-input mt-1.5"
                   />
                 </label>
-                <button type="button" disabled={isSubmitting} onClick={verifyPasswordResetCode} className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-bp bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+                <button type="button" disabled={isSubmitting} onClick={verifyPasswordResetCode} className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-bp bg-brand-green px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
                   {isSubmitting ? 'Verifying...' : 'Verify reset code'}
                 </button>
                 <button type="button" onClick={returnToSignIn} className="w-full text-xs font-medium text-white/48 underline-offset-2 transition hover:text-brand-green hover:underline">
@@ -348,7 +351,7 @@ export default function LoginPage() {
                 </button>
               </div>
             ) : authMode === 'reset-password' ? (
-              <div className="space-y-4 rounded-bp-lg border border-brand-green/20 bg-brand-green/[0.04] p-4">
+              <div className="space-y-3 rounded-bp-lg border border-brand-green/20 bg-brand-green/[0.04] p-3.5 md:p-4">
                 <label className="block text-sm font-medium text-white/70">
                   New password
                   <input
@@ -361,7 +364,7 @@ export default function LoginPage() {
                     className="auth-input mt-1.5"
                   />
                 </label>
-                <button type="button" disabled={isSubmitting} onClick={submitNewPassword} className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-bp bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+                <button type="button" disabled={isSubmitting} onClick={submitNewPassword} className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-bp bg-brand-green px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
                   {isSubmitting ? 'Saving password...' : 'Reset password'}
                 </button>
                 <button type="button" onClick={returnToSignIn} className="w-full text-xs font-medium text-white/48 underline-offset-2 transition hover:text-brand-green hover:underline">
@@ -369,7 +372,7 @@ export default function LoginPage() {
                 </button>
               </div>
             ) : secondFactorStrategy ? (
-              <div className="space-y-4 rounded-bp-lg border border-brand-green/20 bg-brand-green/[0.04] p-4">
+              <div className="space-y-3 rounded-bp-lg border border-brand-green/20 bg-brand-green/[0.04] p-3.5 md:p-4">
                 <label className="block text-sm font-medium text-white/70">
                   Two-factor code
                   <input
@@ -383,12 +386,12 @@ export default function LoginPage() {
                     className="auth-input mt-1.5"
                   />
                 </label>
-                <button type="button" disabled={isSubmitting} onClick={verifySecondFactor} className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-bp bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+                <button type="button" disabled={isSubmitting} onClick={verifySecondFactor} className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-bp bg-brand-green px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
                   {isSubmitting ? 'Verifying...' : 'Verify 2FA'}
                 </button>
               </div>
             ) : (
-            <div className="space-y-4">
+            <div className="space-y-3.5">
               <label className="block text-sm font-medium text-white/70">
                 Email or phone number
                 <input
@@ -422,7 +425,7 @@ export default function LoginPage() {
               </label>
 
               <div className="text-right">
-                <button type="button" onClick={() => setAuthMode('reset-request')} className="inline-flex min-h-11 items-center text-xs font-medium text-brand-green/90 underline-offset-2 hover:underline">
+                <button type="button" onClick={() => setAuthMode('reset-request')} className="inline-flex min-h-10 items-center text-xs font-medium text-brand-green/90 underline-offset-2 hover:underline">
                   Forgot password?
                 </button>
               </div>
@@ -430,7 +433,7 @@ export default function LoginPage() {
             )}
 
             {!secondFactorStrategy && authMode === 'sign-in' ? (
-              <button type="submit" disabled={isSubmitting} className="bp-button-glow mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-bp bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+              <button type="submit" disabled={isSubmitting} className="bp-button-glow mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-bp bg-brand-green px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
                 {isSubmitting ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" /> : <Zap size={16} />}
                 {isSubmitting ? 'Signing in...' : 'Sign In'}
               </button>
@@ -438,18 +441,18 @@ export default function LoginPage() {
 
             {authMode === 'sign-in' ? (
               <>
-              <div className="my-6 flex items-center gap-3">
+              <div className="my-4 flex items-center gap-3">
                 <span className="h-px flex-1 bg-white/8" />
                 <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/34">or continue with</span>
                 <span className="h-px flex-1 bg-white/8" />
               </div>
-                <div className="grid gap-3">
+                <div className="grid gap-2 md:grid-cols-3">
                   {oauthProviders.map((provider) => (
-                    <AuthProviderButton key={provider.label} provider={provider.label} onClick={() => startOAuth(provider.strategy)} disabled={isSubmitting} />
+                    <AuthProviderButton key={provider.label} provider={provider.label} onClick={() => startOAuth(provider.strategy)} disabled={isSubmitting} className="md:h-full" />
                   ))}
                 </div>
 
-                <p className="mt-6 text-center text-sm text-white/48">
+                <p className="mt-4 text-center text-sm text-white/48">
                   No account? <Link href="/auth/signup" className="text-brand-green hover:underline">Create one free</Link>
                 </p>
               </>

@@ -61,22 +61,22 @@ export default function OnboardingPage() {
   };
 
   return (
-    <main className="relative min-h-screen min-h-[100dvh] overflow-x-hidden bg-brand-black px-4 py-6 text-white sm:px-5 md:py-10">
+    <main className="relative min-h-screen min-h-[100dvh] overflow-x-hidden bg-brand-black px-3 py-3 text-white sm:px-4 md:py-4">
       <div className="bp-grid-bg pointer-events-none fixed inset-0 opacity-60" />
-      <section className="relative z-10 mx-auto flex min-h-[calc(100vh-3rem)] max-w-2xl items-start md:min-h-[calc(100vh-5rem)] md:items-center">
-        <div className="bp-card w-full rounded-bp-lg p-4 sm:p-5 md:p-7">
-          <div className="rounded-bp-lg border border-white/8 bg-black/24 p-4 sm:p-5 md:p-6">
+      <section className="relative z-10 mx-auto flex min-h-[calc(100vh-1.5rem)] max-w-2xl items-center">
+        <div className="bp-card w-full rounded-bp-lg p-3.5 sm:p-4 md:p-5 [&_input.auth-input]:min-h-11 [&_input.auth-input]:px-3.5 [&_input.auth-input]:py-3">
+          <div className="rounded-bp-lg border border-white/8 bg-black/24 p-4 sm:p-4 md:p-5">
             <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
-              <span className="flex h-11 w-11 items-center justify-center rounded-bp-lg border border-brand-green/25 bg-brand-green/10">
-                <Image src="/assets/logo-mark.svg" alt="" width={26} height={26} />
+              <span className="flex h-10 w-10 items-center justify-center rounded-bp-md border border-brand-green/25 bg-brand-green/10">
+                <Image src="/assets/logo-mark.svg" alt="" width={24} height={24} />
               </span>
               <span className="font-mono text-sm font-semibold uppercase tracking-[0.2em]">Burner <span className="text-brand-green">Point</span></span>
             </Link>
-            <p className="mt-8 font-mono text-[11px] uppercase tracking-[0.28em] text-brand-green">Required onboarding</p>
-            <h1 className="mt-3 text-2xl font-semibold uppercase sm:text-3xl">Finish your Burner Point profile</h1>
-            <p className="mt-3 text-sm leading-6 text-white/52">Burner Point requires a complete local profile before telecom, billing, and support features are enabled.</p>
+            <p className="mt-5 font-mono text-[10px] uppercase tracking-[0.22em] text-brand-green">Required onboarding</p>
+            <h1 className="mt-3 text-[1.8rem] font-semibold uppercase leading-none sm:text-[2rem]">Finish your Burner Point profile</h1>
+            <p className="mt-2 text-sm leading-5 text-white/52">Burner Point requires a complete local profile before telecom, billing, and support features are enabled.</p>
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <Field label="First name">
                 <input value={form.firstName} onChange={(event) => setField('firstName')(event.target.value)} className="auth-input" autoComplete="given-name" autoCapitalize="words" enterKeyHint="next" />
               </Field>
@@ -91,14 +91,14 @@ export default function OnboardingPage() {
               </Field>
             </div>
 
-            <div className="mt-6 rounded-bp-lg border border-white/8 bg-white/[0.02] p-4">
+            <div className="mt-4 rounded-bp-lg border border-white/8 bg-white/[0.02] p-3.5 md:p-4">
               <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm leading-6 text-white/70">
                 <input checked={form.acceptPolicies} onChange={(event) => setField('acceptPolicies')(event.target.checked)} type="checkbox" className="mt-1 h-5 w-5 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green" />
                 <span>By continuing, you accept the <Link href="/terms" className="text-brand-green hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-brand-green hover:underline">Privacy Policy</Link>.</span>
               </label>
             </div>
 
-            <button type="button" disabled={loading} onClick={completeOnboarding} className="bp-button-glow mt-5 flex min-h-12 w-full items-center justify-center rounded-bp bg-brand-green px-6 py-4 text-sm font-semibold uppercase tracking-[0.22em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+            <button type="button" disabled={loading} onClick={completeOnboarding} className="bp-button-glow mt-4 flex min-h-11 w-full items-center justify-center rounded-bp bg-brand-green px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
               {loading ? 'Saving profile...' : 'Complete onboarding'}
             </button>
           </div>

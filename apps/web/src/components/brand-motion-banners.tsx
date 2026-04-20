@@ -35,6 +35,12 @@ const SERVICES: Array<{ href: string; label: string; Icon: LucideIcon; mot: stri
   { href: '/security', label: 'VPN', Icon: Lock, mot: 'bp-svc-mot-6' },
 ];
 
+function getFlagVisualStyle(iso: string) {
+  return {
+    backgroundImage: `url(https://flagcdn.com/${iso.toLowerCase()}.svg)`,
+  };
+}
+
 function CoverageStrip() {
   return (
     <>
@@ -48,7 +54,11 @@ function CoverageStrip() {
                 key={`${iso}-${ring}`}
                 className="mx-2 inline-flex shrink-0 items-center gap-2 rounded-bp-md border border-brand-green/28 bg-[#010806] px-3 py-2 shadow-[inset_0_1px_0_rgba(0,255,157,0.1),0_6px_22px_rgba(0,0,0,0.4)] sm:mx-3 sm:px-4 sm:py-2.5"
               >
-                <span className={`select-none text-xl leading-none sm:text-2xl ${mot}`} aria-hidden="true">
+                <span
+                  className={`bp-flag-swatch ${mot}`}
+                  style={getFlagVisualStyle(iso)}
+                  aria-hidden="true"
+                >
                   {flag}
                 </span>
                 <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white/90 sm:text-[11px]">
@@ -73,12 +83,26 @@ function TrustedPlatformsStrip() {
             return (
               <div
                 key={`${p.label}-${ring}`}
-                className={`mx-2 inline-flex shrink-0 items-center gap-3 rounded-bp-md border border-white/14 bg-[linear-gradient(155deg,rgba(57,255,20,0.06),rgba(0,0,0,0.94))] px-3 py-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.55)] sm:mx-3 sm:px-4 sm:py-3 ${p.mot}`}
+                className={`mx-2 inline-flex shrink-0 items-center gap-3 rounded-bp-md bg-[linear-gradient(155deg,rgba(57,255,20,0.06),rgba(0,0,0,0.94))] px-3 py-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.55)] sm:mx-3 sm:px-4 sm:py-3 ${p.mot}`}
+                style={{
+                  borderColor: p.tileBorder,
+                  boxShadow: `0 8px 32px rgba(0,0,0,0.55), 0 0 24px ${p.tileGlow}`,
+                }}
               >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-bp border border-white/12 bg-black/50 sm:h-10 sm:w-10">
-                  <Icon className="h-5 w-5 text-white/88 sm:h-6 sm:w-6" aria-hidden="true" />
+                <span
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-bp sm:h-10 sm:w-10"
+                  style={{
+                    background: p.iconBg,
+                    borderColor: p.iconBorder,
+                    borderWidth: 1,
+                  }}
+                >
+                  <Icon className="h-5 w-5 sm:h-6 sm:w-6" style={{ color: p.brandColor }} aria-hidden="true" />
                 </span>
-                <span className="max-w-[7rem] font-mono text-[9px] font-semibold uppercase leading-tight tracking-[0.12em] text-white/78 sm:max-w-none sm:text-[10px] sm:tracking-[0.14em]">
+                <span
+                  className="max-w-[7rem] font-mono text-[9px] font-semibold uppercase leading-tight tracking-[0.12em] sm:max-w-none sm:text-[10px] sm:tracking-[0.14em]"
+                  style={{ color: p.labelColor }}
+                >
                   {p.label}
                 </span>
               </div>
