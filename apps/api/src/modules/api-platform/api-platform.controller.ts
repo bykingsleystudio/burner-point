@@ -1,7 +1,35 @@
 import { Controller, Get, Post, Delete, Param, Body, Req, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { ArrayMaxSize, IsArray, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
 import { ApiPlatformService } from './api-platform.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+
+class CreateApiKeyDto {
+  @IsString()
+  @MaxLength(80)
+  name: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(12)
+  @IsString({ each: true })
+  scopes?: string[];
+}
+
+class CreateDeveloperWebhookDto {
+  @IsString()
+  @MaxLength(80)
+  name: string;
+
+  @IsUrl({ protocols: ['https'], require_protocol: true })
+  @MaxLength(500)
+  url: string;
+
+  @IsArray()
+  @ArrayMaxSize(25)
+  @IsString({ each: true })
+  events: string[];
+}
 
 @ApiTags('api-platform')
 @ApiBearerAuth()
@@ -11,7 +39,7 @@ export class ApiPlatformController {
   constructor(private service: ApiPlatformService) {}
 
   @Post('keys')
-  createKey(@Body() dto: { name: string; scopes: string[] }, @Req() req) {
+  createKey(@Body() dto: CreateApiKeyDto, @Req() req) {
     return this.service.createApiKey(req.user.id, dto.name, dto.scopes || ['read']);
   }
 
@@ -24,7 +52,7 @@ export class ApiPlatformController {
   }
 
   @Post('webhooks')
-  createWebhook(@Body() dto: { name: string; url: string; events: string[] }, @Req() req) {
+  createWebhook(@Body() dto: CreateDeveloperWebhookDto, @Req() req) {
     return this.service.createWebhook(req.user.id, dto.name, dto.url, dto.events);
   }
 

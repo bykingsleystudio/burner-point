@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { createHash, randomBytes } from 'crypto';
@@ -42,6 +42,7 @@ export class ApiPlatformService {
   }
 
   async createWebhook(userId: string, name: string, url: string, events: string[]) {
+    this.assertSafeWebhookUrl(url);
     const signingSecret = randomBytes(32).toString('hex');
     const wh = this.webhookRepo.create({ userId, name, url, events, signingSecret });
     await this.webhookRepo.save(wh);
@@ -55,5 +56,45 @@ export class ApiPlatformService {
   async deleteWebhook(id: string, userId: string) {
     await this.webhookRepo.delete({ id, userId });
     return { success: true };
+  }
+
+  private assertSafeWebhookUrl(value: string) {
+    let parsed: URL;
+    try {
+      parsed = new URL(value);
+    } catch {
+      throw new BadRequestException('Webhook URL must be a valid URL');
+    }
+
+    if (parsed.protocol !== 'https:') {
+      throw new BadRequestException('Webhook URL must use HTTPS');
+    }
+
+    const hostname = parsed.hostname.toLowerCase();
+    const blockedHostnames = new Set(['localhost', 'metadata.google.internal']);
+    if (
+      blockedHostnames.has(hostname) ||
+      hostname.endsWith('.local') ||
+      hostname.endsWith('.internal') ||
+      this.isPrivateIp(hostname)
+    ) {
+      throw new BadRequestException('Webhook URL cannot target local or private network hosts');
+    }
+  }
+
+  private isPrivateIp(hostname: string): boolean {
+    const ipv4 = hostname.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+    if (ipv4) {
+      const [a, b] = ipv4.slice(1).map(Number);
+      return (
+        a === 10 ||
+        a === 127 ||
+        (a === 169 && b === 254) ||
+        (a === 172 && b >= 16 && b <= 31) ||
+        (a === 192 && b === 168) ||
+        a === 0
+      );
+    }
+    return hostname === '::1' || hostname.startsWith('fc') || hostname.startsWith('fd') || hostname.startsWith('fe80');
   }
 }

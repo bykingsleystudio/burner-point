@@ -77,6 +77,40 @@ Response: {
 }
 ```
 
+### GET /platform/deployment-readiness
+
+Returns the safe deployment target matrix, environment model, release gates, observability checks, rollback notes, and missing production configuration. Secret values are never returned.
+
+Use this after setting Vercel, Railway, Neon, Clerk, Sentry, PostHog, Expo/EAS, telecom, payment, storage, and provider environment variables.
+
+```json
+Response: {
+  "product": "Burner Point",
+  "status": "needs_configuration",
+  "policies": {
+    "sourceControl": "GitHub",
+    "webDeployment": "Vercel",
+    "apiDeployment": "Railway",
+    "database": "Neon Postgres",
+    "mobileDelivery": "Expo / EAS"
+  },
+  "blockers": [
+    {
+      "id": "vercel",
+      "name": "Vercel",
+      "status": "partial",
+      "missingEnv": ["NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"]
+    }
+  ],
+  "releaseGates": [
+    {
+      "id": "secret-scan",
+      "command": "npm run security:scan"
+    }
+  ]
+}
+```
+
 ---
 
 ## Authentication Headers
@@ -377,6 +411,12 @@ Returns robots.txt.
 
 ### GET /structured-data
 Returns JSON-LD structured data object.
+
+### Web SEO routes
+The Next.js web app also serves `/sitemap.xml`, `/robots.txt`, `/opengraph-image`, `/twitter-image`, `/manifest.webmanifest`, and `/indexnow-key.txt`.
+
+### Search verification
+Set `GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION`, and `INDEXNOW_KEY` in deployment env before launch. See `docs/SEO_SEARCH_DISCOVERY.md`.
 
 ---
 

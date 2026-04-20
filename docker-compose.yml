@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_DB: burnerpoint
       POSTGRES_USER: burnerpoint
-      POSTGRES_PASSWORD: secret
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-burnerpoint_dev_password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./apps/api/src/database/migrations:/docker-entrypoint-initdb.d:ro
@@ -43,7 +43,11 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: development
-      DATABASE_URL: postgresql://burnerpoint:secret@postgres:5432/burnerpoint
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: burnerpoint
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-burnerpoint_dev_password}
+      DB_NAME: burnerpoint
       REDIS_URL: redis://redis:6379
       APP_URL: http://localhost:3001
       WEB_URL: http://localhost:3000

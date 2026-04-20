@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { IsIn, IsInt, IsObject, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsObject, IsOptional, IsString, Matches, Max, MaxLength, Min } from 'class-validator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
   CaptureAnalyticsEventInput,
@@ -14,6 +14,7 @@ import {
 
 class CaptureAnalyticsEventDto implements CaptureAnalyticsEventInput {
   @IsString()
+  @MaxLength(120)
   event: string;
 
   @IsOptional()
@@ -30,9 +31,11 @@ class UploadIntentDto implements UploadIntentInput {
   purpose: UploadIntentInput['purpose'];
 
   @IsString()
+  @MaxLength(160)
   fileName: string;
 
   @IsString()
+  @MaxLength(120)
   contentType: string;
 
   @IsInt()
@@ -43,6 +46,7 @@ class UploadIntentDto implements UploadIntentInput {
 
 class EsimPlansDto implements EsimPlansInput {
   @IsString()
+  @Matches(/^[A-Z]{2}$/)
   countryCode: string;
 
   @IsOptional()
@@ -52,9 +56,11 @@ class EsimPlansDto implements EsimPlansInput {
 
 class EsimOrderDto implements EsimOrderInput {
   @IsString()
+  @MaxLength(80)
   planId: string;
 
   @IsString()
+  @Matches(/^[A-Z]{2}$/)
   countryCode: string;
 
   @IsOptional()
@@ -64,6 +70,7 @@ class EsimOrderDto implements EsimOrderInput {
 
 class ProxyOrderDto implements ProxyOrderInput {
   @IsString()
+  @MaxLength(80)
   region: string;
 
   @IsIn(['residential', 'mobile'])
@@ -78,6 +85,7 @@ class ProxyOrderDto implements ProxyOrderInput {
 
 class VpnSessionDto implements VpnSessionInput {
   @IsString()
+  @MaxLength(80)
   deviceName: string;
 
   @IsOptional()

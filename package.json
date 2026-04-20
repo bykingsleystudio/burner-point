@@ -7,6 +7,11 @@
     "dev": "nest start --watch",
     "start:prod": "node dist/main",
     "lint": "eslint src",
+    "security:scan": "node scripts/security/scan-secrets.mjs",
+    "verify:api": "npm run build --prefix apps/api",
+    "verify:web": "npm run build --prefix apps/web",
+    "verify:mobile": "cd apps/mobile && npx tsc --noEmit",
+    "release:verify": "npm run security:scan && npm run verify:api && npm run verify:web && npm run verify:mobile",
     "test": "jest",
     "db:migrate": "ts-node -r tsconfig-paths/register src/database/data-source.ts",
     "typeorm": "ts-node -r tsconfig-paths/register node_modules/typeorm/cli"

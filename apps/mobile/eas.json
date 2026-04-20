@@ -6,22 +6,23 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "channel": "development"
     },
     "preview": {
       "distribution": "internal",
+      "channel": "preview",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://burner-point-api-production.up.railway.app/api",
-        "EXPO_PUBLIC_WEB_URL": "https://burnerpoint.vercel.app",
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bmV4dC1hcmFjaG5pZC0yMy5jbGVyay5hY2NvdW50cy5kZXYk"
+        "EXPO_PUBLIC_WEB_URL": "https://burnerpoint.vercel.app"
       }
     },
     "production": {
       "autoIncrement": true,
+      "channel": "production",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://burner-point-api-production.up.railway.app/api",
-        "EXPO_PUBLIC_WEB_URL": "https://burnerpoint.vercel.app",
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bmV4dC1hcmFjaG5pZC0yMy5jbGVyay5hY2NvdW50cy5kZXYk"
+        "EXPO_PUBLIC_WEB_URL": "https://burnerpoint.vercel.app"
       }
     }
   },

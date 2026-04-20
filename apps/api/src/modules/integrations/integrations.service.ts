@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import { createHash, randomBytes } from 'crypto';
 import {
   BACKEND_INTEGRATION_CONTRACTS,
   BackendIntegrationContract,
@@ -85,6 +86,14 @@ const PROVIDER_OPERATIONS: Record<ProviderOperation, {
   },
 };
 
+const ALLOWED_UPLOAD_CONTENT_TYPES: Record<UploadIntentInput['purpose'], string[]> = {
+  mms: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'audio/mpeg'],
+  voicemail: ['audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/x-wav', 'audio/webm'],
+  support_attachment: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'text/plain'],
+  document: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
+  export: ['application/json', 'text/csv', 'application/zip'],
+};
+
 @Injectable()
 export class IntegrationsService {
   private readonly logger = new Logger(IntegrationsService.name);
@@ -156,11 +165,16 @@ export class IntegrationsService {
       throw new BadRequestException(`Upload exceeds ${maxBytes} bytes for ${input.purpose}`);
     }
 
+    if (!this.isAllowedUploadType(input.purpose, input.contentType)) {
+      throw new BadRequestException(`Unsupported upload content type for ${input.purpose}`);
+    }
+
+    const userShard = createHash('sha256').update(userId).digest('hex').slice(0, 16);
     const objectKey = [
       input.purpose,
-      userId,
+      userShard,
       new Date().toISOString().slice(0, 10),
-      `${Date.now()}-${this.safeFileName(input.fileName)}`,
+      `${Date.now()}-${randomBytes(8).toString('hex')}-${this.safeFileName(input.fileName)}`,
     ].join('/');
 
     const configured = ['S3_BUCKET', 'S3_ACCESS_KEY_ID', 'S3_SECRET_ACCESS_KEY'].every((env) => this.hasEnv(env));
@@ -168,6 +182,10 @@ export class IntegrationsService {
       status: configured ? 'ready' : 'not_configured',
       objectKey,
       uploadMethod: 'backend-controlled',
+      accessControl: 'private',
+      directPublicAccess: false,
+      classification: this.uploadClassification(input.purpose),
+      requiresServerSideScan: ['support_attachment', 'document'].includes(input.purpose),
       maxBytes,
       expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
       missingEnv: configured ? [] : ['S3_BUCKET', 'S3_ACCESS_KEY_ID', 'S3_SECRET_ACCESS_KEY'].filter((env) => !this.hasEnv(env)),
@@ -280,6 +298,18 @@ export class IntegrationsService {
 
   private safeFileName(name: string) {
     return name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 120);
+  }
+
+  private isAllowedUploadType(purpose: UploadIntentInput['purpose'], contentType: string): boolean {
+    const normalized = contentType.toLowerCase().split(';')[0].trim();
+    return ALLOWED_UPLOAD_CONTENT_TYPES[purpose].includes(normalized);
+  }
+
+  private uploadClassification(purpose: UploadIntentInput['purpose']) {
+    if (purpose === 'document') return 'sensitive_identity_or_document';
+    if (purpose === 'support_attachment') return 'sensitive_support_attachment';
+    if (purpose === 'voicemail' || purpose === 'mms') return 'private_communication_media';
+    return 'private_export';
   }
 
   private maxUploadBytes(purpose: UploadIntentInput['purpose']) {

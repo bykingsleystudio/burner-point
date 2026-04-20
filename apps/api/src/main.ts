@@ -67,7 +67,7 @@ async function bootstrap() {
   const allowedOrigins = (process.env.CORS_ORIGINS ?? '')
     .split(',')
     .map((o) => o.trim())
-    .filter(Boolean);
+    .filter((origin) => Boolean(origin) && origin !== '*');
   const derivedOrigins = [
     process.env.NEXT_PUBLIC_APP_URL,
     process.env.WEB_APP_URL,
@@ -76,6 +76,10 @@ async function bootstrap() {
   ].filter((origin): origin is string => Boolean(origin));
   const corsOrigins = Array.from(new Set([...allowedOrigins, ...derivedOrigins].map((origin) => origin.replace(/\/+$/, ''))));
   const allowVercelPreviews = process.env.CORS_ALLOW_VERCEL_PREVIEWS === 'true';
+
+  if (isProduction && !corsOrigins.length) {
+    logger.warn('CORS_ORIGINS is empty in production. Browser clients will be rejected until an explicit origin is configured.');
+  }
 
   app.enableCors({
     origin: (origin, callback) => {

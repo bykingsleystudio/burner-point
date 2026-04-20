@@ -18,5 +18,10 @@ export class PlatformController {
   readiness() {
     return this.platformService.getReadiness();
   }
-}
 
+  @Get('deployment-readiness')
+  @ApiOperation({ summary: 'Get deployment target readiness, release gates, and observability checks without exposing secrets' })
+  deploymentReadiness() {
+    return this.platformService.getDeploymentReadiness();
+  }
+}

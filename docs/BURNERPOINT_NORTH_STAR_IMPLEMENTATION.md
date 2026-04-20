@@ -1,306 +1,366 @@
-# Burner Point North-Star Product and Implementation Plan
+# Burner Point North-Star Implementation Document
 
-This document is the production implementation blueprint for Burner Point across desktop web, mobile web, and native mobile. It is aligned to the current codebase direction, live deployment posture, brand system, and platform architecture.
+Updated: 2026-04-17
 
-It is intentionally practical: a beginner can follow it phase by phase, while the decisions remain suitable for a real privacy-first telecom startup.
+This document is the consolidated product, design, engineering, security, payments, SEO, mobile, backend, and deployment blueprint for Burner Point. It covers Sections 1 through 22 and is written to be beginner-friendly while staying production-accurate.
 
-## Specification Coverage Map
-
-This document covers the requested Burner Point scope end-to-end and maps each requested section into implementation-ready product, UI, backend, security, SEO, and deployment work.
-
-- Section 1: Core product understanding is covered in Product Understanding and Strategy.
-- Section 2: Brand identity is covered in Design System and the landing page direction.
-- Section 3: Existing product stack is covered in Backend Architecture, Integrations, and Deployment Order.
-- Section 4: Required product modules are covered in Information Architecture, Web Page Structure, and Mobile App Structure.
-- Section 5: Authentication is covered in Authentication Flow.
-- Section 6: Landing page content is covered in Landing Page UX and Content Structure.
-- Section 7: Clickable links are covered in Information Architecture and Web Page Structure.
-- Section 8: Homepage feature expansion is covered in Landing Page UX and Feature Page Hierarchy.
-- Section 9: Blog, updates, careers, FAQ, help, and about content are covered in Web Page Structure.
-- Section 10: Desktop web UX is covered in Landing Page UX, Design System, and Quality Bar.
-- Section 11: Mobile web UX is covered in Landing Page UX, Design System, and Quality Bar.
-- Section 12: Native mobile requirements are covered in Mobile App Screen-by-Screen Structure.
-- Section 13: Tokens and components are covered in Design System.
-- Section 14: Design review is covered in Quality Bar.
-- Section 15: Full product modules are covered in Information Architecture and Implementation Phases.
-- Section 16: Twilio OTP is covered in Twilio OTP End-to-End Plan.
-- Section 17: Payments are covered in Payment Architecture and Webhook Flow.
-- Section 18: Backend integration rules are covered in Backend Architecture and Integrations.
-- Section 19: Security is covered in Security Architecture and Audit Checklist.
-- Section 20: SEO and indexing are covered in SEO, Indexing, and Discovery.
-- Section 21: Deployment targets are covered in Deployment Order and Current External Blockers.
-- Section 22: Beginner-friendly execution order is covered in Implementation Phases.
-
-## 1. Product Understanding and Strategy
-
-Burner Point is a privacy-first telecommunications and digital access platform. The core promise is simple:
+Burner Point is a real privacy-first telecommunications and digital access platform. The north-star promise is:
 
 Private by Design. Stay Anonymous. Stay Connected.
 
-The platform gives users controlled access to communication infrastructure without exposing their personal phone number. It combines temporary numbers, real-SIM-backed verification, US/Canada conversation numbers, eSIM connectivity, proxies, built-in privacy protection, developer APIs, billing, and support.
+The product should feel premium, secure, minimal, controlled, high-trust, modern, dark-mode dominant, and telecom-grade. It should not feel like a generic SaaS template.
 
-The product must feel like telecom infrastructure, not a generic SaaS landing page. The emotional signal is controlled power: a dark, secure, premium system for users who care about identity separation and communication control.
+## Repository Alignment
 
-## Current Code Integration Status
+The current codebase is a monorepo with these main surfaces:
 
-This repository now includes a first production integration pass for the core launch path:
+| Surface | Path | Purpose |
+| --- | --- | --- |
+| Web | `apps/web` | Next.js public site, auth, dashboard, SEO, social metadata |
+| API | `apps/api` | NestJS backend, auth bridge, OTP, numbers, payments, webhooks, integrations, security, readiness |
+| Mobile | `apps/mobile` | Expo app for iOS and Android |
+| Docs | `docs` | Architecture, security, SEO, integrations, payments, deployment, product direction |
+| Scripts | `scripts` | Security scan and operational helpers |
 
-- Public web routes are live through `apps/web/src/lib/marketing-data.ts`, the dynamic `[slug]` route, dedicated `/api` and `/api/docs` pages, sitemap, robots, manifest, and global metadata.
-- Burner Point brand identity is now codified in shared web and mobile token modules, with exact Deep Green, Black, Cyber Green, Neon Green, metallic accents, Neue Haas fallback typography, 8/12/16px radius guidance, and standard motion values.
-- The web global shell, marketing chrome, landing page hero, native app splash, auth screens, dashboard tabs, calls, inbox, numbers, credits, profile, and settings screens now consume the shared brand tokens instead of hardcoded near-black/gray theme values.
-- The preferred production stack is now encoded in the API through `/api/platform/stack` and `/api/platform/readiness`, covering Next.js, Vercel, NestJS, Railway, Neon, Clerk, Resend, Sentry, Expo, OpenAI, S3-compatible storage, Redis queues, PostHog, Paystack, Paddle, NOWPayments, Twilio, Bandwidth, Infobip, Vonage, 1GLOBAL, Bright Data, and WireGuard.
-- The authenticated dashboard now shows stack readiness without exposing secrets, and the native settings screen includes the mobile-facing stack map.
-- Header authentication links route directly to `/auth/login` and `/auth/signup`, while the Burner Point logo routes to `/`.
-- Clerk-backed sign-up and sign-in flows collect first name, last name, email, phone number, password, Terms acceptance, Privacy acceptance, OAuth, reset password, and second-factor handling.
-- Web dashboard verification at `/dashboard/verification` now sends and verifies Twilio OTP codes through the Burner Point backend only.
-- API phone authentication validates E.164 numbers, limits sends and invalid verification attempts, expires sessions, and keeps Twilio credentials server-side.
-- Payment initialization DTOs now have class-validator decorators so the global Nest whitelist pipe preserves intended fields.
-- Web billing sends the selected credit package, gateway, and client platform to the API, with Paystack, Paddle, and NOWPayments surfaced as core gateway paths.
-- Gateway return pages exist at `/dashboard/payments/success` and `/dashboard/payments/cancel`.
-- API payment callbacks now derive live web/API URLs from `WEB_URL` and `API_URL`, removing hardcoded placeholder domains.
-- Web API bridge tokens now use `sessionStorage` instead of durable `localStorage`, and old local token keys are cleared on new sessions.
-- Settings and profile routes exist at `/dashboard/settings` and `/dashboard/profile`.
-- Dashboard module placeholders were replaced with product-specific telecom control pages for calls, voicemail, rentals, eSIM, proxies, VPN, and support.
-- The authenticated dashboard overview now frames Burner Point as a private telecom control center, with quick paths to verification, rentals, numbers, billing, eSIM, proxies, and VPN.
-- Number management now uses clearer lifecycle language for verification, non-renewable rentals, and renewable rentals.
-- Native mobile inbox now has a real conversation-screen scaffold for calls, texts, voicemail, and MMS instead of a coming-soon placeholder.
-- Production verification completed locally with `npm run build` in `apps/web`, `npm run build` in `apps/api`, and `npx tsc --noEmit` in `apps/mobile`.
+Current implemented foundations include:
 
-### Core Product Pillars
+- Brand tokens in `apps/web/src/lib/brand.ts`.
+- Public content, nav links, footer links, FAQ, blog, updates, careers, help, about, eSIM, proxies, security, terms, and privacy through `apps/web/src/lib/marketing-data.ts` and public routes.
+- SEO registry, sitemap, robots, Open Graph image, Twitter image, IndexNow key route, noindex auth layout, and public metadata through `apps/web/src/lib/seo.ts`.
+- Clerk-oriented auth pages and onboarding routes.
+- Dashboard routes for verification, rentals, numbers, inbox, calls, voicemail, eSIM, proxies, VPN, billing, support, API, webhooks, settings, profile, and security.
+- Twilio OTP backend through `phone-auth` endpoints.
+- Backend integration contracts for Twilio, Infobip, Vonage, Bandwidth, OpenAI, 1GLOBAL, Bright Data, WireGuard, Paystack, Flutterwave, Squad, Korapay, OPay, Paddle, NOWPayments, Resend, Clerk, Neon, Sentry, Railway, DBeaver, S3, PostHog, and Expo.
+- Payment architecture and provider adapters with core gateway posture.
+- Security middleware, audit service, upload hardening, RLS migration, and secret scanning.
+- Deployment readiness endpoint, GitHub CI, EAS environment separation, and deployment runbook.
 
-- Privacy control: users can verify, communicate, and register without exposing their real number.
-- Telecom reliability: real routes, provider fallbacks, webhook processing, and observable delivery health.
-- User simplicity: one dashboard for numbers, messages, calls, verifications, billing, and support.
-- Developer utility: API keys, webhooks, docs, and sandbox-ready flows.
-- Revenue stability: credits, verification purchases, rentals, subscriptions, and compliant web-first checkout.
+## 1. Full Product Understanding and Implementation Strategy
 
-### Bounded Systems
+### Product Definition
 
-- Conversation system: US/Canada only. Handles SMS, MMS, voice, voicemail, WebRTC/WiFi/mobile-data calling, contacts, and conversation history.
-- Verification system: global. Handles SMS OTP and voice OTP for many countries and services, isolated from conversation inbox traffic.
-- Shared platform: Clerk identity, wallet, billing, risk, audit logs, support, API keys, analytics, and observability.
+Burner Point gives users private access to telecommunications and digital identity tools without exposing their personal phone number or primary network identity.
+
+The platform combines:
+
+- Secure non-VoIP number access.
+- SMS, OTP, and voice verification.
+- Temporary and renewable number rentals.
+- US/Canada conversation numbers for calls, voicemail, text, SMS, MMS, and photo messaging over WiFi or cellular data.
+- eSIM purchase and management.
+- Proxy purchase and management.
+- Built-in WireGuard-based privacy protection inside Burner Point.
+- Developer APIs.
+- Credits, subscriptions, and one-time purchases.
+- Support, audit, fraud, and abuse controls.
+
+### Core Positioning
+
+- Private by Design.
+- Stay Anonymous.
+- Stay Connected.
+
+### Business Model
+
+Burner Point revenue should come from:
+
+- Verification purchases starting at `$0.99+`.
+- Non-renewable rentals starting at `$5.99+`.
+- Renewable monthly rentals and subscriptions starting at `$15.99+ / month`.
+- eSIM plans.
+- Proxy plans.
+- Built-in VPN/privacy tier when activated.
+- API usage for developers and teams.
+- Future enterprise/workspace plans.
+
+### Product Strategy
+
+Build Burner Point as a modular product platform, not a pile of pages:
+
+1. Public site converts visitors with clear privacy, telecom, pricing, and trust messaging.
+2. Clerk owns authentication and session security.
+3. The dashboard becomes the private telecom control center.
+4. The backend owns every provider integration and never exposes secrets to web or mobile.
+5. Wallet, billing, ledger, webhooks, and audit logs become the revenue source of truth.
+6. Mobile becomes the operational companion for fast OTP receipt, inbox checks, calls, notifications, renewals, and support.
+7. Security, observability, abuse prevention, and deployment readiness are treated as product features, not cleanup tasks.
+
+### Engineering Strategy
+
+Use a modular monolith on Railway for launch:
+
+- Faster iteration.
+- Shared user, wallet, fraud, support, provider, and audit state.
+- Easier debugging.
+- Clean module boundaries allow future extraction when scale proves it.
+
+Do not create microservices yet. Candidate future extractions are provider routing workers, billing reconciliation workers, VPN control plane, and analytics/event ingestion.
 
 ## 2. Information Architecture
 
-The public site should guide visitors from awareness to trust to action.
+### Public Information Architecture
 
-### Public Navigation
+| Route | Purpose | Status |
+| --- | --- | --- |
+| `/` | Landing page and conversion hub | Implemented |
+| `/overview` | Product ecosystem explanation | Implemented through marketing route |
+| `/verifications` | SMS, OTP, and voice verification | Implemented through marketing route |
+| `/rentals` | Temporary and renewable numbers | Implemented through marketing route |
+| `/numbers` | Number strategy and public entry | Implemented through marketing route |
+| `/esim` | eSIM product page | Implemented through marketing route |
+| `/proxies` | Proxies product page | Implemented through marketing route |
+| `/security` | VPN/privacy and trust posture | Implemented through marketing route |
+| `/api` | Developer API landing | Implemented |
+| `/api/docs` | Developer API docs page | Implemented |
+| `/pricing` | Pricing plans | Implemented through marketing route |
+| `/blog` | Educational content | Implemented through marketing route |
+| `/updates` | Product announcements | Implemented through marketing route |
+| `/careers` | Mission and roles | Implemented through marketing route |
+| `/faq` | FAQ | Implemented through marketing route |
+| `/help` | Help Center | Implemented through marketing route |
+| `/help-center` | Dedicated Help Center page | Implemented |
+| `/about` | Mission and company story | Implemented through marketing route |
+| `/contact` | Support and contact | Implemented through marketing route |
+| `/support` | Support page | Implemented through marketing route |
+| `/terms` | Terms | Implemented through marketing route |
+| `/privacy` | Privacy Policy | Implemented through marketing route |
+| `/privacy-policy` | Dedicated Privacy page | Implemented |
 
-- `/` landing page
-- `/overview`
-- `/verifications`
-- `/rentals`
-- `/api`
-- `/api/docs`
-- `/pricing`
-- `/blog`
-- `/updates`
-- `/careers`
-- `/faq`
-- `/help`
-- `/about`
-- `/contact`
-- `/support`
-- `/terms`
-- `/privacy`
-- `/security`
-- `/esim`
-- `/proxies`
-- `/numbers`
+### Authentication IA
 
-### Auth Navigation
+| Route | Purpose |
+| --- | --- |
+| `/auth/login` | Sign in with email, phone, OAuth, password, reset path |
+| `/auth/signup` | Create account |
+| `/auth/register` | Register alias route |
+| `/auth/phone-verify` | Phone verification client |
+| `/sso-callback` | OAuth callback |
+| `/onboarding` | Post-auth onboarding |
 
-- `/auth/login`
-- `/auth/signup`
-- `/auth/register`
-- `/sso-callback`
-- `/onboarding`
-- `/dashboard`
+### Dashboard IA
 
-### Authenticated Navigation
+| Route | Purpose |
+| --- | --- |
+| `/dashboard` | Private telecom command center |
+| `/dashboard/inbox` | Conversation inbox |
+| `/dashboard/messages` | Message threads |
+| `/dashboard/calls` | Calls |
+| `/dashboard/voicemail` | Voicemail |
+| `/dashboard/contacts` | Contacts |
+| `/dashboard/verification` | OTP and phone verification |
+| `/dashboard/rentals` | Rental purchase and management |
+| `/dashboard/numbers` | Owned numbers, filters, lifecycle |
+| `/dashboard/esim` | eSIM plans and active eSIMs |
+| `/dashboard/proxies` | Proxy purchase and management |
+| `/dashboard/vpn` | Built-in VPN status and controls |
+| `/dashboard/credits` | Credits and wallet |
+| `/dashboard/billing` | Billing overview |
+| `/dashboard/subscriptions` | Subscription management |
+| `/dashboard/support` | Support entry |
+| `/dashboard/support/tickets` | Support tickets |
+| `/dashboard/api` | API tools |
+| `/dashboard/developer` | Developer controls |
+| `/dashboard/webhooks` | Webhook management |
+| `/dashboard/settings` | Settings |
+| `/dashboard/profile` | Profile |
+| `/dashboard/security` | Security settings |
+| `/dashboard/payments/success` | Payment success return |
+| `/dashboard/payments/cancel` | Payment cancel return |
 
-- `/dashboard`
-- `/dashboard/inbox`
-- `/dashboard/calls`
-- `/dashboard/voicemail`
-- `/dashboard/verification`
-- `/dashboard/rentals`
-- `/dashboard/numbers`
-- `/dashboard/esim`
-- `/dashboard/proxies`
-- `/dashboard/vpn`
-- `/dashboard/credits`
-- `/dashboard/support`
-- `/dashboard/api`
-- settings/profile route when available
+### Backend IA
 
-### Global Header Routes
-
-- Logo icon -> `/`
-- Sign In -> `/auth/login`
-- Get Started -> `/auth/signup`
-- Overview -> `/overview`
-- Verifications -> `/verifications`
-- Rentals -> `/rentals`
-- API -> `/api`
-- Pricing -> `/pricing`
-- Blog -> `/blog`
-- FAQ -> `/faq`
-- About -> `/about`
-- Contact -> `/contact`
-- View API Docs -> `/api/docs`
-
-### CTA Route Map
-
-- Learn More -> `/overview`
-- View API Docs -> `/api/docs`
-- Get Verification -> `/verifications`
-- Rent A Number -> `/rentals`
-- Start Monthly Plan -> `/pricing`
-- Get Your Number -> `/rentals` for public pages, then `/dashboard/numbers` after auth
-- View Pricing -> `/pricing`
-- Get Your eSIM -> `/esim`
-- Get Proxies -> `/proxies`
-- See Security -> `/security`
+| Domain | Modules |
+| --- | --- |
+| Auth | `auth`, `phone-auth`, Clerk exchange |
+| Users | `users`, profile, wallet |
+| Telecom | `numbers`, `messaging`, `webhooks`, `global/provider.service` |
+| Payments | `payments`, `paddle`, `billing-v2` |
+| Integrations | `integrations`, provider contracts |
+| Platform readiness | `platform`, `deployment-registry` |
+| Security | `security`, `security.middleware`, `abuse` |
+| Realtime | `gateway` |
+| AI | `ai` |
+| Enterprise | `enterprise`, `api-platform`, `admin` |
+| SEO | `seo` |
 
 ## 3. Web Page-by-Page Structure
 
 ### Landing Page
 
-Purpose: conversion and trust.
+Primary goal: convert privacy-aware visitors into signups or product exploration.
 
-Hero hierarchy:
+Required structure:
 
-- Eyebrow: Private by Design.
-- Support line: Stay Anonymous. Stay Connected.
-- Main headline: Do not want to give out your phone number? No problem. Use ours.
-- Body: Generate secure, non-VoIP numbers instantly and stay in control of your communication anytime, anywhere.
-- Trust line: Receive SMS, voice, and OTP verifications from 900+ platforms worldwide.
-
-Hero CTAs:
-
-- Primary: Get Started -> `/auth/signup`
-- Secondary: Learn More -> `/overview`
-- Utility: View API Docs -> `/api/docs`
-
-Required sections:
-
-- Animated country and number coverage rail with real flag colors and dial codes.
-- How it works in four steps.
-- Phone numbers and verifications.
-- Conversation system for US/Canada calls, SMS, MMS, voicemail, and audio, photo and video sharing.
-- eSIM purchase.
-- Proxies purchase.
-- Built-in VPN privacy and protection.
-- Why Burner Point.
-- Pricing cards.
-- Developer API preview.
-- FAQ preview.
-- Final CTA.
-- Footer with trust badges, social links, Telegram, email, legal links, and copyright.
-
-Design direction:
-
-- Dark cinematic background using Deep Green and Black.
-- Cyber Green primary buttons.
-- Neon Green only for subtle signal/glow states.
-- Metallic gradient for premium brand text and accents.
-- Avoid cluttered gradients and excessive motion.
+1. Sticky header with logo, nav, Sign In, Get Started.
+2. Hero:
+   - Eyebrow: Private by Design.
+   - Headline: Private by Design. Stay Anonymous. Stay Connected.
+   - Core line: Do not want to give out your phone number? No problem. Use ours.
+   - Body: Generate secure, non-VoIP numbers instantly and stay in control of your communication anytime, anywhere.
+   - Trust line: Receive SMS, Voice, and OTP verifications from 900+ platforms worldwide.
+   - CTAs: Get Started, Learn More, View API Docs.
+3. Trust badges:
+   - 256-bit AES Encryption.
+   - No Logs Policy.
+   - GDPR Compliant.
+   - Real SIM Numbers.
+4. How It Works:
+   - Choose your number.
+   - Use it for verification, calls, or messaging.
+   - Receive SMS, OTP, or voice instantly.
+   - Let it expire or keep it.
+5. Product modules:
+   - Phone Number Rentals and Verifications.
+   - eSIM Purchase.
+   - Proxies Purchase.
+   - VPN Privacy and Protection.
+6. Conversation section:
+   - US/Canada calls, voicemail, text, SMS, MMS, photo messaging.
+   - WiFi/data calling.
+   - No roaming fees.
+   - Cross-platform access.
+7. Pricing preview.
+8. Use cases.
+9. Developer API preview.
+10. FAQ preview.
+11. Final CTA.
+12. Footer with route groups, support contacts, socials, legal, and copyright.
 
 ### Overview
 
-Purpose: explain the product ecosystem.
+Purpose: explain Burner Point as one privacy telecom platform.
 
 Sections:
 
-- What Burner Point is.
-- Conversation vs Verification distinction.
-- Shared wallet, billing, auth, risk, and support layers.
-- Use cases: marketplace, dating, business, travel, developer workflows, personal privacy.
+- Product promise.
+- Conversation vs verification distinction.
+- Shared account, wallet, support, risk, API, and audit layers.
+- Who it is for.
 - CTA to pricing and signup.
 
 ### Verifications
 
-Purpose: sell one-time and repeated OTP delivery.
+Purpose: sell SMS, OTP, and voice verification.
 
 Sections:
 
+- Non-VoIP and SIM-backed positioning.
 - SMS OTP and voice OTP.
-- 900+ service support.
-- Country/service selector model.
-- Price and availability messaging.
-- Active verification lifecycle.
-- History and audit trail.
-- CTA to create account.
+- 900+ platforms.
+- Country/service flow.
+- Code receipt states.
+- Abuse limits and delivery transparency.
+- CTA: Get Verification.
 
 ### Rentals
 
-Purpose: sell non-renewable and renewable number access.
+Purpose: sell temporary and renewable number access.
 
 Sections:
 
-- Non-renewable rentals at `$5.99+`.
-- Renewable rentals at `$15.99+ / month`.
-- Rental expiration, grace period, renewal, and release model.
-- US/Canada conversation support where applicable.
-- CTA to pricing and signup.
+- Non-renewable rentals.
+- Renewable monthly rentals.
+- Expiry, renewal, and release rules.
+- Conversation support where applicable.
+- CTA: Rent A Number.
+
+### Numbers
+
+Purpose: explain the number catalog and lifecycle.
+
+Sections:
+
+- Verification numbers.
+- Rental numbers.
+- Conversation numbers.
+- Search, filters, availability, price, type, region, lifecycle.
+
+### eSIM
+
+Purpose: sell global connectivity without physical SIM cards.
+
+Sections:
+
+- Destination-ready plans.
+- Instant activation.
+- Multi-country access.
+- Usage tracking.
+- 1GLOBAL provider abstraction.
+
+### Proxies
+
+Purpose: sell routing flexibility and privacy-enhanced browsing.
+
+Sections:
+
+- Residential proxies.
+- Mobile proxies.
+- Location selection.
+- Credential masking.
+- Rotation and session behavior.
+
+### Security
+
+Purpose: explain in-platform privacy protection.
+
+Sections:
+
+- WireGuard-based protection.
+- Backend-only provider logic.
+- No-logs posture.
+- Reduced exposure.
+- Secure routing.
+- VPN is a feature inside Burner Point, not a standalone product.
 
 ### API and API Docs
 
-Purpose: win developers and business buyers.
+Purpose: win developers.
 
 Sections:
 
 - API overview.
-- API key management.
+- API keys.
 - Number provisioning.
 - Verification lifecycle.
-- Messaging and callback webhooks.
-- Webhook idempotency.
+- Messaging.
+- Webhooks.
+- Idempotency.
+- Signature verification.
 - Sandbox and production notes.
-- SDK roadmap.
 
 ### Pricing
 
-Purpose: reduce decision friction.
+Purpose: reduce purchase friction.
 
-Plans:
+Pricing:
 
-- Verification: `$0.99+ / verification`
-- Non-renewable rental: `$5.99+ / rental`
-- Monthly plan: `$15.99+ / month`
+- Verification: `$0.99+ / verification`.
+- Non-renewable rental: `$5.99+ / rental`.
+- Renewable rental/subscription: `$15.99+ / month`.
 
-Payment messaging:
+Payment notes:
 
-- Paystack for primary local web checkout.
-- Paddle for international card/subscription scenarios.
-- NOWPayments for crypto when strategically enabled.
-- Flutterwave, Squad, Korapay, and OPay are secondary gateways after core revenue stability.
+- Paystack for primary local card/bank flow.
+- Paddle for international cards and subscriptions.
+- NOWPayments for crypto where enabled.
+- Flutterwave, Squad, Korapay, and OPay stay secondary until core revenue is stable.
 
 ### Blog
 
-Five launch posts:
+Launch posts:
 
-- Why You Should Never Use Your Personal Number Online
-- How Burner Numbers Protect Your Identity
-- Understanding Non-VoIP Numbers
-- Privacy in the Digital Age: Anonymous and Connected
-- How Burner Point Handles Secure Communication
-
-Each card needs:
-
-- Category
-- Reading time
-- Anchor ID
-- Summary
-- CTA to read
+- Why You Should Never Use Your Personal Number Online.
+- How Burner Numbers Protect Your Identity.
+- Understanding Non-VoIP Numbers.
+- Privacy in the Digital Age: Anonymous and Connected.
+- How Burner Point Handles Secure Communication.
 
 ### Updates
 
-Five launch updates:
+Launch updates:
 
 - New country numbers added.
-- API webhook and documentation improvements.
+- API improvements.
 - New eSIM regions.
 - New proxy region and durability improvements.
 - WiFi and cellular-data communication improvements for US/Canada.
@@ -309,24 +369,24 @@ Five launch updates:
 
 Sections:
 
-- Mission: build private communication infrastructure.
+- Mission.
 - Why work at Burner Point.
-- Remote-first opportunities.
-- Example roles: product designer, full-stack engineer, telecom integrations engineer, risk/fraud analyst, support operations lead.
-- Culture: privacy, craft, reliability, calm execution.
+- Remote opportunities.
+- Example roles.
+- Culture: privacy, telecommunications, product craftsmanship.
 
 ### FAQ
 
-Required topics:
+Must answer:
 
 - What burner numbers are.
-- How conversation inbox works for US/Canada calls, voicemail, texts, SMS, MMS, and photos.
-- How verification works.
+- How conversation inbox works.
+- How verifications work.
 - How rentals work.
 - Renewable vs non-renewable numbers.
 - eSIM.
 - Proxies.
-- Built-in VPN protection.
+- VPN protection.
 - Payments.
 - Account setup.
 - Refunds and billing.
@@ -336,115 +396,120 @@ Required topics:
 
 Categories:
 
-- Getting Started
-- Verifications
-- Rentals
-- Payments
-- Security
-- API / Developer Tools
-- Account & Authentication
+- Getting Started.
+- Verifications.
+- Rentals.
+- Payments.
+- Security.
+- API / Developer Tools.
+- Account & Authentication.
 
-Article framework:
+Article structure:
 
-- Overview
-- Before you begin
-- Steps
-- Troubleshooting
-- When to contact support
-
-### About
-
-Core story:
-
-Burner Point exists to give users control over communication without exposing identity. The product serves privacy-conscious individuals, builders, operators, travelers, and businesses that need reliable telecom access with reduced personal exposure.
+- What this article covers.
+- Before you begin.
+- Steps.
+- Troubleshooting.
+- When to contact support.
 
 ## 4. Mobile App Screen-by-Screen Structure
 
-Native mobile should feel like an operations console, not a web page squeezed into a phone.
+Native app goal: make Burner Point usable as a private telecom companion on iOS and Android.
 
 ### Navigation
 
-Bottom tabs:
+Use bottom tabs for:
 
-- Dashboard
-- Messages
-- Verify
-- Numbers
-- Settings
+- Dashboard.
+- Messages.
+- Verification.
+- Numbers/Rentals.
+- Settings/Profile.
 
 Secondary routes:
 
-- Calls
-- Voicemail
-- Rentals
-- eSIM
-- Proxies
-- VPN
-- Billing
-- Support
-- API Keys
+- Calls.
+- Voicemail.
+- Contacts.
+- Activity.
+- eSIM.
+- Proxies.
+- VPN.
+- Billing.
+- Support.
+- API/Developer.
 
 ### Onboarding
 
 Screens:
 
-- Private by Design.
-- Choose what you need: verification, rental, conversation, eSIM, proxies, VPN.
-- Create account with Clerk.
-- Verify email and phone.
-- Set privacy preferences.
-- Land in dashboard.
+1. Privacy promise.
+2. Select primary need: verification, rental, conversation, eSIM, proxies, VPN.
+3. Create account or sign in.
+4. Verify email/phone.
+5. Set privacy preferences.
+6. Land on dashboard.
+
+### Sign Up and Sign In
+
+Use Clerk Expo:
+
+- Email.
+- Phone.
+- Password.
+- OAuth where enabled.
+- Secure token cache.
+- Native-safe session storage.
 
 ### Dashboard
 
 Cards:
 
 - Active numbers.
-- Active verifications.
-- Wallet/credits.
+- Active verification.
+- Wallet balance.
 - Recent messages.
 - VPN status.
 - Support status.
+- Quick actions.
 
-### Conversation Inbox
-
-US/Canada only.
-
-Features:
-
-- Conversation threads.
-- SMS/MMS.
-- Photo sharing.
-- Call button.
-- Voicemail badge.
-- Contact details.
-- Message delivery status.
-
-### Calls and Voicemail
+### Conversation Inbox / Messages
 
 Features:
 
-- Dialer or call action.
+- Thread list.
+- SMS/MMS messages.
+- Photo message preview.
+- OTP extraction.
+- Delivery status.
+- Contact context.
+- Quick copy.
+
+### Calls / Voicemail
+
+Features:
+
+- Incoming call state.
 - Active call screen.
-- WiFi/data calling indicator.
 - Call history.
 - Voicemail playback.
-- Missed call status.
+- Missed call indicator.
+- WiFi/data calling indicator.
 
 ### Verification
 
 Flow:
 
-- Select service.
-- Select country.
-- View price.
-- Confirm purchase.
-- Receive number.
-- Wait for code.
-- Display code and history.
-- Retry/fallback state.
+1. Select country.
+2. Select service.
+3. See price.
+4. Confirm purchase.
+5. Receive number.
+6. Wait for SMS/voice code.
+7. Copy code.
+8. Complete or retry.
 
-### Rentals and Numbers
+### Rentals / Numbers
 
 Features:
 
@@ -452,101 +517,130 @@ Features:
 - Expiration timers.
 - Renewable vs non-renewable labels.
 - Search and filters.
-- Renewal CTA.
-- Release number action.
+- Renew.
+- Release.
+- Open inbox.
+
+### Activity
+
+Features:
+
+- Payment events.
+- Provider events.
+- Verification attempts.
+- Number lifecycle events.
+- Support updates.
 
 ### eSIM
 
 Features:
 
-- Plans by country/region.
-- Data amount and duration.
-- Purchase flow.
-- Activation QR or installation instructions.
-- Usage tracking.
+- Plan catalog.
+- Country/region search.
+- Active eSIM.
+- Install instructions.
+- Usage status.
 
 ### Proxies
 
 Features:
 
-- Residential, mobile, datacenter, SOCKS5 options.
+- Proxy plans.
 - Region selection.
-- Active/inactive status.
-- Credential display with masked values.
+- Active credentials.
+- Masked secret display.
 - Rotation controls.
 
 ### VPN
 
-Feature positioning:
-
-- Built-in protection inside Burner Point.
-- Not sold as a standalone VPN product.
-
-Screen:
+Features:
 
 - Toggle.
-- Server/region selection.
-- Status indicator.
-- Recent protection activity.
+- Server selection.
+- Current status.
+- Session timer.
+- Disconnect.
 
 ### Billing
 
 Features:
 
-- Balance.
-- Add credits.
+- Wallet balance.
+- Credit packages.
 - Transaction history.
-- Payment method entry points.
 - Subscription status.
+- Web checkout handoff or store-compliant billing when required.
 
 ### Support
 
 Features:
 
-- Ticket creation.
-- Open/closed tickets.
-- Telegram support links.
+- Ticket list.
+- New ticket.
 - Email support.
-- Help Center article search.
+- Telegram support.
+- Help articles.
+
+### Settings / Profile
+
+Features:
+
+- Profile.
+- Security.
+- Sessions.
+- Notifications.
+- App preferences.
+- Sign out.
+- Delete account.
 
 ## 5. Authentication Flow
 
-Clerk is the primary authentication authority.
+### Auth Provider
 
-### Required Sign-Up Fields
+Clerk is the primary authentication provider. Burner Point backend may exchange Clerk identity for internal API context, but Clerk remains the source of truth for sessions, OAuth, email verification, phone verification, password reset, and MFA.
+
+### Required Account Fields
 
 - First name.
 - Last name.
 - Email.
 - Phone number.
-- Password, unless using OAuth where Clerk handles identity proof.
-- Terms acceptance.
-- Privacy Policy acceptance.
+- Password unless OAuth-only.
+- Terms of Service checkbox.
+- Privacy Policy checkbox.
 
-### Web Sign-Up Flow
+### Create Account Flow
 
-1. User lands on `/auth/signup`.
-2. Burner Point logo links to `/`.
+1. User opens `/auth/signup`.
+2. Burner Point logo routes to `/`.
 3. User enters first name, last name, email, phone, password.
-4. User accepts Terms and Privacy Policy.
-5. User chooses native auth or OAuth.
-6. Clerk verifies email and/or phone depending on dashboard settings.
-7. App exchanges Clerk identity with Burner Point API context if needed.
-8. User lands on `/onboarding` or `/dashboard`.
+4. User accepts Terms and Privacy Policy separately.
+5. User chooses email/password or OAuth.
+6. Clerk creates the user.
+7. Clerk verifies email and/or phone based on dashboard configuration.
+8. Backend stores or maps Burner Point profile context.
+9. User is routed to onboarding or dashboard.
 
-### Web Sign-In Flow
+### Sign-In Flow
 
-1. User lands on `/auth/login`.
+1. User opens `/auth/login`.
 2. Header says Welcome Back.
-3. Logo links to `/`.
-4. Identifier accepts email or phone.
+3. Logo routes to `/`.
+4. Identifier supports email or phone.
 5. User enters password or chooses Google, Apple, or Microsoft.
-6. Clerk handles session and MFA when enabled.
-7. User lands on dashboard.
+6. Clerk handles 2FA if enabled.
+7. Backend session bridge completes where needed.
+8. User lands in `/dashboard`.
 
-### Forgot and Reset Password
+### Password Reset
 
-Use Clerk-owned reset flows for web first. Native mobile should add a dedicated reset-password screen using Clerk Expo APIs.
+Use Clerk reset flows:
+
+- Request reset.
+- Receive email or code.
+- Set new password.
+- Revoke suspicious sessions.
+- Audit the event.
 
 ### 2FA
 
@@ -554,585 +648,1008 @@ Support:
 
 - Email code.
 - Phone code.
-- Optional TOTP for admins and high-risk accounts.
+- TOTP for high-trust accounts/admins.
+- Backup codes for recovery.
 
-### Rate Limiting
+### Auth Rate Limits
 
-Auth-sensitive endpoints must use:
+All auth-sensitive routes require:
 
 - 5 attempts per route per 10 to 15 minutes.
-- Device/IP scoring.
-- Suspicious login flagging.
-- Lockout/challenge states.
+- IP and device tracking.
+- Brute-force lockout.
+- Suspicious login detection.
+- Audit record on high-risk events.
 
-## 6. Landing Page UX and Content Structure
+## 6. Landing Page / Homepage UX and Content Structure
 
-### Hero Layout
+### Desktop UX
 
-Desktop:
+Design for 1440px to 1920px and above:
 
-- Left column: messaging and CTAs.
-- Right column: animated telecom console with country flags, live-looking number cards, and privacy signals.
-- Background: subtle grid, cinematic green radial lighting.
+- Sticky navigation.
+- 12-column grid.
+- Large uppercase headline moments.
+- Premium whitespace.
+- Controlled density.
+- High-contrast CTAs.
+- Subtle glow interactions.
+- Smooth scrolling.
+- Section anchors.
+- Telecom-grade console visuals.
 
-Mobile:
+Hero composition:
 
-- Single column.
-- Main headline first.
-- Primary CTA always visible above the fold.
-- Country selector becomes a horizontal swipe rail.
+- Left: copy and CTAs.
+- Right: dynamic product console with numbers, country rail, verification state, and privacy badges.
+- Background: black/deep-green, subtle grid, controlled neon.
 
-### Motion Rules
+### Mobile Web UX
 
-- Reveal sections with 600 to 850ms ease-out.
-- Hover glow increases on primary CTAs.
-- Tap/click scale: 0.97.
-- Marquee rails pause on hover where possible.
-- Respect `prefers-reduced-motion`.
+Design for 320px to 768px:
 
-### Country and Region Selector
+- Collapsible nav.
+- Stacked sections.
+- Minimum 44px tap targets.
+- Short copy blocks.
+- Mobile-friendly forms.
+- Thumb-zone CTAs.
+- Accordions for FAQ.
+- Compact footer.
+- Reduced motion support.
 
-Required fields:
+### Homepage Content Order
 
-- Flag.
-- Country.
-- ISO code.
-- Dial code.
-- Sample number.
-- Use case label.
+1. Header.
+2. Hero.
+3. Trust badges.
+4. Country/number availability.
+5. How It Works.
+6. Phone Number Rentals and Verifications.
+7. Conversation Feature.
+8. eSIM.
+9. Proxies.
+10. VPN Privacy and Protection.
+11. Why Burner Point.
+12. Pricing.
+13. Use Cases.
+14. Developer API.
+15. FAQ.
+16. Final CTA.
+17. Footer.
 
-Example countries:
+### Homepage Copy Foundation
 
-- US +1.
-- CA +1.
-- GB +44.
-- FR +33.
-- DE +49.
-- JP +81.
-- IN +91.
-- NG +234.
-- ZA +27.
-- BR +55.
+Headline:
+
+Private by Design. Stay Anonymous. Stay Connected.
+
+Hero:
+
+Do not want to give out your phone number? No problem. Use ours.
+
+Generate secure, non-VoIP numbers instantly and stay in control of your communication anytime, anywhere.
+
+Supporting line:
+
+Receive SMS, Voice, and OTP verifications from 900+ platforms worldwide.
 
 ## 7. Feature Page Content and Hierarchy
 
 ### Phone Number Rentals and Verifications
 
-Message:
+Positioning:
 
-Secure access to real mobile numbers for SMS, OTP, voice verification, and US/Canada communication.
+Secure access to real mobile numbers.
 
-Key points:
+Hierarchy:
 
-- Real SIM-backed positioning.
-- Non-VoIP value.
-- SMS/OTP/voice.
-- Conversation feature supports calls, voicemail, text, SMS, MMS, and audio, photo and video sharing for US/Canada.
-- Short-term and renewable rentals.
+1. Real mobile number access.
+2. Non-VoIP/SIM-backed positioning.
+3. SMS, OTP, and voice verification.
+4. Short-term rentals.
+5. Renewable rentals.
+6. Multi-country access.
+7. US/Canada conversation support.
+8. CTA: Get Verification / Rent A Number.
 
 ### eSIM Purchase
 
-Message:
+Positioning:
 
 Global connectivity without physical SIM cards.
 
-Key points:
+Hierarchy:
 
-- 1GLOBAL API model.
-- Instant activation.
-- Travel-ready plans.
-- Usage tracking.
+1. Travel-ready data.
+2. Instant activation.
+3. Multi-country plans.
+4. Usage visibility.
+5. 1GLOBAL backend abstraction.
+6. CTA: Get Your eSIM.
 
 ### Proxies Purchase
 
-Message:
+Positioning:
 
-Privacy-enhanced routing and location control.
+Secure access, routing flexibility, and privacy-enhanced browsing.
 
-Key points:
+Hierarchy:
 
-- Bright Data provider abstraction.
-- Residential, mobile, datacenter, SOCKS5.
-- Rotation and region controls.
+1. Residential/mobile proxy access.
+2. Location flexibility.
+3. Credentials managed through backend.
+4. Rotation and durability.
+5. Usage and abuse controls.
+6. CTA: Get Proxies.
 
 ### VPN Privacy and Protection
 
-Message:
+Positioning:
 
-Protection built into Burner Point.
+In-built protection inside Burner Point.
 
-Key points:
+Hierarchy:
 
-- WireGuard self-hosted control plane.
-- Toggle and status indicator.
-- Feature-level protection, not a standalone VPN storefront.
+1. WireGuard-powered privacy layer.
+2. Server selection.
+3. Session status.
+4. Reduced exposure while using Burner Point.
+5. Not a standalone VPN brand.
+6. CTA: Learn More / See Security.
 
-## 8. Design System
+## 8. Full Navigation and Clickable Route Map
 
-### Color Tokens
+### Header
 
-- `--color-black`: `#000000`
-- `--color-deep-green`: `#013220`
-- `--color-cyber-green`: `#00FF9D`
-- `--color-neon-green`: `#39FF14`
-- `--color-metal-start`: `#9FA6B2`
-- `--color-metal-end`: `#E5E7EB`
-- `--color-card`: `#07140F`
-- `--color-border`: `#123425`
+| Element | Route |
+| --- | --- |
+| Logo | `/` |
+| Sign In | `/auth/login` |
+| Get Started | `/auth/signup` |
 
-### Typography
+### Main Navigation
 
-Preferred typeface:
+| Label | Route |
+| --- | --- |
+| Overview | `/overview` |
+| Verifications | `/verifications` |
+| Rentals | `/rentals` |
+| API | `/api` |
+| Pricing | `/pricing` |
+| Blog | `/blog` |
+| FAQ | `/faq` |
+| About | `/about` |
+| Contact | `/contact` |
 
-- Neue Haas Grotesk Display.
+### Hero and CTA Routes
 
-Current practical web fallback:
+| CTA | Route |
+| --- | --- |
+| Get Started | `/auth/signup` |
+| Learn More | `/overview` |
+| View API Docs | `/api/docs` |
+| Get Verification | `/verifications` |
+| Rent A Number | `/rentals` |
+| Start Monthly Plan | `/pricing` |
+| Get Your Number | `/numbers` or `/rentals` depending on context |
+| View Pricing | `/pricing` |
+| Get Your eSIM | `/esim` |
+| Get Proxies | `/proxies` |
+| See Security | `/security` |
 
-- Space Grotesk for display/UI.
-- DM Mono for technical labels.
+### Footer Product
 
-Implementation note:
+| Label | Route |
+| --- | --- |
+| Overview | `/overview` |
+| Verifications | `/verifications` |
+| Rentals | `/rentals` |
+| API | `/api` |
+| Pricing | `/pricing` |
 
-If licensed Neue Haas assets are available, self-host them and replace the current Google font stack. Until then, Space Grotesk is an acceptable high-contrast fallback.
+### Footer Company
 
-### Spacing
+| Label | Route |
+| --- | --- |
+| About | `/about` |
+| Blog | `/blog` |
+| Updates | `/updates` |
+| Careers | `/careers` |
 
-Use an 8-point system:
+### Footer Support
 
-- 4px micro.
-- 8px base.
-- 16px component padding.
-- 24px card spacing.
-- 32px section spacing.
-- 64px large blocks.
-- 96px to 128px hero/section rhythm on desktop.
+| Label | Route |
+| --- | --- |
+| FAQ | `/faq` |
+| Help Center | `/help` |
+| Contact | `/contact` |
 
-### Radius
+### Footer Legal
 
-- 8px: small pills and badges.
-- 12px: buttons and inputs.
-- 16px: cards.
-- 24px to 32px: hero panels and high-emphasis surfaces.
+| Label | Route |
+| --- | --- |
+| Terms | `/terms` |
+| Privacy Policy | `/privacy` |
+
+### Support Contacts
+
+| Contact | Link |
+| --- | --- |
+| Email | `mailto:info.burnerpoint@gmail.com` |
+| Telegram support | `https://t.me/burnerpoint` |
+| Telegram app channel | `https://t.me/burnerpointapp` |
+
+### Social Routes
+
+| Channel | Link |
+| --- | --- |
+| Instagram | `https://www.instagram.com/burnerpoint.app` |
+| Facebook | `https://www.facebook.com/burnerpoint.app` |
+| LinkedIn | `https://www.linkedin.com/company/burnerpointapp` |
+| TikTok | `https://www.tiktok.com/@burnerpointapp` |
+| Twitter/X | `https://x.com/burnerpointapp` |
+| Telegram | `https://t.me/burnerpointapp` |
+| YouTube | `https://www.youtube.com/@burnerpointapp` |
+
+### Dashboard Route Map
+
+| Label | Route |
+| --- | --- |
+| Dashboard | `/dashboard` |
+| Inbox | `/dashboard/inbox` |
+| Messages | `/dashboard/messages` |
+| Calls | `/dashboard/calls` |
+| Voicemail | `/dashboard/voicemail` |
+| Contacts | `/dashboard/contacts` |
+| Verification | `/dashboard/verification` |
+| Rentals | `/dashboard/rentals` |
+| Numbers | `/dashboard/numbers` |
+| eSIM | `/dashboard/esim` |
+| Proxies | `/dashboard/proxies` |
+| VPN | `/dashboard/vpn` |
+| Credits | `/dashboard/credits` |
+| Billing | `/dashboard/billing` |
+| Subscriptions | `/dashboard/subscriptions` |
+| Support | `/dashboard/support` |
+| Support Tickets | `/dashboard/support/tickets` |
+| API | `/dashboard/api` |
+| Developer | `/dashboard/developer` |
+| Webhooks | `/dashboard/webhooks` |
+| Settings | `/dashboard/settings` |
+| Profile | `/dashboard/profile` |
+| Security | `/dashboard/security` |
+
+## 9. Design System and Component Architecture
+
+### Tokens
+
+Brand tokens live in `apps/web/src/lib/brand.ts`.
+
+Colors:
+
+- Deep Green: `#013220`.
+- Black: `#000000`.
+- Cyber Green: `#00FF9D`.
+- Neon Green: `#39FF14`.
+- Metallic start: `#9FA6B2`.
+- Metallic end: `#E5E7EB`.
+- Surface: `#07140F`.
+- Border: `#123425`.
+
+Typography:
+
+- Primary: Neue Haas Grotesk Display.
+- Current web fallback: Space Grotesk.
+- Technical/OTP/data fallback: DM Mono.
+- Headlines: bold/black.
+- Labels: medium.
+- Body: regular.
+
+Spacing:
+
+- Use an 8-point grid.
+- 4px for micro gaps.
+- 8px for tight spacing.
+- 16px for component padding.
+- 24px and 32px for groups.
+- 64px and 96px for sections.
+
+Radius:
+
+- 8px small.
+- 12px medium.
+- 16px large.
+
+Motion:
+
+- 200ms to 300ms.
+- Ease-in-out or custom expressive easing.
+- Press scale around 0.97.
+- Hover glow increase.
+- Loading pulse.
+- Respect reduced motion.
 
 ### Components
 
-- Primary button: Cyber Green fill, black text, glow.
-- Secondary button: dark surface, border, white text.
-- Ghost button: transparent, green/white text.
-- Inputs: dark background, high contrast labels, 48px minimum height.
-- Cards: dark green/black gradients, subtle border, premium shadow.
-- Modals: centered, focus-trapped, escape-close, mobile full-screen if needed.
-- Accordions: accessible button headers, animated height where safe.
-- Pricing cards: plan, price, inclusions, CTA, recommended state.
-- Trust badges: short text, icon, link.
-- Support widget: email, Telegram, ticket CTA.
+Buttons:
 
-### State System
+- Primary: Cyber Green background, black text.
+- Secondary: bordered dark button.
+- Ghost: minimal text-first action.
 
-- Loading: pulse or skeleton.
-- Empty: explain state and next action.
-- Error: clear reason and next step.
-- Success: short confirmation and route forward.
-- Warning: use Neon Green sparingly for attention, not decoration.
+Inputs:
 
-## 9. Backend Architecture and Integrations
+- Dark background.
+- Clear label.
+- Validation text.
+- 44px or taller tap target.
+- Mobile keyboard/autofill types.
 
-### Architecture Style
+Cards:
 
-Launch as a modular monolith on Railway. Keep clear modules and provider adapters. Extract services later only when scale proves the need.
+- Use for repeated items, pricing plans, feature blocks, dashboard tiles, modals, and functional tools.
+- Do not nest cards inside cards.
 
-Modules:
+Accordions:
 
-- Auth and Clerk exchange.
-- Users and profiles.
-- Phone auth.
-- Conversation.
-- Verification.
-- Rentals/numbers.
-- Provider routing.
-- Payments.
-- Webhooks.
-- Messaging/email.
-- AI.
-- Risk/fraud.
-- Audit/events.
-- Support.
-- API keys/developer tools.
+- FAQ and Help Center.
+- Accessible button header.
+- Keyboard support.
 
-### Provider Abstraction
+Navigation:
 
-Frontend must never call provider APIs directly. The web and mobile apps call Burner Point API only.
-
-Adapters:
-
-- Twilio adapter.
-- Vonage adapter.
-- Infobip adapter.
-- Paystack adapter.
-- Flutterwave adapter.
-- Squad adapter.
-- Korapay adapter.
-- OPay adapter.
-- Paddle adapter.
-- NOWPayments adapter.
-- Resend SMTP/email adapter.
-- OpenAI service wrapper.
-- Future 1GLOBAL adapter.
-- Future Bright Data adapter.
-- Future WireGuard control-plane adapter.
-
-### Webhook Rules
-
-Every webhook endpoint must:
-
-- Verify signature where provider supports it.
-- Store raw payload.
-- Use idempotency keys.
-- Return quickly.
-- Enqueue heavy processing.
-- Update domain state in a transaction.
-- Log audit events.
-
-## 10. Twilio OTP End-to-End Plan
-
-### Frontend
-
-Form fields:
-
-- Phone number with country code.
-- Channel: SMS or voice.
-- Code entry.
+- Sticky desktop nav.
+- Collapsible mobile nav.
+- Dashboard sidebar or tabbed navigation.
+- Native bottom tabs on mobile.
 
 States:
 
-- Idle.
-- Sending.
-- Code sent.
-- Verifying.
-- Verified.
-- Failed.
-- Rate limited.
+- Empty: explain and offer next action.
+- Loading: skeleton/pulse.
+- Error: clear cause and next step.
+- Success: short confirmation and route forward.
 
-Validation:
+### Quality Rules
 
-- Require E.164 phone format.
-- Disable repeated submit while pending.
-- Show friendly retry timers.
+- No generic templates.
+- No noisy animation.
+- No fake privacy claims.
+- No frontend provider secrets.
+- Text must fit on 320px mobile.
+- Tap targets must be at least 44px.
+- Motion must not block performance.
 
-### Backend Endpoints
+## 10. Backend Architecture and Service Integration Plan
 
-Recommended:
+### Backend Shape
 
-- `POST /phone-auth/send`
-- `POST /phone-auth/verify`
+Burner Point uses NestJS on Railway with Neon Postgres, Redis-compatible queues/cache, and backend-only provider adapters.
 
-Server-side only:
+Core modules:
 
-- `TWILIO_ACCOUNT_SID`
-- `TWILIO_AUTH_TOKEN`
-- `TWILIO_VERIFY_SERVICE_SID`
+- `auth`.
+- `phone-auth`.
+- `users`.
+- `numbers`.
+- `messaging`.
+- `webhooks`.
+- `payments`.
+- `paddle`.
+- `billing-v2`.
+- `abuse`.
+- `ai`.
+- `api-platform`.
+- `integrations`.
+- `platform`.
+- `security`.
+- `seo`.
+- `gateway`.
+- `enterprise`.
+- `growth`.
 
-### Flow
+### Provider Rule
 
-1. Frontend submits phone to Burner Point API.
-2. API validates input and rate limit.
-3. API calls Twilio Verify.
-4. API stores session metadata.
-5. User submits code.
-6. API verifies with Twilio.
-7. API updates user phone verification state.
-8. Clerk/Burner Point auth context is synced.
-9. User continues to onboarding or dashboard.
+The frontend and mobile apps only call Burner Point backend endpoints. Provider secrets live server-side only.
+
+Backend-only providers:
+
+- Twilio.
+- Infobip.
+- Vonage.
+- Bandwidth.
+- OpenAI.
+- 1GLOBAL.
+- Bright Data.
+- WireGuard.
+- Paystack.
+- Flutterwave.
+- Squad.
+- Korapay.
+- OPay.
+- Paddle.
+- NOWPayments.
+- Resend.
+- Clerk secret APIs.
+- Neon.
+- Sentry auth token.
+- S3 credentials.
+- Private PostHog capture.
+
+### Public Client Env Allowed
+
+Allowed public values only:
+
+- `NEXT_PUBLIC_API_URL`.
+- `NEXT_PUBLIC_APP_URL`.
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`.
+- `NEXT_PUBLIC_SENTRY_DSN`.
+- `NEXT_PUBLIC_POSTHOG_KEY` where public analytics is intended.
+- `EXPO_PUBLIC_API_URL`.
+- `EXPO_PUBLIC_WEB_URL`.
+- `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`.
+- `EXPO_PUBLIC_SENTRY_DSN`.
+
+### Webhook Strategy
+
+Every webhook must:
+
+1. Verify signature where available.
+2. Store event and idempotency key.
+3. Return quickly.
+4. Process state changes safely.
+5. Emit realtime updates where needed.
+6. Update audit/provider health metrics.
+
+Webhook receivers include:
+
+- Twilio SMS, voice, status, recording, verify.
+- Vonage inbound and status.
+- Infobip inbound and status.
+- Bandwidth.
+- 1GLOBAL.
+- Bright Data.
+- WireGuard.
+- Clerk.
+- Paystack.
+- Paddle.
+- NOWPayments.
+- Secondary payment gateways when enabled.
+
+## 11. Twilio OTP End-to-End Implementation Plan
+
+### Frontend Flow
+
+1. User opens verification or phone verification UI.
+2. User enters phone number in E.164 format.
+3. User chooses SMS or voice where supported.
+4. Frontend validates basic phone format.
+5. Frontend calls Burner Point API, not Twilio.
+6. UI shows sending state.
+7. UI shows code entry state.
+8. User submits code.
+9. UI shows success, failure, retry, or rate-limited state.
+10. User redirects to onboarding or dashboard.
+
+### Backend Flow
+
+Endpoints:
+
+- `POST /phone-auth/send`.
+- `POST /phone-auth/verify`.
+
+Server env:
+
+- `TWILIO_ACCOUNT_SID`.
+- `TWILIO_AUTH_TOKEN`.
+- `TWILIO_VERIFY_SERVICE_SID`.
+
+Backend steps:
+
+1. Validate phone number.
+2. Apply rate limit.
+3. Create or update OTP session.
+4. Call Twilio Verify server-side.
+5. Store session metadata and expiration.
+6. Verify submitted code with Twilio.
+7. Mark phone as verified or reject.
+8. Audit result.
+9. Redirect client flow.
+
+### Error States
+
+- Invalid phone.
+- Unsupported country.
+- Too many attempts.
+- Provider unavailable.
+- Code expired.
+- Incorrect code.
+- Network error.
 
 ### Abuse Controls
 
-- 5 attempts per 10 to 15 minutes.
-- IP and device fingerprint rate limits.
-- Phone velocity limit.
-- Country risk scoring.
-- Provider failure monitoring.
+- 5 sends per route per 10 to 15 minutes.
+- Invalid code attempt limit.
+- IP/device velocity.
+- Phone velocity.
+- Provider health fallback.
+- Audit every blocked attempt.
 
-## 11. Payment Architecture and Webhook Flow
+### Smoke Test
 
-### Web Checkout
+1. Confirm Vercel calls Railway API URL.
+2. Confirm CORS allows production web origin.
+3. Confirm Twilio env exists in Railway.
+4. Send OTP to test phone.
+5. Verify code.
+6. Confirm dashboard redirect.
+7. Confirm no Twilio key appears in frontend bundle.
 
-Primary:
+## 12. Payment Architecture and Webhook Flow
+
+### Products
+
+One-time:
+
+- Verification credits.
+- Rentals.
+
+Recurring:
+
+- Monthly subscription / renewable rental.
+
+### Gateways
+
+Core:
 
 - Paystack.
+- Paddle.
+- NOWPayments.
 
-Strategic:
-
-- Paddle for international merchant-of-record/subscriptions.
-- NOWPayments for crypto if product strategy requires it.
-
-Secondary after core stability:
+Deferred:
 
 - Flutterwave.
-- Squad by GTCO.
+- Squad.
 - Korapay.
 - OPay.
 
-### Mobile Payment Posture
-
-Mobile apps should be account-management and consumption-first unless store-compliant billing is implemented. Apple and Google policies are strict around in-app purchases of digital goods, credits, subscriptions, and virtual access. Use web checkout or store billing where required.
-
-Sources:
-
-- Apple App Review Guidelines: https://developer.apple.com/app-store/review/guidelines/
-- Google Play Payments Policy: https://support.google.com/googleplay/android-developer/answer/9858738
-
 ### Payment Flow
 
-1. User selects credits, verification, rental, or subscription.
-2. Frontend calls Burner Point API.
-3. Backend creates payment session.
-4. Backend returns checkout URL or gateway session.
-5. User pays.
-6. Gateway sends webhook.
-7. Backend verifies webhook.
-8. Backend records transaction.
-9. Backend updates wallet/subscription/rental entitlement.
-10. User sees updated dashboard state.
+1. User chooses product.
+2. Frontend calls Burner Point backend.
+3. Backend validates user, product, amount, region, and gateway.
+4. Backend creates payment session.
+5. Backend calls gateway server-side.
+6. Backend returns checkout URL/session data.
+7. User completes checkout.
+8. Gateway sends webhook.
+9. Backend verifies webhook signature.
+10. Backend deduplicates webhook.
+11. Backend updates payment session.
+12. Backend writes wallet/ledger transaction.
+13. Backend assigns credits, rental, number, or subscription entitlement.
+14. User sees success page and updated dashboard.
 
-### Reconciliation
+### Reconciliation Requirements
 
-Required:
-
-- Payment sessions table.
-- Wallet transactions.
+- Payment session table.
 - Gateway reference.
-- Webhook deduplication.
-- Manual review state.
+- Idempotency key.
+- Ledger event.
+- Product entitlement.
+- Webhook raw payload hash.
 - Refund/chargeback state.
+- Manual review state.
 
-## 12. Security Architecture and Audit Checklist
+### Mobile Payment Caution
 
-### Non-Negotiables
+Native mobile must respect Apple and Google billing requirements for digital goods, credits, subscriptions, and app features. The safest launch posture is:
 
-- Never expose provider secrets in frontend bundles.
-- Never commit `.env` files.
-- Use environment variables in Railway, Vercel, EAS, Clerk, Sentry, and local ignored files.
-- Validate every request body.
-- Limit payload sizes.
-- Lock down CORS.
-- Use HTTPS-only deployed URLs.
-- Set secure headers with Helmet or equivalent.
-- Hash API keys before storage.
-- Verify webhooks.
-- Use idempotency for webhooks and payments.
-- Add audit logs for sensitive actions.
-- Add abuse scoring for telecom actions.
-- Add AI kill switch.
-- Keep mobile tokens in secure storage.
-- Rotate exposed credentials before production.
+- Web checkout for purchases.
+- Mobile app consumes entitlements.
+- If in-app purchases are added later, map store purchases into the same wallet and ledger system.
 
-### Hardcoded Secret Scan
+## 13. Security Architecture and Audit Checklist
 
-Run before every release:
+### Current Security Foundations
 
-- Search for `sk_`, `pk_live`, `sk_live`, `AC...`, `re_`, `whsec_`, `Bearer `, and full provider URLs with embedded credentials.
-- Confirm only placeholder examples are tracked.
-- Confirm `.env`, `.env.local`, `.env.sentry-build-plugin`, and app env files are ignored.
+- Security middleware.
+- CORS allowlist.
+- HTTPS redirect in production.
+- Helmet security headers.
+- Global validation pipe.
+- Payload size limits.
+- Webhook rate limits.
+- Auth route lockout.
+- Secret scanner script.
+- Security audit service.
+- Upload intent hardening.
+- Private object key strategy.
+- RLS migration for sensitive uploads.
+- Mobile secure token storage.
 
-### Sensitive Data
+### Security Checklist
 
-If Burner Point ever handles IDs, licenses, SSNs, or documents:
+Before every release:
 
-- Use object storage with private buckets.
+- Run `npm run security:scan`.
+- Run `git diff --check`.
+- Confirm `.env` files are not staged.
+- Confirm no provider keys are in frontend code.
+- Confirm web bundle does not contain private env values.
+- Confirm CORS origins match production domains.
+- Confirm webhooks verify signatures.
+- Confirm auth routes are rate-limited.
+- Confirm payment webhooks are idempotent.
+- Confirm upload URLs are private and short-lived.
+- Confirm AI kill switch works.
+- Confirm Sentry does not capture secrets.
+- Confirm PostHog does not capture sensitive message bodies or OTPs.
+- Confirm mobile tokens use secure storage.
+
+### Sensitive Upload Policy
+
+For IDs, licenses, SSNs, documents, support attachments, MMS, voicemail, and exports:
+
+- Store in private S3-compatible storage.
 - Use signed URLs.
-- Encrypt at rest.
-- Keep access logs.
-- Store only metadata in Postgres.
-- Add retention and deletion policies.
+- Use randomized user-sharded keys.
+- Enforce content type and size limits.
+- Audit access.
+- Never expose public bucket URLs.
+- Add retention and deletion policy.
 
-## 13. SEO, Indexing, and Discovery
+### Remaining Security Work
 
-Required:
+- Finalize production RLS policies after schema stabilizes.
+- Add provider-specific signature verification where provider formats are final.
+- Add admin 2FA enforcement.
+- Add device/session management UI.
+- Add data retention policy values.
+- Add formal incident runbook.
 
-- Sitemap.
-- Robots.
-- Google Search Console.
-- Bing Webmaster Tools.
-- IndexNow if configured.
-- Open Graph title, description, image, URL.
-- Structured data for organization, software application, FAQ, and article pages where appropriate.
-- Canonical URLs.
-- Metadata for every public page.
+## 14. Deployment Order From Zero to Production
 
-Current improvement included:
+### Step 1: Local Setup
 
-- Web metadata includes favicon icon references, Open Graph basics, and an Organization JSON-LD block.
-- `app/sitemap.ts` generates public routes from the marketing page registry.
-- `app/robots.ts` allows public content while blocking dashboard, onboarding, callback, test, and internal routes.
-- Dynamic marketing pages generate per-page metadata from `marketing-data.ts`.
+1. Install Node 20.
+2. Install dependencies at root and inside apps as needed.
+3. Copy `.env.example` to local ignored env files.
+4. Fill only sandbox/test credentials locally.
+5. Do not commit `.env`.
 
-Next SEO tasks:
+### Step 2: Verify Locally
 
-- Add a dedicated 1200x630 Open Graph image asset instead of relying on the brand SVG.
-- Add JSON-LD for FAQ and article pages.
-- Verify Google Search Console, Bing Webmaster Tools, and IndexNow keys after the production domain is final.
+Run:
 
-## 14. Deployment Order
-
-### Phase 1: Local Safety
-
-1. Check `git status -sb`.
-2. Confirm ignored secret files are not staged.
-3. Run web build.
-4. Run API build.
-5. Run mobile type check or build lint.
-6. Scan for hardcoded secrets.
-
-### Phase 2: GitHub
-
-1. Stage only intended tracked files.
-2. Commit with a clear message.
-3. Fetch origin.
-4. Rebase if needed.
-5. Push `main` or open a PR depending on release policy.
-
-### Phase 3: Neon
-
-1. Confirm `DATABASE_URL` points to Neon.
-2. Use DBeaver to inspect the target database.
-3. Apply migrations only after checking idempotency and backups.
-4. Never run destructive SQL blindly.
-
-### Phase 4: Railway
-
-1. Deploy API from `apps/api`.
-2. Confirm deployment success.
-3. Check `/health`.
-4. Inspect logs for boot errors.
-
-### Phase 5: Vercel
-
-1. Deploy web from `apps/web`.
-2. Confirm alias to `burnerpoint.vercel.app`.
-3. Check HTTP 200.
-4. Test auth pages and dashboard.
-
-### Phase 6: Expo Android
-
-1. Run production EAS Android build.
-2. Confirm AAB artifact.
-3. Upload to Google Play Console.
-4. Complete store listing and privacy forms.
-
-### Phase 7: Expo iOS
-
-1. Run interactive Apple credential setup.
-2. Complete browser login and 2FA.
-3. Validate distribution certificate.
-4. Run production iOS build.
-5. Upload to TestFlight/App Store Connect.
-
-Commands:
-
-```powershell
-cd C:\Users\HP\projects\burner-point\burner-point\apps\mobile
-eas credentials:configure-build --platform ios --profile production
-eas build --platform ios --profile production
+```bash
+npm run release:verify
 ```
 
-## 15. Implementation Phases
+This runs:
 
-### Phase A: Polish the Public Site
+- Secret scan.
+- API build.
+- Web build.
+- Mobile typecheck.
 
-- Finalize hero hierarchy.
-- Add homepage scrollytelling sections.
-- Ensure every CTA route is live.
-- Add sitemap and robots.
-- Add OG image and structured metadata.
-- Improve blog/update/help content depth.
+### Step 3: GitHub
 
-### Phase B: Complete Auth
+1. Create feature branch.
+2. Commit with clear scope.
+3. Open PR to `main`.
+4. Let GitHub Actions run.
+5. Review security, env, migrations, and webhooks.
+6. Merge only when clean.
 
-- Confirm Clerk dashboard has email, phone, password, Google, Apple, and Microsoft enabled.
-- Enforce first name, last name, email, phone, Terms, and Privacy.
-- Complete forgot/reset password on web and native mobile.
-- Add phone verification handling on mobile if Clerk requires phone verification.
+### Step 4: Neon
 
-### Phase C: Complete Dashboard Core
+1. Create development, staging, and production databases or branches.
+2. Enable SSL.
+3. Set `DATABASE_URL` in Railway only.
+4. Apply migrations to staging.
+5. Back up production before risky changes.
+6. Apply production migrations only after staging passes.
 
-- Active numbers overview.
-- Conversation inbox.
-- Verification purchase flow.
-- Rentals.
-- Billing and transaction history.
+### Step 5: Railway API
+
+1. Create staging service.
+2. Set staging env.
+3. Deploy API.
+4. Check `/health`.
+5. Check `/api/platform/readiness`.
+6. Check `/api/platform/deployment-readiness`.
+7. Test auth, OTP, payments, webhooks.
+8. Promote same commit to production.
+
+### Step 6: Vercel Web
+
+1. Set preview env.
+2. Deploy preview.
+3. Test public pages, auth, dashboard, SEO.
+4. Set production env.
+5. Deploy production.
+6. Check `/`, `/sitemap.xml`, `/robots.txt`, `/opengraph-image`, `/auth/login`, `/dashboard`.
+
+### Step 7: Clerk
+
+1. Configure production app.
+2. Enable email, phone, Google, Apple, Microsoft.
+3. Add web redirects.
+4. Add mobile redirects.
+5. Add webhook URL to Railway.
+6. Store secret key in Railway.
+7. Store publishable keys in Vercel and EAS.
+
+### Step 8: Sentry and PostHog
+
+1. Create separate projects for web, API, mobile.
+2. Set DSNs in Vercel, Railway, EAS.
+3. Set source-map auth token only if uploading source maps.
+4. Configure PostHog server-side capture.
+5. Confirm release events and product events arrive.
+
+### Step 9: Providers
+
+Configure and smoke test:
+
+- Twilio.
+- Infobip.
+- Vonage.
+- Bandwidth.
+- 1GLOBAL.
+- Bright Data.
+- WireGuard.
+- Resend.
+- S3.
+
+### Step 10: Payments
+
+1. Configure Paystack.
+2. Configure Paddle.
+3. Configure NOWPayments.
+4. Verify webhooks.
+5. Verify ledger fulfillment.
+6. Keep secondary gateways disabled until core payment reconciliation is stable.
+
+### Step 11: Expo / EAS
+
+1. Set EAS preview env.
+2. Build preview iOS and Android.
+3. Test auth, API, dashboard, messages, verification, billing handoff.
+4. Set EAS production env.
+5. Build production artifacts.
+6. Submit to App Store and Google Play when store metadata is complete.
+
+### Step 12: Launch Monitoring
+
+Monitor:
+
+- Sentry.
+- Railway logs.
+- Vercel logs.
+- Neon metrics.
+- PostHog funnels.
+- Provider dashboards.
+- Payment dashboards.
 - Support tickets.
 
-### Phase D: Provider Integrations
+## 15. Clear Implementation Phases for Beginners
 
-- Stabilize Twilio.
-- Add Vonage fallback.
-- Add Infobip global routing.
-- Add provider health records.
-- Add routing rules and circuit breakers.
+### Phase 1: Understand the Product
 
-### Phase E: Billing and Webhooks
+Read:
 
-- Harden Paystack.
-- Complete Paddle subscription model.
-- Complete NOWPayments status flow.
-- Keep secondary gateways behind feature flags.
+- This document.
+- `docs/BURNERPOINT_TECHNICAL_ARCHITECTURE.md`.
+- `docs/BACKEND_INTEGRATION_CONTRACTS.md`.
+- `docs/PAYMENT_SYSTEM_ARCHITECTURE.md`.
+- `docs/SECURITY_AUDIT.md`.
+- `docs/SEO_SEARCH_DISCOVERY.md`.
+- `docs/DEPLOYMENT_RUNBOOK.md`.
 
-### Phase F: Observability and Abuse Controls
+Goal:
 
-- Add Sentry DSNs.
-- Add Sentry auth token for source maps only when ready.
-- Add PostHog or equivalent.
-- Add audit logs.
-- Add rate limits.
-- Add risk scoring.
+Understand what Burner Point is before changing code.
 
-### Phase G: Mobile Store Readiness
+### Phase 2: Run the Project Locally
 
-- Complete native forgot/reset password.
-- Complete iOS credentials.
-- Build Android and iOS.
-- Prepare app screenshots.
-- Complete privacy disclosures and app review notes.
+1. Install dependencies.
+2. Set local env.
+3. Run API.
+4. Run web.
+5. Run mobile if needed.
+6. Confirm routes open.
 
-## 16. Quality Bar
+Goal:
 
-Every major screen should score at least 9 out of 10:
+See the current product before editing it.
 
-- Visual polish: dark premium, coherent brand, no generic SaaS blocks.
-- UX clarity: one obvious next action per screen.
-- Conversion: CTA rhythm is visible but not desperate.
-- Accessibility: readable contrast, semantic controls, 44px mobile targets.
-- Performance: no heavy animations on mobile, reduced motion respected.
-- Trust: privacy, support, legal, and provider language is clear.
+### Phase 3: Verify Safety
 
-## 17. Current External Blockers
+Run:
 
-### Apple iOS
+```bash
+npm run security:scan
+npm run release:verify
+```
 
-iOS builds need validated Apple credentials. Browser login and 2FA must be completed by the Apple Developer account owner. This cannot be safely bypassed from a non-interactive terminal.
+Goal:
 
-### Clerk
+Know the repo builds and no high-confidence secrets are tracked.
 
-Real production success requires a Clerk application with:
+### Phase 4: Polish Public Web
 
-- Email enabled.
-- Phone enabled.
-- Password enabled if using password auth.
-- Google OAuth.
-- Apple OAuth.
-- Microsoft OAuth.
-- Legal acceptance if Clerk should enforce Terms and Privacy directly.
+Work on:
 
-### Sentry
+- Homepage.
+- Public pages.
+- FAQ.
+- Help.
+- Blog.
+- Updates.
+- Careers.
+- SEO metadata.
+- Open Graph image.
 
-Runtime error reporting requires DSNs. `SENTRY_AUTH_TOKEN` is optional and only needed for source-map upload and release metadata during builds.
+Goal:
 
-## 18. Favicon and Brand Icon
+Make the public product feel premium, secure, and conversion-ready.
 
-The web app should expose:
+### Phase 5: Complete Auth
 
-- `/icon.svg` for App Router favicon support.
-- Metadata icon declarations.
-- Existing `/assets/logo-mark.svg` retained for brand usage.
+Work on:
 
-This ensures the browser tab and URL surface show a Burner Point icon instead of a generic default.
+- Clerk dashboard settings.
+- Sign-up validation.
+- Sign-in with email/phone.
+- OAuth.
+- Password reset.
+- 2FA.
+- Onboarding.
+- Session handling.
+
+Goal:
+
+Make account creation and login production-safe.
+
+### Phase 6: Complete Dashboard Core
+
+Work on:
+
+- Dashboard overview.
+- Verification purchase flow.
+- Rentals.
+- Numbers.
+- Inbox.
+- Calls.
+- Voicemail.
+- Credits.
+- Support.
+
+Goal:
+
+Make the authenticated product useful every day.
+
+### Phase 7: Stabilize Telecom
+
+Work on:
+
+- Twilio OTP.
+- Twilio SMS/MMS/voice.
+- Bandwidth number infrastructure.
+- Infobip global route.
+- Vonage fallback.
+- Provider health and circuit breakers.
+
+Goal:
+
+Make telecom delivery reliable and observable.
+
+### Phase 8: Stabilize Payments
+
+Work on:
+
+- Paystack.
+- Paddle.
+- NOWPayments.
+- Webhooks.
+- Ledger.
+- Reconciliation.
+- Success/cancel return pages.
+
+Goal:
+
+Make revenue flows safe and auditable.
+
+### Phase 9: Add Expansion Products
+
+Work on:
+
+- eSIM with 1GLOBAL.
+- Proxies with Bright Data.
+- VPN with WireGuard.
+- S3 media/document storage.
+
+Goal:
+
+Expand beyond numbers without compromising security.
+
+### Phase 10: Harden Security
+
+Work on:
+
+- RLS.
+- Audit logs.
+- Upload controls.
+- Provider signatures.
+- Abuse/fraud controls.
+- AI kill switch.
+- Mobile secure storage.
+
+Goal:
+
+Reduce platform, user, provider, and payment risk.
+
+### Phase 11: Prepare Deployment
+
+Work on:
+
+- GitHub CI.
+- Vercel env.
+- Railway env.
+- Neon migrations.
+- Clerk production app.
+- Sentry/PostHog.
+- EAS env.
+- Store metadata.
+
+Goal:
+
+Be ready to ship without surprises.
+
+### Phase 12: Release and Monitor
+
+1. Run `npm run release:verify`.
+2. Deploy staging.
+3. Smoke test.
+4. Deploy production.
+5. Monitor errors.
+6. Watch payment and telecom webhooks.
+7. Track support.
+8. Roll back or hotfix if needed.
+
+Goal:
+
+Launch carefully and keep control.
+
+## Final North-Star Standard
+
+Burner Point should feel like a telecom-grade privacy platform with a premium dark interface, clear lifecycle states, secure backend-only integrations, real conversion paths, and visible operational trust.
+
+The product is successful when a beginner can:
+
+1. Understand what Burner Point does.
+2. Create an account.
+3. Get a verification number.
+4. Rent a number.
+5. Use calls/messages/voicemail where supported.
+6. Buy credits safely.
+7. Contact support.
+8. Manage privacy settings.
+9. Understand billing and expiration.
+10. Trust that provider secrets and sensitive data are not exposed.
+
+The engineering system is successful when a developer can:
+
+1. Run the project.
+2. Read the route map.
+3. Follow the docs.
+4. Add a provider safely.
+5. Verify builds.
+6. Scan for secrets.
+7. Deploy through staging.
+8. Monitor production.
+9. Roll back safely.
+10. Keep Burner Point private by design.

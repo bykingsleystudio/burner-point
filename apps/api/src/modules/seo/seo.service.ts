@@ -11,6 +11,32 @@ import axios from 'axios';
 @Injectable()
 export class SeoService implements OnModuleInit {
   private readonly logger = new Logger(SeoService.name);
+  private readonly publicRoutes = [
+    '/',
+    '/overview',
+    '/verifications',
+    '/rentals',
+    '/numbers',
+    '/api',
+    '/api/docs',
+    '/pricing',
+    '/blog',
+    '/updates',
+    '/announcements',
+    '/careers',
+    '/faq',
+    '/help',
+    '/help-center',
+    '/support',
+    '/contact',
+    '/about',
+    '/terms',
+    '/privacy',
+    '/privacy-policy',
+    '/esim',
+    '/proxies',
+    '/security',
+  ];
 
   constructor(private config: ConfigService) {}
 
@@ -22,84 +48,32 @@ export class SeoService implements OnModuleInit {
   }
 
   getSitemap(): string {
-    const base = this.config.get<string>('WEB_URL', 'https://burnerpoint.app');
+    const base = this.config.get<string>('WEB_URL', 'https://burnerpoint.app').replace(/\/+$/, '');
     const now = new Date().toISOString().split('T')[0];
 
+    const body = this.publicRoutes
+      .map((route) => {
+        const priority = route === '/' ? '1.0' : ['/pricing', '/verifications', '/rentals'].includes(route) ? '0.9' : '0.7';
+        const changefreq = route === '/' || route === '/blog' || route === '/updates' || route === '/announcements'
+          ? 'weekly'
+          : 'monthly';
+        return `  <url>
+    <loc>${base}${route}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>${changefreq}</changefreq>
+    <priority>${priority}</priority>
+  </url>`;
+      })
+      .join('\n');
+
     return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
-
-  <!-- Marketing pages -->
-  <url>
-    <loc>${base}/</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>${base}/pricing</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>${base}/features</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>${base}/about</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>${base}/blog</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- Legal -->
-  <url>
-    <loc>${base}/privacy</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>${base}/terms</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>${base}/support</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
-  <!-- Auth (noindex these in meta but include for crawlers) -->
-  <url>
-    <loc>${base}/auth/login</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>${base}/auth/register</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
-  </url>
-
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${body}
 </urlset>`;
   }
 
   getRobots(): string {
-    const base = this.config.get<string>('WEB_URL', 'https://burnerpoint.app');
+    const base = this.config.get<string>('WEB_URL', 'https://burnerpoint.app').replace(/\/+$/, '');
     return `# BurnerPoint robots.txt
 User-agent: *
 Allow: /
@@ -108,17 +82,22 @@ Disallow: /api/
 Disallow: /admin/
 Disallow: /_next/
 Disallow: /auth/
+Disallow: /onboarding
+Disallow: /sso-callback
+Disallow: /test
 
 # Allow marketing bots full access
 User-agent: Googlebot
 Allow: /
 Disallow: /dashboard/
 Disallow: /api/
+Disallow: /auth/
 
 User-agent: Bingbot
 Allow: /
 Disallow: /dashboard/
 Disallow: /api/
+Disallow: /auth/
 
 Sitemap: ${base}/sitemap.xml`;
   }
@@ -128,7 +107,7 @@ Sitemap: ${base}/sitemap.xml`;
    * Embed in <script type="application/ld+json"> in the HTML <head>.
    */
   getStructuredData(): object {
-    const base = this.config.get<string>('WEB_URL', 'https://burnerpoint.app');
+    const base = this.config.get<string>('WEB_URL', 'https://burnerpoint.app').replace(/\/+$/, '');
     return {
       '@context': 'https://schema.org',
       '@type': 'SoftwareApplication',
@@ -136,6 +115,16 @@ Sitemap: ${base}/sitemap.xml`;
       description:
         'Privacy-first temporary phone numbers for anonymous SMS, OTP verification, and secure calling.',
       url: base,
+      sameAs: [
+        'https://www.instagram.com/burnerpoint.app',
+        'https://www.facebook.com/burnerpoint.app',
+        'https://www.linkedin.com/company/burnerpointapp',
+        'https://www.tiktok.com/@burnerpointapp',
+        'https://x.com/burnerpointapp',
+        'https://t.me/burnerpointapp',
+        'https://www.youtube.com/@burnerpointapp',
+      ],
+      supportUrl: `${base}/support`,
       applicationCategory: 'CommunicationApplication',
       operatingSystem: 'iOS, Android, Web',
       offers: {
@@ -162,14 +151,18 @@ Sitemap: ${base}/sitemap.xml`;
    * Much faster than waiting for Googlebot to crawl.
    */
   async pingIndexNow(urls?: string[]): Promise<void> {
-    const base = this.config.get<string>('WEB_URL', 'https://burnerpoint.app');
+    const base = this.config.get<string>('WEB_URL', 'https://burnerpoint.app').replace(/\/+$/, '');
     const host = new URL(base).hostname;
 
     const defaultUrls = [
       `${base}/`,
       `${base}/pricing`,
-      `${base}/features`,
+      `${base}/verifications`,
+      `${base}/rentals`,
       `${base}/blog`,
+      `${base}/faq`,
+      `${base}/help`,
+      `${base}/contact`,
     ];
 
     const urlsToSubmit = urls ?? defaultUrls;

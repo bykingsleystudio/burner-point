@@ -11,6 +11,7 @@ import {
   siteName,
   siteUrl,
 } from '@/lib/seo';
+import { PostHogProvider } from '@/components/posthog-provider';
 import './globals.css';
 
 const inter = Inter({
@@ -76,24 +77,26 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" className={`${inter.variable} ${dmMono.variable}`}>
       <body className="min-h-screen bg-brand-black font-sans antialiased text-white">
         <ClerkProvider>
-          <script
-            type="application/ld+json"
-            suppressHydrationWarning
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(baseStructuredData()) }}
-          />
-          {children}
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              style: {
-                background: BRAND.colors.surface,
-                color: BRAND.colors.white,
-                border: `1px solid ${BRAND.colors.border}`,
-                borderRadius: BRAND.radii.md,
-              },
-              success: { iconTheme: { primary: BRAND.colors.cyberGreen, secondary: BRAND.colors.black } },
-            }}
-          />
+          <PostHogProvider>
+            <script
+              type="application/ld+json"
+              suppressHydrationWarning
+              dangerouslySetInnerHTML={{ __html: JSON.stringify(baseStructuredData()) }}
+            />
+            {children}
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                style: {
+                  background: BRAND.colors.surface,
+                  color: BRAND.colors.white,
+                  border: `1px solid ${BRAND.colors.border}`,
+                  borderRadius: BRAND.radii.md,
+                },
+                success: { iconTheme: { primary: BRAND.colors.cyberGreen, secondary: BRAND.colors.black } },
+              }}
+            />
+          </PostHogProvider>
         </ClerkProvider>
       </body>
     </html>

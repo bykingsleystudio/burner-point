@@ -33,6 +33,7 @@ import { SeoModule } from './modules/seo/seo.module';
 import { MessagingModule } from './modules/messaging/messaging.module';
 import { PlatformModule } from './modules/platform/platform.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
+import { SecurityModule } from './modules/security/security.module';
 
 // ── Security middleware ───────────────────────────────────────────────────────
 import { SecurityMiddleware } from './middleware/security.middleware';
@@ -101,6 +102,7 @@ import { SecurityMiddleware } from './middleware/security.middleware';
 
     // Global infrastructure (Redis, ProviderService)
     GlobalModule,
+    SecurityModule,        // Redacted security audit logging
     PlatformModule,        // Safe stack registry + readiness status
     IntegrationsModule,    // Backend-only provider contracts, analytics, storage, eSIM/proxy/VPN adapters
 

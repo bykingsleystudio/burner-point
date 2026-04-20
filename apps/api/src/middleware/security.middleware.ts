@@ -20,6 +20,8 @@ import { Request, Response, NextFunction } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../modules/global/redis.service';
 import { createHash } from 'crypto';
+import { SecurityAuditService } from '../modules/security/security-audit.service';
+import { AbuseService } from '../modules/abuse/abuse.service';
 
 // ─── Route classification ──────────────────────────────────────────────────
 const AUTH_ROUTES = [
@@ -54,12 +56,33 @@ const WEBHOOK_ROUTES = [
   '/webhooks/twilio',
   '/webhooks/vonage',
   '/webhooks/infobip',
+  '/webhooks/bandwidth',
+  '/webhooks/oneglobal',
+  '/webhooks/brightdata',
+  '/webhooks/wireguard',
+  '/webhooks/clerk',
   '/api/webhooks/twilio',
   '/api/webhooks/vonage',
   '/api/webhooks/infobip',
+  '/api/webhooks/bandwidth',
+  '/api/webhooks/oneglobal',
+  '/api/webhooks/brightdata',
+  '/api/webhooks/wireguard',
+  '/api/webhooks/clerk',
   '/paddle/webhook',
   '/api/paddle/webhook',
 ];
+
+const STATE_CHANGING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+const BLOCKED_METHODS = new Set(['TRACE', 'TRACK']);
+const ALLOWED_BODY_TYPES = [
+  'application/json',
+  'application/x-www-form-urlencoded',
+  'multipart/form-data',
+  'text/plain',
+  'application/octet-stream',
+];
+const DANGEROUS_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
 
 // ─── Limits ────────────────────────────────────────────────────────────────
 const LIMITS = {
@@ -69,7 +92,13 @@ const LIMITS = {
   authTtl: 900,           // 5 attempts / 15 minutes
   paymentMax: 10,
   paymentTtl: 60,         // 10 payment inits / minute
+  webhookMax: 600,
+  webhookTtl: 60,         // High enough for provider retries but still bounded
   maxBodyBytes: 1_048_576, // 1MB hard limit
+  maxDepth: 10,
+  maxObjectKeys: 100,
+  maxArrayItems: 1000,
+  maxStringBytes: 100_000,
 };
 
 @Injectable()
@@ -79,26 +108,83 @@ export class SecurityMiddleware implements NestMiddleware {
   constructor(
     private redis: RedisService,
     private config: ConfigService,
+    private securityAudit: SecurityAuditService,
+    private abuseService: AbuseService,
   ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
     const path = req.path.toLowerCase();
+    const method = req.method.toUpperCase();
     const ip = this.getClientIp(req);
 
-    // Skip rate limiting for webhooks (they need to be reachable)
+    if (BLOCKED_METHODS.has(method)) {
+      await this.recordSecurityAudit(req, ip, 'security.method_blocked', {
+        method,
+        path,
+      });
+      return res.status(HttpStatus.METHOD_NOT_ALLOWED).json({
+        statusCode: 405,
+        message: 'HTTP method not allowed',
+      });
+    }
+
     const isWebhook = WEBHOOK_ROUTES.some((r) => path.startsWith(r));
-    if (isWebhook) return next();
 
     // 1. Check request body size
     const contentLength = parseInt(req.headers['content-length'] ?? '0');
     if (contentLength > LIMITS.maxBodyBytes) {
+      await this.recordSecurityAudit(req, ip, 'security.payload_too_large', {
+        path,
+        contentLength,
+        limit: LIMITS.maxBodyBytes,
+      });
       return res.status(HttpStatus.PAYLOAD_TOO_LARGE).json({
         statusCode: 413,
         message: 'Request payload too large',
       });
     }
 
-    // 2. Auth route rate limiting (strictest)
+    if (!this.hasAllowedContentType(req)) {
+      await this.recordSecurityAudit(req, ip, 'security.content_type_blocked', {
+        path,
+        method,
+        contentType: req.headers['content-type'],
+      });
+      return res.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).json({
+        statusCode: 415,
+        message: 'Unsupported content type',
+      });
+    }
+
+    const payloadViolation = this.inspectRequestPayload(req);
+    if (payloadViolation) {
+      await this.recordSecurityAudit(req, ip, 'security.malformed_payload', {
+        path,
+        reason: payloadViolation,
+      });
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        statusCode: 400,
+        message: payloadViolation,
+      });
+    }
+
+    // 2. Webhook route rate limiting (providers need reachability, not unlimited traffic)
+    if (isWebhook) {
+      const blocked = await this.checkRateLimit(
+        `webhook:${ip}:${this.routeFamily(path)}`,
+        this.limitFromEnv('WEBHOOK_RATE_LIMIT_MAX', LIMITS.webhookMax),
+        this.limitFromEnv('WEBHOOK_RATE_LIMIT_TTL_SECONDS', LIMITS.webhookTtl),
+        res,
+        'Webhook rate limit exceeded.',
+        req,
+        ip,
+        path,
+      );
+      if (blocked) return;
+      return next();
+    }
+
+    // 3. Auth route rate limiting (strictest)
     const isAuth = this.isAuthRoute(path);
     if (isAuth) {
       const routeBucket = this.getAuthRouteBucket(path);
@@ -108,6 +194,9 @@ export class SecurityMiddleware implements NestMiddleware {
         LIMITS.authTtl,
         res,
         `Too many authentication attempts. Try again in 15 minutes.`,
+        req,
+        ip,
+        path,
       );
       if (blocked) return;
 
@@ -119,6 +208,9 @@ export class SecurityMiddleware implements NestMiddleware {
           LIMITS.authTtl,
           res,
           `Too many authentication attempts for this account. Try again in 15 minutes.`,
+          req,
+          ip,
+          path,
         );
         if (identityBlocked) return;
       }
@@ -126,7 +218,7 @@ export class SecurityMiddleware implements NestMiddleware {
       await this.recordAuthRisk(ip, routeBucket, req);
     }
 
-    // 3. Payment route rate limiting
+    // 4. Payment route rate limiting
     const isPayment = PAYMENT_ROUTES.some((r) => path.startsWith(r));
     if (isPayment) {
       const blocked = await this.checkRateLimit(
@@ -135,19 +227,28 @@ export class SecurityMiddleware implements NestMiddleware {
         LIMITS.paymentTtl,
         res,
         `Too many payment requests. Please slow down.`,
+        req,
+        ip,
+        path,
       );
       if (blocked) return;
     }
 
-    // 4. Global rate limiting
+    // 5. Global rate limiting
     const blocked = await this.checkRateLimit(
       `global:${ip}`,
-      LIMITS.globalMax,
-      LIMITS.globalTtl,
+      this.limitFromEnv('GLOBAL_RATE_LIMIT_MAX', LIMITS.globalMax),
+      this.limitFromEnv('GLOBAL_RATE_LIMIT_TTL_SECONDS', LIMITS.globalTtl),
       res,
       `Rate limit exceeded. Please slow down.`,
+      req,
+      ip,
+      path,
     );
     if (blocked) return;
+
+    const abuseBlocked = await this.checkAbuse(req, res, ip, path);
+    if (abuseBlocked) return;
 
     next();
   }
@@ -158,6 +259,9 @@ export class SecurityMiddleware implements NestMiddleware {
     ttlSeconds: number,
     res: Response,
     message: string,
+    req?: Request,
+    ip?: string,
+    path?: string,
   ): Promise<boolean> {
     try {
       const current = await this.redis.incr(key);
@@ -175,6 +279,15 @@ export class SecurityMiddleware implements NestMiddleware {
         const ttl = await this.redis.ttl(key);
         res.setHeader('Retry-After', ttl.toString());
         this.logger.warn(`Rate limit hit: ${key} (${current}/${max})`);
+        if (req && ip && path) {
+          await this.recordSecurityAudit(req, ip, 'security.rate_limited', {
+            path,
+            key,
+            current,
+            max,
+            retryAfter: ttl,
+          });
+        }
         res.status(HttpStatus.TOO_MANY_REQUESTS).json({
           statusCode: 429,
           message,
@@ -188,6 +301,11 @@ export class SecurityMiddleware implements NestMiddleware {
       this.logger.error(`Rate limit check failed: ${err.message}`);
       return false;
     }
+  }
+
+  private limitFromEnv(name: string, fallback: number): number {
+    const parsed = parseInt(this.config.get<string>(name) || '', 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
   }
 
   private getClientIp(req: Request): string {
@@ -215,6 +333,69 @@ export class SecurityMiddleware implements NestMiddleware {
       .filter(Boolean)
       .slice(0, 3)
       .join(':') || 'auth';
+  }
+
+  private routeFamily(path: string): string {
+    return path
+      .replace(/^\/api\//, '/')
+      .split('/')
+      .filter(Boolean)
+      .slice(0, 3)
+      .join(':') || 'root';
+  }
+
+  private hasAllowedContentType(req: Request): boolean {
+    if (!STATE_CHANGING_METHODS.has(req.method.toUpperCase())) return true;
+    const contentLength = parseInt(req.headers['content-length'] ?? '0', 10);
+    if (!contentLength) return true;
+
+    const contentType = String(req.headers['content-type'] || '').toLowerCase();
+    if (!contentType) return false;
+    return ALLOWED_BODY_TYPES.some((allowed) => contentType.includes(allowed));
+  }
+
+  private inspectRequestPayload(req: Request): string | null {
+    return (
+      this.inspectPayload(req.body, 'body', 0) ||
+      this.inspectPayload(req.query, 'query', 0) ||
+      this.inspectPayload(req.params, 'params', 0)
+    );
+  }
+
+  private inspectPayload(value: unknown, location: string, depth: number): string | null {
+    if (value === null || value === undefined) return null;
+    if (depth > LIMITS.maxDepth) return `Malformed payload: ${location} is nested too deeply`;
+
+    if (typeof value === 'string') {
+      if (Buffer.byteLength(value, 'utf8') > LIMITS.maxStringBytes) {
+        return `Malformed payload: ${location} string is too large`;
+      }
+      return null;
+    }
+
+    if (typeof value !== 'object') return null;
+
+    if (Array.isArray(value)) {
+      if (value.length > LIMITS.maxArrayItems) return `Malformed payload: ${location} has too many items`;
+      for (let index = 0; index < value.length; index += 1) {
+        const violation = this.inspectPayload(value[index], `${location}[${index}]`, depth + 1);
+        if (violation) return violation;
+      }
+      return null;
+    }
+
+    const entries = Object.entries(value as Record<string, unknown>);
+    if (entries.length > LIMITS.maxObjectKeys) return `Malformed payload: ${location} has too many keys`;
+
+    for (const [key, nested] of entries) {
+      if (DANGEROUS_KEYS.has(key)) {
+        return `Malformed payload: ${location} contains a blocked key`;
+      }
+      const violation = this.inspectPayload(nested, `${location}.${key}`, depth + 1);
+      if (violation) return violation;
+    }
+
+    return null;
   }
 
   private getAuthIdentifierHash(req: Request): string | null {
@@ -245,10 +426,74 @@ export class SecurityMiddleware implements NestMiddleware {
         this.logger.warn(
           `Suspicious auth velocity: ip=${ip} route=${routeBucket} attempts=${current} ua=${userAgent}`,
         );
+        await this.recordSecurityAudit(req, ip, 'security.suspicious_auth_velocity', {
+          route: routeBucket,
+          attempts: current,
+        });
       }
     } catch (err) {
       this.logger.error(`Auth risk check failed: ${err.message}`);
     }
+  }
+
+  private async checkAbuse(req: Request, res: Response, ip: string, path: string): Promise<boolean> {
+    const action = this.abuseActionForPath(path);
+    try {
+      await this.abuseService.checkAndRecord({
+        ipAddress: ip,
+        deviceFingerprint: this.deviceFingerprint(req),
+        action,
+      });
+      return false;
+    } catch (error) {
+      if (error instanceof HttpException && error.getStatus() === HttpStatus.FORBIDDEN) {
+        await this.recordSecurityAudit(req, ip, 'security.abuse_blocked', {
+          path,
+          action,
+        });
+        res.status(HttpStatus.FORBIDDEN).json({
+          statusCode: 403,
+          message: 'Request blocked by abuse prevention system',
+        });
+        return true;
+      }
+
+      this.logger.warn(`Abuse check failed open: ${error instanceof Error ? error.message : String(error)}`);
+      return false;
+    }
+  }
+
+  private abuseActionForPath(path: string): string {
+    if (this.isAuthRoute(path)) return 'login_attempt';
+    if (path.includes('/phone-auth/send') || path.includes('/messaging/sms/send')) return 'sms_send';
+    if (path.includes('/numbers') || path.includes('/rentals') || path.includes('/payments/initialize')) {
+      return 'number_purchase';
+    }
+    return 'api_request';
+  }
+
+  private deviceFingerprint(req: Request): string | undefined {
+    const header = req.headers['x-device-fingerprint'] || req.headers['x-burner-device-id'];
+    if (!header) return undefined;
+    return createHash('sha256').update(String(header)).digest('hex').slice(0, 32);
+  }
+
+  private async recordSecurityAudit(
+    req: Request,
+    ip: string,
+    action: string,
+    details: Record<string, unknown>,
+  ) {
+    await this.securityAudit.record({
+      action,
+      resource: 'security.middleware',
+      ipAddress: ip,
+      userAgent: String(req.headers['user-agent'] || ''),
+      newValue: {
+        ...details,
+        method: req.method,
+      },
+    });
   }
 }
 
