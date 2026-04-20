@@ -281,6 +281,16 @@ Production setup:
 7. Store `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` in Vercel.
 8. Store `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` in EAS environment variables, not in `eas.json`.
 
+Operator note:
+
+- Clerk does not expose a general account-management CLI in this runbook. The verified official CLI surface used here is `@clerk/upgrade`, which helps with SDK upgrade and migration guidance rather than dashboard account administration.
+- Provider redirects, OAuth connections, live keys, and webhook signing secrets still come from the Clerk dashboard.
+
+## 10.1 PostHog CLI Note
+
+- The verified official PostHog CLI surface used in this project is `@posthog/wizard`, exposed as the `wizard` command.
+- Use the PostHog dashboard for project settings, keys, and privacy controls unless PostHog documents a broader supported CLI workflow for that task.
+
 ## 11. Expo, iOS, and Android
 
 Run EAS from `apps/mobile`.
