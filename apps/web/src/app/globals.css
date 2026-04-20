@@ -455,6 +455,228 @@ select {
   will-change: transform;
 }
 
+/* Homepage: country flags + product logos (distinct marquee speeds + per-chip motion) */
+.bp-coverage-marquee {
+  animation: bp-marquee 38s linear infinite;
+  will-change: transform;
+}
+
+.bp-product-marquee {
+  animation: bp-marquee-rev 44s linear infinite;
+  will-change: transform;
+}
+
+@keyframes bp-marquee-rev {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Flag chip micro-motion (horizontal marquee + layered motion on emoji) */
+@keyframes bp-flag-a {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes bp-flag-b {
+  0%,
+  100% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: rotate(4deg);
+  }
+}
+
+@keyframes bp-flag-c {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes bp-flag-d {
+  0%,
+  100% {
+    transform: skewX(0deg);
+  }
+  50% {
+    transform: skewX(-4deg);
+  }
+}
+
+@keyframes bp-flag-e {
+  0%,
+  100% {
+    transform: translateY(0) translateX(0);
+  }
+  33% {
+    transform: translateY(-3px) translateX(2px);
+  }
+  66% {
+    transform: translateY(2px) translateX(-2px);
+  }
+}
+
+@keyframes bp-flag-f {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.72;
+  }
+}
+
+@keyframes bp-flag-g {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(6deg) scale(1.05);
+  }
+}
+
+@keyframes bp-flag-h {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.25);
+  }
+}
+
+.bp-flag-mot-0 {
+  animation: bp-flag-a 2.5s ease-in-out infinite;
+}
+.bp-flag-mot-1 {
+  animation: bp-flag-b 3.1s ease-in-out infinite;
+}
+.bp-flag-mot-2 {
+  animation: bp-flag-c 2.8s ease-in-out infinite;
+}
+.bp-flag-mot-3 {
+  animation: bp-flag-d 3.4s ease-in-out infinite;
+}
+.bp-flag-mot-4 {
+  animation: bp-flag-e 3s ease-in-out infinite;
+}
+.bp-flag-mot-5 {
+  animation: bp-flag-f 2.6s ease-in-out infinite;
+}
+.bp-flag-mot-6 {
+  animation: bp-flag-g 3.2s ease-in-out infinite;
+}
+.bp-flag-mot-7 {
+  animation: bp-flag-h 2.9s ease-in-out infinite;
+}
+
+/* Service logo row: different motion language (glow / lift / tilt — not flag patterns) */
+@keyframes bp-svc-a {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 255, 157, 0);
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(0, 255, 157, 0.22);
+  }
+}
+
+@keyframes bp-svc-b {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes bp-svc-c {
+  0%,
+  100% {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  50% {
+    border-color: rgba(0, 255, 157, 0.45);
+  }
+}
+
+@keyframes bp-svc-d {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+@keyframes bp-svc-e {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-2.5deg);
+  }
+}
+
+@keyframes bp-svc-f {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 rgba(0, 255, 157, 0));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(0, 255, 157, 0.45));
+  }
+}
+
+@keyframes bp-svc-g {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
+
+.bp-svc-mot-0 {
+  animation: bp-svc-a 3.1s ease-in-out infinite;
+}
+.bp-svc-mot-1 {
+  animation: bp-svc-b 2.7s ease-in-out infinite;
+}
+.bp-svc-mot-2 {
+  animation: bp-svc-c 3.5s ease-in-out infinite;
+}
+.bp-svc-mot-3 {
+  animation: bp-svc-d 2.9s ease-in-out infinite;
+}
+.bp-svc-mot-4 {
+  animation: bp-svc-e 3.3s ease-in-out infinite;
+}
+.bp-svc-mot-5 {
+  animation: bp-svc-f 2.8s ease-in-out infinite;
+}
+.bp-svc-mot-6 {
+  animation: bp-svc-g 3.6s ease-in-out infinite;
+}
+
 @keyframes bp-float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-18px); }
@@ -540,6 +762,23 @@ select {
   .bp-number-track,
   .bp-flag-track,
   .bp-service-track,
+  .bp-coverage-marquee,
+  .bp-product-marquee,
+  .bp-flag-mot-0,
+  .bp-flag-mot-1,
+  .bp-flag-mot-2,
+  .bp-flag-mot-3,
+  .bp-flag-mot-4,
+  .bp-flag-mot-5,
+  .bp-flag-mot-6,
+  .bp-flag-mot-7,
+  .bp-svc-mot-0,
+  .bp-svc-mot-1,
+  .bp-svc-mot-2,
+  .bp-svc-mot-3,
+  .bp-svc-mot-4,
+  .bp-svc-mot-5,
+  .bp-svc-mot-6,
   .bp-reveal,
   .bp-reveal-delay,
   .bp-nature-dot,

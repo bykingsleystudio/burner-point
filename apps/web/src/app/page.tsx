@@ -15,6 +15,7 @@ import {
   Wifi,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { BrandMotionBanners } from '@/components/brand-motion-banners';
 import { BulletList, Eyebrow, MarketingShell } from '@/components/marketing';
 import { buildMetadata, siteName, siteTagline, siteUrl } from '@/lib/seo';
 
@@ -402,6 +403,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <BrandMotionBanners />
 
       <section className="sticky top-20 z-40 hidden border-y border-white/6 bg-brand-black/82 backdrop-blur-xl xl:block">
         <div className="mx-auto grid max-w-[1680px] grid-cols-12 items-center gap-5 px-10 py-4">
