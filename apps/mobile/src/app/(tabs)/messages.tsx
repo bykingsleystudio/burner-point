@@ -58,12 +58,12 @@ export default function MessagesScreen() {
       <View style={s.header}>
         <Text style={s.kicker}>Conversation</Text>
         <Text accessibilityRole="header" style={s.title}>Inbox</Text>
-        <Text style={s.subtitle}>SMS, MMS, photos, calls, voicemail, and contacts stay attached to your private numbers.</Text>
+        <Text style={s.subtitle}>SMS, MMS, audio and video sharing, calls, voicemail, and contacts stay attached to your private numbers.</Text>
       </View>
 
       <View style={s.modeGrid}>
         {[
-          { label: 'Calls', text: 'WiFi/Data', Icon: Phone, href: '/calls' },
+          { label: 'Calls', text: 'WiFi & Data', Icon: Phone, href: '/calls' },
           { label: 'Voicemail', text: 'Missed calls', Icon: Voicemail, href: '/voicemail' },
           { label: 'Contacts', text: 'Private book', Icon: UserRound, href: '/contacts' },
         ].map(({ label, text, Icon, href }) => (

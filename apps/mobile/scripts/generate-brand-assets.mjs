@@ -36,7 +36,7 @@ const splashSvg = `
   <text x="642" y="1520" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, sans-serif"
     font-size="42" font-weight="600" fill="#FFFFFF" letter-spacing="0.2em">BURNER POINT</text>
   <text x="642" y="1575" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, sans-serif"
-    font-size="22" fill="#666666">Private by design</text>
+    font-size="22" fill="#666666">Private By Design</text>
 </svg>`;
 
 /** Android notification: white glyph on transparent (material-style). */

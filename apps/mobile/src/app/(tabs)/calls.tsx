@@ -6,7 +6,7 @@ import { BRAND } from '../../lib/brand';
 import { triggerHaptic } from '../../lib/native-ux';
 
 const recentCalls = [
-  ['+1 415 555 0182', 'Outbound over WiFi', '2m 14s'],
+  ['+1 415 555 0182', 'Outbound over WiFi & Data', '2m 14s'],
   ['+1 647 555 0198', 'Voicemail saved', '0m 38s'],
   ['+1 212 555 0144', 'Inbound private call', '5m 02s'],
 ];
@@ -23,8 +23,8 @@ export default function CallsScreen() {
     <SafeAreaView style={s.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.content}>
         <Text style={s.kicker}>US/CA conversation</Text>
-        <Text style={s.title}>Calls over WiFi and mobile data.</Text>
-        <Text style={s.subtitle}>SMS, MMS, calling, voicemail, and photos stay separated from your real personal number.</Text>
+        <Text style={s.title}>Calls over WiFi & Data.</Text>
+        <Text style={s.subtitle}>SMS, MMS, calling, voicemail, and secure audio, photo and video stay separated from your real personal number.</Text>
 
         <View style={s.heroCard}>
           <View style={s.routeTop}>
@@ -43,7 +43,7 @@ export default function CallsScreen() {
           <TouchableOpacity style={s.action} activeOpacity={0.78} onPress={() => { triggerHaptic('selection'); router.push('/messages' as any); }}>
             <MessageSquare size={20} color={BRAND.colors.cyberGreen} />
             <Text style={s.actionTitle}>Message</Text>
-            <Text style={s.actionText}>SMS and MMS photos</Text>
+            <Text style={s.actionText}>SMS and media sharing</Text>
           </TouchableOpacity>
           <TouchableOpacity style={s.action} activeOpacity={0.78} onPress={() => { triggerHaptic('selection'); router.push('/voicemail' as any); }}>
             <ShieldCheck size={20} color={BRAND.colors.cyberGreen} />

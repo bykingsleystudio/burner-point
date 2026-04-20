@@ -189,7 +189,7 @@ export default function LoginScreen() {
         <TouchableOpacity style={s.logo} onPress={() => Linking.openURL(WEB_APP_URL)} activeOpacity={0.8}>
           <View style={s.logoIcon}><ShieldCheck size={28} color={BRAND.colors.dark} /></View>
           <Text style={s.logoText}>Burner<Text style={s.green}>Point</Text></Text>
-          <Text style={s.logoSub}>Welcome back. Private by design.</Text>
+          <Text style={s.logoSub}>Welcome back. Private By Design.</Text>
         </TouchableOpacity>
 
         <View style={s.form}>

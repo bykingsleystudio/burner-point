@@ -95,7 +95,7 @@ export default function SettingsScreen() {
           <Text style={s.logoutText}>Sign out</Text>
         </TouchableOpacity>
 
-        <Text style={s.version}>Burner Point v1.0.0 - Private by design.</Text>
+        <Text style={s.version}>Burner Point v1.0.0 - Private By Design.</Text>
       </ScrollView>
     </SafeAreaView>
   );

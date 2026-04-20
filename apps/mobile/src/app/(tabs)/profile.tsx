@@ -98,7 +98,7 @@ export default function ProfileScreen() {
           <Text style={s.logoutText}>Sign Out</Text>
         </TouchableOpacity>
 
-        <Text style={s.version}>Burner Point v1.0.0 - Private by design.</Text>
+        <Text style={s.version}>Burner Point v1.0.0 - Private By Design.</Text>
       </ScrollView>
     </SafeAreaView>
   );

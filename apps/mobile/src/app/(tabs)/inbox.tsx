@@ -7,7 +7,7 @@ import { BRAND } from '../../lib/brand';
 const threads = [
   ['+1 415 555 0182', 'Telegram code received', 'OTP'],
   ['+1 647 555 0198', 'Missed call routed to voicemail', 'Voice'],
-  ['+1 212 555 0144', 'Photo message ready for review', 'MMS'],
+  ['+1 212 555 0144', 'Media message ready for review', 'MMS'],
 ];
 
 export default function InboxScreen() {
@@ -17,7 +17,7 @@ export default function InboxScreen() {
     <SafeAreaView style={s.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.content}>
         <Text style={s.kicker}>Conversation inbox</Text>
-        <Text style={s.title}>Calls, texts, voicemail, and MMS in one private thread.</Text>
+        <Text style={s.title}>Calls, texts, voicemail, and private communication in one thread.</Text>
         <Text style={s.subtitle}>
           US and Canada conversation numbers keep communication reachable without exposing your personal line.
         </Text>
@@ -25,11 +25,11 @@ export default function InboxScreen() {
         <View style={s.statusCard}>
           <View style={s.statusTop}>
             <ShieldCheck size={19} color={BRAND.colors.cyberGreen} />
-            <Text style={s.statusLabel}>Private by design</Text>
+            <Text style={s.statusLabel}>Private By Design</Text>
           </View>
-          <Text style={s.statusText}>SMS, MMS photos, voice calls, voicemail, and OTP activity stay tied to the Burner Point number that received them.</Text>
+          <Text style={s.statusText}>SMS, MMS, voice calls, voicemail, secure audio, photo and video activity, and OTPs stay tied to the Burner Point number that received them.</Text>
           <View style={s.pills}>
-            {['No personal number', 'WiFi/Data', 'US/CA'].map((item) => <Text key={item} style={s.pill}>{item}</Text>)}
+            {['No personal number', 'WiFi & Data', 'US/CA'].map((item) => <Text key={item} style={s.pill}>{item}</Text>)}
           </View>
         </View>
 
@@ -37,7 +37,7 @@ export default function InboxScreen() {
           <TouchableOpacity style={s.action} activeOpacity={0.78} onPress={() => router.push('/messages' as any)}>
             <MessageSquare size={20} color={BRAND.colors.cyberGreen} />
             <Text style={s.actionTitle}>Messages</Text>
-            <Text style={s.actionText}>SMS and MMS threads</Text>
+            <Text style={s.actionText}>SMS and messaging threads</Text>
           </TouchableOpacity>
           <TouchableOpacity style={s.action} activeOpacity={0.78} onPress={() => router.push('/calls' as any)}>
             <Phone size={20} color={BRAND.colors.cyberGreen} />

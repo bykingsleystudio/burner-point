@@ -1,6 +1,6 @@
 export const BRAND = {
   name: 'Burner Point',
-  message: 'Private by Design. Stay Anonymous. Stay Connected.',
+  message: 'Stay Anonymous. Stay Connected. Private By Design.',
   colors: {
     deepGreen: '#013220',
     black: '#000000',

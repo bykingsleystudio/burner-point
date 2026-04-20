@@ -14,8 +14,8 @@ const pillars = [
   },
   {
     icon: MessageSquare,
-    title: 'Private Conversations',
-    text: 'Keep calls, voicemail, SMS, MMS, and photo messages separated from your personal number.',
+    title: 'Private Communication',
+    text: 'Keep calls, voicemail, SMS, MMS, and secure audio, photo and video sharing separated from your personal number.',
   },
   {
     icon: Smartphone,
@@ -45,7 +45,7 @@ export default function OnboardingScreen() {
         </View>
 
         <Text style={s.kicker}>Burner Point</Text>
-        <Text accessibilityRole="header" style={s.title}>Private by Design. Stay Anonymous. Stay Connected.</Text>
+        <Text accessibilityRole="header" style={s.title}>Stay Anonymous. Stay Connected. Private By Design.</Text>
         <Text style={s.subtitle}>
           A native privacy telecom control surface for numbers, verification, conversation, connectivity, billing, support, and account security.
         </Text>

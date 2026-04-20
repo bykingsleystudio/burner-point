@@ -44,8 +44,8 @@ export default function HomeScreen() {
 
   const quickActions = [
     { icon: ShieldCheck, label: 'Verify OTP', text: 'New private code', action: () => router.push('/verification' as any) },
-    { icon: Phone, label: 'Calls', text: 'WiFi/data voice', action: () => router.push('/calls' as any) },
-    { icon: MessageSquare, label: 'Inbox', text: 'SMS, MMS, photos', action: () => router.push('/messages' as any) },
+    { icon: Phone, label: 'Calls', text: 'WiFi & Data voice', action: () => router.push('/calls' as any) },
+    { icon: MessageSquare, label: 'Inbox', text: 'SMS, MMS, audio & video', action: () => router.push('/messages' as any) },
     { icon: CalendarDays, label: 'Rentals', text: 'Keep a number', action: () => router.push('/rentals' as any) },
     { icon: Phone, label: 'Numbers', text: 'Active inventory', action: () => router.push('/numbers' as any) },
     { icon: CreditCard, label: 'Billing', text: 'Credits and plans', action: () => router.push('/billing' as any) },
@@ -79,10 +79,10 @@ export default function HomeScreen() {
 
         <View style={s.hero}>
           <View style={s.heroTop}>
-            <Text style={s.heroKicker}>Private by design</Text>
+            <Text style={s.heroKicker}>Stay Anonymous. Stay Connected.</Text>
             <ShieldCheck size={20} color={BRAND.colors.cyberGreen} />
           </View>
-          <Text style={s.heroTitle}>Stay Anonymous. Stay Connected.</Text>
+          <Text style={s.heroTitle}>Private By Design.</Text>
           <Text style={s.heroSub}>Quick access to verifications, rentals, inbox, wallet, and privacy add-ons.</Text>
           <View style={s.heroPills}>
             {['256-bit AES', 'No Logs', 'Real SIM'].map((item) => <Text key={item} style={s.pill}>{item}</Text>)}

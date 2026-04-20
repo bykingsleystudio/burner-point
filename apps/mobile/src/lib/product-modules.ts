@@ -138,7 +138,7 @@ export const MOBILE_PRODUCT_MODULES = {
     ],
     cards: [
       { meta: 'Audio', title: 'Secure Playback', text: 'Use signed playback links and private object storage for recordings.' },
-      { meta: 'Thread', title: 'Context', text: 'Pair voicemail with calls, SMS, MMS, and contact history.' },
+      { meta: 'Thread', title: 'Context', text: 'Pair voicemail with calls, SMS, MMS, secure audio, photo and video sharing, and contact history.' },
       { meta: 'Notify', title: 'Missed Call Alerts', text: 'Send push alerts when a private number receives voicemail.' },
     ],
     workflow: ['Receive missed call', 'Attach recording to number', 'Notify user', 'Protect playback access'],
