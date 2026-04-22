@@ -9,10 +9,10 @@ export default clerkMiddleware(async (auth, request) => {
     await auth.protect();
   }
 
-  const { userId } = await auth();
-  if (userId && isAuthRoute(request)) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
+  // Do not bounce users off /auth/* during signed-in edge-cases.
+  // This prevents OAuth/signup flows from getting trapped in redirect loops when
+  // our API session exchange temporarily fails.
+  await auth();
 
   return NextResponse.next();
 });

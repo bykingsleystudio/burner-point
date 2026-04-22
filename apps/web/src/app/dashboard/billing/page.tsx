@@ -107,7 +107,7 @@ export default function BillingPage() {
               Wallet, subscriptions, and payment history.
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-brand-muted">
-              Manage verification credits, rental purchases, monthly plans, receipts, webhook-safe payment state, and support references from one controlled billing surface.
+              Manage verification credits, rental purchases, monthly plans, receipts, and payment history from one controlled billing surface.
             </p>
           </div>
           <Link href="/dashboard/credits" className="bp-primary-action inline-flex min-h-12 items-center justify-center gap-2 px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em]">
@@ -147,7 +147,7 @@ export default function BillingPage() {
             <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-white">Subscription management</h2>
           </div>
           <p className="mt-3 text-sm leading-6 text-brand-muted">
-            Product assignment should happen only after Paystack, Paddle, or NOWPayments webhook confirmation. Native app purchases must respect Apple and Google billing policy before in-app sale paths are enabled.
+            Choose a plan, pick a payment option, and keep your monthly access, receipts, and renewal timing easy to track.
           </p>
 
           <div className="mt-5 grid gap-3 md:grid-cols-3">
@@ -252,9 +252,9 @@ export default function BillingPage() {
 
       <section className="grid gap-3 md:grid-cols-3">
         {[
-          ['Credits', 'Wallet balance funds verifications, rentals, eSIM, proxies, and renewals after webhook reconciliation.'],
-          ['Rentals', 'Rental purchase sessions should reserve inventory, confirm payment, then activate or release safely.'],
-          ['Subscriptions', 'Monthly plans should use recurring gateway state, cancellation windows, receipts, and support references.'],
+          ['Credits', 'Wallet balance funds verifications, rentals, eSIM, proxies, and renewals across your account.'],
+          ['Rentals', 'Rental purchases stay visible with billing history, due dates, and support references.'],
+          ['Subscriptions', 'Monthly plans keep renewal timing, receipts, and cancellation visibility in one place.'],
         ].map(([title, text]) => (
           <article key={title} className="rounded-bp-lg border border-brand-border bg-brand-card p-5">
             <CalendarDays className="h-5 w-5 text-brand-green" />

@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth, useClerk, useUser } from '@clerk/nextjs';
 import { useAuthStore, useUIStore } from '@/store';
@@ -52,6 +53,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [socket, setSocket] = useState<Socket | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [sessionReady, setSessionReady] = useState(false);
+  const [fatalSessionError, setFatalSessionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -65,6 +67,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     let cancelled = false;
     async function exchangeSession() {
       setSessionReady(false);
+      setFatalSessionError(null);
       try {
         const clerkToken = await getToken();
         if (!clerkToken) throw new Error('Missing secure session token');
@@ -72,13 +75,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           firstName: clerkUser?.firstName,
           lastName: clerkUser?.lastName,
           email: clerkUser?.primaryEmailAddress?.emailAddress,
-          phoneNumber: clerkUser?.primaryPhoneNumber?.phoneNumber,
+          phoneNumber: clerkUser?.primaryPhoneNumber?.phoneNumber || (clerkUser?.unsafeMetadata?.phoneNumber as string | undefined),
         });
         if (cancelled) return;
         setApiSession(data.accessToken, data.refreshToken);
         setAuth(data.user, data.accessToken, data.refreshToken);
         setAccessToken(data.accessToken);
-        if (data.user?.phoneNumber && data.user?.phoneVerified === false) {
+        if (data.needsOnboarding) {
+          router.replace('/onboarding?redirect=/dashboard');
+          return;
+        }
+        if (data.user?.phoneNumber && data.needsPhoneVerification) {
           sessionStorage.setItem('burnerPointPendingPhone', data.user.phoneNumber);
           router.replace('/auth/phone-verify?redirect=/dashboard');
           return;
@@ -86,11 +93,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setSessionReady(true);
       } catch (error: any) {
         if (cancelled) return;
-        const message = error.response?.data?.message || 'Unable to start your Burner Point API session.';
+        const message =
+          error?.response?.status === 401
+            ? 'Your session needs to be refreshed. Please sign in again to continue.'
+            : error?.response?.data?.message || 'Unable to start your Burner Point API session.';
         toast.error(message);
         clearApiSession();
-        if (error.response?.status === 400 && /complete|terms|privacy|phone/i.test(message)) {
-          router.push('/onboarding');
+        if (error?.response?.status === 401) {
+          // Prevent redirect loops where Clerk is signed-in but our API exchange fails.
+          // User can explicitly re-auth via the UI below.
+          clearAuth();
+          setFatalSessionError(message);
+          setSessionReady(true);
+          return;
         }
         setSessionReady(true);
       }
@@ -141,6 +156,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
+  if (fatalSessionError) {
+    return (
+      <main className="min-h-screen bg-brand-black text-white flex items-center justify-center px-4">
+        <div className="w-full max-w-md rounded-[2rem] border border-white/10 bg-white/[0.03] p-6">
+          <div className="text-sm font-mono uppercase tracking-[0.22em] text-brand-green">Session required</div>
+          <h1 className="mt-4 text-2xl font-semibold leading-tight">Please sign in again</h1>
+          <p className="mt-3 text-sm leading-6 text-white/60">{fatalSessionError}</p>
+          <div className="mt-6 flex gap-3">
+            <button
+              type="button"
+              className="bp-button-glow flex min-h-12 flex-1 items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] active:scale-[0.98]"
+              onClick={async () => {
+                clearAuth();
+                clearApiSession();
+                await signOut({ redirectUrl: '/auth/login' });
+              }}
+            >
+              Sign out & sign in
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <div className="flex h-[100dvh] overflow-hidden bg-brand-black">
       {/* Sidebar */}
@@ -149,17 +189,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         sidebarOpen ? 'translate-x-0 md:w-56' : '-translate-x-full md:w-0 md:translate-x-0 md:overflow-hidden'
       )}>
         {/* Logo */}
-        <div className="flex items-center gap-2 px-4 h-16 border-b border-brand-border">
-          <div className="w-7 h-7 rounded bg-brand-green flex items-center justify-center flex-shrink-0">
-            <Shield size={14} className="text-black"/>
-          </div>
-          <span className="font-bold text-sm tracking-tight">Burner Point</span>
+        <div className="flex h-16 items-center gap-3 border-b border-brand-border px-4">
+          <Image src="/assets/logo-mark.svg" alt="" width={24} height={24} className="shrink-0" />
+          <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={126} height={22} className="w-auto shrink-0" />
         </div>
 
         {/* Wallet badge */}
         <div className="px-3 py-3 border-b border-brand-border">
-          <div className="bg-brand-black rounded-xl px-3 py-2.5 flex items-center justify-between">
-            <span className="text-xs text-brand-muted">Balance</span>
+          <div className="flex items-center justify-between rounded-xl bg-brand-black px-3 py-2.5">
+            <span className="text-xs text-brand-muted">Wallet balance</span>
             <span className="text-sm font-mono font-semibold text-brand-green">
               NGN {((user?.walletBalanceKobo || 0) / 100).toLocaleString()}
             </span>
@@ -229,6 +267,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <h2 className="text-sm font-semibold capitalize">
               {pathname.split('/').pop()?.replace('-', ' ') || 'Dashboard'}
             </h2>
+            <p className="mt-0.5 text-xs text-brand-muted">Private communication, verification, billing, and support in one place.</p>
           </div>
           <button className="flex min-h-11 min-w-11 items-center justify-center rounded-bp text-brand-muted transition-colors hover:bg-brand-card hover:text-white">
             <Bell size={18}/>

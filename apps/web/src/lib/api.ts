@@ -78,13 +78,37 @@ api.interceptors.response.use(
 
 export default api;
 
+export interface AuthExchangeResponse {
+  accessToken: string;
+  refreshToken: string;
+  userId: string;
+  user: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+    walletBalanceKobo: number;
+    phoneNumber?: string;
+    phoneVerified?: boolean;
+    referralCode?: string;
+    [key: string]: any;
+  };
+  needsOnboarding: boolean;
+  needsPhoneVerification: boolean;
+  onboarding: {
+    complete: boolean;
+    missingFields: string[];
+  };
+}
+
 // Typed API methods
 export const authApi = {
   register: (data: Record<string, unknown>) => api.post('/auth/register', data),
   login: (data: Record<string, unknown>) => api.post('/auth/login', data),
   logout: (refreshToken: string) => api.post('/auth/logout', { refreshToken }),
   exchangeClerkToken: (clerkToken: string, profile?: Record<string, unknown>) =>
-    api.post('/auth/clerk/exchange', { clerkToken, profile }),
+    api.post<AuthExchangeResponse>('/auth/clerk/exchange', { clerkToken, profile }),
 };
 
 export const numbersApi = {

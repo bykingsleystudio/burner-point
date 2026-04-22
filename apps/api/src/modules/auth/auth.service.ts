@@ -16,8 +16,6 @@ import { LoginDto } from './dto/login.dto';
 const BCRYPT_ROUNDS = 12;
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
-const AUTH_PROFILE_REQUIRED_MESSAGE =
-  'Complete first name, last name, email, phone number, Terms of Service, and Privacy Policy before using Burner Point.';
 
 @Injectable()
 export class AuthService {
@@ -185,6 +183,7 @@ export class AuthService {
 
     const clerkClient = createClerkClient({ secretKey });
     const clerkUser = await clerkClient.users.getUser(clerkUserId) as any;
+    const unsafeMetadata = clerkUser.unsafeMetadata || {};
     const primaryEmail =
       clerkUser.emailAddresses?.find((entry: any) => entry.id === clerkUser.primaryEmailAddressId)?.emailAddress
       ?? clerkUser.emailAddresses?.[0]?.emailAddress
@@ -196,16 +195,31 @@ export class AuthService {
     const primaryPhone =
       clerkUser.phoneNumbers?.find((entry: any) => entry.id === clerkUser.primaryPhoneNumberId)?.phoneNumber
       ?? clerkUser.phoneNumbers?.[0]?.phoneNumber
+      ?? this.asOptionalString(unsafeMetadata.phoneNumber)
       ?? profile?.phoneNumber;
-    const unsafeMetadata = clerkUser.unsafeMetadata || {};
     const email = this.normalizeEmail(primaryEmail);
     const phoneNumber = primaryPhone ? this.normalizePhoneNumber(primaryPhone) : undefined;
     const clerkPhoneVerified = this.isVerifiedClerkPhone(clerkUser, phoneNumber);
-    const firstName = (profile?.firstName || clerkUser.firstName || 'Burner').trim();
-    const lastName = (profile?.lastName || clerkUser.lastName || 'Point').trim();
-    const country = profile?.country || unsafeMetadata.country || 'NG';
-    const lookup = phoneNumber ? [{ email }, { phoneNumber }] : [{ email }];
-    let user = await this.userRepo.findOne({ where: lookup });
+    const firstName = this.normalizeOptionalText(
+      profile?.firstName,
+      clerkUser.firstName,
+      this.asOptionalString(unsafeMetadata.firstName),
+    );
+    const lastName = this.normalizeOptionalText(
+      profile?.lastName,
+      clerkUser.lastName,
+      this.asOptionalString(unsafeMetadata.lastName),
+    );
+    const country = this.normalizeOptionalText(
+      profile?.country,
+      this.asOptionalString(unsafeMetadata.country),
+    ) || 'NG';
+    const existingByEmail = await this.userRepo.findOne({ where: { email } });
+    const existingByPhone = phoneNumber ? await this.userRepo.findOne({ where: { phoneNumber } }) : null;
+    if (existingByEmail && existingByPhone && existingByEmail.id !== existingByPhone.id) {
+      throw new ConflictException('This email address and phone number are already linked to different Burner Point accounts.');
+    }
+    let user = existingByEmail || existingByPhone;
     const termsAccepted =
       Boolean(profile?.acceptTerms) ||
       Boolean(unsafeMetadata.acceptTerms) ||
@@ -215,17 +229,15 @@ export class AuthService {
       Boolean(unsafeMetadata.acceptPrivacy) ||
       Boolean((user?.preferences as any)?.privacyAccepted);
     const effectivePhoneNumber = phoneNumber || user?.phoneNumber;
-    const profileComplete =
-      Boolean(firstName) &&
-      Boolean(lastName) &&
-      Boolean(email) &&
-      Boolean(effectivePhoneNumber) &&
-      termsAccepted &&
-      privacyAccepted;
-
-    if (!profileComplete) {
-      throw new BadRequestException(AUTH_PROFILE_REQUIRED_MESSAGE);
-    }
+    const missingFields = this.getMissingProfileFields({
+      firstName,
+      lastName,
+      email,
+      phoneNumber: effectivePhoneNumber,
+      termsAccepted,
+      privacyAccepted,
+    });
+    const profileComplete = missingFields.length === 0;
 
     const now = new Date().toISOString();
     const preferences = {
@@ -238,6 +250,9 @@ export class AuthService {
       termsAcceptedAt: (user?.preferences as any)?.termsAcceptedAt ?? (termsAccepted ? now : null),
       privacyAcceptedAt: (user?.preferences as any)?.privacyAcceptedAt ?? (privacyAccepted ? now : null),
       referralCode: unsafeMetadata.referralCode ?? (user?.preferences as any)?.referralCode ?? null,
+      onboardingComplete: profileComplete,
+      onboardingMissingFields: missingFields,
+      pendingPhoneNumber: effectivePhoneNumber ?? null,
       authProvider: 'clerk',
     };
 
@@ -249,7 +264,7 @@ export class AuthService {
         lastName,
         country,
         referralCode: this.generateReferralCode(),
-        status: UserStatus.ACTIVE,
+        status: profileComplete ? UserStatus.ACTIVE : UserStatus.PENDING,
         emailVerified: this.isVerifiedClerkEmail(clerkUser, email),
         phoneVerified: clerkPhoneVerified,
         lastLoginAt: new Date(),
@@ -259,11 +274,11 @@ export class AuthService {
     } else {
       const phoneChanged = Boolean(effectivePhoneNumber && user.phoneNumber && user.phoneNumber !== effectivePhoneNumber);
       user.email = user.email || email;
-      user.phoneNumber = user.phoneNumber || effectivePhoneNumber;
+      user.phoneNumber = effectivePhoneNumber || user.phoneNumber;
       user.firstName = firstName || user.firstName;
       user.lastName = lastName || user.lastName;
-      user.country = user.country || country;
-      user.status = user.status === UserStatus.PENDING ? UserStatus.ACTIVE : user.status;
+      user.country = country || user.country;
+      user.status = profileComplete ? UserStatus.ACTIVE : user.status;
       user.emailVerified = user.emailVerified || this.isVerifiedClerkEmail(clerkUser, email);
       user.phoneVerified = phoneChanged ? clerkPhoneVerified : (user.phoneVerified || clerkPhoneVerified);
       user.lastLoginAt = new Date();
@@ -273,7 +288,17 @@ export class AuthService {
 
     await this.userRepo.save(user);
     const tokens = await this.generateTokens(user);
-    return { ...tokens, user };
+    const needsPhoneVerification = Boolean(user.phoneNumber) && !user.phoneVerified;
+    return {
+      ...tokens,
+      user,
+      needsOnboarding: !profileComplete,
+      needsPhoneVerification,
+      onboarding: {
+        complete: profileComplete,
+        missingFields,
+      },
+    };
   }
 
   async validateUser(identifier: string, password: string): Promise<User | null> {
@@ -327,6 +352,37 @@ export class AuthService {
   private normalizeLoginIdentifier(identifier: string): string {
     const trimmed = identifier.trim();
     return trimmed.includes('@') ? this.normalizeEmail(trimmed) : this.normalizePhoneNumber(trimmed);
+  }
+
+  private normalizeOptionalText(...values: Array<string | undefined | null>) {
+    for (const value of values) {
+      if (typeof value !== 'string') continue;
+      const normalized = value.trim();
+      if (normalized) return normalized;
+    }
+    return '';
+  }
+
+  private asOptionalString(value: unknown) {
+    return typeof value === 'string' ? value : undefined;
+  }
+
+  private getMissingProfileFields(profile: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phoneNumber?: string;
+    termsAccepted?: boolean;
+    privacyAccepted?: boolean;
+  }) {
+    const missing: string[] = [];
+    if (!profile.firstName) missing.push('firstName');
+    if (!profile.lastName) missing.push('lastName');
+    if (!profile.email) missing.push('email');
+    if (!profile.phoneNumber) missing.push('phoneNumber');
+    if (!profile.termsAccepted) missing.push('acceptTerms');
+    if (!profile.privacyAccepted) missing.push('acceptPrivacy');
+    return missing;
   }
 
   private isVerifiedClerkEmail(clerkUser: any, email: string): boolean {

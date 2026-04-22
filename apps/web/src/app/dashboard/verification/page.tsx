@@ -75,12 +75,12 @@ export default function VerificationPage() {
               <ShieldCheck className="h-5 w-5 text-brand-green" />
             </div>
             <div>
-              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-brand-green">Twilio Verify</p>
+              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-brand-green">Verification</p>
               <h1 className="text-2xl font-bold">Phone verification</h1>
             </div>
           </div>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-brand-muted">
-            Send SMS or voice OTP through the Burner Point API. Twilio credentials stay on the Railway backend and never reach the browser.
+            Send a secure SMS or voice code to the number on your Burner Point account. International phone formats are supported when entered in full.
           </p>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-[1fr_0.42fr]">
@@ -95,7 +95,7 @@ export default function VerificationPage() {
                 placeholder="+14155550182"
                 className="auth-input mt-2"
               />
-              <span className="mt-1.5 block text-xs text-brand-muted">Use country code. Spaces and dashes are cleaned before sending.</span>
+              <span className="mt-1.5 block text-xs text-brand-muted">Use the full international number, for example +14155550182 or +2348012345678.</span>
             </label>
 
             <fieldset className="block text-sm font-medium text-white/70">
@@ -176,14 +176,14 @@ export default function VerificationPage() {
         </section>
 
         <aside className="rounded-2xl border border-brand-border bg-brand-card p-6">
-          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-brand-green">Production flow</p>
+          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-brand-green">How it works</p>
           <div className="mt-5 space-y-4">
             {[
-              'Frontend validates E.164 phone format.',
-              'Browser calls Burner Point API only.',
-              'Railway backend calls Twilio Verify server-side.',
-              'Auth and phone endpoints are rate limited.',
-              'Successful verification updates the local user record.',
+              'Enter the number attached to your Burner Point profile.',
+              'Choose SMS or voice delivery.',
+              'Receive the code and enter it here.',
+              'If the first try fails, request another code or switch delivery.',
+              'A successful code confirms the number for account security.',
             ].map((item, index) => (
               <div key={item} className="flex gap-3">
                 <div className="flex h-7 w-7 flex-none items-center justify-center rounded-lg border border-brand-green/20 bg-brand-green/10 font-mono text-xs text-brand-green">
@@ -216,7 +216,7 @@ export default function VerificationPage() {
               Buy credits, choose platform, receive the code.
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-brand-muted">
-              Product verifications should debit wallet credits after the user selects country, service, delivery route, and number. Provider calls stay server-side and the inbox shows SMS, OTP, or voice delivery state.
+              Choose the destination service, add credits, select a number, and keep SMS or voice delivery tied to the Burner Point identity you are using for that verification.
             </p>
           </div>
           <Link href="/dashboard/credits" className="bp-primary-action inline-flex min-h-12 items-center justify-center px-6 py-4 text-sm font-semibold uppercase tracking-[0.16em]">
@@ -225,8 +225,8 @@ export default function VerificationPage() {
         </div>
         <div className="mt-6 grid gap-3 md:grid-cols-3">
           {[
-            [Globe2, 'Country and service', 'Choose destination, platform, and provider route before reserving inventory.'],
-            [CreditCard, 'Credit-backed checkout', 'Verification starts from $0.99+ and should reconcile through wallet ledger events.'],
+            [Globe2, 'Country and service', 'Choose destination, platform, and number before you start.'],
+            [CreditCard, 'Credit-backed checkout', 'Verification starts from $0.99+ with wallet funding and clear purchase history.'],
             [ShieldCheck, 'Private delivery', 'SMS, OTP, and voice results stay tied to the selected Burner Point number.'],
           ].map(([Icon, title, text]) => {
             const ItemIcon = Icon as typeof Globe2;

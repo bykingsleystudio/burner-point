@@ -47,16 +47,21 @@ export default function PhoneVerifyPage() {
           firstName: user?.firstName,
           lastName: user?.lastName,
           email: user?.primaryEmailAddress?.emailAddress,
-          phoneNumber: pendingPhone || user?.primaryPhoneNumber?.phoneNumber,
+          phoneNumber: pendingPhone || user?.primaryPhoneNumber?.phoneNumber || (user?.unsafeMetadata?.phoneNumber as string | undefined),
         });
 
         if (cancelled) return;
         setApiSession(data.accessToken, data.refreshToken);
 
+        if (data.needsOnboarding) {
+          router.replace(`/onboarding?redirect=${encodeURIComponent(redirectTo)}`);
+          return;
+        }
+
         const apiPhone = data.user?.phoneNumber || pendingPhone || user?.primaryPhoneNumber?.phoneNumber || '';
         setPhoneNumber(apiPhone);
 
-        if (data.user?.phoneVerified) {
+        if (!data.needsPhoneVerification || data.user?.phoneVerified) {
           toast.success('Phone number already verified.');
           router.replace(redirectTo);
           return;
@@ -138,10 +143,10 @@ export default function PhoneVerifyPage() {
             <div className="mt-5 flex h-12 w-12 items-center justify-center rounded-bp-md border border-brand-green/25 bg-brand-green/10">
               <ShieldCheck className="h-6 w-6 text-brand-green" />
             </div>
-            <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.22em] text-brand-green">Twilio Verify</p>
+            <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.22em] text-brand-green">Secure phone verification</p>
             <h1 className="mt-3 text-[1.8rem] font-semibold uppercase leading-none sm:text-[2rem]">Verify your account phone</h1>
             <p className="mt-2 text-sm leading-5 text-white/52">
-              Burner Point sends OTP through the Railway API using Twilio Verify server-side. No Twilio credentials are bundled into the web app.
+              Use SMS or voice delivery to verify the number attached to your Burner Point account. International numbers are supported when entered in E.164 format.
             </p>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_0.55fr]">
@@ -158,7 +163,7 @@ export default function PhoneVerifyPage() {
                   className="auth-input mt-1.5"
                   disabled={step === 'approved'}
                 />
-                <span className="mt-1.5 block text-xs text-brand-muted">Use your Burner Point profile phone in E.164 format.</span>
+                <span className="mt-1.5 block text-xs text-brand-muted">Use your Burner Point profile phone in E.164 format, for example +14155550182 or +2348012345678.</span>
               </label>
 
               <fieldset className="block text-sm font-medium text-white/70">
@@ -224,7 +229,7 @@ export default function PhoneVerifyPage() {
                         inputMode="numeric"
                         autoComplete="one-time-code"
                         enterKeyHint="done"
-                        placeholder="Enter Twilio code"
+                        placeholder="Enter verification code"
                         className="auth-input mt-1.5 max-w-sm font-mono text-lg"
                       />
                     </label>
@@ -248,7 +253,7 @@ export default function PhoneVerifyPage() {
             ) : null}
 
             <div className="mt-4 rounded-bp-lg border border-white/8 bg-white/[0.02] p-3.5 text-xs leading-5 text-white/46">
-              OTP endpoints are authenticated with the Burner Point API token, rate limited to 5 attempts per 10 minutes, and bound to your local user record before Twilio is called.
+              Codes expire after 10 minutes. If you do not receive one, switch between SMS and voice delivery and confirm the number is typed in full international format.
             </div>
           </div>
         </div>
