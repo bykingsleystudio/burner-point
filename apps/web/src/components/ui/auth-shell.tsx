@@ -18,7 +18,7 @@ const proofItems = [
   {
     icon: MessageSquareText,
     title: 'Cleaner UX',
-    text: 'Users see product benefits, not backend notes, provider names, or internal deployment details.',
+    text: 'Users see clear next steps, calm copy, and privacy-focused guidance from the first screen.',
   },
   {
     icon: Smartphone,
@@ -63,7 +63,7 @@ export function AuthShell({
               {asideTitle || 'Private entry that feels calm, direct, and fast.'}
             </h1>
             <p className="mt-5 max-w-xl text-base leading-8 text-white/62">
-              {asideDescription || 'Burner Point should feel like a premium communication platform from the first screen, not a technical control panel. This shell keeps the language user-facing while preserving your brand palette and motion-driven identity.'}
+              {asideDescription || 'Burner Point should feel like a premium communication platform from the first screen, not a technical control panel. This shell keeps the language focused on what people can do next while preserving your brand palette and motion-driven identity.'}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">

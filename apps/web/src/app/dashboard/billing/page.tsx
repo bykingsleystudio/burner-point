@@ -135,8 +135,8 @@ export default function BillingPage() {
               <p className="text-[10px] uppercase text-white/38">monthly target</p>
             </div>
             <div className="rounded-bp border border-white/8 bg-black/20 p-3">
-              <p className="font-mono text-lg text-brand-green">Webhook</p>
-              <p className="text-[10px] uppercase text-white/38">activation</p>
+              <p className="font-mono text-lg text-brand-green">Protected</p>
+              <p className="text-[10px] uppercase text-white/38">checkout</p>
             </div>
           </div>
         </div>
@@ -244,7 +244,7 @@ export default function BillingPage() {
           ) : (
             <div className="p-10 text-center">
               <CreditCard className="mx-auto h-8 w-8 text-brand-muted" />
-              <p className="mt-3 text-sm text-brand-muted">No billing history yet. Purchases and webhook-confirmed credits will appear here.</p>
+              <p className="mt-3 text-sm text-brand-muted">No billing history yet. Purchases and confirmed credits will appear here.</p>
             </div>
           )}
         </div>

@@ -26,7 +26,7 @@ function PaymentSuccessContent() {
         <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.2em] text-brand-green">Payment received</p>
         <h1 className="mt-2 text-2xl font-bold">Checkout complete</h1>
         <p className="mt-3 text-sm leading-6 text-white/64">
-          Burner Point is reconciling the payment webhook and will update your wallet, rental, or subscription entitlement as soon as the provider confirms it.
+          Burner Point will update your wallet, rental, or subscription as soon as the payment is confirmed.
         </p>
 
         {reference ? (
@@ -37,7 +37,7 @@ function PaymentSuccessContent() {
         ) : null}
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <Link href="/dashboard/credits" className="flex min-h-12 items-center justify-center rounded-xl bg-brand-green px-5 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-black">
+          <Link href="/dashboard/billing" className="flex min-h-12 items-center justify-center rounded-xl bg-brand-green px-5 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-black">
             View Billing
           </Link>
           <Link href="/dashboard" className="flex min-h-12 items-center justify-center rounded-xl border border-white/10 px-5 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-white/72 hover:border-brand-green/35 hover:text-white">
@@ -48,8 +48,8 @@ function PaymentSuccessContent() {
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         {[
-          { icon: CreditCard, title: 'Webhook first', text: 'Wallet changes happen after provider signature checks, not from browser redirects.' },
-          { icon: ShieldCheck, title: 'Protected flow', text: 'Gateway secrets stay server-side and reconciliation is handled by the API.' },
+          { icon: CreditCard, title: 'Confirmation in progress', text: 'Billing updates usually appear automatically within moments of a completed checkout.' },
+          { icon: ShieldCheck, title: 'Protected flow', text: 'Your purchase stays tied to this reference so support can help quickly if anything looks delayed.' },
         ].map((item) => {
           const Icon = item.icon;
           return (

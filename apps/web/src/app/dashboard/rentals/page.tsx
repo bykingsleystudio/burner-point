@@ -25,10 +25,10 @@ const COUNTRIES = [
 ];
 
 const lifecycle = [
-  'Reserve available inventory before checkout expires.',
-  'Confirm payment through gateway webhook before assignment.',
-  'Attach number to account with expiration and renewal state.',
-  'Notify before expiry and route support through billing reference.',
+  'Hold your selection while checkout is in progress.',
+  'Confirm payment and assign the number to your account.',
+  'Track active time, renewal status, and number history in one place.',
+  'Get a reminder before expiry so you can renew or move on smoothly.',
 ];
 
 export default function RentalsPage() {
@@ -100,7 +100,7 @@ export default function RentalsPage() {
             <ShieldCheck className="h-6 w-6 text-brand-green" />
             <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Pricing</p>
             <p className="mt-2 font-mono text-4xl text-brand-green">$5.99+</p>
-            <p className="mt-2 text-sm leading-6 text-white/62">Non-renewable rentals start at $5.99 depending on country, duration, and provider route.</p>
+            <p className="mt-2 text-sm leading-6 text-white/62">Non-renewable rentals start at $5.99 depending on country, duration, and current availability.</p>
           </div>
         </div>
       </section>
@@ -158,7 +158,7 @@ export default function RentalsPage() {
                 className="bp-input mt-2"
               />
               <span className="mt-2 block text-[11px] normal-case leading-5 tracking-normal text-white/42">
-                Add a searched inventory number for automatic webhook assignment, or leave blank to create a paid rental entitlement for operator-assisted assignment.
+                Enter a number you already chose, or leave this blank and Burner Point will match the best available option after purchase.
               </span>
             </label>
           </div>
@@ -201,7 +201,7 @@ export default function RentalsPage() {
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
             {[
               [Phone, 'Number', 'Reserved'],
-              [CreditCard, 'Payment', 'Webhook'],
+              [CreditCard, 'Payment', 'Confirmed'],
               [ShieldCheck, 'Privacy', 'Scoped'],
             ].map(([Icon, label, value]) => {
               const ItemIcon = Icon as typeof Phone;

@@ -61,7 +61,7 @@ const GATEWAYS: Gateway[] = [
     id: 'flutterwave',
     name: 'Flutterwave',
     code: 'FW',
-    desc: 'Deferred secondary gateway',
+    desc: 'Additional regional option',
     color: 'text-orange-400',
     borderActive: 'border-orange-400',
     bgActive: 'bg-orange-400/10',
@@ -71,7 +71,7 @@ const GATEWAYS: Gateway[] = [
     id: 'squad',
     name: 'Squad by GTCO',
     code: 'SQ',
-    desc: 'Deferred secondary gateway',
+    desc: 'Additional regional option',
     color: 'text-green-400',
     borderActive: 'border-green-400',
     bgActive: 'bg-green-400/10',
@@ -81,7 +81,7 @@ const GATEWAYS: Gateway[] = [
     id: 'korapay',
     name: 'Korapay',
     code: 'KO',
-    desc: 'Deferred secondary gateway',
+    desc: 'Additional regional option',
     color: 'text-purple-400',
     borderActive: 'border-purple-400',
     bgActive: 'bg-purple-400/10',
@@ -91,7 +91,7 @@ const GATEWAYS: Gateway[] = [
     id: 'opay',
     name: 'OPay Merchant',
     code: 'OP',
-    desc: 'Deferred secondary gateway',
+    desc: 'Additional regional option',
     color: 'text-yellow-400',
     borderActive: 'border-yellow-400',
     bgActive: 'bg-yellow-400/10',
@@ -151,7 +151,7 @@ export default function CreditsPage() {
       <div>
         <h1 className="text-xl font-bold">Buy Credits</h1>
         <p className="mt-1 text-sm text-brand-muted">
-          Credits fund verifications, rentals, and account actions. Gateway logic stays on the Burner Point API.
+          Credits fund verifications, rentals, and account actions from one protected checkout flow.
         </p>
       </div>
 
@@ -218,7 +218,7 @@ export default function CreditsPage() {
           <div className="h-px flex-1 bg-brand-border" />
         </div>
         <p className="mb-3 text-xs leading-5 text-brand-muted">
-          These remain behind backend feature flags until core revenue is stable.
+          Additional regional checkout options will appear here as they become available.
         </p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {deferredGateways.map((gw) => (
@@ -285,7 +285,7 @@ export default function CreditsPage() {
           <div className="mt-3 rounded-xl border border-cyan-400/20 bg-cyan-400/5 p-3">
             <p className="flex items-center gap-1.5 text-xs text-cyan-400">
               <Globe size={11} />
-              <strong>International cards:</strong> Paddle handles global card checkout and subscription paths.
+              <strong>International cards:</strong> Use Paddle when you want a smooth global card checkout experience.
             </p>
           </div>
         ) : null}

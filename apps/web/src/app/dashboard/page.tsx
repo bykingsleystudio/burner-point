@@ -111,7 +111,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-white">Private by design</p>
-                <p className="text-sm leading-6 text-white/54">Your dashboard focuses on user actions and account outcomes, not backend provider detail.</p>
+                <p className="text-sm leading-6 text-white/54">Your dashboard focuses on user actions, clear next steps, and protected account outcomes.</p>
               </div>
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-3">

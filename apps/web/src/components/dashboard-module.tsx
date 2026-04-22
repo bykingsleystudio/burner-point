@@ -100,7 +100,7 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
       { icon: 'phone', title: 'Voice Context', text: 'Connect call activity and voicemail to the same communication timeline.', meta: 'Calls' },
     ],
     workflow: ['Select a conversation number', 'Open the active contact or service thread', 'Send or receive SMS plus audio, photo and video', 'Preserve delivery, spam, and OTP context'],
-    note: 'Messaging, audio, photo and video storage, and provider callbacks must be normalized by the backend before anything reaches the client. Twilio secrets stay server-side.',
+    note: 'Keep each conversation attached to the right number so messages, media, and follow-up actions stay easy to manage.',
   },
   calls: {
     eyebrow: 'US/Canada Conversation',
@@ -121,7 +121,7 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
       { icon: 'shield', title: 'Number Separation', text: 'Keep business, marketplace, dating, and travel calls away from your real number.', meta: 'Privacy' },
     ],
     workflow: ['Select an active US/CA conversation number', 'Choose or enter a contact', 'Start the call over data', 'Store call activity and voicemail status'],
-    note: 'Live call provider actions remain backend-only and should be routed through Twilio Voice/WebRTC when enabled.',
+    note: 'Call quality, missed activity, and voicemail should stay grouped by number so you can respond quickly.',
   },
   voicemail: {
     eyebrow: 'Call Backup',
@@ -142,7 +142,7 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
       { icon: 'bell', title: 'Missed Call Alerts', text: 'Notify users when a conversation number receives voicemail or call activity.', meta: 'Alerts' },
     ],
     workflow: ['Receive missed call event', 'Attach voicemail to the number', 'Protect playback access', 'Notify the user and preserve activity history'],
-    note: 'Voicemail storage should use private object storage and signed URLs once recordings are enabled.',
+    note: 'Voicemail should stay attached to the number that received it, with playback, callback, and follow-up in one place.',
   },
   rentals: {
     eyebrow: 'Number Rentals',
@@ -163,7 +163,7 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
       { icon: 'shield', title: 'Expiry Control', text: 'Show expiry, renewal, release, and support paths before access changes.', meta: 'Lifecycle' },
     ],
     workflow: ['Select country and number type', 'Confirm price and duration', 'Activate after payment confirmation', 'Renew or release before expiry'],
-    note: 'Rental assignment should happen only after gateway webhook confirmation and wallet ledger reconciliation.',
+    note: 'Rental timing, renewal choices, and support references should stay visible before a number changes state.',
   },
   esim: {
     eyebrow: 'Global Connectivity',
@@ -183,14 +183,14 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
       { icon: 'globe', title: 'Travel Data', text: 'Offer region-aware plans for travel, remote work, and backup connectivity.', meta: 'Global' },
       { icon: 'check', title: 'Usage Visibility', text: 'Show data balance, validity, active plan, and renewal prompts.', meta: 'Control' },
     ],
-    workflow: ['Choose destination or region', 'Select data amount and duration', 'Pay through backend checkout', 'Show activation and usage state'],
-    note: 'Provider keys for 1GLOBAL must stay on the API service and webhook events must update plan status idempotently.',
+    workflow: ['Choose destination or region', 'Select data amount and duration', 'Complete checkout', 'Show activation and usage state'],
+    note: 'Choose a plan, activate it on a compatible device, and monitor usage without leaving your Burner Point account.',
   },
   proxies: {
     eyebrow: 'Routing Flexibility',
     title: 'Proxy access for location-aware privacy workflows.',
     description:
-      'Proxy management gives users secure routing options, location flexibility, and provider health visibility without exposing Bright Data credentials to the client.',
+      'Proxy management gives users secure routing options, location flexibility, and connection health visibility without exposing sensitive details.',
     status: 'Provider abstraction',
     primaryAction: { label: 'Buy Credits', href: '/dashboard/credits' },
     secondaryAction: { label: 'Open API Tools', href: '/dashboard/api' },
@@ -202,10 +202,10 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
     cards: [
       { icon: 'globe', title: 'Region Control', text: 'Select routing regions for browsing, testing, and account separation.', meta: 'Location' },
       { icon: 'lock', title: 'Credential Masking', text: 'Show proxy credentials once, mask stored values, and rotate safely.', meta: 'Secrets' },
-      { icon: 'radio', title: 'Health Checks', text: 'Track active routes, durability, rotation, and provider failures.', meta: 'Reliability' },
+      { icon: 'radio', title: 'Health Checks', text: 'Track active routes, durability, rotation, and connection issues.', meta: 'Reliability' },
     ],
-    workflow: ['Choose proxy type and region', 'Confirm price and duration', 'Provision through backend adapter', 'Display masked credentials and rotation status'],
-    note: 'Bright Data API keys and webhook signatures belong in Railway environment variables only.',
+    workflow: ['Choose proxy type and region', 'Confirm price and duration', 'Activate access', 'Display masked credentials and rotation status'],
+    note: 'Routing regions, masked credentials, and session status should stay easy to read without exposing sensitive details.',
   },
   vpn: {
     eyebrow: 'Built-In Protection',
@@ -225,14 +225,14 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
       { icon: 'globe', title: 'Server Selection', text: 'Expose regions clearly without selling the VPN as a separate product.', meta: 'Routing' },
       { icon: 'shield', title: 'No-Logs Posture', text: 'Keep telemetry limited to abuse prevention, reliability, and billing safety.', meta: 'Trust' },
     ],
-    workflow: ['Check account eligibility', 'Generate WireGuard profile server-side', 'Connect to selected region', 'Display status and rotate credentials safely'],
-    note: 'VPN config generation must use secure storage and never expose private server keys to frontend bundles.',
+    workflow: ['Check account eligibility', 'Prepare your secure connection', 'Connect to the selected region', 'Display status and rotate credentials safely'],
+    note: 'Protection status, region selection, and reconnect guidance should stay clear while you move through the rest of the product.',
   },
   support: {
     eyebrow: 'High-Trust Support',
     title: 'Support for account access, billing, and telecom delivery.',
     description:
-      'Support must understand privacy workflows: verification delivery, rental continuity, number status, payment reconciliation, eSIM activation, proxies, and account security.',
+      'Support must understand privacy workflows: verification delivery, rental continuity, number status, payment updates, eSIM activation, proxies, and account security.',
     status: 'Support operations',
     primaryAction: { label: 'Open Tickets', href: '/dashboard/support/tickets' },
     secondaryAction: { label: 'Email Support', href: 'mailto:info.burnerpoint@gmail.com' },
@@ -244,10 +244,10 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
     cards: [
       { icon: 'ticket', title: 'Support Tickets', text: 'Track issues with category, service, number, gateway reference, and status.', meta: 'Cases' },
       { icon: 'shield', title: 'Privacy Triage', text: 'Avoid asking users to expose sensitive identity data unless truly required.', meta: 'Trust' },
-      { icon: 'check', title: 'Resolution Notes', text: 'Give users clear outcomes for refunds, retries, renewals, and provider failures.', meta: 'Clarity' },
+      { icon: 'check', title: 'Resolution Notes', text: 'Give users clear outcomes for refunds, retries, renewals, and delivery issues.', meta: 'Clarity' },
     ],
-    workflow: ['Collect issue category and reference', 'Attach account and provider context', 'Escalate telecom or payment failures', 'Close with clear resolution history'],
-    note: 'Future ticket endpoints should include audit logs and role-based access for support operators.',
+    workflow: ['Collect issue category and reference', 'Attach the account context that matters', 'Escalate billing or delivery issues', 'Close with clear resolution history'],
+    note: 'Support should focus on clear issue categories, fast next steps, and calm resolution updates.',
   },
   tickets: {
     eyebrow: 'Support Tickets',
@@ -268,13 +268,13 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
       { icon: 'shield', title: 'Sensitive Data Guardrails', text: 'Request IDs or documents only when legally required and store them privately.', meta: 'Privacy' },
     ],
     workflow: ['Create ticket with scoped context', 'Attach telecom, payment, or account references', 'Route to support or operations', 'Close with refund, retry, renewal, or explanation'],
-    note: 'Ticket data should use role-based access, audit logging, private attachments, and strict retention rules before production support launch.',
+    note: 'Each ticket should show what happened, what is needed next, and how long the resolution is likely to take.',
   },
   billing: {
     eyebrow: 'Credits and Billing',
     title: 'Credits, purchases, subscriptions, and payment history.',
     description:
-      'Billing keeps verification credits, rental purchases, monthly plans, gateway checkout state, transaction history, refunds, and reconciliation in one controlled account surface.',
+      'Billing keeps verification credits, rental purchases, monthly plans, checkout status, transaction history, refunds, and account visibility in one controlled surface.',
     status: 'Payment center',
     primaryAction: { label: 'Buy Credits', href: '/dashboard/credits' },
     secondaryAction: { label: 'Open Support', href: '/dashboard/support' },
@@ -285,11 +285,11 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
     ],
     cards: [
       { icon: 'credit', title: 'Wallet Credits', text: 'Use wallet balance for verifications, rentals, eSIM, proxies, and renewals.', meta: 'Credits' },
-      { icon: 'bell', title: 'Webhook-Safe Updates', text: 'Balance changes only after gateway confirmation and idempotent ledger entries.', meta: 'Events' },
+      { icon: 'bell', title: 'Protected Updates', text: 'Balance changes appear only after checkout is confirmed and reflected in your account history.', meta: 'Events' },
       { icon: 'file', title: 'Transaction History', text: 'Expose references, gateway status, product assignment, and receipt support.', meta: 'Ledger' },
     ],
-    workflow: ['Choose package or product', 'Create checkout through Burner Point API', 'Confirm payment by webhook', 'Update ledger and assign inventory'],
-    note: 'Gateway integrations must remain backend-only. Mobile in-app purchases need Apple and Google policy review before selling digital goods in native checkout.',
+    workflow: ['Choose a package or product', 'Start checkout', 'Confirm payment', 'Update billing history and assign access'],
+    note: 'Purchases should appear clearly with status, references, and the next action if something needs attention.',
   },
   developer: {
     eyebrow: 'API and Developer Tools',
@@ -310,7 +310,7 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
       { icon: 'code', title: 'API Contracts', text: 'Keep endpoints typed, documented, rate-limited, and compatible across web and mobile.', meta: 'REST' },
     ],
     workflow: ['Create a named API key', 'Configure webhook URL and event types', 'Verify signatures server-side', 'Provision numbers or consume events safely'],
-    note: 'Raw API keys should be shown once, stored hashed, and protected by rate limits, audit logging, and revoke flows.',
+    note: 'Keys, signing secrets, and delivery history should stay organized, reversible, and easy for teams to manage safely.',
   },
 };
 
@@ -421,7 +421,7 @@ export function DashboardModulePage({ module }: { module: DashboardModuleContent
           </div>
         </div>
         <div className="rounded-lg border border-brand-green/16 bg-brand-green/[0.045] p-5">
-          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Security note</p>
+          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Need to know</p>
           <p className="mt-4 text-sm leading-7 text-white/66">{module.note}</p>
         </div>
       </section>

@@ -26,7 +26,7 @@ function PaymentCancelContent() {
         <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.2em] text-yellow-300">Payment cancelled</p>
         <h1 className="mt-2 text-2xl font-bold">Checkout was not completed</h1>
         <p className="mt-3 text-sm leading-6 text-white/64">
-          No wallet credit or service entitlement is applied until Burner Point receives a confirmed provider webhook.
+          No wallet credit or service access is applied until a payment is confirmed.
         </p>
 
         {reference ? (

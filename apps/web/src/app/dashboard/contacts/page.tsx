@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 import { MessageSquare, Phone, Plus, Search, ShieldCheck, Users } from 'lucide-react';
 
 const CONTACTS = [
@@ -74,7 +75,7 @@ export default function ContactsPage() {
           </div>
           <button
             type="button"
-            onClick={() => alert('Contact creation will save alias, route, phone number, notes, and preferred burner number through the backend contacts endpoint.')}
+            onClick={() => toast('Contact creation is being finalized. Use the existing address book or open Support if you need help today.')}
             className="bp-primary-action inline-flex min-h-12 items-center justify-center gap-2 px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em]"
           >
             <Plus className="h-4 w-4" />
@@ -150,10 +151,10 @@ export default function ContactsPage() {
 
         <aside className="rounded-bp-lg border border-brand-green/16 bg-brand-green/[0.045] p-5">
           <ShieldCheck className="h-6 w-6 text-brand-green" />
-          <h2 className="mt-4 text-sm font-semibold uppercase tracking-[0.14em] text-white">Implementation Direction</h2>
+          <h2 className="mt-4 text-sm font-semibold uppercase tracking-[0.14em] text-white">Contact guidance</h2>
           <div className="mt-4 space-y-3 text-sm leading-6 text-white/64">
-            <p>Contacts should store aliases first, with legal names optional. Each contact can be assigned a preferred Burner Point number for calls, SMS, secure audio, photo and video sharing, and voicemail.</p>
-            <p>Production backend should add contacts, contact notes, route preference, blocked state, last activity, and audit events before enabling sync across web and mobile.</p>
+            <p>Keep aliases first so each contact is easy to recognize by purpose, number, and recent activity.</p>
+            <p>Use the same contact across calls, messages, voicemail, and renewals so private communication stays organized.</p>
           </div>
         </aside>
       </section>
