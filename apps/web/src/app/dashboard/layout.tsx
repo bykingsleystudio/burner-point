@@ -31,6 +31,7 @@ import { authApi, clearApiSession, setApiSession } from '@/lib/api';
 import { formatWalletPrimary, formatWalletSecondary } from '@/lib/money';
 import { useAuthStore, useUIStore } from '@/store';
 import { BpLoadingState } from '@/components/design-system';
+import { AccountAttentionBanner } from '@/components/dashboard/account-attention-banner';
 
 type NavItem = {
   href: string;
@@ -87,7 +88,7 @@ const NAV_ITEMS: NavItem[] = [
     href: '/dashboard/vpn',
     label: 'BP Secure Tunnel',
     shortLabel: 'Secure Tunnel',
-    description: 'WireGuard access, server regions, and config export.',
+    description: 'Secure tunnel access, server regions, and profile export.',
     icon: Shield,
   },
   {
@@ -108,7 +109,7 @@ const PAGE_META: Array<{ match: string; title: string; description: string }> = 
   { match: '/dashboard/rentals', title: 'BP Number Rentals', description: 'Browse inventory, activate rentals, and manage renewal timing.' },
   { match: '/dashboard/esim', title: 'BP eSIM Store', description: 'Provision travel data plans and manage installed eSIMs.' },
   { match: '/dashboard/proxies', title: 'BP Proxy Store', description: 'Filter proxy plans, reveal credentials, and review active sessions.' },
-  { match: '/dashboard/vpn', title: 'BP Secure Tunnel', description: 'Secure routing, server choice, and WireGuard provisioning.' },
+  { match: '/dashboard/vpn', title: 'BP Secure Tunnel', description: 'Secure routing, server choice, and profile provisioning.' },
   { match: '/dashboard/settings', title: 'Settings', description: 'Profile, billing, API keys, support, and security controls.' },
   { match: '/dashboard/profile', title: 'Settings', description: 'Manage personal details and recovery information.' },
   { match: '/dashboard/billing', title: 'Billing & Subscription', description: 'Wallet movements, invoices, plans, and active subscriptions.' },
@@ -169,8 +170,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         if (cancelled) return;
 
+        const sessionUser = {
+          ...data.user,
+          phoneVerified: data.user.phoneVerified,
+          needsOnboarding: data.needsOnboarding,
+          onboardingMissingFields: data.onboarding?.missingFields ?? [],
+        };
+
         setApiSession(data.accessToken, data.refreshToken);
-        setAuth(data.user, data.accessToken, data.refreshToken);
+        setAuth(sessionUser, data.accessToken, data.refreshToken);
         setAccessToken(data.accessToken);
         setSessionReady(true);
       } catch (error: unknown) {
@@ -460,6 +468,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </div>
         </header>
+
+        <AccountAttentionBanner
+          needsOnboarding={user?.needsOnboarding}
+          needsPhoneVerification={Boolean(user?.phoneNumber) && user?.phoneVerified === false}
+          missingFields={user?.onboardingMissingFields}
+        />
 
         <main className="flex-1 px-4 py-5 md:px-6 md:py-6">{children}</main>
       </div>

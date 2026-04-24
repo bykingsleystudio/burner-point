@@ -5,6 +5,7 @@ interface User {
   id: string;
   email: string;
   phoneNumber?: string;
+  phoneVerified?: boolean;
   firstName: string;
   lastName: string;
   role: string;
@@ -14,6 +15,8 @@ interface User {
   walletDisplayCurrency?: 'USD';
   walletFxRateNgnPerUsd?: number;
   referralCode?: string;
+  needsOnboarding?: boolean;
+  onboardingMissingFields?: string[];
 }
 
 interface AuthState {

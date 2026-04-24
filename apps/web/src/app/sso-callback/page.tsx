@@ -6,9 +6,9 @@ export default function SsoCallbackPage() {
   return (
     <AuthenticateWithRedirectCallback
       signInForceRedirectUrl="/dashboard"
-      signUpForceRedirectUrl="/onboarding"
+      signUpForceRedirectUrl="/dashboard"
       signInFallbackRedirectUrl="/dashboard"
-      signUpFallbackRedirectUrl="/onboarding"
+      signUpFallbackRedirectUrl="/dashboard"
     />
   );
 }

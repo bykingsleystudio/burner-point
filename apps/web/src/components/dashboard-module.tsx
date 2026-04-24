@@ -217,7 +217,7 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
     secondaryAction: { label: 'Open Support', href: '/dashboard/support' },
     stats: [
       { label: 'Mode', value: 'Integrated' },
-      { label: 'Protocol', value: 'WireGuard' },
+      { label: 'Profile', value: 'Secure export' },
       { label: 'Logs', value: 'Minimized' },
     ],
     cards: [

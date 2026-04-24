@@ -13,7 +13,7 @@ export const BURNER_POINT_STACK = [
   },
   {
     label: 'Auth',
-    value: 'Clerk + Twilio Verify',
+    value: 'Clerk + global OTP',
   },
   {
     label: 'Mobile',
@@ -25,10 +25,10 @@ export const BURNER_POINT_STACK = [
   },
   {
     label: 'Telecom',
-    value: 'Twilio, Telnyx, Tremil',
+    value: 'Multi-route messaging and verification',
   },
   {
     label: 'Privacy',
-    value: 'WireGuard, Oxylabs, Airalo',
+    value: 'Secure tunnel, proxies, eSIM',
   },
 ] as const;

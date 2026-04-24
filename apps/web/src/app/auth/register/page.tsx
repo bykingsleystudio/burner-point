@@ -10,7 +10,10 @@ import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { ShieldCheck } from 'lucide-react';
 import { AuthProviderButton } from '@/components/auth-provider-button';
-import { AuthShell } from '@/components/ui/auth-shell';
+import { GlassInputWrapper, SignInPage } from '@/components/ui/sign-in';
+
+const AUTH_HERO_IMAGE =
+  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1600&q=80';
 
 const schema = z.object({
   firstName: z.string().min(1, 'First name is required').max(50),
@@ -112,8 +115,8 @@ export default function RegisterPage() {
           authSource: 'web_signup',
         },
       });
-      if (error) throw error;
 
+      if (error) throw error;
       await continueSignUpVerification();
     } catch (err) {
       toast.error(getClerkErrorMessage(err, 'Registration failed'));
@@ -175,13 +178,14 @@ export default function RegisterPage() {
   };
 
   return (
-    <AuthShell
+    <SignInPage
       title="Log in or sign up"
       description={description}
-      asideTitle="Private entry, no extra loops."
-      asideDescription="Create a Burner Point account with the details required for secure recovery, then verify the attached phone number and enter the dashboard directly."
+      heroImageSrc={AUTH_HERO_IMAGE}
+      testimonials={[]}
+      onCreateAccount={() => router.push('/auth/login')}
     >
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="inline-flex rounded-full border border-white/8 bg-white/[0.03] p-1">
             <Link href="/auth/login" className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/46 transition hover:text-white">
@@ -214,33 +218,36 @@ export default function RegisterPage() {
               />
             </div>
 
-            <div className="flex items-center gap-3 pt-1">
-              <span className="h-px flex-1 bg-white/8" />
-              <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-white/32">OR</span>
-              <span className="h-px flex-1 bg-white/8" />
+            <div className="relative flex items-center justify-center">
+              <span className="w-full border-t border-white/10" />
+              <span className="absolute bg-[#04120C] px-4 font-mono text-[11px] uppercase tracking-[0.22em] text-white/34">
+                OR
+              </span>
             </div>
           </>
         ) : null}
 
         {pendingEmailVerification ? (
-          <div className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
+          <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
             <label className="block text-sm font-medium text-white/70">
               Email verification code
-              <input
-                value={verificationCode}
-                onChange={(event) => setVerificationCode(event.target.value)}
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                enterKeyHint="done"
-                placeholder="Enter verification code"
-                className="auth-input mt-2"
-              />
+              <GlassInputWrapper>
+                <input
+                  value={verificationCode}
+                  onChange={(event) => setVerificationCode(event.target.value)}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  enterKeyHint="done"
+                  placeholder="Enter verification code"
+                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
+                />
+              </GlassInputWrapper>
             </label>
             <button
               type="button"
               disabled={isSubmitting}
               onClick={verifyEmail}
-              className="bp-button-glow mt-4 flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
+              className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSubmitting ? 'Verifying...' : 'Verify and continue'}
             </button>
@@ -249,32 +256,72 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="First Name" error={errors.firstName?.message}>
-                <input {...register('firstName')} autoComplete="given-name" autoCapitalize="words" enterKeyHint="next" placeholder="Kingsley" className="auth-input" />
+                <GlassInputWrapper>
+                  <input
+                    {...register('firstName')}
+                    autoComplete="given-name"
+                    autoCapitalize="words"
+                    enterKeyHint="next"
+                    placeholder="Kingsley"
+                    className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
+                  />
+                </GlassInputWrapper>
               </Field>
               <Field label="Last Name" error={errors.lastName?.message}>
-                <input {...register('lastName')} autoComplete="family-name" autoCapitalize="words" enterKeyHint="next" placeholder="Doe" className="auth-input" />
+                <GlassInputWrapper>
+                  <input
+                    {...register('lastName')}
+                    autoComplete="family-name"
+                    autoCapitalize="words"
+                    enterKeyHint="next"
+                    placeholder="Doe"
+                    className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
+                  />
+                </GlassInputWrapper>
               </Field>
             </div>
 
             <Field label="Email Address" error={errors.email?.message}>
-              <input {...register('email')} type="email" autoComplete="email" inputMode="email" autoCapitalize="none" enterKeyHint="next" placeholder="you@example.com" className="auth-input" />
+              <GlassInputWrapper>
+                <input
+                  {...register('email')}
+                  type="email"
+                  autoComplete="email"
+                  inputMode="email"
+                  autoCapitalize="none"
+                  enterKeyHint="next"
+                  placeholder="you@example.com"
+                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
+                />
+              </GlassInputWrapper>
             </Field>
 
             <Field label="Phone Number" error={errors.phoneNumber?.message}>
-              <input
-                {...register('phoneNumber')}
-                id="auth-register-phone"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                enterKeyHint="next"
-                placeholder="+14155550182"
-                className="auth-input"
-              />
+              <GlassInputWrapper>
+                <input
+                  {...register('phoneNumber')}
+                  id="auth-register-phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  enterKeyHint="next"
+                  placeholder="+14155550182"
+                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
+                />
+              </GlassInputWrapper>
             </Field>
 
             <Field label="Password" error={errors.password?.message}>
-              <input {...register('password')} type="password" autoComplete="new-password" enterKeyHint="done" placeholder="8+ chars, mixed case + number" className="auth-input" />
+              <GlassInputWrapper>
+                <input
+                  {...register('password')}
+                  type="password"
+                  autoComplete="new-password"
+                  enterKeyHint="done"
+                  placeholder="8+ chars, mixed case + number"
+                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
+                />
+              </GlassInputWrapper>
             </Field>
 
             <div className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
@@ -285,7 +332,7 @@ export default function RegisterPage() {
                 <div>
                   <p className="text-sm font-semibold text-white">Recovery and verification ready</p>
                   <p className="mt-2 text-sm leading-6 text-white/54">
-                    The attached phone number will be used for the secure verification step immediately after account creation. No extra legal checkbox is required here.
+                    First name, last name, email, phone, and password are captured up front so this Burner Point account can move cleanly into recovery, billing, and secure phone verification without extra onboarding loops.
                   </p>
                 </div>
               </div>
@@ -296,7 +343,7 @@ export default function RegisterPage() {
               disabled={isSubmitting}
               className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSubmitting ? 'Creating account...' : 'Get Started'}
+              {isSubmitting ? 'Creating account...' : 'Continue'}
             </button>
           </form>
         )}
@@ -321,7 +368,7 @@ export default function RegisterPage() {
           </p>
         </div>
       </div>
-    </AuthShell>
+    </SignInPage>
   );
 }
 

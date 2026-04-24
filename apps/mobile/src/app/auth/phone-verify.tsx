@@ -130,9 +130,9 @@ export default function PhoneVerifyScreen() {
           <View style={s.logoWrap}>
             <ShieldCheck size={24} color={BRAND.colors.dark} />
           </View>
-          <Text style={s.kicker}>Twilio Verify</Text>
+          <Text style={s.kicker}>Secure OTP delivery</Text>
           <Text style={s.title}>Verify your account phone.</Text>
-          <Text style={s.sub}>Burner Point sends OTP through the Railway API so Twilio credentials stay off the device.</Text>
+          <Text style={s.sub}>Burner Point sends OTP through the Railway API so routing credentials stay off the device.</Text>
 
           <Text style={s.label}>Account phone number</Text>
           <TextInput

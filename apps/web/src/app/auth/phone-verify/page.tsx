@@ -3,7 +3,7 @@ import PhoneVerifyClient from './phone-verify-client';
 
 export const metadata = {
   title: 'Verify Phone | Burner Point',
-  description: 'Verify your Burner Point account phone number with a secure Twilio OTP flow.',
+  description: 'Verify your Burner Point account phone number with a secure global OTP flow.',
 };
 
 export default function PhoneVerifyPage() {

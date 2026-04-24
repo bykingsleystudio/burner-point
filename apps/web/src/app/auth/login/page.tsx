@@ -5,9 +5,12 @@ import { useRouter } from 'next/navigation';
 import { type FormEvent, useMemo, useRef, useState } from 'react';
 import { useSignIn } from '@clerk/nextjs';
 import toast from 'react-hot-toast';
-import { ArrowRight, Eye, EyeOff, ShieldCheck, Smartphone, Zap } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Smartphone, Zap } from 'lucide-react';
 import { AuthProviderButton } from '@/components/auth-provider-button';
-import { AuthShell } from '@/components/ui/auth-shell';
+import { GlassInputWrapper, SignInPage } from '@/components/ui/sign-in';
+
+const AUTH_HERO_IMAGE =
+  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1600&q=80';
 
 const oauthProviders = [
   { label: 'Google', strategy: 'oauth_google' },
@@ -25,7 +28,6 @@ export default function LoginPage() {
   const { signIn, fetchStatus } = useSignIn();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [secondFactorStrategy, setSecondFactorStrategy] = useState<SecondFactorStrategy | null>(null);
   const [secondFactorCode, setSecondFactorCode] = useState('');
@@ -38,6 +40,7 @@ export default function LoginPage() {
   const authReady = Boolean(signIn);
   const isSubmitting = loading || fetchStatus === 'fetching' || !authReady;
   const canSubmit = identifier.trim().length >= 3 && password.length >= 8;
+
   const description = useMemo(() => {
     if (authMode === 'reset-request') {
       return 'Use your Burner Point email or phone to request a secure password reset code.';
@@ -109,6 +112,7 @@ export default function LoginPage() {
       toast.error('Authentication is still loading.');
       return;
     }
+
     if (!canSubmit) {
       toast.error('Enter your account email or phone and a valid password.');
       return;
@@ -120,8 +124,8 @@ export default function LoginPage() {
         identifier: identifier.trim(),
         password,
       });
-      if (error) throw error;
 
+      if (error) throw error;
       await completeOrContinueSignIn();
     } catch (err) {
       toast.error(getClerkErrorMessage(err, 'Login failed'));
@@ -243,7 +247,6 @@ export default function LoginPage() {
               : await signIn.mfa.verifyTOTP({ code });
 
       if (error) throw error;
-
       await completeOrContinueSignIn();
     } catch (err) {
       toast.error(getClerkErrorMessage(err, '2FA verification failed'));
@@ -280,13 +283,15 @@ export default function LoginPage() {
   };
 
   return (
-    <AuthShell
+    <SignInPage
       title="Log in or sign up"
       description={description}
-      asideTitle="Private access that lands where it should."
-      asideDescription="OAuth, password reset, and 2FA all return to the Burner Point dashboard instead of bouncing through extra onboarding steps."
+      heroImageSrc={AUTH_HERO_IMAGE}
+      testimonials={[]}
+      onResetPassword={() => setAuthMode('reset-request')}
+      onCreateAccount={() => router.push('/auth/register')}
     >
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="inline-flex rounded-full border border-white/8 bg-white/[0.03] p-1">
             <span className="rounded-full bg-brand-green px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-black">
@@ -319,36 +324,44 @@ export default function LoginPage() {
               />
             </div>
 
-            <div className="flex items-center gap-3 pt-1">
-              <span className="h-px flex-1 bg-white/8" />
-              <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-white/32">OR</span>
-              <span className="h-px flex-1 bg-white/8" />
+            <div className="relative flex items-center justify-center">
+              <span className="w-full border-t border-white/10" />
+              <span className="absolute bg-[#04120C] px-4 font-mono text-[11px] uppercase tracking-[0.22em] text-white/34">
+                OR
+              </span>
             </div>
           </>
         ) : null}
 
-        <form onSubmit={onSubmit} className="space-y-4">
-          {authMode === 'reset-request' ? (
-            <div className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
-              <label className="block text-sm font-medium text-white/70">
-                Email or phone number
+        {authMode === 'reset-request' ? (
+          <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
+            <label className="block text-sm font-medium text-white/70">
+              Email or phone number
+              <GlassInputWrapper>
                 <input
                   value={resetIdentifier}
                   onChange={(event) => setResetIdentifier(event.target.value)}
                   type="text"
                   autoComplete="username"
                   placeholder="you@example.com or +14155550182"
-                  className="auth-input mt-2"
+                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
                 />
-              </label>
-              <button type="button" disabled={isSubmitting} onClick={startPasswordReset} className="bp-button-glow mt-4 flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
-                {isSubmitting ? 'Sending code...' : 'Send reset code'}
-              </button>
-            </div>
-          ) : authMode === 'reset-code' ? (
-            <div className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
-              <label className="block text-sm font-medium text-white/70">
-                Reset code
+              </GlassInputWrapper>
+            </label>
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={startPasswordReset}
+              className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSubmitting ? 'Sending code...' : 'Send reset code'}
+            </button>
+          </div>
+        ) : authMode === 'reset-code' ? (
+          <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
+            <label className="block text-sm font-medium text-white/70">
+              Reset code
+              <GlassInputWrapper>
                 <input
                   value={resetCode}
                   onChange={(event) => setResetCode(event.target.value)}
@@ -356,34 +369,48 @@ export default function LoginPage() {
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   placeholder="Enter reset code"
-                  className="auth-input mt-2"
+                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
                 />
-              </label>
-              <button type="button" disabled={isSubmitting} onClick={verifyPasswordResetCode} className="bp-button-glow mt-4 flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
-                {isSubmitting ? 'Verifying...' : 'Verify reset code'}
-              </button>
-            </div>
-          ) : authMode === 'reset-password' ? (
-            <div className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
-              <label className="block text-sm font-medium text-white/70">
-                New password
+              </GlassInputWrapper>
+            </label>
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={verifyPasswordResetCode}
+              className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSubmitting ? 'Verifying...' : 'Verify reset code'}
+            </button>
+          </div>
+        ) : authMode === 'reset-password' ? (
+          <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
+            <label className="block text-sm font-medium text-white/70">
+              New password
+              <GlassInputWrapper>
                 <input
                   value={resetPassword}
                   onChange={(event) => setResetPassword(event.target.value)}
                   type="password"
                   autoComplete="new-password"
                   placeholder="Enter a new password"
-                  className="auth-input mt-2"
+                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
                 />
-              </label>
-              <button type="button" disabled={isSubmitting} onClick={submitNewPassword} className="bp-button-glow mt-4 flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
-                {isSubmitting ? 'Saving password...' : 'Reset password'}
-              </button>
-            </div>
-          ) : secondFactorStrategy ? (
-            <div className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
-              <label className="block text-sm font-medium text-white/70">
-                Security code
+              </GlassInputWrapper>
+            </label>
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={submitNewPassword}
+              className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSubmitting ? 'Saving password...' : 'Reset password'}
+            </button>
+          </div>
+        ) : secondFactorStrategy ? (
+          <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
+            <label className="block text-sm font-medium text-white/70">
+              Security code
+              <GlassInputWrapper>
                 <input
                   value={secondFactorCode}
                   onChange={(event) => setSecondFactorCode(event.target.value)}
@@ -391,17 +418,24 @@ export default function LoginPage() {
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   placeholder="Enter verification code"
-                  className="auth-input mt-2"
+                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
                 />
-              </label>
-              <button type="button" disabled={isSubmitting} onClick={verifySecondFactor} className="bp-button-glow mt-4 flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
-                {isSubmitting ? 'Verifying...' : 'Verify 2FA'}
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <label className="block text-sm font-medium text-white/70">
-                Email address or phone number
+              </GlassInputWrapper>
+            </label>
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={verifySecondFactor}
+              className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSubmitting ? 'Verifying...' : 'Verify 2FA'}
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={onSubmit} className="space-y-4">
+            <label className="block text-sm font-medium text-white/70">
+              Email address or phone number
+              <GlassInputWrapper>
                 <input
                   ref={identifierRef}
                   value={identifier}
@@ -409,44 +443,49 @@ export default function LoginPage() {
                   type="text"
                   autoComplete="username"
                   placeholder="you@example.com or +14155550182"
-                  className="auth-input mt-2"
+                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
                 />
-              </label>
+              </GlassInputWrapper>
+            </label>
 
-              <label className="block text-sm font-medium text-white/70">
-                Password
-                <div className="relative mt-2">
-                  <input
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="current-password"
-                    placeholder="Enter your password"
-                    className="auth-input pr-12"
-                  />
-                  <button type="button" onClick={() => setShowPassword((value) => !value)} className="absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl text-white/42 transition hover:bg-white/5 hover:text-white">
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </label>
+            <label className="block text-sm font-medium text-white/70">
+              Password
+              <GlassInputWrapper>
+                <input
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="Enter your password"
+                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
+                />
+              </GlassInputWrapper>
+            </label>
 
-              <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
-                <button type="button" onClick={() => setAuthMode('reset-request')} className="font-medium text-brand-green transition hover:text-[#1cffac]">
-                  Forgot password?
-                </button>
-                <div className="inline-flex items-center gap-2 text-white/34">
-                  <ShieldCheck className="h-4 w-4 text-brand-green" />
-                  Clerk-backed 2FA available in profile settings
-                </div>
-              </div>
-
-              <button type="submit" disabled={isSubmitting || !canSubmit} className="bp-button-glow flex min-h-12 w-full items-center justify-center gap-2 rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
-                {isSubmitting ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" /> : <Zap size={16} />}
-                {isSubmitting ? 'Signing in...' : 'Continue'}
+            <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
+              <button type="button" onClick={() => setAuthMode('reset-request')} className="font-medium text-brand-green transition hover:text-[#1cffac]">
+                Forgot password?
               </button>
+              <div className="inline-flex items-center gap-2 text-white/34">
+                <ShieldCheck className="h-4 w-4 text-brand-green" />
+                Clerk-backed 2FA available in profile settings
+              </div>
             </div>
-          )}
-        </form>
+
+            <button
+              type="submit"
+              disabled={isSubmitting || !canSubmit}
+              className="bp-button-glow flex min-h-12 w-full items-center justify-center gap-2 rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSubmitting ? (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+              ) : (
+                <Zap size={16} />
+              )}
+              {isSubmitting ? 'Signing in...' : 'Continue'}
+            </button>
+          </form>
+        )}
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/8 pt-4">
           <button type="button" onClick={returnToSignIn} className="inline-flex items-center gap-2 text-sm text-white/46 transition hover:text-white">
@@ -474,7 +513,7 @@ export default function LoginPage() {
           .
         </p>
       </div>
-    </AuthShell>
+    </SignInPage>
   );
 }
 

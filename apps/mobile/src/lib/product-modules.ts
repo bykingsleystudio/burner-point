@@ -37,7 +37,7 @@ export const MOBILE_PRODUCT_MODULES = {
       { meta: 'Control', title: 'Short Lived', text: 'Use a number for one task or move into a rental when continuity matters.' },
     ],
     workflow: ['Select country and service', 'Choose available number', 'Submit it to the platform', 'Read SMS or voice code in Burner Point'],
-    note: 'All provider calls must run through the Burner Point API. Twilio, Telnyx, and Tremil secrets never belong in the mobile bundle.',
+    note: 'All carrier and routing calls must run through the Burner Point API. Sensitive credentials never belong in the mobile bundle.',
   },
   rentals: {
     eyebrow: 'Rentals',
@@ -107,7 +107,7 @@ export const MOBILE_PRODUCT_MODULES = {
     title: 'In-platform privacy protection for Burner Point sessions.',
     description:
       'The VPN layer reduces exposure while using Burner Point. It is part of the platform, not a standalone consumer VPN product.',
-    status: 'WireGuard control plane',
+    status: 'Secure tunnel control plane',
     primaryAction: { label: 'Open Settings', href: '/settings' },
     secondaryAction: { label: 'Support', href: '/support' },
     stats: [
@@ -121,7 +121,7 @@ export const MOBILE_PRODUCT_MODULES = {
       { meta: 'Trust', title: 'No-Logs Posture', text: 'Limit telemetry to safety, abuse prevention, reliability, and billing.' },
     ],
     workflow: ['Check eligibility', 'Generate profile server-side', 'Connect selected region', 'Display status and rotation'],
-    note: 'WireGuard private server keys and config generation must stay backend-only.',
+    note: 'Secure tunnel private keys and profile generation must stay backend-only.',
   },
   voicemail: {
     eyebrow: 'Voicemail',

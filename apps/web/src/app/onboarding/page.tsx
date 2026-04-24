@@ -29,7 +29,6 @@ function OnboardingContent() {
     lastName: user?.lastName || String(userMetadata.lastName || ''),
     email: user?.primaryEmailAddress?.emailAddress || '',
     phoneNumber: user?.primaryPhoneNumber?.phoneNumber || String(userMetadata.phoneNumber || ''),
-    acceptPolicies: Boolean(userMetadata.acceptTerms && userMetadata.acceptPrivacy),
   });
 
   useEffect(() => {
@@ -51,10 +50,6 @@ function OnboardingContent() {
       toast.error('First name, last name, email, and phone number are required.');
       return;
     }
-    if (!form.acceptPolicies) {
-      toast.error('Accept the Terms of Service and Privacy Policy to continue.');
-      return;
-    }
 
     const normalizedPhone = form.phoneNumber.trim().replace(/[^\d+]/g, '');
     if (!E164_PATTERN.test(normalizedPhone)) {
@@ -67,11 +62,11 @@ function OnboardingContent() {
       const clerkToken = await getToken();
       if (!clerkToken) throw new Error('No secure session token');
 
-      const { data } = await authApi.exchangeClerkToken(clerkToken, {
-        ...form,
-        phoneNumber: normalizedPhone,
-        acceptTerms: true,
-        acceptPrivacy: true,
+        const { data } = await authApi.exchangeClerkToken(clerkToken, {
+          ...form,
+          phoneNumber: normalizedPhone,
+          acceptTerms: true,
+          acceptPrivacy: true,
       });
 
       setApiSession(data.accessToken, data.refreshToken);
@@ -136,26 +131,16 @@ function OnboardingContent() {
           </Field>
         </div>
 
-        <div className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
-          <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm leading-6 text-white/70">
-            <input
-              checked={form.acceptPolicies}
-              onChange={(event) => setField('acceptPolicies')(event.target.checked)}
-              type="checkbox"
-              className="mt-1 h-5 w-5 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green"
-            />
-            <span>
-              By continuing, you accept the{' '}
-              <Link href="/terms" className="text-brand-green hover:underline">
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link href="/privacy" className="text-brand-green hover:underline">
-                Privacy Policy
-              </Link>
-              .
-            </span>
-          </label>
+        <div className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4 text-sm leading-6 text-white/70">
+          By continuing, you accept the{' '}
+          <Link href="/terms" className="text-brand-green hover:underline">
+            Terms of Service
+          </Link>{' '}
+          and{' '}
+          <Link href="/privacy" className="text-brand-green hover:underline">
+            Privacy Policy
+          </Link>
+          .
         </div>
 
         <button type="button" disabled={loading} onClick={completeOnboarding} className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">

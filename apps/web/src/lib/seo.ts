@@ -21,7 +21,7 @@ export const seoKeywords = [
   'private communication',
   'eSIM connectivity',
   'privacy proxies',
-  'WireGuard VPN protection',
+  'secure tunnel privacy protection',
 ];
 
 export type SeoPage = {
