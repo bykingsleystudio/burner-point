@@ -4,6 +4,7 @@ import {
   ArrowRight,
   CalendarDays,
   Check,
+  CreditCard,
   Globe2,
   Lock,
   Mail,
@@ -111,31 +112,31 @@ const offerCards: Array<{ icon: LucideIcon; title: string; text: string; href: s
 
 const pricing = [
   {
-    icon: ShieldCheck,
-    title: 'Verification',
-    price: '$0.99+',
-    period: 'per verification',
-    text: 'Price varies by service and country.',
-    href: '/verifications',
-    cta: 'Get Verification',
+    icon: CreditCard,
+    title: 'Wallet Top-Up',
+    price: 'USD Wallet',
+    period: 'usage-based billing',
+    text: 'Fund BP Verify Hub, BP Number Rentals, BP eSIM Store, and BP Proxy Store from one wallet balance.',
+    href: '/dashboard/credits',
+    cta: 'Fund Wallet',
   },
   {
     icon: CalendarDays,
-    title: 'Non-Renewable Rentals',
-    price: '$5.99',
-    period: 'per rental',
-    text: 'Temporary number access when you do not need renewal.',
+    title: 'Renewable Rentals',
+    price: '$15.99+',
+    period: 'monthly continuity',
+    text: 'Keep the same number active for ongoing recovery, messaging, and repeat verification workflows.',
     href: '/rentals',
     cta: 'Rent A Number',
   },
   {
-    icon: Phone,
-    title: 'Renewable Rentals',
-    price: '$15.99',
-    period: 'per month',
-    text: 'Keep the same number active for continuity and recovery.',
-    href: '/pricing',
-    cta: 'Start Monthly Plan',
+    icon: ShieldCheck,
+    title: 'Subscriptions',
+    price: 'Recurring',
+    period: 'paddle billing',
+    text: 'Use subscriptions for BP Messenger Pro, BP Secure Tunnel, and advanced recurring plans.',
+    href: '/dashboard/billing',
+    cta: 'Manage Billing',
   },
 ];
 
@@ -569,7 +570,7 @@ export default function Home() {
             <div>
               <Eyebrow>Pricing</Eyebrow>
               <h2 id="pricing-title" className="max-w-4xl text-4xl font-black uppercase leading-[0.98] text-white md:text-6xl">
-                Simple entry points for private access.
+                Wallet funding for usage. Subscriptions for continuity.
               </h2>
             </div>
             <Link href="/pricing" className="bp-secondary-action inline-flex min-h-12 items-center justify-center px-6 py-4 text-sm font-semibold uppercase">

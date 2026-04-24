@@ -1,4 +1,4 @@
-import { All, Controller, Post, Body, Headers, Req, Res, HttpCode, RawBodyRequest } from '@nestjs/common';
+import { Controller, Post, Body, Headers, Req, Res, HttpCode, RawBodyRequest } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { WebhooksService } from './webhooks.service';
 import { Request, Response } from 'express';
@@ -54,65 +54,37 @@ export class WebhooksController {
     return this.service.handleTelnyxWebhook(body, headers);
   }
 
-  @Post('bandwidth')
+  @Post('airalo')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Bandwidth webhook receiver' })
-  async bandwidthWebhook(
+  @ApiOperation({ summary: 'Airalo webhook receiver' })
+  async airaloWebhook(
     @Body() body: Record<string, unknown>,
     @Headers() headers: Record<string, string>,
     @Req() req: RawBodyRequest<Request>,
   ) {
-    return this.service.handleProviderWebhook('bandwidth', body, headers, req.rawBody);
+    return this.service.handleProviderWebhook('airalo', body, headers, req.rawBody);
   }
 
-  @All('vonage/inbound')
+  @Post('oxylabs')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Vonage inbound SMS webhook receiver' })
-  async vonageInbound(@Req() req: Request) {
-    return this.service.handleVonageInboundWebhook(this.mergeWebhookPayload(req));
-  }
-
-  @All('vonage/status')
-  @HttpCode(200)
-  @ApiOperation({ summary: 'Vonage delivery status webhook receiver' })
-  async vonageStatus(@Req() req: Request) {
-    return this.service.handleVonageStatusWebhook(this.mergeWebhookPayload(req));
-  }
-
-  @Post('infobip/inbound')
-  @HttpCode(200)
-  @ApiOperation({ summary: 'Infobip inbound SMS webhook receiver' })
-  async infobipInbound(@Body() body: Record<string, unknown>, @Headers() headers: Record<string, string>) {
-    return this.service.handleInfobipInboundWebhook(body, headers);
-  }
-
-  @Post('infobip/status')
-  @HttpCode(200)
-  @ApiOperation({ summary: 'Infobip delivery status webhook receiver' })
-  async infobipStatus(@Body() body: Record<string, unknown>, @Headers() headers: Record<string, string>) {
-    return this.service.handleInfobipDeliveryWebhook(body, headers);
-  }
-
-  @Post('oneglobal')
-  @HttpCode(200)
-  @ApiOperation({ summary: '1GLOBAL webhook receiver' })
-  async oneGlobalWebhook(
+  @ApiOperation({ summary: 'Oxylabs webhook receiver' })
+  async oxylabsWebhook(
     @Body() body: Record<string, unknown>,
     @Headers() headers: Record<string, string>,
     @Req() req: RawBodyRequest<Request>,
   ) {
-    return this.service.handleProviderWebhook('oneglobal', body, headers, req.rawBody);
+    return this.service.handleProviderWebhook('oxylabs', body, headers, req.rawBody);
   }
 
-  @Post('brightdata')
+  @Post('smartproxy')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Bright Data webhook receiver' })
-  async brightDataWebhook(
+  @ApiOperation({ summary: 'Smartproxy webhook receiver' })
+  async smartproxyWebhook(
     @Body() body: Record<string, unknown>,
     @Headers() headers: Record<string, string>,
     @Req() req: RawBodyRequest<Request>,
   ) {
-    return this.service.handleProviderWebhook('brightdata', body, headers, req.rawBody);
+    return this.service.handleProviderWebhook('smartproxy', body, headers, req.rawBody);
   }
 
   @Post('wireguard')
@@ -136,14 +108,6 @@ export class WebhooksController {
   ) {
     return this.service.handleClerkWebhook(body, headers, req.rawBody, this.requestUrl(req));
   }
-
-  private mergeWebhookPayload(req: Request): Record<string, unknown> {
-    return {
-      ...(req.query as Record<string, unknown>),
-      ...((req.body ?? {}) as Record<string, unknown>),
-    };
-  }
-
   private requestUrl(req: Request): string {
     return `${req.protocol}://${req.get('host')}${req.originalUrl}`;
   }

@@ -89,8 +89,13 @@ function OnboardingContent() {
 
       toast.success('Profile secured.');
       router.push(redirectTo);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || err.message || 'Onboarding failed');
+    } catch (error: unknown) {
+      const responseError = error as Error & {
+        response?: {
+          data?: { message?: string };
+        };
+      };
+      toast.error(responseError.response?.data?.message || responseError.message || 'Onboarding failed');
     } finally {
       setLoading(false);
     }

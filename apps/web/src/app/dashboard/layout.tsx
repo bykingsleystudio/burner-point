@@ -1,45 +1,128 @@
 'use client';
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
+
+import { type ComponentType, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth, useClerk, useUser } from '@clerk/nextjs';
-import { useAuthStore, useUIStore } from '@/store';
-import { authApi, clearApiSession, setApiSession } from '@/lib/api';
-import { io, Socket } from 'socket.io-client';
-import toast from 'react-hot-toast';
 import {
-  LayoutDashboard, MessageSquare, Phone, PhoneIncoming,
-  Voicemail, ShieldCheck, Clock, CreditCard, Key,
-  HelpCircle, Wifi, Smartphone, Globe, Shield, LogOut,
-  Menu, X, Bell, Settings, Ticket, LockKeyhole, Users, Repeat2, Webhook,
+  Bell,
+  ChevronDown,
+  CreditCard,
+  Globe2,
+  HelpCircle,
+  KeyRound,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  MessageSquareText,
+  Phone,
+  Settings,
+  Shield,
+  ShieldCheck,
+  Smartphone,
+  UserCircle2,
+  X,
 } from 'lucide-react';
+import { io } from 'socket.io-client';
 import clsx from 'clsx';
+import toast from 'react-hot-toast';
+import { authApi, clearApiSession, setApiSession } from '@/lib/api';
+import { formatWalletPrimary, formatWalletSecondary } from '@/lib/money';
+import { useAuthStore, useUIStore } from '@/store';
 import { BpLoadingState } from '@/components/design-system';
 
-const NAV = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Overview' },
-  { href: '/dashboard/inbox', icon: MessageSquare, label: 'Inbox' },
-  { href: '/dashboard/messages', icon: MessageSquare, label: 'Messages & Photos' },
-  { href: '/dashboard/contacts', icon: Users, label: 'Contacts' },
-  { href: '/dashboard/numbers', icon: Phone, label: 'Numbers' },
-  { href: '/dashboard/calls', icon: PhoneIncoming, label: 'Calls' },
-  { href: '/dashboard/voicemail', icon: Voicemail, label: 'Voicemail' },
-  { href: '/dashboard/verification', icon: ShieldCheck, label: 'Verification' },
-  { href: '/dashboard/rentals', icon: Clock, label: 'Rentals' },
-  { href: '/dashboard/billing', icon: CreditCard, label: 'Credits & Billing' },
-  { href: '/dashboard/subscriptions', icon: Repeat2, label: 'Subscriptions' },
-  { href: '/dashboard/developer', icon: Key, label: 'API & Developer' },
-  { href: '/dashboard/webhooks', icon: Webhook, label: 'Webhooks' },
-  null, // divider
-  { href: '/dashboard/vpn', icon: Wifi, label: 'VPN', badge: 'Beta' },
-  { href: '/dashboard/esim', icon: Smartphone, label: 'eSIM', badge: 'Beta' },
-  { href: '/dashboard/proxies', icon: Globe, label: 'Proxies', badge: 'Soon' },
-  null,
-  { href: '/dashboard/support', icon: HelpCircle, label: 'Support' },
-  { href: '/dashboard/support/tickets', icon: Ticket, label: 'Support Tickets' },
-  { href: '/dashboard/security', icon: LockKeyhole, label: 'Security & 2FA' },
-  { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
+type NavItem = {
+  href: string;
+  label: string;
+  shortLabel: string;
+  description: string;
+  icon: ComponentType<{ className?: string }>;
+};
+
+const NAV_ITEMS: NavItem[] = [
+  {
+    href: '/dashboard',
+    label: 'Dashboard',
+    shortLabel: 'Overview',
+    description: 'Account activity, balance, and launch actions.',
+    icon: LayoutDashboard,
+  },
+  {
+    href: '/dashboard/inbox',
+    label: 'BP Messenger',
+    shortLabel: 'Messenger',
+    description: 'Messaging, calls, contacts, and shared media.',
+    icon: MessageSquareText,
+  },
+  {
+    href: '/dashboard/verification',
+    label: 'BP Verify Hub',
+    shortLabel: 'Verify Hub',
+    description: 'Tiered verification routing and live OTP visibility.',
+    icon: ShieldCheck,
+  },
+  {
+    href: '/dashboard/rentals',
+    label: 'BP Number Rentals',
+    shortLabel: 'Rentals',
+    description: 'Available numbers, active rentals, and renewals.',
+    icon: Phone,
+  },
+  {
+    href: '/dashboard/esim',
+    label: 'BP eSIM Store',
+    shortLabel: 'eSIM Store',
+    description: 'Travel-ready plans, QR delivery, and active usage.',
+    icon: Smartphone,
+  },
+  {
+    href: '/dashboard/proxies',
+    label: 'BP Proxy Store',
+    shortLabel: 'Proxy Store',
+    description: 'Proxy plans, credentials, and active sessions.',
+    icon: Globe2,
+  },
+  {
+    href: '/dashboard/vpn',
+    label: 'BP Secure Tunnel',
+    shortLabel: 'Secure Tunnel',
+    description: 'WireGuard access, server regions, and config export.',
+    icon: Shield,
+  },
+  {
+    href: '/dashboard/settings',
+    label: 'Settings',
+    shortLabel: 'Settings',
+    description: 'Profile, billing, API keys, and support.',
+    icon: Settings,
+  },
+];
+
+const PAGE_META: Array<{ match: string; title: string; description: string }> = [
+  { match: '/dashboard/inbox', title: 'BP Messenger', description: 'Messaging, calling, and contacts across your private number stack.' },
+  { match: '/dashboard/calls', title: 'BP Messenger', description: 'Missed, incoming, and outgoing activity tied to Burner Point lines.' },
+  { match: '/dashboard/contacts', title: 'BP Messenger', description: 'Contact control, dialing, and private communication identity.' },
+  { match: '/dashboard/messages', title: 'BP Messenger', description: 'Conversation context, media, and secure message history.' },
+  { match: '/dashboard/verification', title: 'BP Verify Hub', description: 'Tiered verification routing with a live OTP surface.' },
+  { match: '/dashboard/rentals', title: 'BP Number Rentals', description: 'Browse inventory, activate rentals, and manage renewal timing.' },
+  { match: '/dashboard/esim', title: 'BP eSIM Store', description: 'Provision travel data plans and manage installed eSIMs.' },
+  { match: '/dashboard/proxies', title: 'BP Proxy Store', description: 'Filter proxy plans, reveal credentials, and review active sessions.' },
+  { match: '/dashboard/vpn', title: 'BP Secure Tunnel', description: 'Secure routing, server choice, and WireGuard provisioning.' },
+  { match: '/dashboard/settings', title: 'Settings', description: 'Profile, billing, API keys, support, and security controls.' },
+  { match: '/dashboard/profile', title: 'Settings', description: 'Manage personal details and recovery information.' },
+  { match: '/dashboard/billing', title: 'Billing & Subscription', description: 'Wallet movements, invoices, plans, and active subscriptions.' },
+  { match: '/dashboard/credits', title: 'Billing & Subscription', description: 'Fund the wallet for verification, rentals, eSIM, and proxies.' },
+  { match: '/dashboard/api', title: 'API & Developer', description: 'Manage API keys, docs access, and integration security.' },
+  { match: '/dashboard/developer', title: 'API & Developer', description: 'Developer access, webhook control, and automation paths.' },
+  { match: '/dashboard/support', title: 'Support', description: 'Tickets, Telegram, and account issue handling.' },
+  { match: '/dashboard', title: 'Dashboard', description: 'Private telecom operations, funding, and account visibility.' },
+];
+
+const QUICK_ACTIONS = [
+  { href: '/dashboard/rentals', label: 'Buy Number' },
+  { href: '/dashboard/inbox', label: 'Start Chat' },
+  { href: '/dashboard/verification', label: 'Run Verification' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -49,18 +132,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { signOut } = useClerk();
   const { user: clerkUser } = useUser();
   const { user, setAuth, clearAuth } = useAuthStore();
-  const { sidebarOpen, toggleSidebar } = useUIStore();
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const { sidebarOpen, toggleSidebar, setSidebarOpen } = useUIStore();
   const [sessionReady, setSessionReady] = useState(false);
   const [fatalSessionError, setFatalSessionError] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const unsafePhoneNumber =
+    typeof clerkUser?.unsafeMetadata?.phoneNumber === 'string'
+      ? clerkUser.unsafeMetadata.phoneNumber
+      : undefined;
 
   useEffect(() => {
     if (!isLoaded) return;
+
     if (!isSignedIn) {
       clearAuth();
       clearApiSession();
-      router.push('/auth/login');
+      router.replace('/auth/login');
       return;
     }
 
@@ -68,215 +155,313 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     async function exchangeSession() {
       setSessionReady(false);
       setFatalSessionError(null);
+
       try {
         const clerkToken = await getToken();
         if (!clerkToken) throw new Error('Missing secure session token');
+
         const { data } = await authApi.exchangeClerkToken(clerkToken, {
           firstName: clerkUser?.firstName,
           lastName: clerkUser?.lastName,
           email: clerkUser?.primaryEmailAddress?.emailAddress,
-          phoneNumber: clerkUser?.primaryPhoneNumber?.phoneNumber || (clerkUser?.unsafeMetadata?.phoneNumber as string | undefined),
+          phoneNumber: clerkUser?.primaryPhoneNumber?.phoneNumber || unsafePhoneNumber,
         });
+
         if (cancelled) return;
+
         setApiSession(data.accessToken, data.refreshToken);
         setAuth(data.user, data.accessToken, data.refreshToken);
         setAccessToken(data.accessToken);
-        if (data.needsOnboarding) {
-          router.replace('/onboarding?redirect=/dashboard');
-          return;
-        }
-        if (data.user?.phoneNumber && data.needsPhoneVerification) {
-          sessionStorage.setItem('burnerPointPendingPhone', data.user.phoneNumber);
-          router.replace('/auth/phone-verify?redirect=/dashboard');
-          return;
-        }
         setSessionReady(true);
-      } catch (error: any) {
+      } catch (error: unknown) {
         if (cancelled) return;
+        const responseError = error as Error & {
+          response?: {
+            status?: number;
+            data?: { message?: string };
+          };
+        };
+
         const message =
-          error?.response?.status === 401
-            ? 'Your session needs to be refreshed. Please sign in again to continue.'
-            : error?.response?.data?.message || 'Unable to start your Burner Point API session.';
-        toast.error(message);
+          responseError.response?.status === 401
+            ? 'Your secure session could not be refreshed. Sign in again to reopen the dashboard.'
+            : responseError.response?.data?.message || 'Unable to start the Burner Point dashboard session.';
+
         clearApiSession();
-        if (error?.response?.status === 401) {
-          // Prevent redirect loops where Clerk is signed-in but our API exchange fails.
-          // User can explicitly re-auth via the UI below.
+
+        if (responseError.response?.status === 401) {
           clearAuth();
           setFatalSessionError(message);
           setSessionReady(true);
           return;
         }
+
+        toast.error(message);
+        setFatalSessionError(message);
         setSessionReady(true);
       }
     }
 
     exchangeSession();
-    return () => { cancelled = true; };
-  }, [isLoaded, isSignedIn, getToken, clerkUser?.id]);
+    return () => {
+      cancelled = true;
+    };
+  }, [clearAuth, getToken, isLoaded, isSignedIn, clerkUser?.id, clerkUser?.firstName, clerkUser?.lastName, clerkUser?.primaryEmailAddress?.emailAddress, clerkUser?.primaryPhoneNumber?.phoneNumber, router, setAuth, unsafePhoneNumber]);
 
   useEffect(() => {
     if (!accessToken) return;
 
-    // Real-time WebSocket connection
-    const s = io(`${process.env.NEXT_PUBLIC_WS_URL}/events`, {
+    const socket = io(`${process.env.NEXT_PUBLIC_WS_URL}/events`, {
       auth: { token: accessToken },
       transports: ['websocket'],
     });
-    s.on('connect', () => console.log('[WS] Connected'));
-    s.on('message.received', (data) => {
-      toast((t) => (
+
+    socket.on('message.received', (data) => {
+      toast(
         <div>
-          <p className="font-semibold text-sm">New SMS from {data.from}</p>
-          {data.otp && <p className="font-mono text-brand-green text-lg">{data.otp}</p>}
-          <p className="text-xs text-brand-muted truncate">{data.body}</p>
-        </div>
-      ), { duration: 6000 });
+          <p className="text-sm font-semibold text-white">New message from {data.from}</p>
+          {data.otp ? <p className="font-mono text-lg text-brand-green">{data.otp}</p> : null}
+          <p className="mt-1 text-xs text-white/60">{data.body}</p>
+        </div>,
+        { duration: 5000 },
+      );
     });
-    s.on('call.incoming', (data) => {
-      toast(`Incoming call from ${data.from}`, { duration: 8000 });
+
+    socket.on('call.incoming', (data) => {
+      toast.success(`Incoming call from ${data.from}`);
     });
-    setSocket(s);
-    return () => { s.disconnect(); };
+
+    return () => {
+      socket.disconnect();
+    };
   }, [accessToken]);
 
-  const logout = async () => {
+  useEffect(() => {
+    if (!pathname.startsWith('/dashboard')) return;
+    if (window.innerWidth < 768) setSidebarOpen(false);
+  }, [pathname, setSidebarOpen]);
+
+  const currentPage = useMemo(() => {
+    return PAGE_META.find((item) => pathname.startsWith(item.match)) ?? PAGE_META[PAGE_META.length - 1];
+  }, [pathname]);
+
+  const handleSignOut = async () => {
     clearAuth();
     clearApiSession();
-    await signOut({ redirectUrl: '/auth/login' });
+    await signOut({ redirectUrl: '/' });
   };
 
   if (!isLoaded || !sessionReady) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-brand-black text-white">
-        <div className="w-full max-w-md px-5">
-          <BpLoadingState label="Securing your Burner Point session..." />
+      <main className="flex min-h-screen items-center justify-center bg-brand-black px-4 text-white">
+        <div className="w-full max-w-md">
+          <BpLoadingState label="Securing your Burner Point workspace..." />
         </div>
-      </div>
+      </main>
     );
   }
 
   if (fatalSessionError) {
     return (
-      <main className="min-h-screen bg-brand-black text-white flex items-center justify-center px-4">
+      <main className="flex min-h-screen items-center justify-center bg-brand-black px-4 text-white">
         <div className="w-full max-w-md rounded-[2rem] border border-white/10 bg-white/[0.03] p-6">
-          <div className="text-sm font-mono uppercase tracking-[0.22em] text-brand-green">Session required</div>
-          <h1 className="mt-4 text-2xl font-semibold leading-tight">Please sign in again</h1>
-          <p className="mt-3 text-sm leading-6 text-white/60">{fatalSessionError}</p>
-          <div className="mt-6 flex gap-3">
-            <button
-              type="button"
-              className="bp-button-glow flex min-h-12 flex-1 items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] active:scale-[0.98]"
-              onClick={async () => {
-                clearAuth();
-                clearApiSession();
-                await signOut({ redirectUrl: '/auth/login' });
-              }}
-            >
-              Sign out & sign in
-            </button>
-          </div>
+          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Session attention</p>
+          <h1 className="mt-3 text-2xl font-semibold text-white">Sign in again to continue</h1>
+          <p className="mt-3 text-sm leading-6 text-white/62">{fatalSessionError}</p>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="bp-button-glow mt-6 flex min-h-12 w-full items-center justify-center rounded-[1.1rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac]"
+          >
+            Return to sign in
+          </button>
         </div>
       </main>
     );
   }
 
   return (
-    <div className="flex h-[100dvh] overflow-hidden bg-brand-black">
-      {/* Sidebar */}
-      <aside className={clsx(
-        'fixed inset-y-0 left-0 z-30 flex w-72 max-w-[86vw] flex-shrink-0 flex-col border-r border-brand-border bg-brand-dark shadow-[24px_0_70px_rgba(0,0,0,0.55)] transition-all duration-300 md:relative md:max-w-none md:shadow-none',
-        sidebarOpen ? 'translate-x-0 md:w-56' : '-translate-x-full md:w-0 md:translate-x-0 md:overflow-hidden'
-      )}>
-        {/* Logo */}
-        <div className="flex h-16 items-center gap-3 border-b border-brand-border px-4">
-          <Image src="/assets/logo-mark.svg" alt="" width={24} height={24} className="shrink-0" />
-          <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={126} height={22} className="w-auto shrink-0" />
+    <div className="flex min-h-screen bg-brand-black text-white">
+      <aside
+        className={clsx(
+          'fixed inset-y-0 left-0 z-40 flex w-[19rem] max-w-[88vw] flex-col border-r border-white/8 bg-[linear-gradient(180deg,rgba(1,50,32,0.94),rgba(0,0,0,0.98))] shadow-[28px_0_80px_rgba(0,0,0,0.48)] transition-transform duration-300 md:static md:max-w-none',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
+        )}
+      >
+        <div className="border-b border-white/8 px-5 py-5">
+          <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
+            <span className="flex h-11 w-11 items-center justify-center rounded-[1rem] border border-brand-green/25 bg-brand-green/10 shadow-[0_0_26px_rgba(0,255,157,0.16)]">
+              <Image src="/assets/logo-mark.svg" alt="" width={24} height={24} />
+            </span>
+            <span>
+              <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={138} height={26} className="h-auto w-auto" />
+              <span className="mt-1 block text-[11px] text-white/48">Private telecom control surface</span>
+            </span>
+          </Link>
         </div>
 
-        {/* Wallet badge */}
-        <div className="px-3 py-3 border-b border-brand-border">
-          <div className="flex items-center justify-between rounded-xl bg-brand-black px-3 py-2.5">
-            <span className="text-xs text-brand-muted">Wallet balance</span>
-            <span className="text-sm font-mono font-semibold text-brand-green">
-              NGN {((user?.walletBalanceKobo || 0) / 100).toLocaleString()}
-            </span>
+        <div className="border-b border-white/8 px-5 py-4">
+          <div className="rounded-[1.25rem] border border-brand-green/18 bg-brand-green/[0.06] p-4">
+            <div className="flex items-center justify-between gap-3">
+              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">Credits balance</span>
+              <CreditCard className="h-4 w-4 text-brand-green" />
+            </div>
+            <p className="mt-3 font-mono text-2xl text-white">{formatWalletPrimary(user)}</p>
+            <p className="mt-2 text-xs leading-5 text-white/48">Local convenience value: {formatWalletSecondary(user)}</p>
           </div>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-2 px-2">
-          {NAV.map((item, i) => {
-            if (!item) return <div key={i} className="my-2 border-t border-brand-border"/>;
-            const active = pathname === item.href || (
-              item.href !== '/dashboard' &&
-              item.href !== '/dashboard/support' &&
-              pathname.startsWith(`${item.href}/`)
-            );
-            return (
-              <Link key={item.href} href={item.href}
-                className={clsx(
-                  'mb-0.5 flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all group',
-                  active ? 'bg-brand-green/10 text-brand-green' : 'text-brand-muted hover:text-white hover:bg-brand-card'
-                )}>
-                <item.icon size={15} className={active ? 'text-brand-green' : ''}/>
-                <span className="flex-1">{item.label}</span>
-                {item.badge && (
-                  <span className={clsx('text-[10px] px-1.5 py-0.5 rounded font-medium',
-                    item.badge === 'Soon' ? 'bg-brand-border text-brand-muted' : 'bg-brand-green/20 text-brand-green'
-                  )}>{item.badge}</span>
-                )}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Dashboard">
+          <div className="space-y-1">
+            {NAV_ITEMS.map((item) => {
+              const active =
+                item.href === '/dashboard'
+                  ? pathname === item.href
+                  : pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={clsx(
+                    'group flex items-start gap-3 rounded-[1.15rem] px-3 py-3 transition',
+                    active
+                      ? 'border border-brand-green/24 bg-brand-green/[0.09] text-white'
+                      : 'border border-transparent text-white/56 hover:border-white/8 hover:bg-white/[0.03] hover:text-white',
+                  )}
+                >
+                  <span
+                    className={clsx(
+                      'mt-0.5 flex h-10 w-10 flex-none items-center justify-center rounded-[0.95rem] border transition',
+                      active
+                        ? 'border-brand-green/28 bg-brand-green/12 text-brand-green'
+                        : 'border-white/8 bg-black/20 text-white/44 group-hover:border-brand-green/20 group-hover:text-brand-green',
+                    )}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className={clsx('block text-sm font-semibold', active ? 'text-white' : 'text-white/82')}>{item.label}</span>
+                    <span className="mt-1 block text-xs leading-5 text-white/42">{item.description}</span>
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
         </nav>
 
-        {/* User */}
-        <div className="border-t border-brand-border px-3 py-3">
-          <div className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-2 py-2 hover:bg-brand-card group">
-            <div className="w-7 h-7 rounded-full bg-brand-green/20 border border-brand-green/30 flex items-center justify-center flex-shrink-0">
-              <span className="text-xs font-bold text-brand-green">{(user?.firstName || clerkUser?.firstName || 'B')?.[0]?.toUpperCase()}</span>
+        <div className="border-t border-white/8 px-4 py-4">
+          <details className="group [&_summary::-webkit-details-marker]:hidden">
+            <summary className="flex min-h-12 cursor-pointer list-none items-center gap-3 rounded-[1.15rem] border border-white/8 bg-white/[0.03] px-3 py-3 transition hover:border-brand-green/22 hover:bg-brand-green/[0.05]">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full border border-brand-green/24 bg-brand-green/10 text-sm font-semibold text-brand-green">
+                {(user?.firstName || clerkUser?.firstName || 'B').slice(0, 1).toUpperCase()}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold text-white">
+                  {user?.firstName || clerkUser?.firstName || 'Burner Point user'}
+                </span>
+                <span className="block truncate text-xs text-white/46">
+                  {user?.email || clerkUser?.primaryEmailAddress?.emailAddress || 'Private account'}
+                </span>
+              </span>
+              <ChevronDown className="h-4 w-4 text-white/42 transition group-open:rotate-180" />
+            </summary>
+            <div className="mt-2 rounded-[1.15rem] border border-white/8 bg-black/36 p-2">
+              <Link href="/dashboard/profile" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-white/68 transition hover:bg-white/[0.04] hover:text-white">
+                <UserCircle2 className="h-4 w-4 text-brand-green" />
+                Profile
+              </Link>
+              <Link href="/dashboard/billing" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-white/68 transition hover:bg-white/[0.04] hover:text-white">
+                <CreditCard className="h-4 w-4 text-brand-green" />
+                Billing
+              </Link>
+              <Link href="/dashboard/api" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-white/68 transition hover:bg-white/[0.04] hover:text-white">
+                <KeyRound className="h-4 w-4 text-brand-green" />
+                API Keys
+              </Link>
+              <Link href="/dashboard/support" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-white/68 transition hover:bg-white/[0.04] hover:text-white">
+                <HelpCircle className="h-4 w-4 text-brand-green" />
+                Support
+              </Link>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-white/68 transition hover:bg-white/[0.04] hover:text-red-300"
+              >
+                <LogOut className="h-4 w-4 text-red-300" />
+                Sign Out
+              </button>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium truncate">{user?.firstName || clerkUser?.firstName}</p>
-              <p className="text-[10px] text-brand-muted truncate">{user?.email || clerkUser?.primaryEmailAddress?.emailAddress}</p>
-            </div>
-            <button onClick={logout} className="flex h-9 w-9 items-center justify-center rounded-bp text-brand-muted opacity-100 transition-colors hover:text-red-400 md:opacity-0 md:group-hover:opacity-100">
-              <LogOut size={13}/>
-            </button>
-          </div>
+          </details>
         </div>
       </aside>
+
       {sidebarOpen ? (
         <button
           type="button"
           aria-label="Close dashboard navigation"
           onClick={toggleSidebar}
-          className="fixed inset-0 z-20 bg-black/58 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-30 bg-black/58 backdrop-blur-sm md:hidden"
         />
       ) : null}
 
-      {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Topbar */}
-        <header className="flex h-16 flex-shrink-0 items-center gap-3 border-b border-brand-border px-4 md:gap-4 md:px-6">
-          <button onClick={toggleSidebar} className="flex min-h-11 min-w-11 items-center justify-center rounded-bp text-brand-muted transition-colors hover:bg-brand-card hover:text-white">
-            {sidebarOpen ? <X size={18}/> : <Menu size={18}/>}
-          </button>
-          <div className="flex-1">
-            <h2 className="text-sm font-semibold capitalize">
-              {pathname.split('/').pop()?.replace('-', ' ') || 'Dashboard'}
-            </h2>
-            <p className="mt-0.5 text-xs text-brand-muted">Private communication, verification, billing, and support in one place.</p>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-20 border-b border-white/8 bg-brand-black/86 px-4 py-4 backdrop-blur-xl md:px-6">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex items-start gap-3">
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-[1rem] border border-white/10 bg-white/[0.03] text-white/72 transition hover:border-brand-green/22 hover:text-brand-green md:hidden"
+              >
+                {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+              <div>
+                <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">{currentPage.title}</p>
+                <h1 className="mt-2 text-2xl font-semibold text-white">{currentPage.title}</h1>
+                <p className="mt-1 text-sm leading-6 text-white/54">{currentPage.description}</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+              <div className="flex items-center gap-3 rounded-[1.15rem] border border-white/8 bg-white/[0.03] px-4 py-3">
+                <CreditCard className="h-4 w-4 text-brand-green" />
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">Credits balance</p>
+                  <p className="text-sm font-semibold text-white">{formatWalletPrimary(user)}</p>
+                  <p className="mt-1 text-[11px] text-white/42">{formatWalletSecondary(user)}</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="flex min-h-12 min-w-12 items-center justify-center rounded-[1rem] border border-white/8 bg-white/[0.03] text-white/70 transition hover:border-brand-green/22 hover:text-brand-green"
+                aria-label="Notifications"
+              >
+                <Bell className="h-5 w-5" />
+              </button>
+
+              <div className="flex flex-wrap gap-2">
+                {QUICK_ACTIONS.map((action, index) => (
+                  <Link
+                    key={action.href}
+                    href={action.href}
+                    className={clsx(
+                      'inline-flex min-h-12 items-center justify-center rounded-[1rem] px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] transition',
+                      index === 0
+                        ? 'bg-brand-green text-black hover:bg-[#1cffac]'
+                        : 'border border-white/10 bg-white/[0.03] text-white/74 hover:border-brand-green/24 hover:text-white',
+                    )}
+                  >
+                    {action.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
           </div>
-          <button className="flex min-h-11 min-w-11 items-center justify-center rounded-bp text-brand-muted transition-colors hover:bg-brand-card hover:text-white">
-            <Bell size={18}/>
-          </button>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          {children}
-        </main>
+        <main className="flex-1 px-4 py-5 md:px-6 md:py-6">{children}</main>
       </div>
     </div>
   );

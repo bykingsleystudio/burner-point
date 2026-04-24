@@ -7,10 +7,8 @@ import { resolveWebhookBaseUrl } from '../../config/runtime-env';
 
 export enum ProviderName {
   TWILIO = 'twilio',
-  BANDWIDTH = 'bandwidth',
-  VONAGE = 'vonage',
-  INFOBIP = 'infobip',
   TELNYX = 'telnyx',
+  TREMIL = 'tremil',
   PLIVO = 'plivo',
   TERMII = 'termii',
 }
@@ -70,7 +68,7 @@ export class ProviderService {
 
   selectConversationRoute(countryCode: string, preferredProvider?: ProviderName): RouteDecision {
     const country = this.normalizeCountry(countryCode);
-    const fallbackProviders = [ProviderName.VONAGE];
+    const fallbackProviders = [ProviderName.TELNYX, ProviderName.TREMIL];
     const primaryProvider = preferredProvider ?? ProviderName.TWILIO;
 
     return {
@@ -80,10 +78,10 @@ export class ProviderService {
       primaryProvider,
       fallbackProviders: fallbackProviders.filter((p) => p !== primaryProvider),
       numberProvider: country === 'US' || country === 'CA'
-        ? ProviderName.BANDWIDTH
+        ? ProviderName.TELNYX
         : ProviderName.TWILIO,
       reason: country === 'US' || country === 'CA'
-        ? 'US/CA conversation uses Twilio for app messaging/voice, Bandwidth as number infrastructure, and Vonage as independent fallback.'
+        ? 'US/CA conversation uses Twilio for app messaging and voice, Telnyx for number infrastructure, and Tremil as the economy fallback route.'
         : 'Conversation is designed for US/CA only; non-US/CA traffic should be routed through verification or blocked by product policy.',
     };
   }
@@ -171,12 +169,10 @@ export class ProviderService {
     const route = this.selectConversationRoute(country);
 
     if (
-      route.numberProvider === ProviderName.BANDWIDTH &&
-      this.isProviderConfigured(ProviderName.BANDWIDTH)
+      route.numberProvider === ProviderName.TELNYX &&
+      this.isProviderConfigured(ProviderName.TELNYX)
     ) {
-      this.logger.warn(
-        'Bandwidth is selected as US/CA number infrastructure, but this build still uses Twilio number search until the Bandwidth numbers adapter is enabled.',
-      );
+      return this.searchTelnyxNumbers(country, areaCode, route.numberProvider, smsEnabled);
     }
 
     if (!this.twilioClient) throw new Error('Twilio not configured');
@@ -205,10 +201,17 @@ export class ProviderService {
 
   async purchaseNumber(
     phoneNumber: string,
-    countryCode?: string,
+  countryCode?: string,
   ): Promise<{ sid: string; number: string; provider: ProviderName; numberProvider: ProviderName }> {
     const country = countryCode ? this.normalizeCountry(countryCode) : this.inferCountryFromPhone(phoneNumber);
     const route = this.selectConversationRoute(country);
+
+    if (
+      route.numberProvider === ProviderName.TELNYX &&
+      this.isProviderConfigured(ProviderName.TELNYX)
+    ) {
+      return this.purchaseTelnyxNumber(phoneNumber, route.numberProvider);
+    }
 
     if (!this.twilioClient) throw new Error('Twilio not configured');
     const webhookBaseUrl = this.getWebhookBaseUrl();
@@ -229,10 +232,16 @@ export class ProviderService {
   }
 
   async releaseNumber(sid: string, provider: ProviderName = ProviderName.TWILIO): Promise<void> {
-    if (provider !== ProviderName.TWILIO) {
-      this.logger.warn(`Release requested for ${provider}; Twilio adapter is the only active release adapter.`);
+    if (provider === ProviderName.TELNYX) {
+      await this.releaseTelnyxNumber(sid);
       return;
     }
+
+    if (provider !== ProviderName.TWILIO) {
+      this.logger.warn(`Release requested for ${provider}; Twilio and Telnyx are the active release adapters.`);
+      return;
+    }
+
     if (!this.twilioClient) throw new Error('Twilio not configured');
     await this.twilioClient.incomingPhoneNumbers(sid).remove();
   }
@@ -246,10 +255,10 @@ export class ProviderService {
     switch (provider) {
       case ProviderName.TWILIO:
         return this.sendTwilioSms(to, from, body);
-      case ProviderName.VONAGE:
-        return this.sendVonageSms(to, from, body);
-      case ProviderName.INFOBIP:
-        return this.sendInfobipSms(to, from, body);
+      case ProviderName.TELNYX:
+        return this.sendTelnyxSms(to, from, body);
+      case ProviderName.TREMIL:
+        return this.sendTremilSms(to, from, body);
       default:
         throw new Error(`${provider} SMS adapter is deferred for this release`);
     }
@@ -261,64 +270,147 @@ export class ProviderService {
     return { sid: msg.sid, status: msg.status };
   }
 
-  private async sendVonageSms(to: string, from: string, body: string) {
-    const apiKey = this.configService.get<string>('VONAGE_API_KEY');
-    const apiSecret = this.configService.get<string>('VONAGE_API_SECRET');
-    if (!apiKey || !apiSecret) throw new Error('Vonage not configured');
+  private async sendTelnyxSms(to: string, from: string, body: string) {
+    const apiKey = this.configService.get<string>('TELNYX_API_KEY');
+    if (!apiKey) throw new Error('Telnyx not configured');
     const webhookBaseUrl = this.getWebhookBaseUrl();
+    const messagingProfileId = this.configService.get<string>('TELNYX_MESSAGING_PROFILE_ID');
 
-    const response = await axios.post('https://rest.nexmo.com/sms/json', {
-      api_key: apiKey,
-      api_secret: apiSecret,
-      to: this.stripPlus(to),
-      from: this.stripPlus(from),
+    const payload: Record<string, unknown> = {
+      from,
+      to,
       text: body,
-      'status-report-req': 1,
-      callback: `${webhookBaseUrl}/vonage/status`,
+      webhook_url: `${webhookBaseUrl}/telnyx`,
+    };
+    if (messagingProfileId) payload.messaging_profile_id = messagingProfileId;
+
+    const response = await axios.post('https://api.telnyx.com/v2/messages', payload, {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
     });
 
-    const message = response.data?.messages?.[0] ?? {};
-    const status = String(message.status ?? 'unknown');
-    if (status !== '0') {
-      throw new Error(message['error-text'] ?? `Vonage SMS failed with status ${status}`);
-    }
-
+    const message = response.data?.data ?? {};
     return {
-      sid: message['message-id'] ?? `vonage-${Date.now()}`,
-      status: 'queued',
-    };
+      sid: message.id ?? `telnyx-${Date.now()}`,
+      status: message.status ?? 'queued',
+    }
   }
 
-  private async sendInfobipSms(to: string, from: string, body: string) {
-    const baseUrl = this.configService.get<string>('INFOBIP_BASE_URL');
-    const apiKey = this.configService.get<string>('INFOBIP_API_KEY');
-    if (!baseUrl || !apiKey) throw new Error('Infobip not configured');
-    const webhookBaseUrl = this.getWebhookBaseUrl();
+  private async sendTremilSms(to: string, from: string, body: string) {
+    const baseUrl = this.configService.get<string>('TREMIL_BASE_URL');
+    const apiKey = this.configService.get<string>('TREMIL_API_KEY');
+    const apiSecret = this.configService.get<string>('TREMIL_SECRET');
+    if (!baseUrl || !apiKey) throw new Error('Tremil not configured');
 
     const response = await axios.post(
-      `${baseUrl.replace(/\/$/, '')}/sms/2/text/advanced`,
+      `${baseUrl.replace(/\/$/, '')}/messages`,
       {
-        messages: [{
-          from: this.stripPlus(from),
-          destinations: [{ to: this.stripPlus(to) }],
-          text: body,
-          notifyUrl: `${webhookBaseUrl}/infobip/status`,
-          notifyContentType: 'application/json',
-        }],
+        from,
+        to,
+        text: body,
       },
       {
         headers: {
-          Authorization: `App ${apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
+          ...(apiSecret ? { 'X-API-Secret': apiSecret } : {}),
           'Content-Type': 'application/json',
         },
       },
     );
 
-    const message = response.data?.messages?.[0] ?? {};
+    const message = response.data?.data ?? response.data ?? {};
     return {
-      sid: message.messageId ?? `infobip-${Date.now()}`,
-      status: message.status?.groupName ?? 'queued',
+      sid: message.id ?? message.messageId ?? `tremil-${Date.now()}`,
+      status: message.status ?? 'queued',
     };
+  }
+
+  private async searchTelnyxNumbers(
+    country: string,
+    areaCode: string | undefined,
+    numberProvider: ProviderName,
+    smsEnabled: boolean,
+  ) {
+    const apiKey = this.configService.get<string>('TELNYX_API_KEY');
+    if (!apiKey) throw new Error('Telnyx not configured');
+
+    const params: Record<string, string | number> = {
+      'filter[country_code]': country,
+      'filter[phone_number_type]': 'local',
+      'filter[features]': smsEnabled ? 'sms' : 'voice',
+      'filter[limit]': 20,
+    };
+    if (areaCode) params['filter[national_destination_code]'] = areaCode;
+
+    const response = await axios.get('https://api.telnyx.com/v2/available_phone_numbers', {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      params,
+    });
+
+    return (response.data?.data ?? []).map((item: Record<string, unknown>) => {
+      const features = Array.isArray(item.features) ? item.features.map((feature) => String(feature).toLowerCase()) : [];
+      return {
+        number: String(item.phone_number ?? ''),
+        friendlyName: String(item.phone_number ?? ''),
+        countryCode: country,
+        provider: ProviderName.TELNYX,
+        preferredNumberProvider: numberProvider,
+        capabilities: {
+          sms: features.includes('sms'),
+          voice: features.includes('voice') || features.includes('emergency'),
+          mms: features.includes('mms'),
+        },
+      };
+    });
+  }
+
+  private async purchaseTelnyxNumber(
+    phoneNumber: string,
+    numberProvider: ProviderName,
+  ): Promise<{ sid: string; number: string; provider: ProviderName; numberProvider: ProviderName }> {
+    const apiKey = this.configService.get<string>('TELNYX_API_KEY');
+    if (!apiKey) throw new Error('Telnyx not configured');
+
+    const connectionId = this.configService.get<string>('TELNYX_CONNECTION_ID');
+    const messagingProfileId = this.configService.get<string>('TELNYX_MESSAGING_PROFILE_ID');
+    const payload: Record<string, unknown> = {
+      phone_numbers: [{ phone_number: phoneNumber }],
+      customer_reference: `burner-point-${Date.now()}`,
+    };
+    if (connectionId) payload.connection_id = connectionId;
+    if (messagingProfileId) payload.messaging_profile_id = messagingProfileId;
+
+    const response = await axios.post('https://api.telnyx.com/v2/number_orders', payload, {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const purchased = response.data?.data?.phone_numbers?.[0] ?? {};
+
+    return {
+      sid: purchased.id ?? response.data?.data?.id ?? `telnyx-order-${Date.now()}`,
+      number: purchased.phone_number ?? phoneNumber,
+      provider: ProviderName.TELNYX,
+      numberProvider,
+    };
+  }
+
+  private async releaseTelnyxNumber(phoneNumberId: string): Promise<void> {
+    const apiKey = this.configService.get<string>('TELNYX_API_KEY');
+    if (!apiKey) throw new Error('Telnyx not configured');
+
+    await axios.delete(`https://api.telnyx.com/v2/phone_numbers/${phoneNumberId}`, {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+    });
   }
 
   private async isProviderHealthy(
@@ -333,24 +425,22 @@ export class ProviderService {
 
   private getVerificationProviderChain(countryCode: string, serviceCode?: string): ProviderName[] {
     const service = (serviceCode ?? '').toLowerCase();
-    if (countryCode === 'NG') return [ProviderName.INFOBIP, ProviderName.TWILIO, ProviderName.VONAGE];
-    if (['IN', 'PK', 'BD'].includes(countryCode)) return [ProviderName.INFOBIP, ProviderName.VONAGE, ProviderName.TWILIO];
-    if (['US', 'CA'].includes(countryCode)) return [ProviderName.TWILIO, ProviderName.VONAGE, ProviderName.INFOBIP];
-    if (['GB', 'DE', 'FR', 'ES', 'IT', 'NL', 'SE', 'NO', 'FI'].includes(countryCode)) {
-      return [ProviderName.TWILIO, ProviderName.VONAGE, ProviderName.INFOBIP];
+    if (['US', 'CA', 'GB'].includes(countryCode)) return [ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.TREMIL];
+    if (['DE', 'FR', 'ES', 'IT', 'NL', 'SE', 'NO', 'FI'].includes(countryCode)) {
+      return [ProviderName.TELNYX, ProviderName.TWILIO, ProviderName.TREMIL];
     }
-    if (service.includes('high-risk')) return [ProviderName.INFOBIP, ProviderName.VONAGE, ProviderName.TWILIO];
-    return [ProviderName.TWILIO, ProviderName.INFOBIP, ProviderName.VONAGE];
+    if (service.includes('high-risk')) return [ProviderName.TELNYX, ProviderName.TWILIO, ProviderName.TREMIL];
+    return [ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.TREMIL];
   }
 
   private getVerificationRouteLabel(provider: ProviderName): string {
     switch (provider) {
       case ProviderName.TWILIO:
         return 'BP Core Verify';
-      case ProviderName.INFOBIP:
-        return 'BP Global Route';
-      case ProviderName.VONAGE:
-        return 'BP Smart Route';
+      case ProviderName.TELNYX:
+        return 'BP Standard Route';
+      case ProviderName.TREMIL:
+        return 'BP Economy Route';
       case ProviderName.PLIVO:
         return 'BP Budget Route';
       case ProviderName.TERMII:
@@ -364,12 +454,10 @@ export class ProviderService {
     switch (provider) {
       case ProviderName.TWILIO:
         return Boolean(this.configService.get('TWILIO_ACCOUNT_SID') && this.configService.get('TWILIO_AUTH_TOKEN'));
-      case ProviderName.VONAGE:
-        return Boolean(this.configService.get('VONAGE_API_KEY') && this.configService.get('VONAGE_API_SECRET'));
-      case ProviderName.INFOBIP:
-        return Boolean(this.configService.get('INFOBIP_BASE_URL') && this.configService.get('INFOBIP_API_KEY'));
-      case ProviderName.BANDWIDTH:
-        return Boolean(this.configService.get('BANDWIDTH_ACCOUNT_ID') && this.configService.get('BANDWIDTH_API_TOKEN'));
+      case ProviderName.TELNYX:
+        return Boolean(this.configService.get('TELNYX_API_KEY'));
+      case ProviderName.TREMIL:
+        return Boolean(this.configService.get('TREMIL_API_KEY') && this.configService.get('TREMIL_BASE_URL'));
       default:
         return false;
     }

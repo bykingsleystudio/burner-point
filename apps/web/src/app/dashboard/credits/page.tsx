@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { paymentsApi, type PaymentGatewayId } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { Bitcoin, ExternalLink, Globe, Shield } from 'lucide-react';
+import { formatNgnKobo, formatStoredKoboAsUsd } from '@/lib/money';
 
 interface Package {
   id: string;
@@ -183,12 +184,15 @@ export default function CreditsPage() {
                 ) : null}
                 <p className="text-sm font-semibold">{pkg.name}</p>
                 <p className="mt-1 font-mono text-xl font-bold text-brand-green">
-                  NGN {(pkg.priceKobo / 100).toLocaleString()}
+                  {formatStoredKoboAsUsd(pkg.priceKobo)}
                 </p>
                 <p className="mt-0.5 text-xs text-brand-muted">
-                  NGN {(pkg.amountKobo / 100).toLocaleString()} credits
+                  {formatNgnKobo(pkg.priceKobo)} local checkout
+                </p>
+                <p className="mt-1 text-xs text-brand-muted">
+                  {formatStoredKoboAsUsd(pkg.amountKobo)} wallet credits
                   {pkg.bonusKobo > 0 ? (
-                    <span className="text-brand-green"> + NGN {(pkg.bonusKobo / 100).toLocaleString()} bonus</span>
+                    <span className="text-brand-green"> + {formatStoredKoboAsUsd(pkg.bonusKobo)} bonus</span>
                   ) : null}
                 </p>
               </button>
@@ -240,7 +244,13 @@ export default function CreditsPage() {
         <div className="mb-3 flex items-center justify-between">
           <span className="text-sm text-brand-muted">Amount</span>
           <span className="font-mono font-bold text-brand-green">
-            {selectedPkg ? `NGN ${(selectedPkg.priceKobo / 100).toLocaleString()}` : '-'}
+            {selectedPkg ? formatStoredKoboAsUsd(selectedPkg.priceKobo) : '-'}
+          </span>
+        </div>
+        <div className="mb-5 flex items-center justify-between">
+          <span className="text-sm text-brand-muted">Local checkout</span>
+          <span className="text-sm text-white/70">
+            {selectedPkg ? formatNgnKobo(selectedPkg.priceKobo) : '-'}
           </span>
         </div>
         <div className="mb-5 flex items-center justify-between">

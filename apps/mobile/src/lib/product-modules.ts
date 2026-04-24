@@ -37,7 +37,7 @@ export const MOBILE_PRODUCT_MODULES = {
       { meta: 'Control', title: 'Short Lived', text: 'Use a number for one task or move into a rental when continuity matters.' },
     ],
     workflow: ['Select country and service', 'Choose available number', 'Submit it to the platform', 'Read SMS or voice code in Burner Point'],
-    note: 'All provider calls must run through the Burner Point API. Twilio, Infobip, and Vonage secrets never belong in the mobile bundle.',
+    note: 'All provider calls must run through the Burner Point API. Twilio, Telnyx, and Tremil secrets never belong in the mobile bundle.',
   },
   rentals: {
     eyebrow: 'Rentals',
@@ -65,7 +65,7 @@ export const MOBILE_PRODUCT_MODULES = {
     title: 'Travel data without a physical SIM swap.',
     description:
       'Purchase and manage eSIM plans for global data connectivity from the same privacy-first account you use for numbers.',
-    status: '1GLOBAL ready',
+    status: 'Global data catalog',
     primaryAction: { label: 'Buy Credits', href: '/credits' },
     secondaryAction: { label: 'Support', href: '/support' },
     stats: [
@@ -79,14 +79,14 @@ export const MOBILE_PRODUCT_MODULES = {
       { meta: 'Usage', title: 'Balance Visibility', text: 'Keep data remaining, validity, and renewal state easy to read.' },
     ],
     workflow: ['Choose destination', 'Select data package', 'Complete secure checkout', 'Install and monitor usage'],
-    note: '1GLOBAL keys and webhooks must stay on the API service and update plan state idempotently.',
+    note: 'eSIM provisioning keys and webhooks must stay on the API service and update plan state idempotently.',
   },
   proxies: {
     eyebrow: 'Proxies',
     title: 'Routing flexibility for private access workflows.',
     description:
       'Use mobile or residential proxy access for location-aware browsing, testing, and account separation with server-side credential control.',
-    status: 'Bright Data abstraction',
+    status: 'Provisioning and credential delivery',
     primaryAction: { label: 'Buy Credits', href: '/credits' },
     secondaryAction: { label: 'Developer Tools', href: '/developer' },
     stats: [
@@ -100,7 +100,7 @@ export const MOBILE_PRODUCT_MODULES = {
       { meta: 'Health', title: 'Durability', text: 'Track active routes, failures, session status, and expiration.' },
     ],
     workflow: ['Select proxy type', 'Choose region', 'Provision through backend', 'Show masked credentials and health'],
-    note: 'Bright Data credentials must never be embedded in the mobile app. The client should only receive scoped provisioning results.',
+    note: 'Proxy credentials must never be embedded in the mobile app. The client should only receive scoped provisioning results.',
   },
   vpn: {
     eyebrow: 'VPN',

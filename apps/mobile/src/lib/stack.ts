@@ -25,10 +25,10 @@ export const BURNER_POINT_STACK = [
   },
   {
     label: 'Telecom',
-    value: 'Twilio, Bandwidth, Infobip, Vonage',
+    value: 'Twilio, Telnyx, Tremil',
   },
   {
     label: 'Privacy',
-    value: 'WireGuard, Bright Data, 1GLOBAL',
+    value: 'WireGuard, Oxylabs, Airalo',
   },
 ] as const;

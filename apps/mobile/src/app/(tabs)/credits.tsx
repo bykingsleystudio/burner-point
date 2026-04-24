@@ -14,9 +14,18 @@ import axios from 'axios';
 
 import { API_BASE_URL, WEB_BILLING_URL } from '../../lib/config';
 import { BRAND } from '../../lib/brand';
+import { formatNgnKobo, formatStoredKoboAsUsd } from '../../lib/money';
 import { triggerHaptic } from '../../lib/native-ux';
 
 type GatewayId = 'paystack' | 'paddle' | 'nowpayments';
+type CreditPackage = {
+  id: string;
+  name: string;
+  amountKobo: number;
+  bonusKobo: number;
+  priceKobo: number;
+  isFeatured?: boolean;
+};
 
 const GATEWAYS: Array<{ id: GatewayId; label: string; code: string; desc: string }> = [
   { id: 'paystack', label: 'Paystack', code: 'NG', desc: 'Cards, Bank, USSD' },
@@ -25,8 +34,8 @@ const GATEWAYS: Array<{ id: GatewayId; label: string; code: string; desc: string
 ];
 
 export default function CreditsScreen() {
-  const [packages, setPackages] = useState<any[]>([]);
-  const [selectedPkg, setSelectedPkg] = useState<any>(null);
+  const [packages, setPackages] = useState<CreditPackage[]>([]);
+  const [selectedPkg, setSelectedPkg] = useState<CreditPackage | null>(null);
   const [gateway, setGateway] = useState<GatewayId>('paystack');
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
@@ -55,8 +64,9 @@ export default function CreditsScreen() {
     try {
       const url = `${WEB_BILLING_URL}?packageId=${encodeURIComponent(selectedPkg.id)}&gateway=${encodeURIComponent(gateway)}`;
       await Linking.openURL(url);
-    } catch (error: any) {
-      Alert.alert('Error', error?.message ?? 'Unable to open secure web checkout');
+    } catch (error: unknown) {
+      const message = (error as Error)?.message ?? 'Unable to open secure web checkout';
+      Alert.alert('Error', message);
     } finally {
       setPaying(false);
     }
@@ -81,7 +91,7 @@ export default function CreditsScreen() {
           <View>
             <View style={s.header}>
               <Text style={s.title}>Buy Credits</Text>
-              <Text style={s.subtitle}>NGN 1,600 ~= $1 USD</Text>
+              <Text style={s.subtitle}>Wallet funding is normalized to USD, with local checkout shown for convenience.</Text>
             </View>
             <Text style={s.sectionLabel}>Select Package</Text>
           </View>
@@ -98,10 +108,11 @@ export default function CreditsScreen() {
               </View>
             ) : null}
             <Text style={s.pkgName}>{pkg.name}</Text>
-            <Text style={s.pkgPrice}>NGN {(pkg.priceKobo / 100).toLocaleString()}</Text>
+            <Text style={s.pkgPrice}>{formatStoredKoboAsUsd(pkg.priceKobo)}</Text>
+            <Text style={s.pkgLocal}>{formatNgnKobo(pkg.priceKobo)} local checkout</Text>
             <Text style={s.pkgCredits}>
-              NGN {(pkg.amountKobo / 100).toLocaleString()} credits
-              {pkg.bonusKobo > 0 ? ` + NGN ${(pkg.bonusKobo / 100).toLocaleString()} bonus` : ''}
+              {formatStoredKoboAsUsd(pkg.amountKobo)} wallet credits
+              {pkg.bonusKobo > 0 ? ` + ${formatStoredKoboAsUsd(pkg.bonusKobo)} bonus` : ''}
             </Text>
           </TouchableOpacity>
         )}
@@ -211,6 +222,7 @@ const s = StyleSheet.create({
     fontWeight: '900',
     fontFamily: BRAND.typography.mono,
   },
+  pkgLocal: { color: BRAND.colors.metalStart, fontSize: 10, marginTop: 2 },
   pkgCredits: { color: BRAND.colors.muted, fontSize: 10, marginTop: 2 },
   footer: { padding: 16 },
   gatewayGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

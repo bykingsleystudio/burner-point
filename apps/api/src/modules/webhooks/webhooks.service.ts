@@ -11,7 +11,7 @@ import { EventsGateway } from '../gateway/events.gateway';
 import { AiService } from '../ai/ai.service';
 import { resolveClerkWebhookSigningSecret, resolveWebhookBaseUrl } from '../../config/runtime-env';
 
-type ProviderWebhookSource = 'bandwidth' | 'oneglobal' | 'brightdata' | 'wireguard';
+type ProviderWebhookSource = 'airalo' | 'oxylabs' | 'smartproxy' | 'wireguard';
 
 @Injectable()
 export class WebhooksService {
@@ -167,90 +167,6 @@ export class WebhooksService {
   async handleVerifyStatus(payload: Record<string, string>) {
     const sid = payload.VerificationSid || payload.sid || 'unknown';
     this.logger.log(`Twilio Verify callback received: ${sid}`);
-    return { success: true };
-  }
-
-  async handleVonageInboundWebhook(payload: Record<string, unknown>) {
-    const eventId = this.asString(payload.messageId ?? payload['message-id'] ?? payload.messageId);
-    if (!eventId) return { success: true };
-
-    const duplicate = await this.storeWebhookEvent(eventId, 'vonage', 'message.inbound', payload);
-    if (duplicate) return { success: true };
-
-    await this.persistInboundProviderSms({
-      provider: 'vonage',
-      eventId,
-      from: this.normalizePhone(this.asString(payload.msisdn ?? payload.from)),
-      to: this.normalizePhone(this.asString(payload.to)),
-      body: this.asString(payload.text),
-      payload,
-    });
-
-    return { success: true };
-  }
-
-  async handleVonageStatusWebhook(payload: Record<string, unknown>) {
-    const eventId = this.asString(payload.messageId ?? payload['message-id'] ?? payload.messageId);
-    if (!eventId) return { success: true };
-
-    const webhookEventId = `${eventId}:${this.asString(payload.status) || 'status'}`;
-    const duplicate = await this.storeWebhookEvent(webhookEventId, 'vonage', 'message.status', payload);
-    if (duplicate) return { success: true };
-
-    await this.msgRepo.update(
-      { providerMessageSid: eventId },
-      { status: this.mapVonageMessageStatus(this.asString(payload.status)) },
-    );
-
-    return { success: true };
-  }
-
-  async handleInfobipInboundWebhook(
-    payload: Record<string, unknown>,
-    headers: Record<string, string>,
-  ) {
-    const results = this.getWebhookResults(payload);
-
-    for (const item of results) {
-      const eventId = this.asString(item.messageId ?? item.messageID ?? headers['x-infobip-message-id']);
-      if (!eventId) continue;
-
-      const duplicate = await this.storeWebhookEvent(eventId, 'infobip', 'message.inbound', item);
-      if (duplicate) continue;
-
-      await this.persistInboundProviderSms({
-        provider: 'infobip',
-        eventId,
-        from: this.normalizePhone(this.asString(item.from)),
-        to: this.normalizePhone(this.asString(item.to)),
-        body: this.asString(item.text ?? item.cleanText),
-        payload: item,
-      });
-    }
-
-    return { success: true };
-  }
-
-  async handleInfobipDeliveryWebhook(
-    payload: Record<string, unknown>,
-    headers: Record<string, string>,
-  ) {
-    const results = this.getWebhookResults(payload);
-
-    for (const item of results) {
-      const eventId = this.asString(item.messageId ?? item.messageID ?? headers['x-infobip-message-id']);
-      if (!eventId) continue;
-
-      const webhookEventId = `${eventId}:${this.asString((item.status as Record<string, unknown> | undefined)?.groupName ?? item.status) || 'status'}`;
-      const duplicate = await this.storeWebhookEvent(webhookEventId, 'infobip', 'message.status', item);
-      if (duplicate) continue;
-
-      await this.msgRepo.update(
-        { providerMessageSid: eventId },
-        { status: this.mapInfobipMessageStatus(item.status) },
-      );
-    }
-
     return { success: true };
   }
 
@@ -443,45 +359,11 @@ export class WebhooksService {
     return false;
   }
 
-  private getWebhookResults(payload: Record<string, unknown>): Record<string, unknown>[] {
-    const results = payload.results;
-    if (Array.isArray(results)) {
-      return results.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object');
-    }
-    return [payload];
-  }
-
-  private mapVonageMessageStatus(status: string): MessageStatus {
-    const normalized = status.toLowerCase();
-    if (['delivered'].includes(normalized)) return MessageStatus.DELIVERED;
-    if (['accepted', 'buffered', 'sent'].includes(normalized)) return MessageStatus.SENT;
-    if (['failed', 'expired', 'rejected', 'undeliverable'].includes(normalized)) return MessageStatus.FAILED;
-    return MessageStatus.SENT;
-  }
-
-  private mapInfobipMessageStatus(status: unknown): MessageStatus {
-    const value = typeof status === 'object' && status
-      ? this.asString((status as Record<string, unknown>).groupName ?? (status as Record<string, unknown>).name)
-      : this.asString(status);
-    const normalized = value.toLowerCase();
-    if (normalized.includes('delivered')) return MessageStatus.DELIVERED;
-    if (normalized.includes('pending') || normalized.includes('sent')) return MessageStatus.SENT;
-    if (normalized.includes('undeliverable') || normalized.includes('expired') || normalized.includes('rejected')) {
-      return MessageStatus.FAILED;
-    }
-    return MessageStatus.SENT;
-  }
-
-  private normalizePhone(value: string): string {
-    if (!value) return '';
-    return value.startsWith('+') ? value : `+${value}`;
-  }
-
   private getProviderWebhookSecretEnv(source: ProviderWebhookSource): string {
     const env: Record<ProviderWebhookSource, string> = {
-      bandwidth: 'BANDWIDTH_WEBHOOK_SECRET',
-      oneglobal: 'ONEGLOBAL_WEBHOOK_SECRET',
-      brightdata: 'BRIGHTDATA_WEBHOOK_SECRET',
+      airalo: 'AIRALO_WEBHOOK_SECRET',
+      oxylabs: 'OXYLABS_WEBHOOK_SECRET',
+      smartproxy: 'SMARTPROXY_WEBHOOK_SECRET',
       wireguard: 'WIREGUARD_WEBHOOK_SECRET',
     };
     return env[source];
@@ -523,9 +405,9 @@ export class WebhooksService {
       'x-signature',
       'x-webhook-signature',
       `x-${source}-signature`,
-      'x-bandwidth-signature',
-      'x-oneglobal-signature',
-      'x-brightdata-signature',
+      'x-airalo-signature',
+      'x-oxylabs-signature',
+      'x-smartproxy-signature',
       'x-wireguard-signature',
     ];
     for (const name of names) {

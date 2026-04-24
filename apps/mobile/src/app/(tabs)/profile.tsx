@@ -9,12 +9,23 @@ import axios from 'axios';
 import { API_BASE_URL } from '../../lib/config';
 import { clearApiSession, getApiAccessToken } from '../../lib/auth';
 import { BRAND } from '../../lib/brand';
+import { formatNgnKobo, formatUsdCents, getWalletUsdCents } from '../../lib/money';
 import { triggerHaptic } from '../../lib/native-ux';
+
+type ProfileUser = {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  referralCode?: string;
+  walletBalanceKobo?: number;
+  walletBalanceUsdCents?: number;
+  walletFxRateNgnPerUsd?: number;
+};
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { getToken, signOut } = useAuth();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<ProfileUser | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -67,7 +78,8 @@ export default function ProfileScreen() {
         {/* Wallet */}
         <View style={s.walletCard}>
           <Text style={s.walletLabel}>Wallet Balance</Text>
-          <Text style={s.walletBalance}>NGN {((user?.walletBalanceKobo || 0) / 100).toLocaleString()}</Text>
+          <Text style={s.walletBalance}>{formatUsdCents(getWalletUsdCents(user))}</Text>
+          <Text style={s.walletSecondary}>{formatNgnKobo(user?.walletBalanceKobo)}</Text>
         </View>
 
         {/* Referral */}
@@ -114,6 +126,7 @@ const s = StyleSheet.create({
   walletCard: { marginHorizontal: 16, marginBottom: 12, backgroundColor: BRAND.colors.surface, borderRadius: BRAND.radii.lg, padding: 16, borderWidth: 1, borderColor: BRAND.colors.border },
   walletLabel: { color: BRAND.colors.muted, fontSize: 12, marginBottom: 4 },
   walletBalance: { color: BRAND.colors.cyberGreen, fontSize: 28, fontWeight: '900', fontFamily: BRAND.typography.mono },
+  walletSecondary: { color: BRAND.colors.muted, fontSize: 12, marginTop: 4 },
   referralCard: { marginHorizontal: 16, marginBottom: 12, backgroundColor: `${BRAND.colors.cyberGreen}08`, borderRadius: BRAND.radii.lg, padding: 16, borderWidth: 1, borderColor: `${BRAND.colors.cyberGreen}30`, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   referralLabel: { color: BRAND.colors.muted, fontSize: 11, marginBottom: 4 },
   referralCode: { color: BRAND.colors.cyberGreen, fontSize: 20, fontWeight: '900', fontFamily: BRAND.typography.mono },

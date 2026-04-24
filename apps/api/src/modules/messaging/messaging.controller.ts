@@ -92,7 +92,7 @@ export class MessagingController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.ACCEPTED)
-  @ApiOperation({ summary: 'Send SMS through provider routing (Twilio primary, Vonage/Infobip fallback)' })
+  @ApiOperation({ summary: 'Send SMS through provider routing (Twilio primary, Telnyx fallback, Tremil economy route)' })
   async sendSMS(@Body() dto: SendSmsDto) {
     return this.messagingService.sendSMS(dto);
   }

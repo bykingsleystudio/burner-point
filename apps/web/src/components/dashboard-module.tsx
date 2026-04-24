@@ -166,11 +166,11 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
     note: 'Rental timing, renewal choices, and support references should stay visible before a number changes state.',
   },
   esim: {
-    eyebrow: 'Global Connectivity',
+    eyebrow: 'BP eSIM Store',
     title: 'eSIM plans without physical SIM friction.',
     description:
       'Burner Point eSIM management is designed for travel-ready data, instant activation, and multi-country connectivity while keeping privacy tooling in one account.',
-    status: '1GLOBAL-ready catalog',
+    status: 'Global data catalog',
     primaryAction: { label: 'Buy Credits', href: '/dashboard/credits' },
     secondaryAction: { label: 'Contact Support', href: '/dashboard/support' },
     stats: [
@@ -187,11 +187,11 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
     note: 'Choose a plan, activate it on a compatible device, and monitor usage without leaving your Burner Point account.',
   },
   proxies: {
-    eyebrow: 'Routing Flexibility',
+    eyebrow: 'BP Proxy Store',
     title: 'Proxy access for location-aware privacy workflows.',
     description:
       'Proxy management gives users secure routing options, location flexibility, and connection health visibility without exposing sensitive details.',
-    status: 'Provider abstraction',
+    status: 'Provisioning and credential delivery',
     primaryAction: { label: 'Buy Credits', href: '/dashboard/credits' },
     secondaryAction: { label: 'Open API Tools', href: '/dashboard/api' },
     stats: [
@@ -208,11 +208,11 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
     note: 'Routing regions, masked credentials, and session status should stay easy to read without exposing sensitive details.',
   },
   vpn: {
-    eyebrow: 'Built-In Protection',
+    eyebrow: 'BP Secure Tunnel',
     title: 'Privacy protection inside Burner Point, not a standalone VPN.',
     description:
       'The VPN layer should reduce exposure while users operate Burner Point services. It belongs to the platform security model, paired with numbers, eSIM, proxies, and account controls.',
-    status: 'WireGuard control plane',
+    status: 'Secure tunnel control plane',
     primaryAction: { label: 'See Security', href: '/security' },
     secondaryAction: { label: 'Open Support', href: '/dashboard/support' },
     stats: [
@@ -229,7 +229,7 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
     note: 'Protection status, region selection, and reconnect guidance should stay clear while you move through the rest of the product.',
   },
   support: {
-    eyebrow: 'High-Trust Support',
+    eyebrow: 'Support',
     title: 'Support for account access, billing, and telecom delivery.',
     description:
       'Support must understand privacy workflows: verification delivery, rental continuity, number status, payment updates, eSIM activation, proxies, and account security.',

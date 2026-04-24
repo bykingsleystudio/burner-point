@@ -5,6 +5,7 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { ArrowRight, CalendarDays, CreditCard, FileText, RefreshCw, ShieldCheck } from 'lucide-react';
 import { billingApi, paymentsApi, type PaymentGatewayId } from '@/lib/api';
+import { formatLegacyAmountPrimary, formatLegacyAmountSecondary, formatStoredKoboAsUsd } from '@/lib/money';
 
 type Plan = {
   id: string;
@@ -166,7 +167,7 @@ export default function BillingPage() {
                     }`}
                   >
                     <p className="text-sm font-semibold uppercase text-white">{plan.name}</p>
-                    <p className="mt-2 font-mono text-2xl text-brand-green">{formatMoney(plan.priceKoboMonthly)}</p>
+                    <p className="mt-2 font-mono text-2xl text-brand-green">{formatStoredKoboAsUsd(plan.priceKoboMonthly)}</p>
                     <p className="mt-2 text-xs leading-5 text-brand-muted">{plan.description ?? 'Monthly privacy and telecom access plan.'}</p>
                   </button>
                 );
@@ -232,7 +233,8 @@ export default function BillingPage() {
                     </div>
                   </div>
                   <div className="text-sm text-white/62 md:text-right">
-                    <p className="font-mono text-brand-green">{formatMoney(item.amountKobo)}</p>
+                    <p className="font-mono text-brand-green">{formatLegacyAmountPrimary(item)}</p>
+                    <p className="mt-1 text-[11px] text-white/36">{formatLegacyAmountSecondary(item)}</p>
                     <p className="text-[11px] uppercase">{item.gateway ?? 'ledger'} - {item.status ?? 'recorded'}</p>
                   </div>
                   <div className="text-xs text-white/40 md:text-right">
@@ -265,9 +267,4 @@ export default function BillingPage() {
       </section>
     </div>
   );
-}
-
-function formatMoney(value?: number) {
-  if (!value) return '$0';
-  return `NGN ${(Number(value) / 100).toLocaleString()}`;
 }

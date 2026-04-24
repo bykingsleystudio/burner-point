@@ -21,12 +21,16 @@ const NUMBER_TYPES = [
   { value: 'rental', label: 'Renewable rental', desc: 'Monthly continuity and recovery' },
 ];
 
+type AvailableNumber = {
+  number: string;
+};
+
 export default function NumbersPage() {
   const { numbers, setNumbers, addNumber, removeNumber, loading, setLoading } = useNumbersStore();
   const [showModal, setShowModal] = useState(false);
   const [country, setCountry] = useState('US');
   const [type, setType] = useState('verification');
-  const [available, setAvailable] = useState<any[]>([]);
+  const [available, setAvailable] = useState<AvailableNumber[]>([]);
   const [searching, setSearching] = useState(false);
   const [provisioning, setProvisioning] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -57,8 +61,9 @@ export default function NumbersPage() {
       addNumber(r.data);
       setShowModal(false);
       toast.success(`Number ${phoneNumber} provisioned`);
-    } catch (e: any) {
-      toast.error(e.response?.data?.message || 'Provisioning failed');
+    } catch (error: unknown) {
+      const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(message || 'Provisioning failed');
     } finally {
       setProvisioning(null);
     }
@@ -77,7 +82,7 @@ export default function NumbersPage() {
 
   const filteredNumbers = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    return numbers.filter((number: any) => {
+    return numbers.filter((number) => {
       const matchesStatus = statusFilter === 'all' || number.status === statusFilter;
       const matchesType = typeFilter === 'all' || number.type === typeFilter;
       const matchesQuery = !normalized || [number.number, number.countryCode, number.type, number.status]
@@ -87,8 +92,8 @@ export default function NumbersPage() {
     });
   }, [numbers, query, statusFilter, typeFilter]);
 
-  const visibleTypes = useMemo(() => Array.from(new Set(numbers.map((number: any) => number.type).filter(Boolean))), [numbers]);
-  const visibleStatuses = useMemo(() => Array.from(new Set(numbers.map((number: any) => number.status).filter(Boolean))), [numbers]);
+  const visibleTypes = useMemo(() => Array.from(new Set(numbers.map((number) => number.type).filter(Boolean))), [numbers]);
+  const visibleStatuses = useMemo(() => Array.from(new Set(numbers.map((number) => number.status).filter(Boolean))), [numbers]);
 
   return (
     <div className="space-y-6">

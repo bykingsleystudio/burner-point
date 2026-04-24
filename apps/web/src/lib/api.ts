@@ -89,10 +89,14 @@ export interface AuthExchangeResponse {
     lastName: string;
     role: string;
     walletBalanceKobo: number;
+    walletBalanceUsdCents?: number;
+    walletBalanceUsd?: number;
+    walletDisplayCurrency?: 'USD';
+    walletFxRateNgnPerUsd?: number;
     phoneNumber?: string;
     phoneVerified?: boolean;
     referralCode?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   needsOnboarding: boolean;
   needsPhoneVerification: boolean;

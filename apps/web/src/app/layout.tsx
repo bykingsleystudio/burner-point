@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { ClerkProvider } from '@clerk/nextjs';
-import { Inter, DM_Mono } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
 import { BRAND } from '@/lib/brand';
 import {
@@ -13,19 +12,6 @@ import {
 } from '@/lib/seo';
 import { PostHogProvider } from '@/components/posthog-provider';
 import './globals.css';
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-sans',
-  display: 'swap',
-});
-
-const dmMono = DM_Mono({
-  subsets: ['latin'],
-  weight: ['300', '400', '500'],
-  variable: '--font-mono',
-  display: 'swap',
-});
 
 const verification: NonNullable<Metadata['verification']> = {
   ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
@@ -74,7 +60,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${dmMono.variable}`}>
+    <html lang="en">
       <body className="min-h-screen bg-brand-black font-sans antialiased text-white">
         <ClerkProvider>
           <PostHogProvider>

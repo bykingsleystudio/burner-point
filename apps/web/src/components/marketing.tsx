@@ -129,9 +129,6 @@ export function SiteHeader() {
             </Link>
             <UserButton />
           </Show>
-          <Link href="/api/docs" className="rounded-bp border border-brand-green/20 bg-brand-green/8 px-4 py-3 text-xs font-semibold uppercase text-brand-green transition hover:bg-brand-green/15">
-            View API Docs
-          </Link>
         </div>
         <details ref={mobileNavRef} className="group relative z-[130] lg:hidden [&_summary::-webkit-details-marker]:hidden">
           <summary aria-label="Open navigation menu" className="relative z-[135] flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center rounded-bp-md border border-white/16 bg-black text-white shadow-[0_12px_34px_rgba(0,0,0,0.45)] transition duration-[220ms] ease-out hover:border-brand-green/45 hover:text-brand-green active:scale-[0.98]">
@@ -189,7 +186,6 @@ export function SiteHeader() {
                   <UserButton />
                 </div>
               </Show>
-              <Link href="/api/docs" onClick={closeMobileNav} className="rounded-bp border border-brand-green/40 bg-black px-4 py-3 text-center text-xs font-semibold uppercase text-brand-green transition duration-[220ms] ease-out active:scale-[0.98]">View API Docs</Link>
             </div>
           </div>
         </details>

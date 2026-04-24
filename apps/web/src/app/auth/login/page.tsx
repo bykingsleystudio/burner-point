@@ -38,34 +38,28 @@ export default function LoginPage() {
   const authReady = Boolean(signIn);
   const isSubmitting = loading || fetchStatus === 'fetching' || !authReady;
   const canSubmit = identifier.trim().length >= 3 && password.length >= 8;
-  const currentDescription = useMemo(() => {
+  const description = useMemo(() => {
     if (authMode === 'reset-request') {
-      return 'We will send a reset code to the email address or phone number on your Burner Point account.';
+      return 'Use your Burner Point email or phone to request a secure password reset code.';
     }
     if (authMode === 'reset-code') {
-      return 'Enter the reset code you received so you can set a new password and get back into your workspace.';
+      return 'Enter the reset code you received to confirm the account recovery request.';
     }
     if (authMode === 'reset-password') {
-      return 'Set a new password for your Burner Point account.';
+      return 'Set a new password, then return directly to the Burner Point dashboard.';
     }
     if (secondFactorStrategy) {
-      return 'A second verification step is required before you can enter your Burner Point workspace.';
+      return 'Two-factor authentication is enabled on this Burner Point account. Enter the security code to continue.';
     }
-    return 'Access your numbers, private conversations, verification activity, and billing in one secure workspace.';
+    return 'Stay Anonymous. Stay Connected. Private By Design.';
   }, [authMode, secondFactorStrategy]);
 
   const finishSignIn = async () => {
     if (!signIn) throw new Error('Authentication is still loading.');
 
     const { error } = await signIn.finalize({
-      navigate: ({ session, decorateUrl }) => {
-        const destination = session?.currentTask ? '/onboarding' : '/dashboard';
-        const url = decorateUrl(destination);
-        if (url.startsWith('http')) {
-          window.location.href = url;
-          return;
-        }
-        router.push(url);
+      navigate: ({ decorateUrl }) => {
+        router.push(decorateUrl('/dashboard'));
       },
     });
 
@@ -116,7 +110,7 @@ export default function LoginPage() {
       return;
     }
     if (!canSubmit) {
-      toast.error('Enter your email address or phone number and a valid password.');
+      toast.error('Enter your account email or phone and a valid password.');
       return;
     }
 
@@ -230,15 +224,6 @@ export default function LoginPage() {
     }
   };
 
-  const returnToSignIn = () => {
-    setAuthMode('sign-in');
-    setSecondFactorStrategy(null);
-    setSecondFactorCode('');
-    setResetIdentifier('');
-    setResetCode('');
-    setResetPassword('');
-  };
-
   const verifySecondFactor = async () => {
     if (!signIn || !secondFactorStrategy || !secondFactorCode.trim()) {
       toast.error('Enter your verification code to continue.');
@@ -285,12 +270,21 @@ export default function LoginPage() {
     }
   };
 
+  const returnToSignIn = () => {
+    setAuthMode('sign-in');
+    setSecondFactorStrategy(null);
+    setSecondFactorCode('');
+    setResetIdentifier('');
+    setResetCode('');
+    setResetPassword('');
+  };
+
   return (
     <AuthShell
       title="Log in or sign up"
-      description={currentDescription}
-      asideTitle="Secure access without the onboarding dead ends."
-      asideDescription="The new Burner Point auth flow is designed to move users from OAuth or email sign-in into profile completion and phone verification without bouncing them back into duplicate account setup."
+      description={description}
+      asideTitle="Private access that lands where it should."
+      asideDescription="OAuth, password reset, and 2FA all return to the Burner Point dashboard instead of bouncing through extra onboarding steps."
     >
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -302,9 +296,7 @@ export default function LoginPage() {
               Create account
             </Link>
           </div>
-          <Link href="/terms" className="text-xs font-medium text-white/40 transition hover:text-brand-green">
-            Terms of Use
-          </Link>
+          <div className="text-xs text-white/38">By continuing you accept the Terms of Service and Privacy Policy.</div>
         </div>
 
         {!secondFactorStrategy && authMode === 'sign-in' ? (
@@ -321,7 +313,7 @@ export default function LoginPage() {
               ))}
               <AuthProviderButton
                 provider="Phone"
-                label="Continue with phone"
+                label="Continue with Phone"
                 onClick={() => identifierRef.current?.focus()}
                 disabled={isSubmitting}
               />
@@ -329,7 +321,7 @@ export default function LoginPage() {
 
             <div className="flex items-center gap-3 pt-1">
               <span className="h-px flex-1 bg-white/8" />
-              <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-white/32">or</span>
+              <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-white/32">OR</span>
               <span className="h-px flex-1 bg-white/8" />
             </div>
           </>
@@ -344,10 +336,8 @@ export default function LoginPage() {
                   value={resetIdentifier}
                   onChange={(event) => setResetIdentifier(event.target.value)}
                   type="text"
-                  inputMode="text"
                   autoComplete="username"
-                  enterKeyHint="next"
-                  placeholder="you@example.com or +234 801 234 5678"
+                  placeholder="you@example.com or +14155550182"
                   className="auth-input mt-2"
                 />
               </label>
@@ -365,7 +355,6 @@ export default function LoginPage() {
                   type="text"
                   inputMode="numeric"
                   autoComplete="one-time-code"
-                  enterKeyHint="done"
                   placeholder="Enter reset code"
                   className="auth-input mt-2"
                 />
@@ -383,7 +372,6 @@ export default function LoginPage() {
                   onChange={(event) => setResetPassword(event.target.value)}
                   type="password"
                   autoComplete="new-password"
-                  enterKeyHint="done"
                   placeholder="Enter a new password"
                   className="auth-input mt-2"
                 />
@@ -402,7 +390,6 @@ export default function LoginPage() {
                   type="text"
                   inputMode="numeric"
                   autoComplete="one-time-code"
-                  enterKeyHint="done"
                   placeholder="Enter verification code"
                   className="auth-input mt-2"
                 />
@@ -420,10 +407,8 @@ export default function LoginPage() {
                   value={identifier}
                   onChange={(event) => setIdentifier(event.target.value)}
                   type="text"
-                  inputMode="text"
                   autoComplete="username"
-                  enterKeyHint="next"
-                  placeholder="you@example.com or +234 801 234 5678"
+                  placeholder="you@example.com or +14155550182"
                   className="auth-input mt-2"
                 />
               </label>
@@ -436,7 +421,6 @@ export default function LoginPage() {
                     onChange={(event) => setPassword(event.target.value)}
                     type={showPassword ? 'text' : 'password'}
                     autoComplete="current-password"
-                    enterKeyHint="done"
                     placeholder="Enter your password"
                     className="auth-input pr-12"
                   />
@@ -452,7 +436,7 @@ export default function LoginPage() {
                 </button>
                 <div className="inline-flex items-center gap-2 text-white/34">
                   <ShieldCheck className="h-4 w-4 text-brand-green" />
-                  Session persistence across trusted devices
+                  Clerk-backed 2FA available in profile settings
                 </div>
               </div>
 
@@ -481,7 +465,7 @@ export default function LoginPage() {
         <p className="text-xs leading-6 text-white/38">
           By continuing you agree to the Burner Point{' '}
           <Link href="/terms" className="text-brand-green transition hover:text-[#1cffac]">
-            Terms of Use
+            Terms of Service
           </Link>{' '}
           and{' '}
           <Link href="/privacy" className="text-brand-green transition hover:text-[#1cffac]">

@@ -34,19 +34,25 @@ export type MarketingPageContent = {
 };
 
 export const primaryNav: MarketingLink[] = [
-  { label: 'Overview', href: '/overview' },
-  { label: 'Verifications', href: '/verifications' },
-  { label: 'Rentals', href: '/rentals' },
-  { label: 'API', href: '/api' },
+  { label: 'Dashboard', href: '/dashboard' },
   { label: 'Pricing', href: '/pricing' },
-  { label: 'Blog', href: '/blog' },
-  { label: 'FAQ', href: '/faq' },
   { label: 'About', href: '/about' },
-  { label: 'Contact', href: '/contact' },
+  { label: 'Blog', href: '/blog' },
+  { label: 'Help', href: '/help' },
 ];
 
 export const footerGroups = [
-  { title: 'Product', href: '/overview', links: primaryNav.slice(0, 5) },
+  {
+    title: 'Product',
+    href: '/pricing',
+    links: [
+      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Pricing', href: '/pricing' },
+      { label: 'About', href: '/about' },
+      { label: 'Blog', href: '/blog' },
+      { label: 'Help', href: '/help' },
+    ],
+  },
   {
     title: 'Company',
     href: '/about',
@@ -70,7 +76,7 @@ export const footerGroups = [
     title: 'Legal',
     href: '/terms',
     links: [
-      { label: 'Terms', href: '/terms' },
+      { label: 'Terms of Service', href: '/terms' },
       { label: 'Privacy Policy', href: '/privacy' },
     ],
   },
@@ -189,15 +195,15 @@ export const marketingPages: Record<string, MarketingPageContent> = {
   pricing: {
     slug: 'pricing',
     eyebrow: 'Pricing',
-    title: 'Great products. Simple pricing.',
-    description: 'Start with a one-time verification, rent a number for short-term access, or choose a monthly plan when continuity matters.',
+    title: 'Wallet-based usage plus recurring subscriptions.',
+    description: 'Fund a USD-priced wallet for BP Verify Hub, BP Number Rentals, BP eSIM Store, and BP Proxy Store, then use subscriptions for BP Messenger Pro, BP Secure Tunnel, and advanced recurring plans.',
     primaryCta: { label: 'Get Your Number', href: '/auth/signup' },
     secondaryCta: { label: 'Contact Support', href: '/support' },
-    highlights: ['$0.99+ per verification', '$5.99+ per rental', '$15.99+ monthly plans'],
+    highlights: ['Wallet top-up for usage-based products', 'Subscriptions for recurring access', 'Paystack, Paddle, and NOWPayments'],
     cards: [
-      { icon: 'shield', title: 'Verifications', meta: '$0.99+ / verification', text: 'Best for one-time OTP, SMS, or voice confirmation.', href: '/verifications', cta: 'Get Verification' },
-      { icon: 'calendar', title: 'Non-Renewable Rentals', meta: '$5.99+ / rental', text: 'Best for short-term access between one and fourteen days.', href: '/rentals', cta: 'Rent A Number' },
-      { icon: 'credit', title: 'Monthly Plans', meta: '$15.99+ / month', text: 'Best for recurring communication, account recovery, and long-running projects.', href: '/auth/signup', cta: 'Start Monthly Plan' },
+      { icon: 'credit', title: 'Wallet Top-Up', meta: 'Usage-based', text: 'Use wallet funds for BP Verify Hub, BP Number Rentals, BP eSIM Store, and BP Proxy Store.', href: '/dashboard/credits', cta: 'Fund Wallet' },
+      { icon: 'calendar', title: 'Renewable Rentals', meta: 'Recurring', text: 'Keep the same number active when continuity, recovery, and monthly access matter.', href: '/rentals', cta: 'Rent A Number' },
+      { icon: 'shield', title: 'Subscriptions', meta: 'Recurring', text: 'Use subscriptions for BP Messenger Pro, BP Secure Tunnel, and advanced recurring platform access.', href: '/dashboard/billing', cta: 'Manage Billing' },
     ],
   },
   blog: {

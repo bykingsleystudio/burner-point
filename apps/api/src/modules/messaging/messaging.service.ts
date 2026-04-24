@@ -167,8 +167,8 @@ export class MessagingService {
       options.from ||
       this.configService.get<string>('SMS_DEFAULT_FROM') ||
       this.configService.get<string>('TWILIO_DEFAULT_FROM') ||
-      this.configService.get<string>('VONAGE_DEFAULT_FROM') ||
-      this.configService.get<string>('INFOBIP_DEFAULT_FROM');
+      this.configService.get<string>('TELNYX_DEFAULT_FROM') ||
+      this.configService.get<string>('TREMIL_DEFAULT_FROM');
 
     if (!from) {
       throw new Error('SMS sender not configured. Set SMS_DEFAULT_FROM or a provider-specific sender.');

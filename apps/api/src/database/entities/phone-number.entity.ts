@@ -9,9 +9,6 @@ export enum NumberStatus { ACTIVE = 'active', EXPIRED = 'expired', RELEASED = 'r
 export enum NumberType { BURNER = 'burner', RENTAL = 'rental', VERIFICATION = 'verification', ENTERPRISE = 'enterprise' }
 export enum NumberProvider {
   TWILIO = 'twilio',
-  BANDWIDTH = 'bandwidth',
-  VONAGE = 'vonage',
-  INFOBIP = 'infobip',
   TELNYX = 'telnyx',
   PLIVO = 'plivo',
   TERMII = 'termii',

@@ -1,168 +1,197 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 import {
   ArrowRight,
+  BellRing,
   CreditCard,
-  Globe2,
-  MessageSquare,
+  MessageSquareText,
   Phone,
   RadioTower,
-  Receipt,
   ShieldCheck,
-  Smartphone,
   Sparkles,
-  UserCircle2,
-  Wifi,
 } from 'lucide-react';
-import api from '@/lib/api';
+import { billingApi, numbersApi } from '@/lib/api';
+import { formatLegacyAmountPrimary, formatLegacyAmountSecondary, formatWalletPrimary, formatWalletSecondary } from '@/lib/money';
 import { useAuthStore } from '@/store';
 
-interface Stats {
-  totalNumbers: number;
-  totalMessages: number;
-  walletBalanceKobo: number;
-  activeNumbers: number;
-}
+type NumberRecord = {
+  id: string;
+  number: string;
+  status?: string;
+  type?: string;
+  smsReceived?: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
 
-const quickActions = [
-  { href: '/dashboard/numbers', label: 'Get a number', text: 'Browse inventory, choose a region, and activate private access.', icon: Phone },
-  { href: '/dashboard/verification', label: 'Start verification', text: 'Receive SMS or voice codes for supported services.', icon: ShieldCheck },
-  { href: '/dashboard/inbox', label: 'Open inbox', text: 'Read conversations, media, and recent communication activity.', icon: MessageSquare },
-  { href: '/dashboard/credits', label: 'Add credits', text: 'Top up your wallet for rentals, verification, and renewals.', icon: CreditCard },
-] as const;
-
-const moduleCards = [
-  { href: '/dashboard/rentals', title: 'Rentals', text: 'Manage active rentals, renewals, due dates, and purchase history.', icon: RadioTower },
-  { href: '/dashboard/billing', title: 'Billing', text: 'Track transactions, invoices, payment methods, and plan history.', icon: Receipt },
-  { href: '/dashboard/esim', title: 'eSIM', text: 'Buy plans, monitor usage, and keep travel connectivity organized.', icon: Smartphone },
-  { href: '/dashboard/proxies', title: 'Proxies', text: 'View available routes, active sessions, and account-ready purchase options.', icon: Globe2 },
-  { href: '/dashboard/vpn', title: 'VPN', text: 'Select a region, monitor status, and keep secure routing inside Burner Point.', icon: Wifi },
-  { href: '/dashboard/settings', title: 'Profile & settings', text: 'Update account details, notifications, support preferences, and security.', icon: UserCircle2 },
-] as const;
+type LedgerItem = {
+  id: string;
+  description?: string;
+  type?: string;
+  status?: string;
+  amountKobo?: number;
+  createdAt?: string;
+};
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const { user: clerkUser } = useUser();
-  const [stats, setStats] = useState<Stats>({
-    totalNumbers: 0,
-    totalMessages: 0,
-    walletBalanceKobo: 0,
-    activeNumbers: 0,
-  });
+  const [numbers, setNumbers] = useState<NumberRecord[]>([]);
+  const [activity, setActivity] = useState<LedgerItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([api.get('/numbers'), api.get('/users/me/wallet')])
-      .then(([numbersRes, walletRes]) => {
-        const numbers = Array.isArray(numbersRes.data) ? numbersRes.data : [];
-        setStats({
-          totalNumbers: numbers.length,
-          activeNumbers: numbers.filter((item: any) => item.status === 'active').length,
-          totalMessages: numbers.reduce((sum: number, item: any) => sum + (item.smsReceived || 0), 0),
-          walletBalanceKobo: walletRes.data.balanceKobo || 0,
-        });
+    let mounted = true;
+
+    Promise.allSettled([numbersApi.list(), billingApi.ledger(1, 6)])
+      .then((results) => {
+        if (!mounted) return;
+
+        const nextNumbers = results[0].status === 'fulfilled' && Array.isArray(results[0].value.data)
+          ? results[0].value.data
+          : [];
+        const nextLedger = results[1].status === 'fulfilled'
+          ? results[1].value.data?.transactions ?? []
+          : [];
+
+        setNumbers(nextNumbers);
+        setActivity(nextLedger);
       })
-      .catch(() => undefined);
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'morning';
-    if (hour < 17) return 'afternoon';
-    return 'evening';
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
   }, []);
 
+  const activeNumbers = numbers.filter((item) => item.status === 'active').length;
+  const messagesToday = numbers.reduce((sum, item) => sum + Number(item.smsReceived ?? 0), 0);
+  const activeRentals = numbers.filter((item) => item.type === 'rental' || item.type === 'burner').length;
   const headlineName = user?.firstName || clerkUser?.firstName || 'there';
-  const statCards = [
-    { label: 'Active numbers', value: stats.activeNumbers, helper: 'Ready for messaging, calls, or verification.', icon: Phone },
-    { label: 'Messages received', value: stats.totalMessages.toLocaleString(), helper: 'Conversation and OTP history linked to your numbers.', icon: MessageSquare },
-    { label: 'Wallet balance', value: `NGN ${(stats.walletBalanceKobo / 100).toLocaleString()}`, helper: 'Credits available for private services and renewals.', icon: CreditCard },
-    { label: 'Numbers in account', value: stats.totalNumbers, helper: 'Every active or historical number attached to this profile.', icon: ShieldCheck },
-  ] as const;
 
   return (
-    <div className="space-y-8">
-      <section className="rounded-[2rem] border border-white/8 bg-[linear-gradient(135deg,rgba(1,50,32,0.92),rgba(0,0,0,0.96)_58%)] p-6 shadow-[0_30px_100px_rgba(0,0,0,0.32)] md:p-8">
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(22rem,0.85fr)] xl:items-end">
+    <div className="space-y-6">
+      <section className="overflow-hidden rounded-[2rem] border border-white/8 bg-[linear-gradient(135deg,rgba(1,50,32,0.94),rgba(0,0,0,0.98)_62%)] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.38)] md:p-8">
+        <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr] xl:items-end">
           <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-brand-green">Overview</p>
-            <h1 className="mt-4 max-w-[14ch] text-[2.35rem] font-semibold leading-[0.94] text-white sm:text-[2.8rem] md:text-[3.5rem]">
-              Good {greeting}, <span className="text-brand-green">{headlineName}</span>.
-            </h1>
-            <p className="mt-4 max-w-3xl text-base leading-8 text-white/60">
-              Everything you need for private numbers, verifications, conversations, billing, and secure connectivity now lives in one calmer workspace.
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Burner Point overview</p>
+            <h2 className="mt-4 max-w-[14ch] text-[2.45rem] font-semibold leading-[0.94] text-white sm:text-[3rem] md:text-[3.7rem]">
+              {greeting}, <span className="text-brand-green">{headlineName}</span>.
+            </h2>
+            <p className="mt-4 max-w-3xl text-base leading-8 text-white/58">
+              Stay Anonymous. Stay Connected. Private By Design. This workspace keeps your messaging, verification, rentals, wallet activity, and privacy controls in one production surface.
             </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/dashboard/numbers" className="bp-primary-action inline-flex min-h-12 items-center justify-center px-6 py-4 text-sm font-semibold uppercase">
-                Get a number
-              </Link>
-              <Link href="/dashboard/verification" className="bp-secondary-action inline-flex min-h-12 items-center justify-center px-6 py-4 text-sm font-semibold uppercase">
-                Verify a service
-              </Link>
-            </div>
           </div>
 
           <div className="rounded-[1.6rem] border border-white/10 bg-black/28 p-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-green/12 text-brand-green">
-                <Sparkles className="h-5 w-5" />
-              </div>
+            <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold text-white">Private by design</p>
-                <p className="text-sm leading-6 text-white/54">Your dashboard focuses on user actions, clear next steps, and protected account outcomes.</p>
+                <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Credits balance</p>
+                <p className="mt-3 font-mono text-3xl text-white">{formatWalletPrimary(user)}</p>
+                <p className="mt-2 text-sm text-white/42">{formatWalletSecondary(user)}</p>
               </div>
+              <span className="flex h-12 w-12 items-center justify-center rounded-[1rem] border border-brand-green/24 bg-brand-green/10">
+                <CreditCard className="h-5 w-5 text-brand-green" />
+              </span>
             </div>
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              {[
-                ['Verification', 'Global phone-friendly onboarding and secure OTP delivery.'],
-                ['Conversations', 'Messaging, calls, contacts, and voicemail in one threaded surface.'],
-                ['Billing', 'Wallet, subscriptions, renewals, and receipts kept easy to scan.'],
-              ].map(([title, text]) => (
-                <div key={title} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-                  <p className="text-sm font-semibold text-white">{title}</p>
-                  <p className="mt-2 text-sm leading-6 text-white/52">{text}</p>
-                </div>
-              ))}
-            </div>
+            <p className="mt-4 text-sm leading-6 text-white/52">
+              Wallet-backed services cover BP Verify Hub, BP Number Rentals, BP eSIM Store, and BP Proxy Store. Recurring subscriptions remain inside billing and subscriptions.
+            </p>
           </div>
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
-        {statCards.map((card) => {
-          const Icon = card.icon;
+      <section className="grid gap-4 xl:grid-cols-3">
+        {[
+          {
+            label: 'Active Numbers',
+            value: activeNumbers,
+            text: 'Lines currently active across verification, messaging, or rentals.',
+            icon: Phone,
+          },
+          {
+            label: 'Messages Today',
+            value: messagesToday,
+            text: 'Inbound message volume currently attached to your live number inventory.',
+            icon: MessageSquareText,
+          },
+          {
+            label: 'Active Rentals',
+            value: activeRentals,
+            text: 'Numbers currently assigned to short-term or renewable rental workflows.',
+            icon: RadioTower,
+          },
+        ].map((stat) => {
+          const Icon = stat.icon;
           return (
-            <article key={card.label} className="rounded-[1.5rem] border border-white/8 bg-brand-card p-5">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-green/12 text-brand-green">
-                <Icon className="h-5 w-5" />
-              </div>
-              <p className="mt-5 text-3xl font-semibold text-white">{card.value}</p>
-              <p className="mt-2 text-sm font-medium text-white/74">{card.label}</p>
-              <p className="mt-2 text-sm leading-6 text-white/46">{card.helper}</p>
+            <article key={stat.label} className="rounded-[1.5rem] border border-white/8 bg-brand-card p-5">
+              <span className="flex h-11 w-11 items-center justify-center rounded-[1rem] border border-brand-green/20 bg-brand-green/10">
+                <Icon className="h-5 w-5 text-brand-green" />
+              </span>
+              <p className="mt-5 text-4xl font-semibold text-white">{loading ? '...' : stat.value}</p>
+              <p className="mt-2 text-sm font-semibold uppercase tracking-[0.12em] text-white/78">{stat.label}</p>
+              <p className="mt-3 text-sm leading-6 text-white/50">{stat.text}</p>
             </article>
           );
         })}
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.12fr)_minmax(20rem,0.88fr)]">
+      <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
         <div className="rounded-[1.6rem] border border-white/8 bg-brand-card p-5 md:p-6">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Quick actions</p>
-              <h2 className="mt-3 text-2xl font-semibold text-white">Move faster through the tasks you repeat most.</h2>
+              <h3 className="mt-3 text-2xl font-semibold text-white">Move into the next task without hunting for it.</h3>
             </div>
+            <span className="hidden h-12 w-12 items-center justify-center rounded-[1rem] border border-brand-green/20 bg-brand-green/10 lg:flex">
+              <Sparkles className="h-5 w-5 text-brand-green" />
+            </span>
           </div>
-          <div className="mt-6 grid gap-3 md:grid-cols-2">
-            {quickActions.map((action) => {
+
+          <div className="mt-6 grid gap-3 md:grid-cols-3">
+            {[
+              {
+                href: '/dashboard/rentals',
+                label: 'Buy Number',
+                text: 'Browse inventory, choose duration, and assign a line to your account.',
+                icon: Phone,
+              },
+              {
+                href: '/dashboard/inbox',
+                label: 'Start Chat',
+                text: 'Open BP Messenger and continue an existing conversation or create a new one.',
+                icon: MessageSquareText,
+              },
+              {
+                href: '/dashboard/verification',
+                label: 'Run Verification',
+                text: 'Pick a tier, select a service, and watch live OTP updates in the hub.',
+                icon: ShieldCheck,
+              },
+            ].map((action) => {
               const Icon = action.icon;
               return (
-                <Link key={action.href} href={action.href} className="group rounded-[1.35rem] border border-white/8 bg-black/24 p-4 transition hover:-translate-y-0.5 hover:border-brand-green/28 hover:bg-brand-green/[0.05]">
+                <Link
+                  key={action.href}
+                  href={action.href}
+                  className="group rounded-[1.35rem] border border-white/8 bg-black/24 p-4 transition hover:-translate-y-0.5 hover:border-brand-green/28 hover:bg-brand-green/[0.05]"
+                >
                   <div className="flex items-center justify-between gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-green/12 text-brand-green">
-                      <Icon className="h-5 w-5" />
-                    </div>
+                    <span className="flex h-11 w-11 items-center justify-center rounded-[1rem] border border-brand-green/18 bg-brand-green/10">
+                      <Icon className="h-5 w-5 text-brand-green" />
+                    </span>
                     <ArrowRight className="h-4 w-4 text-white/28 transition group-hover:translate-x-1 group-hover:text-brand-green" />
                   </div>
                   <p className="mt-4 text-base font-semibold text-white">{action.label}</p>
@@ -174,57 +203,32 @@ export default function DashboardPage() {
         </div>
 
         <aside className="rounded-[1.6rem] border border-white/8 bg-brand-card p-5 md:p-6">
-          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Today at a glance</p>
-          <div className="mt-6 space-y-4">
-            {[
-              'Use verification when you need a one-time code for a new service.',
-              'Open inbox to review conversation history, media, or missed activity.',
-              'Visit billing before purchasing rentals, renewals, or new account credits.',
-            ].map((item, index) => (
-              <div key={item} className="flex gap-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-brand-green/24 bg-brand-green/10 text-xs font-semibold text-brand-green">
-                  0{index + 1}
+          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Recent activity</p>
+          <div className="mt-5 space-y-3">
+            {activity.length ? (
+              activity.map((item) => (
+                <div key={item.id} className="rounded-[1.25rem] border border-white/8 bg-black/24 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-white">{item.description || item.type || 'Wallet event'}</p>
+                      <p className="mt-1 text-xs uppercase tracking-[0.12em] text-white/42">{item.status || 'Recorded'}</p>
+                    </div>
+                    <BellRing className="h-4 w-4 text-brand-green" />
+                  </div>
+                  <p className="mt-3 font-mono text-sm text-brand-green">{formatLegacyAmountPrimary(item)}</p>
+                  <p className="mt-1 text-xs text-white/40">{formatLegacyAmountSecondary(item)}</p>
+                  <p className="mt-2 text-xs text-white/42">
+                    {item.createdAt ? new Date(item.createdAt).toLocaleString() : 'Pending timestamp'}
+                  </p>
                 </div>
-                <p className="pt-1 text-sm leading-6 text-white/58">{item}</p>
+              ))
+            ) : (
+              <div className="rounded-[1.25rem] border border-white/8 bg-black/24 p-5 text-sm leading-6 text-white/52">
+                Recent verification events, rentals, and wallet activity will appear here once the account starts transacting.
               </div>
-            ))}
-          </div>
-          <div className="mt-6 rounded-[1.35rem] border border-white/8 bg-black/24 p-4">
-            <p className="text-sm font-semibold text-white">Brand message</p>
-            <p className="mt-2 text-base leading-7 text-white/64">
-              Stay Anonymous. Stay Connected. <span className="text-brand-green">Private by Design.</span>
-            </p>
+            )}
           </div>
         </aside>
-      </section>
-
-      <section className="rounded-[1.6rem] border border-white/8 bg-brand-card p-5 md:p-6">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Modules</p>
-            <h2 className="mt-3 text-2xl font-semibold text-white">Everything in your Burner Point account</h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-white/52">
-              The redesigned dashboard keeps the information user-facing and task-oriented, with each area scoped to the action a customer is actually trying to complete.
-            </p>
-          </div>
-        </div>
-        <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {moduleCards.map((module) => {
-            const Icon = module.icon;
-            return (
-              <Link key={module.href} href={module.href} className="group rounded-[1.35rem] border border-white/8 bg-black/24 p-4 transition hover:-translate-y-0.5 hover:border-brand-green/28 hover:bg-brand-green/[0.05]">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-green/12 text-brand-green">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-white/28 transition group-hover:translate-x-1 group-hover:text-brand-green" />
-                </div>
-                <p className="mt-4 text-base font-semibold text-white">{module.title}</p>
-                <p className="mt-2 text-sm leading-6 text-white/50">{module.text}</p>
-              </Link>
-            );
-          })}
-        </div>
       </section>
     </div>
   );

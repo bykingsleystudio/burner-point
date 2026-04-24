@@ -9,6 +9,10 @@ interface User {
   lastName: string;
   role: string;
   walletBalanceKobo: number;
+  walletBalanceUsdCents?: number;
+  walletBalanceUsd?: number;
+  walletDisplayCurrency?: 'USD';
+  walletFxRateNgnPerUsd?: number;
   referralCode?: string;
 }
 

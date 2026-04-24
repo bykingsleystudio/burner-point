@@ -44,45 +44,53 @@ export interface VpnSessionInput {
 }
 
 type ProviderOperation =
-  | 'oneglobal.plans'
-  | 'oneglobal.order'
-  | 'brightdata.proxyOrder'
+  | 'airalo.plans'
+  | 'airalo.order'
+  | 'oxylabs.proxyOrder'
+  | 'smartproxy.proxyOrder'
   | 'wireguard.session';
 
 const PROVIDER_OPERATIONS: Record<ProviderOperation, {
   integrationId: BackendIntegrationId;
   baseUrlEnv: string;
   pathEnv: string;
-  apiKeyEnv: string;
-  authHeader: string;
+  authHeaders: string[];
+  authKind: 'bearer' | 'basic' | 'raw';
 }> = {
-  'oneglobal.plans': {
-    integrationId: 'oneglobal',
-    baseUrlEnv: 'ONEGLOBAL_BASE_URL',
-    pathEnv: 'ONEGLOBAL_PLANS_PATH',
-    apiKeyEnv: 'ONEGLOBAL_API_KEY',
-    authHeader: 'Authorization',
+  'airalo.plans': {
+    integrationId: 'airalo',
+    baseUrlEnv: 'AIRALO_BASE_URL',
+    pathEnv: 'AIRALO_PLANS_PATH',
+    authHeaders: ['AIRALO_CLIENT_ID', 'AIRALO_CLIENT_SECRET'],
+    authKind: 'basic',
   },
-  'oneglobal.order': {
-    integrationId: 'oneglobal',
-    baseUrlEnv: 'ONEGLOBAL_BASE_URL',
-    pathEnv: 'ONEGLOBAL_ORDER_PATH',
-    apiKeyEnv: 'ONEGLOBAL_API_KEY',
-    authHeader: 'Authorization',
+  'airalo.order': {
+    integrationId: 'airalo',
+    baseUrlEnv: 'AIRALO_BASE_URL',
+    pathEnv: 'AIRALO_ORDER_PATH',
+    authHeaders: ['AIRALO_CLIENT_ID', 'AIRALO_CLIENT_SECRET'],
+    authKind: 'basic',
   },
-  'brightdata.proxyOrder': {
-    integrationId: 'brightdata',
-    baseUrlEnv: 'BRIGHTDATA_BASE_URL',
-    pathEnv: 'BRIGHTDATA_PROXY_ORDER_PATH',
-    apiKeyEnv: 'BRIGHTDATA_API_KEY',
-    authHeader: 'Authorization',
+  'oxylabs.proxyOrder': {
+    integrationId: 'oxylabs',
+    baseUrlEnv: 'OXYLABS_BASE_URL',
+    pathEnv: 'OXYLABS_PROXY_ORDER_PATH',
+    authHeaders: ['OXYLABS_USERNAME', 'OXYLABS_PASSWORD'],
+    authKind: 'basic',
+  },
+  'smartproxy.proxyOrder': {
+    integrationId: 'smartproxy',
+    baseUrlEnv: 'SMARTPROXY_BASE_URL',
+    pathEnv: 'SMARTPROXY_PROXY_ORDER_PATH',
+    authHeaders: ['SMARTPROXY_API_KEY'],
+    authKind: 'bearer',
   },
   'wireguard.session': {
     integrationId: 'wireguard',
     baseUrlEnv: 'WIREGUARD_CONTROL_BASE_URL',
     pathEnv: 'WIREGUARD_SESSION_PATH',
-    apiKeyEnv: 'WIREGUARD_CONTROL_API_KEY',
-    authHeader: 'Authorization',
+    authHeaders: ['WIREGUARD_CONTROL_API_KEY'],
+    authKind: 'bearer',
   },
 };
 
@@ -194,15 +202,42 @@ export class IntegrationsService {
   }
 
   requestEsimPlans(userId: string, input: EsimPlansInput) {
-    return this.callConfiguredProvider('oneglobal.plans', userId, input);
+    return this.callConfiguredProvider('airalo.plans', userId, input);
   }
 
   createEsimOrder(userId: string, input: EsimOrderInput) {
-    return this.callConfiguredProvider('oneglobal.order', userId, input);
+    return this.callConfiguredProvider('airalo.order', userId, input);
   }
 
-  createProxyOrder(userId: string, input: ProxyOrderInput) {
-    return this.callConfiguredProvider('brightdata.proxyOrder', userId, input);
+  async createProxyOrder(userId: string, input: ProxyOrderInput) {
+    const preferredOperations: ProviderOperation[] = ['oxylabs.proxyOrder', 'smartproxy.proxyOrder'];
+    const missingByProvider: Array<{ integrationId: BackendIntegrationId; missingEnv: string[] }> = [];
+
+    for (const operation of preferredOperations) {
+      const missingEnv = this.getMissingProviderEnv(operation);
+      if (missingEnv.length) {
+        missingByProvider.push({
+          integrationId: PROVIDER_OPERATIONS[operation].integrationId,
+          missingEnv,
+        });
+        continue;
+      }
+
+      try {
+        return await this.callConfiguredProvider(operation, userId, input);
+      } catch (error) {
+        this.logger.warn(`${operation} failed; falling back if another proxy provider is configured: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+
+    return {
+      status: 'not_configured',
+      integrationId: 'oxylabs',
+      operation: 'proxy.order',
+      requestAccepted: false,
+      fallbackChecked: ['oxylabs', 'smartproxy'],
+      missingEnvByProvider: missingByProvider,
+    };
   }
 
   createVpnSession(userId: string, input: VpnSessionInput) {
@@ -211,7 +246,7 @@ export class IntegrationsService {
 
   private async callConfiguredProvider(operation: ProviderOperation, userId: string, payload: object) {
     const cfg = PROVIDER_OPERATIONS[operation];
-    const missingEnv = [cfg.baseUrlEnv, cfg.pathEnv, cfg.apiKeyEnv].filter((env) => !this.hasEnv(env));
+    const missingEnv = this.getMissingProviderEnv(operation);
     if (missingEnv.length) {
       this.logger.warn(`${operation} skipped; missing ${missingEnv.join(', ')}`);
       return {
@@ -225,7 +260,7 @@ export class IntegrationsService {
 
     const baseUrl = this.config.get<string>(cfg.baseUrlEnv).replace(/\/+$/, '');
     const path = this.config.get<string>(cfg.pathEnv).replace(/^\/?/, '/');
-    const apiKey = this.config.get<string>(cfg.apiKeyEnv);
+    const authValues = cfg.authHeaders.map((name) => this.config.get<string>(name) || '');
     const response = await axios.post(
       `${baseUrl}${path}`,
       {
@@ -235,7 +270,7 @@ export class IntegrationsService {
       {
         timeout: 15000,
         headers: {
-          [cfg.authHeader]: `Bearer ${apiKey}`,
+          ...this.buildProviderAuthHeaders(cfg.authKind, authValues),
           'Content-Type': 'application/json',
           'X-Burner-Point-Operation': operation,
         },
@@ -294,6 +329,27 @@ export class IntegrationsService {
     if (!value) return false;
     const normalized = value.trim().toLowerCase();
     return normalized !== 'replace_me' && !normalized.includes('replace_me');
+  }
+
+  private getMissingProviderEnv(operation: ProviderOperation): string[] {
+    const cfg = PROVIDER_OPERATIONS[operation];
+    return [cfg.baseUrlEnv, cfg.pathEnv, ...cfg.authHeaders].filter((env) => !this.hasEnv(env));
+  }
+
+  private buildProviderAuthHeaders(
+    authKind: 'bearer' | 'basic' | 'raw',
+    values: string[],
+  ): Record<string, string> {
+    if (authKind === 'bearer') {
+      return { Authorization: `Bearer ${values[0]}` };
+    }
+
+    if (authKind === 'basic') {
+      const token = Buffer.from(`${values[0]}:${values[1] || ''}`).toString('base64');
+      return { Authorization: `Basic ${token}` };
+    }
+
+    return { Authorization: values[0] };
   }
 
   private safeFileName(name: string) {

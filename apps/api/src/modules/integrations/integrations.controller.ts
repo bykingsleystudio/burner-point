@@ -131,19 +131,19 @@ export class IntegrationsController {
   }
 
   @Post('esim/plans')
-  @ApiOperation({ summary: 'Query configured 1GLOBAL eSIM plans through the backend' })
+  @ApiOperation({ summary: 'Query configured Airalo eSIM plans through the backend' })
   esimPlans(@Req() req: { user: { id: string } }, @Body() dto: EsimPlansDto) {
     return this.integrationsService.requestEsimPlans(req.user.id, dto);
   }
 
   @Post('esim/orders')
-  @ApiOperation({ summary: 'Create configured 1GLOBAL eSIM order through the backend' })
+  @ApiOperation({ summary: 'Create configured Airalo eSIM order through the backend' })
   esimOrder(@Req() req: { user: { id: string } }, @Body() dto: EsimOrderDto) {
     return this.integrationsService.createEsimOrder(req.user.id, dto);
   }
 
   @Post('proxies/orders')
-  @ApiOperation({ summary: 'Create configured Bright Data proxy order through the backend' })
+  @ApiOperation({ summary: 'Create configured Oxylabs or Smartproxy proxy order through the backend' })
   proxyOrder(@Req() req: { user: { id: string } }, @Body() dto: ProxyOrderDto) {
     return this.integrationsService.createProxyOrder(req.user.id, dto);
   }

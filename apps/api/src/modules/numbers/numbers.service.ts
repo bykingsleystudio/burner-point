@@ -214,12 +214,6 @@ export class NumbersService {
 
   private mapNumberProvider(provider: ProviderName): NumberProvider {
     switch (provider) {
-      case ProviderName.BANDWIDTH:
-        return NumberProvider.BANDWIDTH;
-      case ProviderName.VONAGE:
-        return NumberProvider.VONAGE;
-      case ProviderName.INFOBIP:
-        return NumberProvider.INFOBIP;
       case ProviderName.TELNYX:
         return NumberProvider.TELNYX;
       case ProviderName.PLIVO:

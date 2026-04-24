@@ -12,6 +12,7 @@ import { User, UserStatus } from '../../database/entities/user.entity';
 import { RedisService } from '../global/redis.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { withWalletPresentation } from '../../config/money';
 
 const BCRYPT_ROUNDS = 12;
 const MAX_FAILED_ATTEMPTS = 5;
@@ -291,7 +292,7 @@ export class AuthService {
     const needsPhoneVerification = Boolean(user.phoneNumber) && !user.phoneVerified;
     return {
       ...tokens,
-      user,
+      user: withWalletPresentation(user, this.configService),
       needsOnboarding: !profileComplete,
       needsPhoneVerification,
       onboarding: {

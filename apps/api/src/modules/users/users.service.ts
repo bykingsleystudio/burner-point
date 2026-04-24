@@ -1,16 +1,21 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
 import { User } from '../../database/entities/user.entity';
+import { buildWalletPresentation, withWalletPresentation } from '../../config/money';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectRepository(User) private userRepo: Repository<User>) {}
+  constructor(
+    @InjectRepository(User) private userRepo: Repository<User>,
+    private configService: ConfigService,
+  ) {}
 
   async getProfile(userId: string) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
-    return user;
+    return withWalletPresentation(user, this.configService);
   }
 
   async updateProfile(userId: string, dto: Partial<{ firstName: string; lastName: string; timezone: string; country: string; preferences: Record<string, unknown> }>) {
@@ -20,9 +25,15 @@ export class UsersService {
 
   async getWalletBalance(userId: string) {
     const user = await this.userRepo.findOne({ where: { id: userId }, select: ['id', 'walletBalanceKobo'] });
+    if (!user) throw new NotFoundException('User not found');
+    const wallet = buildWalletPresentation(Number(user.walletBalanceKobo), this.configService);
     return {
-      balanceKobo: Number(user.walletBalanceKobo),
-      balanceNgn: Number(user.walletBalanceKobo) / 100,
+      balanceKobo: wallet.walletBalanceKobo,
+      balanceNgn: wallet.walletBalanceNgn,
+      balanceUsdCents: wallet.walletBalanceUsdCents,
+      balanceUsd: wallet.walletBalanceUsd,
+      displayCurrency: wallet.walletDisplayCurrency,
+      fxRateNgnPerUsd: wallet.walletFxRateNgnPerUsd,
     };
   }
 

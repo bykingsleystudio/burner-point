@@ -135,23 +135,21 @@ TWILIO_VERIFY_SERVICE_SID=VAxxxxxxxx
 TWILIO_DEFAULT_FROM=+15551234567
 ```
 
-### Infobip and Vonage Routing
+### Telnyx and Tremil Routing
 
-Set these when enabling the global verification fallback routes and independent SMS provider routing. Provider callback URLs should point to your Railway API domain under the global `/api` prefix:
+Set these when enabling the global verification fallback routes, Telnyx number infrastructure, and the Tremil economy route. Provider callback URLs should point to your Railway API domain under the global `/api` prefix:
 
-- Vonage inbound SMS: `https://your-railway-domain.up.railway.app/api/webhooks/vonage/inbound`
-- Vonage delivery status: `https://your-railway-domain.up.railway.app/api/webhooks/vonage/status`
-- Infobip inbound SMS: `https://your-railway-domain.up.railway.app/api/webhooks/infobip/inbound`
-- Infobip delivery status: `https://your-railway-domain.up.railway.app/api/webhooks/infobip/status`
+- Telnyx messaging and number events: `https://your-railway-domain.up.railway.app/api/webhooks/telnyx`
 
 ```env
 SMS_DEFAULT_FROM=BurnerPoint
-VONAGE_API_KEY=your_vonage_api_key
-VONAGE_API_SECRET=your_vonage_api_secret
-VONAGE_DEFAULT_FROM=BurnerPoint
-INFOBIP_BASE_URL=https://xxxx.api.infobip.com
-INFOBIP_API_KEY=your_infobip_api_key
-INFOBIP_DEFAULT_FROM=BurnerPoint
+TELNYX_API_KEY=KEY_xxx
+TELNYX_MESSAGING_PROFILE_ID=profile_xxx
+TELNYX_CONNECTION_ID=conn_xxx
+TELNYX_DEFAULT_FROM=+15551234567
+TREMIL_API_KEY=tm_xxx
+TREMIL_SECRET=xxx
+TREMIL_BASE_URL=https://api.tremil.example.com
 ```
 
 ### Payments

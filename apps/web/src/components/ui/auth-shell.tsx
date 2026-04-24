@@ -8,22 +8,22 @@ const proofItems = [
   {
     icon: ShieldCheck,
     title: 'One auth path',
-    text: 'Email, OAuth, onboarding, and phone verification now resolve in one clean sequence.',
+    text: 'Email, OAuth, recovery, and phone verification move through one calmer Burner Point entry flow.',
   },
   {
     icon: Globe2,
     title: 'Global verification',
-    text: 'Phone verification flows are designed around international numbers instead of country-locked onboarding.',
+    text: 'Phone verification is designed around international numbers instead of country-locked account setup.',
   },
   {
     icon: MessageSquareText,
     title: 'Cleaner UX',
-    text: 'Users see clear next steps, calm copy, and privacy-focused guidance from the first screen.',
+    text: 'Users see direct next steps, privacy-first copy, and fewer dead-end redirects.',
   },
   {
     icon: Smartphone,
     title: 'Web and mobile ready',
-    text: 'The same privacy-first language scales across browser and Expo surfaces.',
+    text: 'The same Burner Point language scales across browser and Expo surfaces.',
   },
 ];
 
@@ -63,7 +63,7 @@ export function AuthShell({
               {asideTitle || 'Private entry that feels calm, direct, and fast.'}
             </h1>
             <p className="mt-5 max-w-xl text-base leading-8 text-white/62">
-              {asideDescription || 'Burner Point should feel like a premium communication platform from the first screen, not a technical control panel. This shell keeps the language focused on what people can do next while preserving your brand palette and motion-driven identity.'}
+              {asideDescription || 'Burner Point should feel like a premium communication platform from the first screen, not a technical control panel. This shell keeps the language focused on what people can do next while preserving the cyber-green brand system.'}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -112,7 +112,7 @@ export function AuthShell({
                 <div>
                   <p className="text-sm font-semibold text-white">One account across numbers, inbox, verification, billing, and support.</p>
                   <p className="mt-1.5 text-sm leading-6 text-white/52">
-                    Sign in with email or OAuth, complete your profile, then verify your number only where it improves account security.
+                    Sign in with email or OAuth, recover access safely, and verify your account phone from the dedicated secure step without re-onboarding loops.
                   </p>
                   <Link href="/pricing" className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-brand-green transition hover:gap-3">
                     View pricing

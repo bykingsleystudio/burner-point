@@ -6,8 +6,16 @@ import toast from 'react-hot-toast';
 import { Copy, Key, Plus, Trash2, Webhook } from 'lucide-react';
 import { developerApi } from '@/lib/api';
 
+type ApiKeyRecord = {
+  id: string;
+  name: string;
+  keyPrefix: string;
+  rawKey?: string;
+  usageCount?: number;
+};
+
 export default function ApiPage() {
-  const [keys, setKeys] = useState<any[]>([]);
+  const [keys, setKeys] = useState<ApiKeyRecord[]>([]);
   const [newKeyName, setNewKeyName] = useState('');
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -23,7 +31,7 @@ export default function ApiPage() {
     setCreating(true);
     try {
       const r = await developerApi.createKey({ name: newKeyName, scopes: ['read', 'write'] });
-      setKeys((current) => [...current, r.data]);
+      setKeys((current) => [...current, r.data as ApiKeyRecord]);
       setRevealedKey(r.data.rawKey);
       setNewKeyName('');
       toast.success('API key created. Copy it now because it will not be shown again.');

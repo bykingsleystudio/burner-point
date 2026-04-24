@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
-import { Check, ShieldCheck } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import { AuthProviderButton } from '@/components/auth-provider-button';
 import { AuthShell } from '@/components/ui/auth-shell';
 
@@ -16,25 +16,17 @@ const schema = z.object({
   firstName: z.string().min(1, 'First name is required').max(50),
   lastName: z.string().min(1, 'Last name is required').max(50),
   email: z.string().email('Enter a valid email address'),
-  // Backend OTP verification requires strict E.164 (leading +).
-  phoneNumber: z.string().min(10, 'Phone number is required').regex(
-    /^\+[1-9]\d{6,14}$/,
-    'Enter your phone number in E.164 format (example: +14155550182)',
-  ),
-  password: z.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Must include uppercase, lowercase, and number'),
-  referralCode: z.string().optional(),
-  acceptTerms: z.boolean().refine((value) => value === true, { message: 'You must accept the Terms of Service' }),
-  acceptPrivacy: z.boolean().refine((value) => value === true, { message: 'You must accept the Privacy Policy' }),
+  phoneNumber: z
+    .string()
+    .min(10, 'Phone number is required')
+    .regex(/^\+[1-9]\d{6,14}$/, 'Enter your phone number in E.164 format (example: +14155550182)'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Must include uppercase, lowercase, and number'),
 });
 
 type FormData = z.infer<typeof schema>;
-
-const FEATURES = [
-  'Global phone verification without country locks',
-  'Private numbers, verification, rentals, and messaging',
-  'Cleaner onboarding with no duplicate account loops',
-  'One account surface across web and mobile',
-] as const;
 
 const oauthProviders = [
   { label: 'Google', strategy: 'oauth_google' },
@@ -50,48 +42,29 @@ export default function RegisterPage() {
   const [verificationCode, setVerificationCode] = useState('');
   const authReady = Boolean(signUp);
   const isSubmitting = loading || fetchStatus === 'fetching' || !authReady;
+
   const {
     register,
     handleSubmit,
-    watch,
-    setValue,
-    clearErrors,
     getValues,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { acceptTerms: false, acceptPrivacy: false },
   });
 
-  const acceptTerms = watch('acceptTerms');
-  const acceptPrivacy = watch('acceptPrivacy');
-  const policyAccepted = acceptTerms && acceptPrivacy;
-  const policyError = errors.acceptTerms?.message || errors.acceptPrivacy?.message;
-  const phoneField = register('phoneNumber');
-  const currentDescription = useMemo(() => (
-    pendingEmailVerification
-      ? 'Confirm your email address to finish account creation. Your phone number stays attached to your Burner Point profile and can be verified in the next secure step.'
-      : 'Create your Burner Point account with the contact details you want attached to secure recovery, verification, and private communication.'
-  ), [pendingEmailVerification]);
-
-  const togglePolicies = (checked: boolean) => {
-    setValue('acceptTerms', checked, { shouldValidate: true, shouldDirty: true });
-    setValue('acceptPrivacy', checked, { shouldValidate: true, shouldDirty: true });
-    if (checked) clearErrors(['acceptTerms', 'acceptPrivacy']);
-  };
+  const description = useMemo(() => {
+    if (pendingEmailVerification) {
+      return 'Confirm the secure code sent to your email, then move directly into phone verification and your Burner Point dashboard.';
+    }
+    return 'Stay Anonymous. Stay Connected. Private By Design.';
+  }, [pendingEmailVerification]);
 
   const finishSignUp = async () => {
     if (!signUp) throw new Error('Authentication is still loading.');
 
     const { error } = await signUp.finalize({
-      navigate: ({ session, decorateUrl }) => {
-        const destination = session?.currentTask ? '/onboarding' : '/dashboard';
-        const url = decorateUrl(destination);
-        if (url.startsWith('http')) {
-          window.location.href = url;
-          return;
-        }
-        router.push(url);
+      navigate: ({ decorateUrl }) => {
+        router.push(decorateUrl('/auth/phone-verify?redirect=/dashboard'));
       },
     });
 
@@ -103,7 +76,7 @@ export default function RegisterPage() {
 
     if (signUp.status === 'complete') {
       await finishSignUp();
-      toast.success('Account created. Welcome to Burner Point.');
+      toast.success('Account created. Verify your phone to enter Burner Point.');
       return;
     }
 
@@ -133,12 +106,10 @@ export default function RegisterPage() {
         lastName: data.lastName,
         legalAccepted: true,
         unsafeMetadata: {
-          referralCode: data.referralCode,
           phoneNumber: data.phoneNumber,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          acceptTerms: data.acceptTerms,
-          acceptPrivacy: data.acceptPrivacy,
+          acceptTerms: true,
+          acceptPrivacy: true,
+          authSource: 'web_signup',
         },
       });
       if (error) throw error;
@@ -167,7 +138,6 @@ export default function RegisterPage() {
       const { error } = await signUp.verifications.verifyEmailCode({ code: verificationCode.trim() });
       if (error) throw error;
 
-      setVerificationCode('');
       await continueSignUpVerification();
     } catch (err) {
       toast.error(getClerkErrorMessage(err, 'Verification failed'));
@@ -181,10 +151,6 @@ export default function RegisterPage() {
       toast.error('Authentication is still loading.');
       return;
     }
-    if (!policyAccepted) {
-      toast.error('Accept the Terms of Service and Privacy Policy to continue.');
-      return;
-    }
 
     const values = getValues();
 
@@ -194,13 +160,12 @@ export default function RegisterPage() {
         redirectUrl: '/dashboard',
         redirectCallbackUrl: '/sso-callback',
         unsafeMetadata: {
-          authSource: 'web_signup',
-          acceptTerms: true,
-          acceptPrivacy: true,
-          phoneNumber: values.phoneNumber || undefined,
+          authSource: 'web_signup_oauth',
           firstName: values.firstName || undefined,
           lastName: values.lastName || undefined,
-          referralCode: values.referralCode || undefined,
+          phoneNumber: values.phoneNumber || undefined,
+          acceptTerms: true,
+          acceptPrivacy: true,
         },
       });
       if (error) throw error;
@@ -212,9 +177,9 @@ export default function RegisterPage() {
   return (
     <AuthShell
       title="Log in or sign up"
-      description={currentDescription}
-      asideTitle="Build a private communication identity that starts clean."
-      asideDescription="Burner Point account creation now separates authentication from profile completion and phone verification, which removes the Clerk onboarding loops you were hitting on OAuth and first-time signup."
+      description={description}
+      asideTitle="Private entry, no extra loops."
+      asideDescription="Create a Burner Point account with the details required for secure recovery, then verify the attached phone number and enter the dashboard directly."
     >
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -226,9 +191,7 @@ export default function RegisterPage() {
               Create account
             </span>
           </div>
-          <Link href="/privacy" className="text-xs font-medium text-white/40 transition hover:text-brand-green">
-            Privacy policy
-          </Link>
+          <div className="text-xs text-white/38">By continuing you accept the Terms of Service and Privacy Policy.</div>
         </div>
 
         {!pendingEmailVerification ? (
@@ -245,7 +208,7 @@ export default function RegisterPage() {
               ))}
               <AuthProviderButton
                 provider="Phone"
-                label="Continue with phone"
+                label="Continue with Phone"
                 onClick={() => document.getElementById('auth-register-phone')?.focus()}
                 disabled={isSubmitting}
               />
@@ -253,7 +216,7 @@ export default function RegisterPage() {
 
             <div className="flex items-center gap-3 pt-1">
               <span className="h-px flex-1 bg-white/8" />
-              <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-white/32">or</span>
+              <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-white/32">OR</span>
               <span className="h-px flex-1 bg-white/8" />
             </div>
           </>
@@ -273,106 +236,89 @@ export default function RegisterPage() {
                 className="auth-input mt-2"
               />
             </label>
-            <button type="button" disabled={isSubmitting} onClick={verifyEmail} className="bp-button-glow mt-4 flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={verifyEmail}
+              className="bp-button-glow mt-4 flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
+            >
               {isSubmitting ? 'Verifying...' : 'Verify and continue'}
             </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="First name" error={errors.firstName?.message}>
+              <Field label="First Name" error={errors.firstName?.message}>
                 <input {...register('firstName')} autoComplete="given-name" autoCapitalize="words" enterKeyHint="next" placeholder="Kingsley" className="auth-input" />
               </Field>
-              <Field label="Last name" error={errors.lastName?.message}>
+              <Field label="Last Name" error={errors.lastName?.message}>
                 <input {...register('lastName')} autoComplete="family-name" autoCapitalize="words" enterKeyHint="next" placeholder="Doe" className="auth-input" />
               </Field>
             </div>
 
-            <div className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
-              <div className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">
-                <ShieldCheck className="h-4 w-4" />
-                Required account recovery
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Email address" error={errors.email?.message}>
-                  <input {...register('email')} type="email" inputMode="email" autoComplete="email" autoCapitalize="none" enterKeyHint="next" placeholder="you@example.com" className="auth-input" />
-                </Field>
-                <Field label="Phone number" error={errors.phoneNumber?.message}>
-                  <input
-                    {...phoneField}
-                    id="auth-register-phone"
-                    type="tel"
-                    inputMode="tel"
-                    autoComplete="tel"
-                    enterKeyHint="next"
-                    placeholder="+14155550182"
-                    className="auth-input"
-                  />
-                </Field>
-              </div>
-            </div>
+            <Field label="Email Address" error={errors.email?.message}>
+              <input {...register('email')} type="email" autoComplete="email" inputMode="email" autoCapitalize="none" enterKeyHint="next" placeholder="you@example.com" className="auth-input" />
+            </Field>
 
-            <div className="grid gap-4 md:grid-cols-[1fr_0.72fr]">
-              <Field label="Password" error={errors.password?.message}>
-                <input {...register('password')} type="password" autoComplete="new-password" enterKeyHint="next" placeholder="8+ chars, mixed case + number" className="auth-input" />
-              </Field>
-              <Field label="Referral code">
-                <input {...register('referralCode')} autoCapitalize="characters" enterKeyHint="done" placeholder="ABC1234" className="auth-input font-mono" />
-              </Field>
-            </div>
+            <Field label="Phone Number" error={errors.phoneNumber?.message}>
+              <input
+                {...register('phoneNumber')}
+                id="auth-register-phone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                enterKeyHint="next"
+                placeholder="+14155550182"
+                className="auth-input"
+              />
+            </Field>
+
+            <Field label="Password" error={errors.password?.message}>
+              <input {...register('password')} type="password" autoComplete="new-password" enterKeyHint="done" placeholder="8+ chars, mixed case + number" className="auth-input" />
+            </Field>
 
             <div className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
-              <div className="grid gap-2">
-                {FEATURES.map((item) => (
-                  <div key={item} className="flex items-start gap-3 text-sm leading-6 text-white/62">
-                    <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-brand-green/24 bg-brand-green/10">
-                      <Check className="h-3 w-3 text-brand-green" />
-                    </span>
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
-              <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm leading-6 text-white/70">
-                <input
-                  checked={policyAccepted}
-                  onChange={(event) => togglePolicies(event.target.checked)}
-                  type="checkbox"
-                  className="mt-1 h-5 w-5 shrink-0 rounded border-white/20 bg-black/40 text-brand-green focus:ring-brand-green"
-                />
-                <span>
-                  By continuing, you accept the{' '}
-                  <Link href="/terms" className="text-brand-green underline-offset-2 hover:underline">
-                    Terms of Service
-                  </Link>{' '}
-                  and{' '}
-                  <Link href="/privacy" className="text-brand-green underline-offset-2 hover:underline">
-                    Privacy Policy
-                  </Link>
-                  .
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-brand-green/22 bg-brand-green/10">
+                  <ShieldCheck className="h-4 w-4 text-brand-green" />
                 </span>
-              </label>
-              {policyError ? <p className="mt-2 text-xs text-red-300">{policyError}</p> : null}
+                <div>
+                  <p className="text-sm font-semibold text-white">Recovery and verification ready</p>
+                  <p className="mt-2 text-sm leading-6 text-white/54">
+                    The attached phone number will be used for the secure verification step immediately after account creation. No extra legal checkbox is required here.
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <button type="submit" disabled={isSubmitting} className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
-              {isSubmitting ? 'Creating account...' : 'Create account'}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSubmitting ? 'Creating account...' : 'Get Started'}
             </button>
           </form>
         )}
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/8 pt-4">
-          <div className="text-sm text-white/46">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/8 pt-4 text-xs leading-6 text-white/38">
+          <p>
+            By continuing you accept the{' '}
+            <Link href="/terms" className="text-brand-green transition hover:text-[#1cffac]">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link href="/privacy" className="text-brand-green transition hover:text-[#1cffac]">
+              Privacy Policy
+            </Link>
+            .
+          </p>
+          <p>
             Already have an account?{' '}
-            <Link href="/auth/login" className="font-medium text-brand-green transition hover:text-[#1cffac]">
+            <Link href="/auth/login" className="text-brand-green transition hover:text-[#1cffac]">
               Sign in
             </Link>
-          </div>
-          <div className="text-xs text-white/36">
-            Phone verification happens in a dedicated secure step after account creation.
-          </div>
+          </p>
         </div>
       </div>
     </AuthShell>

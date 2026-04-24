@@ -1,11 +1,11 @@
 export type BackendIntegrationId =
   | 'twilio'
-  | 'infobip'
-  | 'vonage'
-  | 'bandwidth'
+  | 'telnyx'
+  | 'tremil'
   | 'openai'
-  | 'oneglobal'
-  | 'brightdata'
+  | 'airalo'
+  | 'oxylabs'
+  | 'smartproxy'
   | 'wireguard'
   | 'paystack'
   | 'flutterwave'
@@ -62,47 +62,31 @@ export const BACKEND_INTEGRATION_CONTRACTS: BackendIntegrationContract[] = [
     ],
   },
   {
-    id: 'infobip',
-    name: 'Infobip',
+    id: 'telnyx',
+    name: 'Telnyx',
     category: 'telecom',
     backendOnly: true,
-    secretEnv: ['INFOBIP_BASE_URL', 'INFOBIP_API_KEY'],
-    optionalEnv: ['INFOBIP_SENDER_ID', 'INFOBIP_WEBHOOK_SECRET'],
+    secretEnv: ['TELNYX_API_KEY'],
+    optionalEnv: ['TELNYX_MESSAGING_PROFILE_ID', 'TELNYX_CONNECTION_ID', 'TELNYX_WEBHOOK_SECRET'],
     publicClientEnv: [],
-    frontendRule: 'Use Burner Point messaging/verification routes; never call Infobip from clients.',
+    frontendRule: 'Use Burner Point messaging, verification, and number routes; never call Telnyx from clients.',
     endpoints: [
-      { method: 'POST', path: '/messaging/sms/send', auth: 'user', purpose: 'Send routed SMS with Infobip fallback support' },
-      { method: 'POST', path: '/webhooks/infobip/inbound', auth: 'provider-signature', purpose: 'Receive Infobip inbound messages' },
-      { method: 'POST', path: '/webhooks/infobip/status', auth: 'provider-signature', purpose: 'Receive Infobip delivery status' },
+      { method: 'POST', path: '/messaging/sms/send', auth: 'user', purpose: 'Send routed SMS through Telnyx fallback infrastructure' },
+      { method: 'GET', path: '/numbers/search', auth: 'user', purpose: 'Search Telnyx-backed conversation inventory through the backend' },
+      { method: 'POST', path: '/webhooks/telnyx', auth: 'provider-signature', purpose: 'Receive Telnyx messaging and number lifecycle events' },
     ],
   },
   {
-    id: 'vonage',
-    name: 'Vonage',
+    id: 'tremil',
+    name: 'Tremil',
     category: 'telecom',
     backendOnly: true,
-    secretEnv: ['VONAGE_API_KEY', 'VONAGE_API_SECRET'],
-    optionalEnv: ['VONAGE_APPLICATION_ID', 'VONAGE_PRIVATE_KEY', 'VONAGE_WEBHOOK_SECRET'],
+    secretEnv: ['TREMIL_API_KEY'],
+    optionalEnv: ['TREMIL_BASE_URL', 'TREMIL_SECRET', 'TREMIL_WEBHOOK_SECRET'],
     publicClientEnv: [],
-    frontendRule: 'Use Burner Point messaging/verification routes; Vonage stays a server-side fallback.',
+    frontendRule: 'Use Burner Point messaging and verification routes; Tremil remains a server-side economy route.',
     endpoints: [
-      { method: 'POST', path: '/messaging/sms/send', auth: 'user', purpose: 'Send routed SMS with Vonage fallback support' },
-      { method: 'ALL', path: '/webhooks/vonage/inbound', auth: 'provider-signature', purpose: 'Receive Vonage inbound SMS' },
-      { method: 'ALL', path: '/webhooks/vonage/status', auth: 'provider-signature', purpose: 'Receive Vonage delivery status' },
-    ],
-  },
-  {
-    id: 'bandwidth',
-    name: 'Bandwidth',
-    category: 'telecom',
-    backendOnly: true,
-    secretEnv: ['BANDWIDTH_ACCOUNT_ID', 'BANDWIDTH_API_TOKEN'],
-    optionalEnv: ['BANDWIDTH_APPLICATION_ID', 'BANDWIDTH_WEBHOOK_SECRET'],
-    publicClientEnv: [],
-    frontendRule: 'Use /numbers and /webhooks/bandwidth; Bandwidth credentials never leave Railway.',
-    endpoints: [
-      { method: 'GET', path: '/numbers/search', auth: 'user', purpose: 'Search numbers through backend number infrastructure' },
-      { method: 'POST', path: '/webhooks/bandwidth', auth: 'provider-signature', purpose: 'Normalize Bandwidth callbacks' },
+      { method: 'POST', path: '/messaging/sms/send', auth: 'user', purpose: 'Send routed SMS through Tremil when economy routing is selected' },
     ],
   },
   {
@@ -120,32 +104,46 @@ export const BACKEND_INTEGRATION_CONTRACTS: BackendIntegrationContract[] = [
     ],
   },
   {
-    id: 'oneglobal',
-    name: '1GLOBAL',
+    id: 'airalo',
+    name: 'Airalo',
     category: 'connectivity',
     backendOnly: true,
-    secretEnv: ['ONEGLOBAL_API_KEY'],
-    optionalEnv: ['ONEGLOBAL_BASE_URL', 'ONEGLOBAL_PLANS_PATH', 'ONEGLOBAL_ORDER_PATH', 'ONEGLOBAL_WEBHOOK_SECRET'],
+    secretEnv: ['AIRALO_CLIENT_ID', 'AIRALO_CLIENT_SECRET'],
+    optionalEnv: ['AIRALO_BASE_URL', 'AIRALO_PLANS_PATH', 'AIRALO_ORDER_PATH', 'AIRALO_WEBHOOK_SECRET'],
     publicClientEnv: [],
-    frontendRule: 'Use /integrations/esim routes; never call 1GLOBAL from clients.',
+    frontendRule: 'Use /integrations/esim routes; never call Airalo directly from clients.',
     endpoints: [
-      { method: 'POST', path: '/integrations/esim/plans', auth: 'user', purpose: 'Query configured 1GLOBAL eSIM catalog endpoint' },
-      { method: 'POST', path: '/integrations/esim/orders', auth: 'user', purpose: 'Create configured 1GLOBAL eSIM order' },
-      { method: 'POST', path: '/webhooks/oneglobal', auth: 'provider-signature', purpose: 'Normalize 1GLOBAL webhook events' },
+      { method: 'POST', path: '/integrations/esim/plans', auth: 'user', purpose: 'Query configured Airalo eSIM catalog endpoint' },
+      { method: 'POST', path: '/integrations/esim/orders', auth: 'user', purpose: 'Create configured Airalo eSIM order' },
+      { method: 'POST', path: '/webhooks/airalo', auth: 'provider-signature', purpose: 'Normalize Airalo webhook events' },
     ],
   },
   {
-    id: 'brightdata',
-    name: 'Bright Data',
+    id: 'oxylabs',
+    name: 'Oxylabs',
     category: 'connectivity',
     backendOnly: true,
-    secretEnv: ['BRIGHTDATA_API_KEY'],
-    optionalEnv: ['BRIGHTDATA_BASE_URL', 'BRIGHTDATA_CUSTOMER_ID', 'BRIGHTDATA_ZONE', 'BRIGHTDATA_PROXY_ORDER_PATH', 'BRIGHTDATA_WEBHOOK_SECRET'],
+    secretEnv: ['OXYLABS_USERNAME', 'OXYLABS_PASSWORD'],
+    optionalEnv: ['OXYLABS_BASE_URL', 'OXYLABS_PROXY_ORDER_PATH', 'OXYLABS_WEBHOOK_SECRET'],
     publicClientEnv: [],
-    frontendRule: 'Use /integrations/proxies routes; Bright Data keys stay server-side.',
+    frontendRule: 'Use /integrations/proxies routes; Oxylabs credentials stay server-side.',
     endpoints: [
-      { method: 'POST', path: '/integrations/proxies/orders', auth: 'user', purpose: 'Create configured Bright Data proxy order' },
-      { method: 'POST', path: '/webhooks/brightdata', auth: 'provider-signature', purpose: 'Normalize Bright Data webhook events' },
+      { method: 'POST', path: '/integrations/proxies/orders', auth: 'user', purpose: 'Create configured Oxylabs proxy order' },
+      { method: 'POST', path: '/webhooks/oxylabs', auth: 'provider-signature', purpose: 'Normalize Oxylabs webhook events' },
+    ],
+  },
+  {
+    id: 'smartproxy',
+    name: 'Smartproxy',
+    category: 'connectivity',
+    backendOnly: true,
+    secretEnv: ['SMARTPROXY_API_KEY'],
+    optionalEnv: ['SMARTPROXY_BASE_URL', 'SMARTPROXY_PROXY_ORDER_PATH', 'SMARTPROXY_WEBHOOK_SECRET'],
+    publicClientEnv: [],
+    frontendRule: 'Use /integrations/proxies routes; Smartproxy stays a backend fallback for proxy fulfillment.',
+    endpoints: [
+      { method: 'POST', path: '/integrations/proxies/orders', auth: 'user', purpose: 'Fallback proxy order path when Smartproxy is selected by backend routing' },
+      { method: 'POST', path: '/webhooks/smartproxy', auth: 'provider-signature', purpose: 'Normalize Smartproxy webhook events' },
     ],
   },
   {

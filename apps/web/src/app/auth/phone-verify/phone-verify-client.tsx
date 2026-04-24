@@ -32,6 +32,14 @@ export default function PhoneVerifyPage() {
   const normalizedPhone = useMemo(() => phoneNumber.trim().replace(/[^\d+]/g, ''), [phoneNumber]);
   const phoneIsValid = e164Pattern.test(normalizedPhone);
   const codeIsValid = /^\d{4,10}$/.test(code.trim());
+  const unsafePhoneNumber =
+    typeof user?.unsafeMetadata?.phoneNumber === 'string'
+      ? user.unsafeMetadata.phoneNumber
+      : undefined;
+  const firstName = user?.firstName;
+  const lastName = user?.lastName;
+  const primaryEmail = user?.primaryEmailAddress?.emailAddress;
+  const primaryPhone = user?.primaryPhoneNumber?.phoneNumber;
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -44,21 +52,16 @@ export default function PhoneVerifyPage() {
 
         const pendingPhone = typeof window !== 'undefined' ? sessionStorage.getItem('burnerPointPendingPhone') : null;
         const { data } = await authApi.exchangeClerkToken(clerkToken, {
-          firstName: user?.firstName,
-          lastName: user?.lastName,
-          email: user?.primaryEmailAddress?.emailAddress,
-          phoneNumber: pendingPhone || user?.primaryPhoneNumber?.phoneNumber || (user?.unsafeMetadata?.phoneNumber as string | undefined),
+          firstName,
+          lastName,
+          email: primaryEmail,
+          phoneNumber: pendingPhone || primaryPhone || unsafePhoneNumber,
         });
 
         if (cancelled) return;
         setApiSession(data.accessToken, data.refreshToken);
 
-        if (data.needsOnboarding) {
-          router.replace(`/onboarding?redirect=${encodeURIComponent(redirectTo)}`);
-          return;
-        }
-
-        const apiPhone = data.user?.phoneNumber || pendingPhone || user?.primaryPhoneNumber?.phoneNumber || '';
+        const apiPhone = data.user?.phoneNumber || pendingPhone || primaryPhone || '';
         setPhoneNumber(apiPhone);
 
         if (!data.needsPhoneVerification || data.user?.phoneVerified) {
@@ -68,17 +71,27 @@ export default function PhoneVerifyPage() {
         }
 
         setStep('ready');
-      } catch (error: any) {
+      } catch (error: unknown) {
         if (cancelled) return;
-        const message = error.response?.data?.message || error.message || 'Complete onboarding before phone verification.';
+        const responseError = error as Error & {
+          response?: {
+            data?: { message?: string };
+          };
+        };
+        const message =
+          responseError.response?.data?.message ||
+          responseError.message ||
+          'Unable to prepare secure phone verification.';
         toast.error(message);
-        router.replace('/onboarding');
+        router.replace('/dashboard');
       }
     }
 
     prepareApiSession();
-    return () => { cancelled = true; };
-  }, [isLoaded, getToken, router, redirectTo, user?.id]);
+    return () => {
+      cancelled = true;
+    };
+  }, [firstName, getToken, isLoaded, lastName, primaryEmail, primaryPhone, redirectTo, router, unsafePhoneNumber, user?.id]);
 
   const sendCode = async () => {
     if (!phoneIsValid) {
@@ -118,7 +131,7 @@ export default function PhoneVerifyPage() {
     } catch (error) {
       const message = getOtpError(error, 'Verification failed. Check the code and try again.');
       setLastError(message);
-      const remaining = (error as any)?.response?.data?.attemptsRemaining;
+      const remaining = (error as { response?: { data?: { attemptsRemaining?: number } } })?.response?.data?.attemptsRemaining;
       if (typeof remaining === 'number') setAttemptsRemaining(remaining);
     } finally {
       setLoading(false);
