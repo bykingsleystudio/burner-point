@@ -132,12 +132,12 @@ function OnboardingContent() {
         </div>
 
         <div className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4 text-sm leading-6 text-white/70">
-          By continuing, you accept the{' '}
-          <Link href="/terms" className="text-brand-green hover:underline">
+          By continuing, you agree to the{' '}
+          <Link href="/terms-of-service" className="text-brand-green hover:underline">
             Terms of Service
           </Link>{' '}
           and{' '}
-          <Link href="/privacy" className="text-brand-green hover:underline">
+          <Link href="/privacy-policy" className="text-brand-green hover:underline">
             Privacy Policy
           </Link>
           .

@@ -156,6 +156,19 @@ select {
   opacity: 0.06;
 }
 
+@keyframes bp-orbit-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(8px, -10px, 0) scale(1.04);
+  }
+  66% {
+    transform: translate3d(-6px, 8px, 0) scale(0.96);
+  }
+}
+
 .bp-divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);

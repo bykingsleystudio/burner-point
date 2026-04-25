@@ -168,6 +168,23 @@ export default function SettingsPage() {
           </div>
         </article>
 
+        <article className="rounded-[1.5rem] border border-white/8 bg-brand-card p-5">
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="h-5 w-5 text-brand-green" />
+            <h3 className="text-base font-semibold text-white">Legal</h3>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <Link href="/terms-of-service" className="rounded-[1rem] border border-white/8 bg-black/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
+              <p className="text-sm font-semibold text-white">Terms of Service</p>
+              <p className="mt-2 text-sm leading-6 text-white/50">Review the current Burner Point terms effective April 23, 2026.</p>
+            </Link>
+            <Link href="/privacy-policy" className="rounded-[1rem] border border-white/8 bg-black/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
+              <p className="text-sm font-semibold text-white">Privacy Policy</p>
+              <p className="mt-2 text-sm leading-6 text-white/50">See how Burner Point collects, uses, and protects account data.</p>
+            </Link>
+          </div>
+        </article>
+
         <article className="rounded-[1.5rem] border border-red-300/16 bg-red-500/[0.03] p-5">
           <div className="flex items-center gap-3">
             <Trash2 className="h-5 w-5 text-red-300" />

@@ -2,18 +2,14 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { type ReactNode, useMemo, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { useSignUp } from '@clerk/nextjs';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
-import { ShieldCheck } from 'lucide-react';
 import { AuthProviderButton } from '@/components/auth-provider-button';
 import { GlassInputWrapper, SignInPage } from '@/components/ui/sign-in';
-
-const AUTH_HERO_IMAGE =
-  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1600&q=80';
 
 const schema = z.object({
   firstName: z.string().min(1, 'First name is required').max(50),
@@ -54,13 +50,6 @@ export default function RegisterPage() {
   } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
-
-  const description = useMemo(() => {
-    if (pendingEmailVerification) {
-      return 'Confirm the secure code sent to your email, then move directly into phone verification and your Burner Point dashboard.';
-    }
-    return 'Stay Anonymous. Stay Connected. Private By Design.';
-  }, [pendingEmailVerification]);
 
   const finishSignUp = async () => {
     if (!signUp) throw new Error('Authentication is still loading.');
@@ -179,23 +168,19 @@ export default function RegisterPage() {
 
   return (
     <SignInPage
-      title="Log in or sign up"
-      description={description}
-      heroImageSrc={AUTH_HERO_IMAGE}
+      title={null}
+      description={null}
       testimonials={[]}
-      onCreateAccount={() => router.push('/auth/login')}
     >
       <div className="space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="inline-flex rounded-full border border-white/8 bg-white/[0.03] p-1">
-            <Link href="/auth/login" className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/46 transition hover:text-white">
+          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Create account</p>
+          <p className="text-sm text-white/46">
+            Already have an account?{' '}
+            <Link href="/auth/login" className="text-brand-green transition hover:text-[#39FF14]">
               Sign in
             </Link>
-            <span className="rounded-full bg-brand-green px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-black">
-              Create account
-            </span>
-          </div>
-          <div className="text-xs text-white/38">By continuing you accept the Terms of Service and Privacy Policy.</div>
+          </p>
         </div>
 
         {!pendingEmailVerification ? (
@@ -229,6 +214,12 @@ export default function RegisterPage() {
 
         {pendingEmailVerification ? (
           <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">Email verification</p>
+              <p className="mt-2 text-sm leading-6 text-white/56">
+                Enter the secure code sent to your email to complete account creation and continue into phone verification.
+              </p>
+            </div>
             <label className="block text-sm font-medium text-white/70">
               Email verification code
               <GlassInputWrapper>
@@ -324,47 +315,27 @@ export default function RegisterPage() {
               </GlassInputWrapper>
             </Field>
 
-            <div className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
-              <div className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-brand-green/22 bg-brand-green/10">
-                  <ShieldCheck className="h-4 w-4 text-brand-green" />
-                </span>
-                <div>
-                  <p className="text-sm font-semibold text-white">Recovery and verification ready</p>
-                  <p className="mt-2 text-sm leading-6 text-white/54">
-                    First name, last name, email, phone, and password are captured up front so this Burner Point account can move cleanly into recovery, billing, and secure phone verification without extra onboarding loops.
-                  </p>
-                </div>
-              </div>
-            </div>
-
             <button
               type="submit"
               disabled={isSubmitting}
               className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSubmitting ? 'Creating account...' : 'Continue'}
+              {isSubmitting ? 'Creating account...' : 'Get Started'}
             </button>
           </form>
         )}
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/8 pt-4 text-xs leading-6 text-white/38">
+        <div className="border-t border-white/8 pt-4 text-xs leading-6 text-white/42">
           <p>
-            By continuing you accept the{' '}
-            <Link href="/terms" className="text-brand-green transition hover:text-[#1cffac]">
+            By continuing you agree to the{' '}
+            <Link href="/terms-of-service" className="text-brand-green transition hover:text-[#39FF14]">
               Terms of Service
             </Link>{' '}
             and{' '}
-            <Link href="/privacy" className="text-brand-green transition hover:text-[#1cffac]">
+            <Link href="/privacy-policy" className="text-brand-green transition hover:text-[#39FF14]">
               Privacy Policy
             </Link>
             .
-          </p>
-          <p>
-            Already have an account?{' '}
-            <Link href="/auth/login" className="text-brand-green transition hover:text-[#1cffac]">
-              Sign in
-            </Link>
           </p>
         </div>
       </div>

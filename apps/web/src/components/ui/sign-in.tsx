@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -63,7 +64,7 @@ interface SignInPageProps {
 }
 
 const GlassInputWrapper = ({ children }: { children: React.ReactNode }) => (
-  <div className="rounded-2xl border border-white/10 bg-white/[0.035] backdrop-blur-md transition-colors focus-within:border-brand-green/60 focus-within:bg-brand-green/[0.08]">
+  <div className="rounded-[1.2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.018))] backdrop-blur-md transition-colors focus-within:border-brand-green/60 focus-within:bg-brand-green/[0.08]">
     {children}
   </div>
 );
@@ -75,6 +76,7 @@ const TestimonialCard = ({ testimonial, delay }: { testimonial: Testimonial; del
       delay,
     )}
   >
+    {/* eslint-disable-next-line @next/next/no-img-element */}
     <img src={testimonial.avatarSrc} className="h-10 w-10 rounded-2xl object-cover" alt={testimonial.name} />
     <div className="text-sm leading-snug">
       <p className="flex items-center gap-1 font-medium text-white">{testimonial.name}</p>
@@ -97,7 +99,7 @@ function SocialButton({
     <button
       type="button"
       onClick={onClick}
-      className="animate-element flex w-full items-center justify-center gap-3 rounded-2xl border border-white/10 bg-black/28 py-4 text-sm font-medium text-white transition-colors hover:border-brand-green/35 hover:bg-brand-green/[0.06]"
+      className="animate-element flex min-h-[54px] w-full items-center justify-center gap-3 rounded-[1.2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-4 py-4 text-sm font-medium text-white transition-colors hover:border-brand-green/35 hover:bg-brand-green/[0.06]"
     >
       {icon}
       {label}
@@ -106,8 +108,8 @@ function SocialButton({
 }
 
 export const SignInPage: React.FC<SignInPageProps> = ({
-  title = <span className="tracking-tight text-foreground">Log in or sign up</span>,
-  description = 'Stay Anonymous. Stay Connected. Private By Design.',
+  title = null,
+  description = null,
   heroImageSrc,
   testimonials = [],
   onSignIn,
@@ -130,25 +132,29 @@ export const SignInPage: React.FC<SignInPageProps> = ({
         <div className="pointer-events-none absolute inset-0">
           <div className="bp-grid-bg absolute inset-0 opacity-60" />
           <div className="absolute left-0 top-0 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(0,255,157,0.18),transparent_68%)] blur-3xl" />
-          <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(57,255,20,0.14),transparent_68%)] blur-3xl" />
+          <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(57,255,20,0.12),transparent_68%)] blur-3xl" />
         </div>
 
         <div className="relative z-10 w-full max-w-xl">
           <div className="mb-8">
             <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
-              <img src="/assets/logo-mark.svg" alt="" className="h-9 w-9" />
-              <img src="/assets/wordmark-white.svg" alt="Burner Point" className="h-6 w-auto" />
+              <Image src="/assets/logo-mark.svg" alt="" width={36} height={36} className="h-9 w-9" />
+              <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={188} height={24} className="h-6 w-auto" />
             </Link>
           </div>
 
-          <div className="rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(1,50,32,0.82),rgba(0,0,0,0.96))] p-6 shadow-[0_40px_120px_rgba(0,0,0,0.42)] sm:p-8">
+          <div className="rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(1,50,32,0.68),rgba(0,0,0,0.96)_44%,rgba(0,0,0,0.98))] p-6 shadow-[0_40px_120px_rgba(0,0,0,0.42)] sm:p-8">
             <div className="flex flex-col gap-5">
-              <h1 className="animate-element animate-delay-100 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
-                {title}
-              </h1>
-              <p className="animate-element animate-delay-200 max-w-xl text-sm leading-7 text-white/62 sm:text-base">
-                {description}
-              </p>
+              {title ? (
+                <h1 className="animate-element animate-delay-100 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
+                  {title}
+                </h1>
+              ) : null}
+              {description ? (
+                <p className="animate-element animate-delay-200 max-w-xl text-sm leading-7 text-white/62 sm:text-base">
+                  {description}
+                </p>
+              ) : null}
 
               {renderCustomContent ? (
                 <div className="animate-element animate-delay-300">{renderCustomContent}</div>
@@ -247,13 +253,62 @@ export const SignInPage: React.FC<SignInPageProps> = ({
         </div>
       </section>
 
-      {heroImageSrc ? (
-        <section className="relative hidden flex-1 overflow-hidden border-l border-white/8 md:block">
+      <section className="relative hidden flex-1 overflow-hidden border-l border-white/8 md:block">
+        {heroImageSrc ? (
           <div
-            className="animate-slide-right animate-delay-300 absolute inset-4 rounded-[2rem] bg-cover bg-center"
+            className="absolute inset-4 rounded-[2rem] bg-cover bg-center opacity-35"
             style={{ backgroundImage: `url(${heroImageSrc})` }}
           />
-          <div className="absolute inset-4 rounded-[2rem] bg-[linear-gradient(180deg,rgba(1,50,32,0.1),rgba(0,0,0,0.72))]" />
+        ) : null}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_18%,rgba(0,255,157,0.14),transparent_24%),radial-gradient(circle_at_82%_20%,rgba(57,255,20,0.08),transparent_22%),linear-gradient(180deg,rgba(1,50,32,0.72),rgba(0,0,0,0.96)_54%)]" />
+        <div className="absolute inset-4 rounded-[2rem] border border-white/6 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))]" />
+
+        <div className="pointer-events-none absolute inset-0">
+          {Array.from({ length: 10 }).map((_, index) => (
+            <span
+              key={`auth-particle-${index}`}
+              className="absolute rounded-full bg-brand-green/70 shadow-[0_0_18px_rgba(0,255,157,0.55)]"
+              style={{
+                width: `${index % 3 === 0 ? 7 : 4}px`,
+                height: `${index % 3 === 0 ? 7 : 4}px`,
+                left: `${12 + index * 8}%`,
+                top: `${10 + ((index * 11) % 62)}%`,
+                opacity: 0.18 + (index % 4) * 0.12,
+                animation: `bp-orbit-drift ${7 + index * 0.6}s ease-in-out ${index * 0.18}s infinite`,
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="relative z-10 flex h-full flex-col justify-between p-8 xl:p-10">
+          <div className="max-w-xl">
+            <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-brand-green">Private entry</p>
+            <h2 className="mt-4 max-w-lg text-[2.6rem] font-semibold leading-[0.96] text-white xl:text-[3.4rem]">
+              One account for numbers, verification, routing, and support.
+            </h2>
+            <p className="mt-4 max-w-xl text-base leading-8 text-white/60">
+              OAuth, password access, recovery, phone verification, and 2FA are staged to move forward cleanly instead of repeating the same decision twice.
+            </p>
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-2">
+            {[
+              ['BP Verify Hub', 'OTP capture, SMS routing, and live code delivery.'],
+              ['BP Messenger', 'Messages, voice, voicemail, and private threads.'],
+              ['BP Secure Tunnel', 'Integrated protection and calmer session control.'],
+              ['Billing & Support', 'Wallet, renewals, receipts, and scoped support paths.'],
+            ].map(([titleText, text], index) => (
+              <article
+                key={titleText}
+                className="animate-slide-right rounded-[1.45rem] border border-white/8 bg-black/28 p-5 backdrop-blur-xl"
+                style={{ animationDelay: `${220 + index * 110}ms` }}
+              >
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">{titleText}</p>
+                <p className="mt-3 text-sm leading-7 text-white/62">{text}</p>
+              </article>
+            ))}
+          </div>
+
           {testimonials.length > 0 ? (
             <div className="absolute bottom-8 left-1/2 flex w-full -translate-x-1/2 justify-center gap-4 px-8">
               <TestimonialCard testimonial={testimonials[0]} delay="animate-delay-1000" />
@@ -268,19 +323,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 </div>
               ) : null}
             </div>
-          ) : (
-            <div className="absolute bottom-8 left-8 right-8 rounded-[1.75rem] border border-white/10 bg-black/36 p-6 backdrop-blur-xl">
-              <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-brand-green">Private entry</p>
-              <h2 className="mt-3 max-w-md text-3xl font-semibold leading-tight text-white">
-                Burner Point keeps numbers, verification, billing, and support inside one calmer account surface.
-              </h2>
-              <p className="mt-4 max-w-lg text-sm leading-7 text-white/60">
-                OAuth, password access, recovery, and phone verification are designed to move forward instead of bouncing users through redundant screens.
-              </p>
-            </div>
-          )}
-        </section>
-      ) : null}
+          ) : null}
+        </div>
+      </section>
     </div>
   );
 };

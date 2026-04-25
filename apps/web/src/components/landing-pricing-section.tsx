@@ -1,7 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Globe2, MessageSquareText, Phone, ShieldCheck, Smartphone } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { ArrowRight, Globe2, MessageSquareText, Phone, Server, ShieldCheck, Smartphone } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { LiquidButton, MetalButton } from '@/components/ui/liquid-glass-button';
 
@@ -12,6 +13,8 @@ const MODULES: Array<{
   href: string;
   cta: string;
   icon: LucideIcon;
+  eyebrow: string;
+  highlights: string[];
   featured?: boolean;
 }> = [
   {
@@ -21,6 +24,8 @@ const MODULES: Array<{
     href: '/dashboard/verification',
     cta: 'Run Verification',
     icon: ShieldCheck,
+    eyebrow: 'Usage based',
+    highlights: ['SMS and voice OTP', 'Live verification routing'],
     featured: true,
   },
   {
@@ -30,6 +35,8 @@ const MODULES: Array<{
     href: '/dashboard/rentals',
     cta: 'Rent Number',
     icon: Phone,
+    eyebrow: 'Recurring option',
+    highlights: ['Renewable numbers', 'SMS and voice ready'],
   },
   {
     title: 'BP Messenger',
@@ -38,6 +45,8 @@ const MODULES: Array<{
     href: '/dashboard/inbox',
     cta: 'Start Messaging',
     icon: MessageSquareText,
+    eyebrow: 'Subscription',
+    highlights: ['Private message threads', 'Voicemail and calling'],
   },
   {
     title: 'BP eSIM Store',
@@ -46,6 +55,18 @@ const MODULES: Array<{
     href: '/dashboard/esim',
     cta: 'Buy eSIM',
     icon: Smartphone,
+    eyebrow: 'Travel data',
+    highlights: ['QR delivery', 'Global roaming access'],
+  },
+  {
+    title: 'BP Proxy Store',
+    price: '$7.99/mo',
+    description: 'Residential and datacenter routing for safer task separation.',
+    href: '/dashboard/proxies',
+    cta: 'View Proxies',
+    icon: Server,
+    eyebrow: 'Secure routing',
+    highlights: ['Dedicated credentials', 'Session isolation'],
   },
   {
     title: 'BP Secure Tunnel',
@@ -54,11 +75,14 @@ const MODULES: Array<{
     href: '/dashboard/vpn',
     cta: 'Secure Access',
     icon: Globe2,
+    eyebrow: 'Private tunnel',
+    highlights: ['Dedicated IP access', 'Protected region switching'],
   },
 ];
 
 export function LandingPricingSection() {
   const router = useRouter();
+  const shouldReduceMotion = useReducedMotion();
 
   return (
     <section className="bp-section-shell relative scroll-mt-28 py-16 md:py-24" id="pricing" aria-labelledby="pricing-title">
@@ -75,14 +99,18 @@ export function LandingPricingSection() {
           </div>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {MODULES.map((item, index) => {
             const Icon = item.icon;
             const isFeatured = item.featured || index === 0;
 
             return (
-              <article
+              <motion.article
                 key={item.title}
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.22 }}
+                transition={{ duration: 0.56, delay: shouldReduceMotion ? 0 : index * 0.06 }}
                 className={`rounded-[1.75rem] border p-5 backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_34px_90px_rgba(0,255,157,0.11)] md:p-6 ${
                   isFeatured
                     ? 'border-brand-green/28 bg-[linear-gradient(180deg,rgba(0,255,157,0.1),rgba(0,0,0,0.88))]'
@@ -90,17 +118,27 @@ export function LandingPricingSection() {
                 }`}
               >
                 <div className="flex items-start justify-between gap-4">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-[1rem] border border-brand-green/20 bg-brand-green/10">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-[1rem] bg-brand-green/10">
                     <Icon className="h-6 w-6 text-brand-green" />
                   </span>
                   <span className="rounded-full border border-white/10 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-white/48">
-                    {isFeatured ? 'Most used' : 'Module'}
+                    {item.eyebrow}
                   </span>
                 </div>
 
                 <h3 className="mt-6 text-xl font-semibold text-white">{item.title}</h3>
                 <p className="mt-4 font-mono text-3xl text-brand-green">{item.price}</p>
                 <p className="mt-4 text-sm leading-7 text-white/58">{item.description}</p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {item.highlights.map((highlight) => (
+                    <span
+                      key={highlight}
+                      className="rounded-full border border-white/8 bg-white/[0.03] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/54"
+                    >
+                      {highlight}
+                    </span>
+                  ))}
+                </div>
 
                 <div className="mt-8">
                   {isFeatured ? (
@@ -116,7 +154,7 @@ export function LandingPricingSection() {
                     </LiquidButton>
                   )}
                 </div>
-              </article>
+              </motion.article>
             );
           })}
         </div>

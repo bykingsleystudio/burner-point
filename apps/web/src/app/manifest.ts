@@ -14,13 +14,13 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ['productivity', 'utilities', 'business'],
     icons: [
       {
-        src: '/icon.svg',
+        src: '/assets/logo-mark.svg',
         sizes: 'any',
         type: 'image/svg+xml',
         purpose: 'any',
       },
       {
-        src: '/icon.svg',
+        src: '/assets/logo-mark.svg',
         sizes: 'any',
         type: 'image/svg+xml',
         purpose: 'maskable',

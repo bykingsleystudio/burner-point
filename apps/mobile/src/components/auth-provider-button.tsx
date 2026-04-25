@@ -1,9 +1,10 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Phone } from 'lucide-react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { BRAND } from '../lib/brand';
 
-type ProviderName = 'Google' | 'Apple' | 'Microsoft';
+type ProviderName = 'Google' | 'Apple' | 'Microsoft' | 'Phone';
 
 export function AuthProviderButton({
   provider,
@@ -23,15 +24,17 @@ export function AuthProviderButton({
       accessibilityRole="button"
       accessibilityLabel={`Continue with ${provider}`}
     >
-      <View style={styles.logoWrap}>
-        <ProviderLogo provider={provider} />
-      </View>
+      <ProviderLogo provider={provider} />
       <Text style={styles.providerLabel}>{provider}</Text>
     </TouchableOpacity>
   );
 }
 
 function ProviderLogo({ provider }: { provider: ProviderName }) {
+  if (provider === 'Phone') {
+    return <Phone size={18} color={BRAND.colors.cyberGreen} />;
+  }
+
   if (provider === 'Google') {
     return (
       <Svg viewBox="0 0 24 24" width={18} height={18} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
@@ -66,34 +69,25 @@ function ProviderLogo({ provider }: { provider: ProviderName }) {
 
 const styles = StyleSheet.create({
   button: {
-    flex: 1,
-    minHeight: 58,
-    borderRadius: BRAND.radii.md,
+    minHeight: 60,
+    flexBasis: '48%',
+    flexGrow: 1,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: BRAND.colors.border,
     backgroundColor: BRAND.colors.dark,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     gap: 6,
   },
   buttonDisabled: {
     opacity: 0.55,
   },
-  logoWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: BRAND.radii.sm,
-    borderWidth: 1,
-    borderColor: `${BRAND.colors.white}18`,
-    backgroundColor: `${BRAND.colors.white}05`,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   providerLabel: {
     color: BRAND.colors.metalEnd,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '800',
     textAlign: 'center',
   },

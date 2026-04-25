@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Redirect } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
 import { LayoutDashboard, MessageSquare, Phone, ShieldCheck, UserCircle } from 'lucide-react-native';
 import { useAuth } from '@clerk/clerk-expo';
 import { BRAND } from '../../lib/brand';
@@ -19,13 +20,17 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: BRAND.colors.black,
-          borderTopColor: BRAND.colors.border,
-          borderTopWidth: 1,
-          height: 88,
-          paddingBottom: 20,
+          position: 'absolute',
+          left: 12,
+          right: 12,
+          bottom: 12,
+          height: 82,
+          borderTopWidth: 0,
+          backgroundColor: 'transparent',
+          paddingBottom: 12,
           paddingTop: 10,
         },
+        tabBarBackground: () => <View style={styles.tabBarBackground} />,
         tabBarActiveTintColor: BRAND.colors.cyberGreen,
         tabBarInactiveTintColor: BRAND.colors.muted,
         tabBarLabelStyle: { fontSize: 10, fontWeight: '800', textTransform: 'uppercase', marginTop: 2 },
@@ -55,3 +60,18 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBarBackground: {
+    flex: 1,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: `${BRAND.colors.white}12`,
+    backgroundColor: `${BRAND.colors.surface}F2`,
+    shadowColor: '#000000',
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 10,
+  },
+});

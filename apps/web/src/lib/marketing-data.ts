@@ -38,7 +38,7 @@ export const primaryNav: MarketingLink[] = [
   { label: 'Pricing', href: '/pricing' },
   { label: 'About', href: '/about' },
   { label: 'Blog', href: '/blog' },
-  { label: 'Help', href: '/help' },
+  { label: 'Help', href: '/help-center' },
 ];
 
 export const footerGroups = [
@@ -50,7 +50,7 @@ export const footerGroups = [
       { label: 'Pricing', href: '/pricing' },
       { label: 'About', href: '/about' },
       { label: 'Blog', href: '/blog' },
-      { label: 'Help', href: '/help' },
+      { label: 'Help', href: '/help-center' },
     ],
   },
   {
@@ -68,16 +68,16 @@ export const footerGroups = [
     href: '/support',
     links: [
       { label: 'FAQ', href: '/faq' },
-      { label: 'Help Center', href: '/help' },
+      { label: 'Help Center', href: '/help-center' },
       { label: 'Contact', href: '/contact' },
     ],
   },
   {
     title: 'Legal',
-    href: '/terms',
+    href: '/terms-of-service',
     links: [
-      { label: 'Terms of Service', href: '/terms' },
-      { label: 'Privacy Policy', href: '/privacy' },
+      { label: 'Terms of Service', href: '/terms-of-service' },
+      { label: 'Privacy Policy', href: '/privacy-policy' },
     ],
   },
 ];
@@ -94,8 +94,8 @@ export const socialLinks = [
 
 export const trustBadges: MarketingLink[] = [
   { label: '256-bit AES Encryption', href: '/security' },
-  { label: 'No Logs Policy', href: '/privacy' },
-  { label: 'GDPR Compliant', href: '/privacy' },
+  { label: 'No Logs Policy', href: '/privacy-policy' },
+  { label: 'GDPR Compliant', href: '/privacy-policy' },
   { label: 'Real SIM Numbers', href: '/verifications' },
 ];
 
@@ -112,7 +112,7 @@ const faqItems = [
   ['Is VPN protection a separate product?', 'No. VPN privacy and protection is an in-platform Burner Point feature. It is designed to reduce exposure while using Burner Point services, not to operate as a standalone VPN brand.'],
   ['What payment methods does Burner Point support?', 'The product architecture supports Paystack, Paddle, and NOWPayments for core revenue flows, with Flutterwave, Squad by GTCO, Korapay, and OPay deferred until core payment stability is proven.'],
   ['How do refunds and billing work?', 'Refund eligibility depends on the product, provider delivery, whether a verification or rental was consumed, payment status, and number lifecycle. Billing surfaces should show references, status, credits, receipts, and support paths.'],
-  ['What is required to create an account?', 'Account creation requires first name, last name, email, phone number, password, Terms acceptance, and Privacy Policy acceptance. Burner Point supports email, phone, OAuth, password reset, and optional 2FA through a managed authentication layer.'],
+  ['What is required to create an account?', 'Account creation requires first name, last name, email, phone number, and password. By continuing, users agree to the Terms of Service and Privacy Policy. Burner Point supports email, phone, OAuth, password reset, and optional 2FA through a managed authentication layer.'],
   ['How does Burner Point handle privacy and data?', 'Burner Point is designed around data minimization, private access control, a no-logs posture for sensitive privacy workflows, and operational telemetry limited to security, billing, fraud prevention, support, and reliability.'],
   ['How do I reach support?', 'Email info.burnerpoint@gmail.com or message Telegram support at @burnerpoint and @burnerpointapp for account, verification, rental, billing, eSIM, proxy, VPN, or API help.'],
 ].map(([question, answer]) => ({ question, answer }));
@@ -354,7 +354,7 @@ marketingPages.help = {
   primaryCta: { label: 'Contact Support', href: '/contact' },
   secondaryCta: { label: 'Telegram Support', href: 'https://t.me/burnerpoint' },
   cards: [
-    { icon: 'book', meta: 'Getting Started', title: 'Create your Burner Point account', text: 'Required profile fields, Terms acceptance, Privacy Policy acceptance, and first-dashboard orientation.', href: '/help#help-getting-started', anchorId: 'help-getting-started' },
+    { icon: 'book', meta: 'Getting Started', title: 'Create your Burner Point account', text: 'Required profile fields, linked legal pages, and first-dashboard orientation.', href: '/help#help-getting-started', anchorId: 'help-getting-started' },
     { icon: 'book', meta: 'Verifications', title: 'Receive SMS, OTP, and voice codes', text: 'Choose country and service, activate a number, submit it to the platform, and monitor delivery.', href: '/help#help-verifications', anchorId: 'help-verifications' },
     { icon: 'book', meta: 'Rentals', title: 'Manage temporary and renewable numbers', text: 'Understand expiration, renewal, release, conversation support, and recovery planning.', href: '/help#help-rentals', anchorId: 'help-rentals' },
     { icon: 'book', meta: 'Payments', title: 'Credits, purchases, receipts, and references', text: 'Troubleshoot checkout status, wallet credits, subscriptions, and payment gateway references.', href: '/help#help-payments', anchorId: 'help-payments' },
@@ -363,7 +363,7 @@ marketingPages.help = {
     { icon: 'book', meta: 'Account & Authentication', title: 'Profile, sign out, and recovery', text: 'Manage account details, support tickets, notification preferences, and recovery paths.', href: '/help#help-account-auth', anchorId: 'help-account-auth' },
   ],
   sections: [
-    { anchorId: 'help-getting-started', meta: 'Getting Started', title: 'Getting Started', text: 'Create a Burner Point account with first name, last name, email, phone number, password, Terms acceptance, and Privacy Policy acceptance. After sign-up, complete onboarding so telecom, billing, support, and dashboard features have the account context they need.', items: ['Use a real email and phone number for recovery', 'Complete email or phone verification when prompted', 'Start with Get Verification, Rent A Number, or Buy Credits from the dashboard'] },
+    { anchorId: 'help-getting-started', meta: 'Getting Started', title: 'Getting Started', text: 'Create a Burner Point account with first name, last name, email, phone number, and password. By continuing, you agree to the Terms of Service and Privacy Policy. After sign-up, complete onboarding so telecom, billing, support, and dashboard features have the account context they need.', items: ['Use a real email and phone number for recovery', 'Complete email or phone verification when prompted', 'Start with Get Verification, Rent A Number, or Buy Credits from the dashboard'] },
     { anchorId: 'help-verifications', meta: 'Verifications', title: 'Verifications', text: 'Verification workflows let you choose a country, service, and number, then receive SMS OTP or voice OTP through Burner Point. Delivery depends on provider route quality, platform rules, and available inventory.', items: ['Select service and country before purchasing', 'Watch the inbox for SMS or voice code delivery', 'Open support with the service, number, and payment reference if delivery fails'] },
     { anchorId: 'help-rentals', meta: 'Rentals', title: 'Rentals', text: 'Rentals are for users who need a number beyond a single OTP. Non-renewable rentals are short-term. Renewable rentals are monthly and better for account recovery, repeat verification, messaging, and US/Canada conversation flows.', items: ['Track expiration before losing access', 'Renew monthly numbers before they lapse', 'Use conversation-supported numbers for calls, voicemail, SMS, and secure audio, photo and video sharing where available'] },
     { anchorId: 'help-payments', meta: 'Payments', title: 'Payments', text: 'Credits and billing should show gateway status, product assignment, receipts, references, wallet updates, and subscriptions. Paystack, Paddle, and NOWPayments are the core payment paths, with secondary gateways deferred until core stability.', items: ['Save checkout and payment references', 'Wait for webhook confirmation before expecting assignment', 'Contact support if payment succeeded but credits or inventory did not update'] },

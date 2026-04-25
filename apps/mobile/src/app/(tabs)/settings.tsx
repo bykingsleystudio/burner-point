@@ -16,6 +16,8 @@ const settings = [
   { label: 'API keys', text: 'Developer access, keys, and webhooks', Icon: Key, href: '/developer' },
   { label: 'Notifications', text: 'OTP, rentals, billing, and alerts', Icon: Bell },
   { label: 'Preferences', text: 'Motion, region, privacy defaults', Icon: SlidersHorizontal },
+  { label: 'Terms of Service', text: 'Current Burner Point legal terms', Icon: ShieldCheck, externalUrl: `${WEB_APP_URL}/terms-of-service` },
+  { label: 'Privacy Policy', text: 'How Burner Point handles personal data', Icon: ShieldCheck, externalUrl: `${WEB_APP_URL}/privacy-policy` },
   { label: 'Support', text: 'Tickets, email, and Telegram help channels', Icon: HelpCircle, href: '/support' },
 ];
 

@@ -2,15 +2,12 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { type FormEvent, useMemo, useRef, useState } from 'react';
+import { type FormEvent, useRef, useState } from 'react';
 import { useSignIn } from '@clerk/nextjs';
 import toast from 'react-hot-toast';
-import { ArrowRight, ShieldCheck, Smartphone, Zap } from 'lucide-react';
+import { ArrowRight, Zap } from 'lucide-react';
 import { AuthProviderButton } from '@/components/auth-provider-button';
 import { GlassInputWrapper, SignInPage } from '@/components/ui/sign-in';
-
-const AUTH_HERO_IMAGE =
-  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1600&q=80';
 
 const oauthProviders = [
   { label: 'Google', strategy: 'oauth_google' },
@@ -40,22 +37,6 @@ export default function LoginPage() {
   const authReady = Boolean(signIn);
   const isSubmitting = loading || fetchStatus === 'fetching' || !authReady;
   const canSubmit = identifier.trim().length >= 3 && password.length >= 8;
-
-  const description = useMemo(() => {
-    if (authMode === 'reset-request') {
-      return 'Use your Burner Point email or phone to request a secure password reset code.';
-    }
-    if (authMode === 'reset-code') {
-      return 'Enter the reset code you received to confirm the account recovery request.';
-    }
-    if (authMode === 'reset-password') {
-      return 'Set a new password, then return directly to the Burner Point dashboard.';
-    }
-    if (secondFactorStrategy) {
-      return 'Two-factor authentication is enabled on this Burner Point account. Enter the security code to continue.';
-    }
-    return 'Stay Anonymous. Stay Connected. Private By Design.';
-  }, [authMode, secondFactorStrategy]);
 
   const finishSignIn = async () => {
     if (!signIn) throw new Error('Authentication is still loading.');
@@ -284,24 +265,30 @@ export default function LoginPage() {
 
   return (
     <SignInPage
-      title="Log in or sign up"
-      description={description}
-      heroImageSrc={AUTH_HERO_IMAGE}
+      title={null}
+      description={null}
       testimonials={[]}
       onResetPassword={() => setAuthMode('reset-request')}
-      onCreateAccount={() => router.push('/auth/register')}
     >
       <div className="space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="inline-flex rounded-full border border-white/8 bg-white/[0.03] p-1">
-            <span className="rounded-full bg-brand-green px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-black">
-              Sign in
-            </span>
-            <Link href="/auth/register" className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/46 transition hover:text-white">
-              Create account
+          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">
+            {secondFactorStrategy
+              ? 'Two-factor verification'
+              : authMode === 'reset-request'
+                ? 'Reset password'
+                : authMode === 'reset-code'
+                  ? 'Verify reset code'
+                  : authMode === 'reset-password'
+                    ? 'Create a new password'
+                    : 'Sign in'}
+          </p>
+          <p className="text-sm text-white/46">
+            Need an account?{' '}
+            <Link href="/auth/register" className="text-brand-green transition hover:text-[#39FF14]">
+              Create one
             </Link>
-          </div>
-          <div className="text-xs text-white/38">By continuing you accept the Terms of Service and Privacy Policy.</div>
+          </p>
         </div>
 
         {!secondFactorStrategy && authMode === 'sign-in' ? (
@@ -335,6 +322,9 @@ export default function LoginPage() {
 
         {authMode === 'reset-request' ? (
           <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
+            <p className="text-sm leading-6 text-white/56">
+              Use the email address or phone number on your Burner Point account to request a secure password reset code.
+            </p>
             <label className="block text-sm font-medium text-white/70">
               Email or phone number
               <GlassInputWrapper>
@@ -359,6 +349,9 @@ export default function LoginPage() {
           </div>
         ) : authMode === 'reset-code' ? (
           <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
+            <p className="text-sm leading-6 text-white/56">
+              Enter the code you received so we can confirm the recovery request before changing the password.
+            </p>
             <label className="block text-sm font-medium text-white/70">
               Reset code
               <GlassInputWrapper>
@@ -384,6 +377,9 @@ export default function LoginPage() {
           </div>
         ) : authMode === 'reset-password' ? (
           <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
+            <p className="text-sm leading-6 text-white/56">
+              Set a new password for this Burner Point account, then continue straight into the dashboard.
+            </p>
             <label className="block text-sm font-medium text-white/70">
               New password
               <GlassInputWrapper>
@@ -408,6 +404,9 @@ export default function LoginPage() {
           </div>
         ) : secondFactorStrategy ? (
           <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
+            <p className="text-sm leading-6 text-white/56">
+              Two-factor authentication is enabled on this account. Enter the security code to continue.
+            </p>
             <label className="block text-sm font-medium text-white/70">
               Security code
               <GlassInputWrapper>
@@ -466,10 +465,6 @@ export default function LoginPage() {
               <button type="button" onClick={() => setAuthMode('reset-request')} className="font-medium text-brand-green transition hover:text-[#1cffac]">
                 Forgot password?
               </button>
-              <div className="inline-flex items-center gap-2 text-white/34">
-                <ShieldCheck className="h-4 w-4 text-brand-green" />
-                Clerk-backed 2FA available in profile settings
-              </div>
             </div>
 
             <button
@@ -492,22 +487,18 @@ export default function LoginPage() {
             <ArrowRight className="h-4 w-4 rotate-180" />
             Back
           </button>
-          <div className="flex items-center gap-2 text-sm text-white/46">
-            <Smartphone className="h-4 w-4 text-brand-green" />
-            Need an account?
-            <Link href="/auth/register" className="font-medium text-brand-green transition hover:text-[#1cffac]">
-              Create one
-            </Link>
-          </div>
+          <Link href="/dashboard/security" className="text-sm text-brand-green transition hover:text-[#39FF14]">
+            Manage 2FA after sign-in
+          </Link>
         </div>
 
-        <p className="text-xs leading-6 text-white/38">
+        <p className="text-xs leading-6 text-white/42">
           By continuing you agree to the Burner Point{' '}
-          <Link href="/terms" className="text-brand-green transition hover:text-[#1cffac]">
+          <Link href="/terms-of-service" className="text-brand-green transition hover:text-[#39FF14]">
             Terms of Service
           </Link>{' '}
           and{' '}
-          <Link href="/privacy" className="text-brand-green transition hover:text-[#1cffac]">
+          <Link href="/privacy-policy" className="text-brand-green transition hover:text-[#39FF14]">
             Privacy Policy
           </Link>
           .

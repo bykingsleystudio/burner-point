@@ -9,6 +9,7 @@ import {
   Bell,
   ChevronDown,
   CreditCard,
+  FileText,
   Globe2,
   HelpCircle,
   KeyRound,
@@ -125,6 +126,8 @@ const QUICK_ACTIONS = [
   { href: '/dashboard/inbox', label: 'Start Chat' },
   { href: '/dashboard/verification', label: 'Run Verification' },
 ];
+
+const MOBILE_NAV_ITEMS = ['/dashboard', '/dashboard/inbox', '/dashboard/verification', '/dashboard/rentals', '/dashboard/settings'] as const;
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -289,7 +292,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex min-h-screen bg-brand-black text-white">
+    <div className="flex min-h-screen bg-brand-black pb-24 text-white md:pb-0">
       <aside
         className={clsx(
           'fixed inset-y-0 left-0 z-40 flex w-[19rem] max-w-[88vw] flex-col border-r border-white/8 bg-[linear-gradient(180deg,rgba(1,50,32,0.94),rgba(0,0,0,0.98))] shadow-[28px_0_80px_rgba(0,0,0,0.48)] transition-transform duration-300 md:static md:max-w-none',
@@ -298,9 +301,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       >
         <div className="border-b border-white/8 px-5 py-5">
           <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
-            <span className="flex h-11 w-11 items-center justify-center rounded-[1rem] border border-brand-green/25 bg-brand-green/10 shadow-[0_0_26px_rgba(0,255,157,0.16)]">
-              <Image src="/assets/logo-mark.svg" alt="" width={24} height={24} />
-            </span>
+            <Image src="/assets/logo-mark.svg" alt="" width={28} height={30} className="h-auto w-auto drop-shadow-[0_0_20px_rgba(0,255,157,0.2)]" />
             <span>
               <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={138} height={26} className="h-auto w-auto" />
               <span className="mt-1 block text-[11px] text-white/48">Private telecom control surface</span>
@@ -391,6 +392,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <HelpCircle className="h-4 w-4 text-brand-green" />
                 Support
               </Link>
+              <Link href="/terms-of-service" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-white/68 transition hover:bg-white/[0.04] hover:text-white">
+                <FileText className="h-4 w-4 text-brand-green" />
+                Terms of Service
+              </Link>
+              <Link href="/privacy-policy" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-white/68 transition hover:bg-white/[0.04] hover:text-white">
+                <Shield className="h-4 w-4 text-brand-green" />
+                Privacy Policy
+              </Link>
               <button
                 type="button"
                 onClick={handleSignOut}
@@ -477,6 +486,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <main className="flex-1 px-4 py-5 md:px-6 md:py-6">{children}</main>
       </div>
+
+      <nav className="fixed inset-x-3 bottom-3 z-20 rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(7,20,15,0.96),rgba(0,0,0,0.96))] p-2 shadow-[0_24px_80px_rgba(0,0,0,0.44)] backdrop-blur-xl md:hidden" aria-label="Mobile dashboard">
+        <div className="grid grid-cols-5 gap-1">
+          {NAV_ITEMS.filter((item) => MOBILE_NAV_ITEMS.includes(item.href as (typeof MOBILE_NAV_ITEMS)[number])).map((item) => {
+            const active =
+              item.href === '/dashboard'
+                ? pathname === item.href
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const Icon = item.icon;
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={clsx(
+                  'flex min-h-[68px] flex-col items-center justify-center gap-2 rounded-[1rem] px-2 text-center text-[10px] font-semibold uppercase tracking-[0.12em] transition',
+                  active ? 'bg-brand-green/[0.1] text-brand-green' : 'text-white/44',
+                )}
+              >
+                <Icon className={clsx('h-5 w-5', active ? 'text-brand-green' : 'text-white/50')} />
+                <span>{item.shortLabel}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { Show, UserButton } from '@clerk/nextjs';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -11,6 +12,7 @@ import {
   Briefcase,
   CalendarDays,
   Check,
+  ChevronDown,
   Code2,
   CreditCard,
   X,
@@ -70,13 +72,22 @@ export function Eyebrow({ children }: { children: ReactNode }) {
 export function BurnerLogo({ compact = false }: { compact?: boolean }) {
   return (
     <Link href="/" className="group inline-flex items-center gap-3" aria-label="Burner Point home">
-      <span className="flex h-10 w-10 items-center justify-center rounded-bp-md border border-brand-green/25 bg-brand-green/10 shadow-[0_0_32px_rgba(0,255,157,0.18)] transition group-hover:scale-105 group-hover:bg-brand-green/20">
-        <Image src="/assets/logo-mark.svg" alt="" width={24} height={24} priority />
-      </span>
+      <Image
+        src="/assets/logo-mark.svg"
+        alt=""
+        width={40}
+        height={40}
+        priority
+        className="h-10 w-10 transition duration-300 group-hover:scale-[1.03]"
+      />
       {!compact ? (
-        <span className="bp-brand-wordmark bp-metal-text text-base">
-          Burner Point
-        </span>
+        <Image
+          src="/assets/wordmark-white.svg"
+          alt="Burner Point"
+          width={198}
+          height={28}
+          className="h-6 w-auto sm:h-7"
+        />
       ) : null}
     </Link>
   );
@@ -102,29 +113,67 @@ export function SiteHeader() {
     const el = mobileNavRef.current;
     if (el) el.open = false;
   };
+  const headerMenuLinks = [
+    { label: 'Dashboard', href: '/dashboard' },
+    { label: 'Pricing', href: '/pricing' },
+    { label: 'About', href: '/about' },
+    { label: 'Blog', href: '/blog' },
+    { label: 'Help', href: '/help-center' },
+    { label: 'Sign In', href: '/auth/login' },
+  ];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-brand-border/80 bg-brand-black/88 shadow-[0_18px_70px_rgba(0,0,0,0.34)] backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-white/6 bg-[rgba(1,7,4,0.82)] shadow-[0_18px_70px_rgba(0,0,0,0.34)] backdrop-blur-2xl">
       <div className="mx-auto flex min-h-20 max-w-[1680px] items-center justify-between gap-4 px-5 sm:px-6 xl:px-10 2xl:min-h-24">
         <BurnerLogo />
-        <nav className="hidden items-center gap-5 text-sm text-white/58 xl:flex 2xl:gap-7" aria-label="Primary">
+        <nav className="hidden items-center gap-3 text-sm xl:flex 2xl:gap-4" aria-label="Primary">
           {primaryNav.map((item) => (
-            <Link key={item.href} href={item.href} className="rounded-bp px-2 py-2 transition hover:bg-brand-green/8 hover:text-brand-green">
+            <Link
+              key={item.href}
+              href={item.href}
+              className="rounded-full px-4 py-2 text-white/58 transition hover:bg-white/[0.03] hover:text-white"
+            >
               {item.label}
             </Link>
           ))}
         </nav>
         <div className="hidden items-center gap-3 lg:flex">
+          <Menu as="div" className="relative hidden xl:block">
+            <MenuButton className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 bg-white/[0.025] px-4 py-2 text-sm font-semibold text-white/76 transition hover:border-brand-green/28 hover:text-white">
+              Menu
+              <ChevronDown className="h-4 w-4 text-brand-green" />
+            </MenuButton>
+            <MenuItems
+              transition
+              anchor="bottom end"
+              className="mt-3 w-72 origin-top-right rounded-[1.4rem] border border-white/10 bg-[rgba(2,10,6,0.96)] p-3 shadow-[0_28px_80px_rgba(0,0,0,0.58)] transition duration-200 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
+            >
+              <div className="mb-2 px-2">
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-green">Navigation</p>
+              </div>
+              {headerMenuLinks.map((item) => (
+                <MenuItem key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="flex min-h-12 items-center justify-between rounded-[1rem] px-4 py-3 text-sm text-white/72 transition hover:bg-white/[0.04] hover:text-white"
+                  >
+                    <span>{item.label}</span>
+                    <ArrowRight className="h-4 w-4 text-brand-green" />
+                  </Link>
+                </MenuItem>
+              ))}
+            </MenuItems>
+          </Menu>
           <Show when="signed-out">
-            <Link href="/auth/signup" className="bp-primary-action px-4 py-3 text-xs font-semibold uppercase">
+            <Link href="/auth/signup" className="bp-primary-action rounded-full px-5 py-3 text-xs font-semibold uppercase">
               Get Started
             </Link>
-            <Link href="/auth/login" className="bp-secondary-action px-4 py-3 text-xs font-semibold uppercase">
+            <Link href="/auth/login" className="bp-secondary-action rounded-full px-5 py-3 text-xs font-semibold uppercase">
               Sign In
             </Link>
           </Show>
           <Show when="signed-in">
-            <Link href="/dashboard" className="bp-secondary-action px-4 py-3 text-xs font-semibold uppercase">
+            <Link href="/dashboard" className="bp-secondary-action rounded-full px-5 py-3 text-xs font-semibold uppercase">
               Dashboard
             </Link>
             <UserButton />
@@ -144,7 +193,7 @@ export function SiteHeader() {
           <div
             role="navigation"
             aria-label="Mobile primary navigation"
-            className="fixed inset-x-0 top-[4.75rem] z-[140] mx-3 max-h-[min(32rem,calc(100vh-5.5rem))] overflow-y-auto overscroll-contain rounded-bp-lg border border-brand-green/40 bg-[#013220] p-5 text-white shadow-[0_32px_100px_rgba(0,0,0,0.92)] ring-2 ring-black/80 transition duration-[220ms] ease-out"
+            className="fixed inset-x-0 top-[4.75rem] z-[140] mx-3 max-h-[min(32rem,calc(100vh-5.5rem))] overflow-y-auto overscroll-contain rounded-[1.8rem] border border-white/10 bg-[rgba(2,10,6,0.97)] p-5 text-white shadow-[0_32px_100px_rgba(0,0,0,0.92)] transition duration-[220ms] ease-out"
           >
             <div className="mb-4 flex items-center justify-between border-b border-brand-green/25 pb-4">
               <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-green">Menu</p>
@@ -158,12 +207,12 @@ export function SiteHeader() {
               </button>
             </div>
             <div className="grid grid-cols-1 gap-2">
-              {primaryNav.map((item) => (
+              {headerMenuLinks.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={closeMobileNav}
-                  className="flex min-h-12 items-center rounded-bp border border-white/14 bg-black px-4 py-3 text-sm font-semibold text-white transition duration-[220ms] ease-out hover:border-brand-green/35 hover:bg-[#011a12] hover:text-brand-green active:scale-[0.98]"
+                  className="flex min-h-12 items-center rounded-[1rem] border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-semibold text-white transition duration-[220ms] ease-out hover:border-brand-green/35 hover:bg-[#011a12] hover:text-brand-green active:scale-[0.98]"
                 >
                   {item.label}
                 </Link>
@@ -171,18 +220,18 @@ export function SiteHeader() {
             </div>
             <div className="mt-4 grid gap-2 border-t border-brand-green/25 pt-4">
               <Show when="signed-out">
-                <Link href="/auth/signup" onClick={closeMobileNav} className="rounded-bp bg-brand-green px-4 py-3 text-center text-xs font-semibold uppercase text-black transition duration-[220ms] ease-out active:scale-[0.98]">
+                <Link href="/auth/signup" onClick={closeMobileNav} className="rounded-full bg-brand-green px-4 py-3 text-center text-xs font-semibold uppercase text-black transition duration-[220ms] ease-out active:scale-[0.98]">
                   Get Started
                 </Link>
-                <Link href="/auth/login" onClick={closeMobileNav} className="rounded-bp border border-white/20 bg-black px-4 py-3 text-center text-xs font-semibold uppercase text-white transition duration-[220ms] ease-out active:scale-[0.98]">
+                <Link href="/auth/login" onClick={closeMobileNav} className="rounded-full border border-white/20 bg-black px-4 py-3 text-center text-xs font-semibold uppercase text-white transition duration-[220ms] ease-out active:scale-[0.98]">
                   Sign In
                 </Link>
               </Show>
               <Show when="signed-in">
-                <Link href="/dashboard" onClick={closeMobileNav} className="rounded-bp border border-white/20 bg-black px-4 py-3 text-center text-xs font-semibold uppercase text-white transition duration-[220ms] ease-out active:scale-[0.98]">
+                <Link href="/dashboard" onClick={closeMobileNav} className="rounded-full border border-white/20 bg-black px-4 py-3 text-center text-xs font-semibold uppercase text-white transition duration-[220ms] ease-out active:scale-[0.98]">
                   Dashboard
                 </Link>
-                <div className="flex justify-center rounded-bp border border-white/20 bg-black px-4 py-3">
+                <div className="flex justify-center rounded-full border border-white/20 bg-black px-4 py-3">
                   <UserButton />
                 </div>
               </Show>
@@ -231,16 +280,11 @@ export function SiteFooter() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/36">Social Media</p>
-              <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="mt-4 flex flex-wrap gap-3">
                 {socialLinks.map((item) => (
-                  <a key={item.label} href={item.href} target="_blank" rel="noreferrer" aria-label={`${item.label} ${item.handle}`} className="flex min-h-11 items-center gap-3 rounded-bp border border-white/10 bg-black/25 px-3 py-2 transition hover:-translate-y-0.5 hover:border-brand-green/40 hover:text-brand-green">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-bp border border-white/10 font-mono text-[10px] font-semibold uppercase text-white/70">
-                      {item.short}
-                    </span>
-                    <span>
-                      <span className="block text-xs font-semibold text-white/76">{item.label}</span>
-                      <span className="block font-mono text-[10px] text-white/42">{item.handle}</span>
-                    </span>
+                  <a key={item.label} href={item.href} target="_blank" rel="noreferrer" aria-label={`${item.label} ${item.handle}`} className="inline-flex items-center gap-2 rounded-full bg-white/[0.03] px-4 py-2 text-sm text-white/64 transition hover:bg-white/[0.05] hover:text-brand-green">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-brand-green/80">{item.short}</span>
+                    <span>{item.label}</span>
                   </a>
                 ))}
               </div>
@@ -266,7 +310,8 @@ export function MarketingShell({ children }: { children: ReactNode }) {
     <main className="relative min-h-screen min-h-[100dvh] overflow-hidden bg-brand-black pb-20 text-white md:pb-0">
       <a href="#main-content" className="bp-skip-link">Skip to content</a>
       <div className="pointer-events-none fixed inset-0">
-        <div className="bp-grid-bg absolute inset-0 opacity-70" />
+        <div className="bp-grid-bg absolute inset-0 opacity-60" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_10%,rgba(0,255,157,0.1),transparent_24%),radial-gradient(circle_at_88%_12%,rgba(57,255,20,0.06),transparent_18%)]" />
         <div className="absolute inset-x-0 top-0 h-[560px] bg-[linear-gradient(180deg,rgba(1,50,32,0.62),rgba(0,0,0,0))]" />
         <div className="absolute inset-x-0 bottom-0 h-[420px] bg-[linear-gradient(0deg,rgba(1,50,32,0.32),rgba(0,0,0,0))]" />
       </div>
@@ -275,19 +320,19 @@ export function MarketingShell({ children }: { children: ReactNode }) {
         <div id="main-content">{children}</div>
         <SiteFooter />
       </div>
-      <div role="navigation" aria-label="Mobile conversion actions" className="fixed inset-x-0 bottom-0 z-50 border-t border-brand-green/15 bg-brand-black/92 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-20px_60px_rgba(0,0,0,0.44)] backdrop-blur-xl md:hidden">
+      <div role="navigation" aria-label="Mobile conversion actions" className="fixed inset-x-0 bottom-0 z-50 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 md:hidden">
         <Show when="signed-out">
-          <div className="grid grid-cols-2 gap-3">
-            <Link href="/auth/signup" className="bp-primary-action flex min-h-12 items-center justify-center px-4 py-3 text-xs font-semibold uppercase">
+          <div className="grid grid-cols-2 gap-3 rounded-full border border-white/10 bg-brand-black/92 p-2 shadow-[0_-20px_60px_rgba(0,0,0,0.44)] backdrop-blur-xl">
+            <Link href="/auth/signup" className="bp-primary-action flex min-h-12 items-center justify-center rounded-full px-4 py-3 text-xs font-semibold uppercase">
               Get Started
             </Link>
-            <Link href="/auth/login" className="bp-secondary-action flex min-h-12 items-center justify-center px-4 py-3 text-xs font-semibold uppercase">
+            <Link href="/auth/login" className="bp-secondary-action flex min-h-12 items-center justify-center rounded-full px-4 py-3 text-xs font-semibold uppercase">
               Sign In
             </Link>
           </div>
         </Show>
         <Show when="signed-in">
-          <Link href="/dashboard" className="bp-primary-action flex min-h-12 items-center justify-center px-4 py-3 text-xs font-semibold uppercase">
+          <Link href="/dashboard" className="bp-primary-action flex min-h-12 items-center justify-center rounded-full px-4 py-3 text-xs font-semibold uppercase shadow-[0_-20px_60px_rgba(0,0,0,0.44)]">
             Open Dashboard
           </Link>
         </Show>

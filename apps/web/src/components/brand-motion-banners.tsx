@@ -35,12 +35,6 @@ const SERVICES: Array<{ href: string; label: string; Icon: LucideIcon; mot: stri
   { href: '/security', label: 'VPN', Icon: Lock, mot: 'bp-svc-mot-6' },
 ];
 
-function getFlagVisualStyle(iso: string) {
-  return {
-    backgroundImage: `url(https://flagcdn.com/${iso.toLowerCase()}.svg)`,
-  };
-}
-
 function CoverageStrip() {
   return (
     <>
@@ -52,13 +46,9 @@ function CoverageStrip() {
             return (
               <div
                 key={`${iso}-${ring}`}
-                className="mx-2 inline-flex shrink-0 items-center gap-2 rounded-bp-md border border-brand-green/28 bg-[#010806] px-3 py-2 shadow-[inset_0_1px_0_rgba(0,255,157,0.1),0_6px_22px_rgba(0,0,0,0.4)] sm:mx-3 sm:px-4 sm:py-2.5"
+                className="mx-2 inline-flex shrink-0 items-center gap-2 rounded-full bg-white/[0.03] px-3 py-2 sm:mx-3 sm:px-4 sm:py-2.5"
               >
-                <span
-                  className={`bp-flag-swatch ${mot}`}
-                  style={getFlagVisualStyle(iso)}
-                  aria-hidden="true"
-                >
+                <span className={`text-base ${mot}`} aria-hidden="true">
                   {flag}
                 </span>
                 <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white/90 sm:text-[11px]">
@@ -83,20 +73,12 @@ function TrustedPlatformsStrip() {
             return (
               <div
                 key={`${p.label}-${ring}`}
-                className={`mx-2 inline-flex shrink-0 items-center gap-3 rounded-bp-md bg-[linear-gradient(155deg,rgba(57,255,20,0.06),rgba(0,0,0,0.94))] px-3 py-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.55)] sm:mx-3 sm:px-4 sm:py-3 ${p.mot}`}
+                className={`mx-2 inline-flex shrink-0 items-center gap-3 rounded-full bg-white/[0.03] px-3 py-2.5 sm:mx-3 sm:px-4 sm:py-3 ${p.mot}`}
                 style={{
-                  borderColor: p.tileBorder,
-                  boxShadow: `0 8px 32px rgba(0,0,0,0.55), 0 0 24px ${p.tileGlow}`,
+                  boxShadow: `0 8px 32px rgba(0,0,0,0.4), 0 0 24px ${p.tileGlow}`,
                 }}
               >
-                <span
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-bp sm:h-10 sm:w-10"
-                  style={{
-                    background: p.iconBg,
-                    borderColor: p.iconBorder,
-                    borderWidth: 1,
-                  }}
-                >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center sm:h-9 sm:w-9">
                   <Icon className="h-5 w-5 sm:h-6 sm:w-6" style={{ color: p.brandColor }} aria-hidden="true" />
                 </span>
                 <span
@@ -125,9 +107,9 @@ function ProductStrip() {
               <Link
                 key={`${s.href}-${ring}`}
                 href={s.href}
-                className={`mx-3 inline-flex shrink-0 items-center gap-3 rounded-bp-md border border-white/12 bg-[linear-gradient(145deg,rgba(0,255,157,0.08),rgba(0,0,0,0.92))] px-4 py-3 shadow-[0_10px_36px_rgba(0,0,0,0.5)] transition duration-[220ms] ease-out hover:border-brand-green/40 hover:shadow-[0_12px_40px_rgba(0,255,157,0.12)] active:scale-[0.98] ${s.mot}`}
+                className={`mx-3 inline-flex shrink-0 items-center gap-3 rounded-full bg-[linear-gradient(145deg,rgba(0,255,157,0.08),rgba(0,0,0,0.92))] px-4 py-3 shadow-[0_10px_36px_rgba(0,0,0,0.5)] transition duration-[220ms] ease-out hover:bg-brand-green/[0.08] hover:shadow-[0_12px_40px_rgba(0,255,157,0.12)] active:scale-[0.98] ${s.mot}`}
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-bp border border-brand-green/22 bg-black/55">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center">
                   <Icon className="h-5 w-5 text-brand-green" aria-hidden="true" />
                 </span>
                 <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-white/88">{s.label}</span>
@@ -170,7 +152,7 @@ export function BrandMotionBanners() {
         <p className="mb-2 text-center font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-[#39FF14]/90">
           Trusted platforms
         </p>
-        <p className="mb-5 max-w-2xl mx-auto px-4 text-center text-[11px] leading-relaxed text-white/36">
+        <p className="mx-auto mb-5 max-w-2xl px-4 text-center text-[11px] leading-relaxed text-white/36">
           Logos are identifiers only (react-icons: Simple Icons and Font Awesome glyphs). Trademarks belong to their owners. Not affiliated with or endorsed by these services.
         </p>
         <div className="relative overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_5%,black_95%,transparent)]">

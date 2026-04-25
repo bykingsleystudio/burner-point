@@ -37,12 +37,9 @@ export const metadata: Metadata = {
   category: 'Communication',
   verification,
   icons: {
-    icon: [
-      { url: '/icon.svg', type: 'image/svg+xml' },
-      { url: '/assets/logo-mark.svg', type: 'image/svg+xml' },
-    ],
-    shortcut: '/icon.svg',
-    apple: '/icon.svg',
+    icon: [{ url: '/assets/logo-mark.svg', type: 'image/svg+xml' }],
+    shortcut: '/assets/logo-mark.svg',
+    apple: '/assets/logo-mark.svg',
   },
   appleWebApp: {
     capable: true,

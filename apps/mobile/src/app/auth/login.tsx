@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Eye, EyeOff, ShieldCheck, Zap } from 'lucide-react-native';
@@ -26,6 +26,7 @@ export default function LoginScreen() {
   const { isLoaded, signIn, setActive } = useSignIn();
   const { getToken } = useAuth();
   const { startSSOFlow } = useSSO();
+  const identifierInputRef = useRef<TextInput>(null);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -210,13 +211,18 @@ export default function LoginScreen() {
             <ShieldCheck size={24} color={BRAND.colors.dark} />
           </View>
           <Text style={s.logoText}>Burner<Text style={s.green}>Point</Text></Text>
-          <Text style={s.logoSub}>Secure access for private communication.</Text>
         </TouchableOpacity>
 
         <View style={s.form}>
-          <Text style={s.kicker}>Sign in</Text>
-          <Text style={s.title}>Welcome back.</Text>
-          <Text style={s.sub}>Use your email address or phone number to get into Burner Point.</Text>
+          <Text style={s.kicker}>
+            {secondFactorStrategy
+              ? 'Two-factor verification'
+              : authStep === 'reset-request'
+                ? 'Reset password'
+                : authStep === 'reset-confirm'
+                  ? 'Enter reset code'
+                  : 'Secure sign in'}
+          </Text>
 
           {secondFactorStrategy ? (
             <>
@@ -302,8 +308,18 @@ export default function LoginScreen() {
             </>
           ) : (
             <>
+              <View style={s.providerGrid}>
+                {providers.map(([label, strategy]) => (
+                  <AuthProviderButton key={label} provider={label} onPress={() => oauth(strategy)} disabled={loading || !isLoaded} />
+                ))}
+                <AuthProviderButton provider="Phone" onPress={() => identifierInputRef.current?.focus()} disabled={loading || !isLoaded} />
+              </View>
+
+              <Text style={s.or}>or use your Burner Point account</Text>
+
               <Text style={s.label}>Email or phone number</Text>
               <TextInput
+                ref={identifierInputRef}
                 value={identifier}
                 onChangeText={setIdentifier}
                 placeholder="you@example.com or +1 415 555 0182"
@@ -346,16 +362,16 @@ export default function LoginScreen() {
                 <Text style={s.textLinkLabel}>Forgot password?</Text>
               </TouchableOpacity>
 
-              <Text style={s.or}>or continue with</Text>
-              <View style={s.providerRow}>
-                {providers.map(([label, strategy]) => (
-                  <AuthProviderButton key={label} provider={label} onPress={() => oauth(strategy)} disabled={loading || !isLoaded} />
-                ))}
-              </View>
-
               <TouchableOpacity onPress={() => router.push('/auth/register' as any)} style={s.textLink}>
                 <Text style={s.registerText}>No account? <Text style={s.registerHighlight}>Create one free</Text></Text>
               </TouchableOpacity>
+
+              <Text style={s.legalText}>
+                By continuing you agree to the
+                <Text style={s.legalLink} onPress={() => Linking.openURL(`${WEB_APP_URL}/terms-of-service`)}> Terms of Service</Text>
+                {' '}and
+                <Text style={s.legalLink} onPress={() => Linking.openURL(`${WEB_APP_URL}/privacy-policy`)}> Privacy Policy</Text>.
+              </Text>
             </>
           )}
         </View>
@@ -379,19 +395,16 @@ const s = StyleSheet.create({
   },
   logoText: { color: BRAND.colors.white, fontSize: 24, fontWeight: '900' },
   green: { color: BRAND.colors.cyberGreen },
-  logoSub: { color: BRAND.colors.metalStart, fontSize: 12, marginTop: 4 },
   form: {
     backgroundColor: BRAND.colors.surface,
     borderWidth: 1,
     borderColor: BRAND.colors.border,
-    borderRadius: BRAND.radii.lg,
-    padding: 14,
-    gap: 8,
+    borderRadius: 22,
+    padding: 18,
+    gap: 10,
     ...BRAND.shadows.card,
   },
-  kicker: { color: BRAND.colors.cyberGreen, fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
-  title: { color: BRAND.colors.white, fontSize: 28, lineHeight: 28, fontWeight: '900', textTransform: 'uppercase' },
-  sub: { color: BRAND.colors.metalStart, fontSize: 13, lineHeight: 18, marginBottom: 2 },
+  kicker: { color: BRAND.colors.cyberGreen, fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.4 },
   label: { color: BRAND.colors.metalStart, fontSize: 11, fontWeight: '700', marginTop: 2 },
   input: {
     minHeight: 48,
@@ -421,8 +434,10 @@ const s = StyleSheet.create({
   textLink: { alignItems: 'center', paddingTop: 4 },
   textLinkLabel: { color: BRAND.colors.cyberGreen, fontSize: 12, fontWeight: '800' },
   or: { color: BRAND.colors.muted, fontSize: 10, textAlign: 'center', marginTop: 2, textTransform: 'uppercase' },
-  providerRow: { flexDirection: 'row', gap: 8, marginTop: 2 },
+  providerGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   registerText: { color: BRAND.colors.metalStart, fontSize: 13 },
   registerHighlight: { color: BRAND.colors.cyberGreen, fontWeight: '800' },
   resetActions: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, paddingTop: 4 },
+  legalText: { color: BRAND.colors.muted, fontSize: 11, lineHeight: 16, textAlign: 'center' },
+  legalLink: { color: BRAND.colors.cyberGreen, fontWeight: '800' },
 });

@@ -35,6 +35,8 @@ export type SeoPage = {
 
 export function routeForSlug(slug: string) {
   if (slug === 'api-docs') return '/api/docs';
+  if (slug === 'terms') return '/terms-of-service';
+  if (slug === 'privacy') return '/privacy-policy';
   return `/${slug}`;
 }
 
@@ -63,12 +65,18 @@ export const publicSeoPages: SeoPage[] = [
     page: marketingPages.help,
   },
   {
-    route: '/privacy-policy',
-    title: 'Privacy Policy',
-    description: marketingPages.privacy.description,
+    route: '/terms-of-service',
+    title: 'Terms of Service',
+    description: 'Burner Point Terms of Service effective April 23, 2026.',
     changeFrequency: 'yearly',
     priority: 0.4,
-    page: marketingPages.privacy,
+  },
+  {
+    route: '/privacy-policy',
+    title: 'Privacy Policy',
+    description: 'Burner Point Privacy Policy effective April 23, 2026.',
+    changeFrequency: 'yearly',
+    priority: 0.4,
   },
   ...Object.values(marketingPages).map((page) => ({
     route: routeForSlug(page.slug),
