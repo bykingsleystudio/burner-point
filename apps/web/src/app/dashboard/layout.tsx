@@ -97,7 +97,7 @@ const NAV_ITEMS: NavItem[] = [
     href: '/dashboard/settings',
     label: 'Settings',
     shortLabel: 'Settings',
-    description: 'Profile, billing, API keys, and support.',
+    description: 'Profile, billing, access keys, and support.',
     icon: Settings,
   },
 ];
@@ -112,12 +112,12 @@ const PAGE_META: Array<{ match: string; title: string; description: string }> = 
   { match: '/dashboard/esim', title: 'BP eSIM Store', description: 'Provision travel data plans and manage installed eSIMs.' },
   { match: '/dashboard/proxies', title: 'BP Proxy Store', description: 'Filter proxy plans, reveal credentials, and review active sessions.' },
   { match: '/dashboard/vpn', title: 'BP Secure Tunnel', description: 'Secure routing, server choice, and profile provisioning.' },
-  { match: '/dashboard/settings', title: 'Settings', description: 'Profile, billing, API keys, support, and security controls.' },
+  { match: '/dashboard/settings', title: 'Settings', description: 'Profile, billing, access keys, support, and security controls.' },
   { match: '/dashboard/profile', title: 'Settings', description: 'Manage personal details and recovery information.' },
   { match: '/dashboard/billing', title: 'Billing & Subscription', description: 'Wallet movements, invoices, plans, and active subscriptions.' },
   { match: '/dashboard/credits', title: 'Billing & Subscription', description: 'Fund the wallet for verification, rentals, eSIM, and proxies.' },
-  { match: '/dashboard/api', title: 'API & Developer', description: 'Manage API keys, docs access, and integration security.' },
-  { match: '/dashboard/developer', title: 'API & Developer', description: 'Developer access, webhook control, and automation paths.' },
+  { match: '/dashboard/api', title: 'Advanced Access', description: 'Manage access keys, event delivery, and integration security.' },
+  { match: '/dashboard/developer', title: 'Advanced Access', description: 'Advanced access, event delivery control, and automation paths.' },
   { match: '/dashboard/support', title: 'Support', description: 'Tickets, Telegram, and account issue handling.' },
   { match: '/dashboard', title: 'Dashboard', description: 'Private telecom operations, funding, and account visibility.' },
 ];
@@ -392,7 +392,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </Link>
               <Link href="/dashboard/api" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-white/68 transition hover:bg-white/[0.04] hover:text-white">
                 <KeyRound className="h-4 w-4 text-brand-green" />
-                API Keys
+                Access Keys
               </Link>
               <Link href="/dashboard/support" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-white/68 transition hover:bg-white/[0.04] hover:text-white">
                 <HelpCircle className="h-4 w-4 text-brand-green" />

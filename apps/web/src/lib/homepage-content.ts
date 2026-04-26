@@ -65,7 +65,7 @@ export const productLinks: ProductLink[] = [
   },
   {
     name: 'BP Verify Hub',
-    description: 'Receive supported SMS and voice verification codes from one controlled dashboard.',
+    description: 'Receive supported SMS and voice verification codes from one clean dashboard.',
     href: '/#bp-verify-hub',
   },
   {
@@ -100,12 +100,12 @@ export const headerLinks = [
 ] as const;
 
 export const heroTrustItems = [
-  'Private numbers',
+  'US, UK & Canada numbers',
   'SMS & Voice OTP',
-  'Rentals',
-  'eSIM',
-  'Proxies',
+  'Renewable rentals',
+  'eSIM data',
   'Secure VPN',
+  'Proxy access',
 ] as const;
 
 export const productStripCards: FeatureCard[] = [
@@ -156,7 +156,7 @@ export const solutionFeatures: FeatureCard[] = [
     description: 'Choose a number for calls, texts, and contact separation without exposing your personal line.',
   },
   {
-    title: 'SMS & voice OTP',
+    title: 'SMS and voice OTP',
     description: 'Receive supported verification codes directly inside your dashboard where service and route support exist.',
   },
   {
@@ -181,7 +181,7 @@ export const productSections: ProductSection[] = [
   {
     id: 'bp-messenger',
     eyebrow: 'BP Messenger',
-    title: 'Your phone’s other number.',
+    title: "Your phone's other number.",
     description:
       'BP Messenger gives you a dedicated private number for communication without exposing your personal number. Choose a supported US, Canada, or UK number, then call, text, manage contacts, block spam, and keep conversations separate.',
     href: '/auth/signup',
@@ -249,7 +249,7 @@ export const productSections: ProductSection[] = [
       'BP Proxy Store gives users access to proxy plans for business, testing, research, geo-checking, and approved routing use cases.',
     href: '/auth/signup',
     cta: 'View Proxy Plans',
-    note: 'Proxy access must be used lawfully and in accordance with Burner Point’s Acceptable Use Policy.',
+    note: "Proxy access must be used lawfully and in accordance with Burner Point's Acceptable Use Policy.",
     features: [
       'Residential, datacenter, and rotating proxies',
       'Location filtering',
@@ -262,7 +262,7 @@ export const productSections: ProductSection[] = [
     eyebrow: 'BP Secure Tunnel',
     title: 'Secure your connection with BP Secure Tunnel.',
     description:
-      'BP Secure Tunnel is Burner Point’s WireGuard-based VPN system for private, encrypted connectivity and dedicated IP access.',
+      "BP Secure Tunnel is Burner Point's WireGuard-based VPN system for private, encrypted connectivity and dedicated IP access.",
     href: '/auth/signup',
     cta: 'Activate Secure Tunnel',
     features: [
@@ -298,12 +298,12 @@ export const howItWorksSteps = [
 ];
 
 export const dashboardPreviewCards = [
-  { label: 'Available balance', value: '$25.00', meta: 'USD wallet' },
-  { label: 'Active number', value: '+1 United States', meta: 'Messenger line' },
+  { label: 'Available balance', value: '$25.00', meta: 'Wallet ready for verification, rentals, and travel data' },
+  { label: 'Active number', value: '+1 United States', meta: 'Private messaging line in use' },
   { label: 'OTP received', value: '482901', meta: 'Live Verify Hub session' },
-  { label: 'eSIM plan', value: 'USA 5GB active', meta: 'Travel connectivity' },
-  { label: 'Proxy plan', value: 'Residential online', meta: 'Approved routing' },
-  { label: 'Secure Tunnel', value: 'Dedicated IP connected', meta: 'WireGuard session' },
+  { label: 'eSIM plan', value: 'USA 5GB active', meta: 'Travel connectivity in one tap' },
+  { label: 'Proxy plan', value: 'Residential online', meta: 'Approved routing available' },
+  { label: 'Secure Tunnel', value: 'Dedicated IP connected', meta: 'Encrypted session running' },
 ] as const;
 
 export const pricingCards: PricingCard[] = [
@@ -467,6 +467,12 @@ export const testimonialPlaceholders = [
       'The wallet system makes it easy. I fund once and use it across verifications, rentals, and other tools.',
   },
   {
+    name: 'Freelancer',
+    location: 'Toronto, Canada',
+    quote:
+      'Having a dedicated private number for messaging helps me stay organized without carrying another SIM.',
+  },
+  {
     name: 'Traveler',
     location: 'Nairobi, Kenya',
     quote:
@@ -479,10 +485,14 @@ export const testimonialPlaceholders = [
       'I use different tools for privacy, proxies, and connectivity. Burner Point brings them together in one dashboard.',
   },
   {
+    name: 'Consultant',
+    location: 'Manchester, UK',
+    quote: 'BP Messenger feels like a private second line for my work life.',
+  },
+  {
     name: 'QA Analyst',
     location: 'Austin, USA',
-    quote:
-      'The VPN and proxy tools make the platform feel bigger than a normal second-number app.',
+    quote: 'The VPN and proxy tools make the platform feel bigger than a normal second-number app.',
   },
 ];
 
@@ -508,7 +518,7 @@ export const faqCategories: FaqCategory[] = [
           'No. Burner Point includes BP Messenger, BP Verify Hub, BP Rentals, BP eSIM Store, BP Proxy Store, and BP Secure Tunnel.',
       },
       {
-        question: 'What does “Private by Design” mean?',
+        question: 'What does "Private by Design" mean?',
         answer:
           'It means Burner Point is built to help users reduce exposure of their personal number and manage communication tools with more control.',
       },
@@ -532,7 +542,7 @@ export const faqCategories: FaqCategory[] = [
       {
         question: 'What is BP Messenger?',
         answer:
-          'BP Messenger is Burner Point’s private messaging and calling product. It gives users a dedicated number for supported US, UK, or Canada regions.',
+          "BP Messenger is Burner Point's private messaging and calling product. It gives users a dedicated number for supported US, UK, or Canada regions.",
       },
       {
         question: 'Do I need a number to use BP Messenger?',
@@ -728,7 +738,7 @@ export const faqCategories: FaqCategory[] = [
       {
         question: 'What is BP Secure Tunnel?',
         answer:
-          'BP Secure Tunnel is Burner Point’s VPN product powered by WireGuard-based secure tunneling.',
+          "BP Secure Tunnel is Burner Point's VPN product powered by WireGuard-based secure tunneling.",
       },
       {
         question: 'What is a dedicated IP?',
@@ -759,7 +769,7 @@ export const faqCategories: FaqCategory[] = [
       {
         question: 'How do I reach support?',
         answer:
-          'Email info.burnerpoint@gmail.com or message Telegram support at @burnerpoint or @burnerpointapp for account, verification, rental, billing, eSIM, proxy, VPN, or API help.',
+          'Email info.burnerpoint@gmail.com or message Telegram support at @burnerpoint or @burnerpointapp for account, verification, rental, billing, eSIM, proxy, or VPN help.',
       },
       {
         question: 'Does privacy-first mean no rules?',

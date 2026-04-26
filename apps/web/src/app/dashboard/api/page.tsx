@@ -34,7 +34,7 @@ export default function ApiPage() {
       setKeys((current) => [...current, r.data as ApiKeyRecord]);
       setRevealedKey(r.data.rawKey);
       setNewKeyName('');
-      toast.success('API key created. Copy it now because it will not be shown again.');
+      toast.success('Access key created. Copy it now because it will not be shown again.');
     } catch {
       toast.error('Failed to create key');
     } finally {
@@ -52,11 +52,10 @@ export default function ApiPage() {
   return (
     <div className="max-w-3xl space-y-6">
       <div>
-        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Developer access</p>
-        <h1 className="mt-1 text-xl font-bold">API Keys</h1>
+        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Private access</p>
+        <h1 className="mt-1 text-xl font-bold">Access Keys</h1>
         <p className="mt-1 text-sm leading-6 text-brand-muted">
-          Build private verification and number workflows through Burner Point only. Base URL:{' '}
-          <code className="font-mono text-brand-green">{process.env.NEXT_PUBLIC_API_URL}</code>
+          Manage secure account keys for approved private workflows without exposing operational details on the frontend.
         </p>
       </div>
 
@@ -68,7 +67,7 @@ export default function ApiPage() {
           <Webhook className="h-5 w-5 text-brand-green" />
         </span>
         <span>
-          <span className="block text-sm font-semibold uppercase text-white">Manage Webhooks</span>
+          <span className="block text-sm font-semibold uppercase text-white">Manage Event Notifications</span>
           <span className="mt-1 block text-sm leading-6 text-brand-muted">
             Configure signed delivery for messages, calls, number lifecycle, verification, payment, and subscription events.
           </span>
@@ -77,7 +76,7 @@ export default function ApiPage() {
 
       {revealedKey ? (
         <div className="rounded-lg border border-brand-green/30 bg-brand-green/10 p-4">
-          <p className="mb-2 text-xs font-semibold text-brand-green">Your new API key. Copy it now. It is shown once.</p>
+          <p className="mb-2 text-xs font-semibold text-brand-green">Your new access key. Copy it now. It is shown once.</p>
           <div className="flex items-center gap-2">
             <code className="flex-1 overflow-auto rounded-lg bg-brand-black px-3 py-2 font-mono text-xs">{revealedKey}</code>
             <button
@@ -115,7 +114,7 @@ export default function ApiPage() {
       ) : keys.length === 0 ? (
         <div className="rounded-lg border border-brand-border bg-brand-card p-8 text-center text-brand-muted">
           <Key size={24} className="mx-auto mb-2" />
-          <p className="text-sm">No API keys yet</p>
+          <p className="text-sm">No access keys yet</p>
         </div>
       ) : (
         <div className="space-y-2">

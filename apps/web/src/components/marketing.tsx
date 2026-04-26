@@ -1,57 +1,28 @@
 'use client';
 
-import { Show, UserButton } from '@clerk/nextjs';
-import Image from 'next/image';
 import Link from 'next/link';
-import { useRef, type ReactNode } from 'react';
-import {
-  ArrowRight,
-  Bell,
-  BookOpen,
-  Briefcase,
-  CalendarDays,
-  Check,
-  Code2,
-  CreditCard,
-  X,
-  FileText,
-  Globe2,
-  HelpCircle,
-  KeyRound,
-  Lock,
-  Mail,
-  MessageSquare,
-  Phone,
-  ShieldCheck,
-  Smartphone,
-  Wifi,
-} from 'lucide-react';
+import type { ReactNode } from 'react';
+import { ArrowRight, Check, CreditCard, Globe2, HelpCircle, Lock, Mail, MessageSquare, Phone, ShieldCheck, Smartphone, Wifi } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { FaFacebook, FaInstagram, FaLinkedin, FaTelegram, FaTiktok, FaYoutube } from 'react-icons/fa6';
-import { FaXTwitter } from 'react-icons/fa6';
-import { BpAccordion, BpButton, BpInput, BpSupportWidget, BpTextarea, BpTrustBadge } from '@/components/design-system';
-import { LiquidLink } from '@/components/ui/liquid-glass-button';
+import { MarketingFooter, MarketingHeader } from '@/components/sections/bp-marketing-shell';
+import { BpButton } from '@/components/ui/bp-landing-primitives';
 import {
-  footerGroups,
-  primaryNav,
-  socialLinks,
-  trustBadges,
   type IconKey,
   type MarketingCard,
   type MarketingPageContent,
 } from '@/lib/marketing-data';
 
 const icons: Record<IconKey, LucideIcon> = {
-  bell: Bell,
-  book: BookOpen,
-  briefcase: Briefcase,
-  calendar: CalendarDays,
-  code: Code2,
+  bell: ShieldCheck,
+  book: HelpCircle,
+  briefcase: ShieldCheck,
+  calendar: CreditCard,
+  code: ShieldCheck,
   credit: CreditCard,
-  file: FileText,
+  file: MessageSquare,
   globe: Globe2,
   help: HelpCircle,
-  key: KeyRound,
+  key: Lock,
   lock: Lock,
   mail: Mail,
   message: MessageSquare,
@@ -61,302 +32,29 @@ const icons: Record<IconKey, LucideIcon> = {
   wifi: Wifi,
 };
 
-const socialIcons = {
-  Instagram: FaInstagram,
-  Facebook: FaFacebook,
-  LinkedIn: FaLinkedin,
-  TikTok: FaTiktok,
-  'Twitter/X': FaXTwitter,
-  Telegram: FaTelegram,
-  YouTube: FaYoutube,
-} as const;
-
 export function Eyebrow({ children }: { children: ReactNode }) {
-  return (
-    <div className="bp-label mb-4 inline-flex items-center gap-3 font-mono text-[10px] text-brand-green">
-      <span className="h-px w-8 bg-brand-green/80" />
-      <span>{children}</span>
-    </div>
-  );
-}
-
-export function BurnerLogo({ compact = false }: { compact?: boolean }) {
-  return (
-    <Link href="/" className="group inline-flex items-center gap-3" aria-label="Burner Point home">
-      <Image
-        src="/assets/logo-mark.svg"
-        alt=""
-        width={40}
-        height={40}
-        priority
-        className="h-10 w-10 transition duration-300 group-hover:scale-[1.03]"
-      />
-      {!compact ? (
-        <Image
-          src="/assets/wordmark-white.svg"
-          alt="Burner Point"
-          width={198}
-          height={28}
-          className="h-6 w-auto sm:h-7"
-        />
-      ) : null}
-    </Link>
-  );
-}
-
-function MenuIcon() {
-  return (
-    <span className="flex h-5 w-5 flex-col justify-center gap-1.5">
-      <span className="h-px w-full bg-current" />
-      <span className="h-px w-full bg-current" />
-      <span className="h-px w-full bg-current" />
-    </span>
-  );
-}
-
-function CloseIcon() {
-  return <X className="h-5 w-5" aria-hidden="true" />;
-}
-
-export function SiteHeader() {
-  const mobileNavRef = useRef<HTMLDetailsElement>(null);
-  const closeMobileNav = () => {
-    const el = mobileNavRef.current;
-    if (el) el.open = false;
-  };
-  const headerMenuLinks = [
-    { label: 'Dashboard', href: '/dashboard' },
-    { label: 'Pricing', href: '/pricing' },
-    { label: 'About', href: '/about' },
-    { label: 'Blog', href: '/blog' },
-    { label: 'Help', href: '/help' },
-    { label: 'Sign In', href: '/auth/login' },
-  ];
-
-  return (
-    <header className="sticky top-0 z-50 border-b border-white/6 bg-[rgba(1,7,4,0.8)] shadow-[0_18px_70px_rgba(0,0,0,0.34)] backdrop-blur-2xl">
-      <div className="mx-auto flex min-h-20 max-w-[1680px] items-center justify-between gap-4 px-5 sm:px-6 xl:px-10 2xl:min-h-24">
-        <BurnerLogo />
-        <nav className="hidden items-center gap-2 text-sm lg:flex xl:gap-3" aria-label="Primary">
-          {primaryNav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="rounded-full px-4 py-2 text-white/58 transition hover:bg-white/[0.03] hover:text-white"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="hidden items-center gap-3 lg:flex">
-          <Show when="signed-out">
-            <Link href="/auth/login" className="bp-secondary-action rounded-full px-5 py-3 text-xs font-semibold uppercase">
-              Sign In
-            </Link>
-            <LiquidLink href="/auth/signup" className="text-black">
-              <span className="inline-flex items-center gap-2 px-5 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-black">
-                Get Started
-              </span>
-            </LiquidLink>
-          </Show>
-          <Show when="signed-in">
-            <Link href="/dashboard" className="bp-secondary-action rounded-full px-5 py-3 text-xs font-semibold uppercase">
-              Dashboard
-            </Link>
-            <UserButton />
-          </Show>
-        </div>
-        <details ref={mobileNavRef} className="group relative z-[130] lg:hidden [&_summary::-webkit-details-marker]:hidden">
-          <summary aria-label="Open navigation menu" className="relative z-[135] flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center rounded-bp-md border border-white/16 bg-black text-white shadow-[0_12px_34px_rgba(0,0,0,0.45)] transition duration-[220ms] ease-out hover:border-brand-green/45 hover:text-brand-green active:scale-[0.98]">
-            <span className="sr-only">Toggle navigation</span>
-            <span className="group-open:hidden"><MenuIcon /></span>
-            <span className="hidden group-open:flex"><CloseIcon /></span>
-          </summary>
-          <div
-            className="fixed inset-0 z-[125] bg-[rgba(0,0,0,0.92)] backdrop-blur-[3px] transition-opacity duration-[220ms] ease-out"
-            aria-hidden="true"
-            onClick={closeMobileNav}
-          />
-          <div
-            role="navigation"
-            aria-label="Mobile primary navigation"
-            className="fixed inset-x-0 top-[4.75rem] z-[140] mx-3 max-h-[min(32rem,calc(100vh-5.5rem))] overflow-y-auto overscroll-contain rounded-[1.8rem] border border-white/10 bg-[rgba(2,10,6,0.97)] p-5 text-white shadow-[0_32px_100px_rgba(0,0,0,0.92)] transition duration-[220ms] ease-out"
-          >
-            <div className="mb-4 flex items-center justify-between border-b border-brand-green/25 pb-4">
-              <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-green">Menu</p>
-              <button
-                type="button"
-                onClick={closeMobileNav}
-                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-bp-md border border-brand-green/40 bg-black text-brand-green shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition duration-[220ms] ease-out hover:border-brand-green hover:bg-brand-green/10 active:scale-[0.98]"
-                aria-label="Close menu"
-              >
-                <X className="h-5 w-5" aria-hidden="true" />
-              </button>
-            </div>
-            <div className="grid grid-cols-1 gap-2">
-              {headerMenuLinks.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={closeMobileNav}
-                  className="flex min-h-12 items-center rounded-[1rem] border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-semibold text-white transition duration-[220ms] ease-out hover:border-brand-green/35 hover:bg-[#011a12] hover:text-brand-green active:scale-[0.98]"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-            <div className="mt-4 grid gap-2 border-t border-brand-green/25 pt-4">
-              <Show when="signed-out">
-                <Link href="/auth/login" onClick={closeMobileNav} className="rounded-full border border-white/20 bg-black px-4 py-3 text-center text-xs font-semibold uppercase text-white transition duration-[220ms] ease-out active:scale-[0.98]">
-                  Sign In
-                </Link>
-                <Link href="/auth/signup" onClick={closeMobileNav} className="rounded-full bg-brand-green px-4 py-3 text-center text-xs font-semibold uppercase text-black transition duration-[220ms] ease-out active:scale-[0.98]">
-                  Get Started
-                </Link>
-              </Show>
-              <Show when="signed-in">
-                <Link href="/dashboard" onClick={closeMobileNav} className="rounded-full border border-white/20 bg-black px-4 py-3 text-center text-xs font-semibold uppercase text-white transition duration-[220ms] ease-out active:scale-[0.98]">
-                  Dashboard
-                </Link>
-                <div className="flex justify-center rounded-full border border-white/20 bg-black px-4 py-3">
-                  <UserButton />
-                </div>
-              </Show>
-            </div>
-          </div>
-        </details>
-      </div>
-    </header>
-  );
-}
-
-export function SiteFooter() {
-  return (
-    <footer className="relative border-t border-white/6 py-12 md:py-20">
-      <div className="mx-auto max-w-[1680px] px-5 sm:px-6 xl:px-10">
-        <div className="grid gap-12 lg:grid-cols-12">
-          <div className="lg:col-span-4">
-            <BurnerLogo />
-            <p className="mt-6 max-w-md text-sm leading-8 text-white/56">
-              Don&apos;t want to give out your phone number? No problem. Use ours. Burner Point keeps messaging, verification, rentals, eSIM, and protected routing inside one private telecom surface.
-            </p>
-            <div className="mt-6 space-y-2 text-sm text-white/54">
-              <a href="mailto:info.burnerpoint@gmail.com" className="block transition hover:text-brand-green">Email: info.burnerpoint@gmail.com</a>
-              <a href="https://t.me/burnerpoint" className="block transition hover:text-brand-green">Telegram: @burnerpoint</a>
-              <a href="https://t.me/burnerpointapp" className="block transition hover:text-brand-green">Telegram App: @burnerpointapp</a>
-            </div>
-            <div className="mt-6 flex flex-wrap gap-3">
-              {socialLinks.map((item) => {
-                const Icon = socialIcons[item.label as keyof typeof socialIcons];
-                return (
-                  <a
-                    key={item.label}
-                    href={item.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={`${item.label} ${item.handle}`}
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/64 transition hover:border-brand-green/28 hover:text-brand-green"
-                  >
-                    {Icon ? <Icon className="h-4 w-4" /> : <span className="font-mono text-[10px] uppercase">{item.short}</span>}
-                  </a>
-                );
-              })}
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-6 sm:gap-8 lg:col-span-8 lg:grid-cols-4">
-            {footerGroups.map((group) => (
-              <div key={group.title}>
-                <Link href={group.href} className="font-mono text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:text-brand-green">
-                  {group.title}
-                </Link>
-                <ul className="mt-5 space-y-3 text-sm text-white/48">
-                  {group.links.map((item) => (
-                    <li key={item.href}>
-                      <Link href={item.href} className="transition hover:text-brand-green">{item.label}</Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="bp-panel mt-12 p-5">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/36">Support and trust</p>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-full bg-white/[0.03] px-4 py-2 text-sm text-white/64 transition hover:bg-white/[0.05] hover:text-brand-green">
-                  Dashboard
-                </Link>
-                <Link href="/pricing" className="inline-flex items-center gap-2 rounded-full bg-white/[0.03] px-4 py-2 text-sm text-white/64 transition hover:bg-white/[0.05] hover:text-brand-green">
-                  Pricing
-                </Link>
-                <Link href="/api/docs" className="inline-flex items-center gap-2 rounded-full bg-white/[0.03] px-4 py-2 text-sm text-white/64 transition hover:bg-white/[0.05] hover:text-brand-green">
-                  API Docs
-                </Link>
-                <Link href="/help" className="inline-flex items-center gap-2 rounded-full bg-white/[0.03] px-4 py-2 text-sm text-white/64 transition hover:bg-white/[0.05] hover:text-brand-green">
-                  Help
-                </Link>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              {trustBadges.map((badge) => (
-                <BpTrustBadge key={badge.label} label={badge.label} href={badge.href} />
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="mt-8 flex flex-col gap-3 text-xs text-white/34 md:flex-row md:items-center md:justify-between">
-          <p>&copy; 2026 Burner Point. All rights reserved.</p>
-          <p className="font-mono uppercase tracking-[0.2em] text-brand-green/70">Stay Anonymous. Stay Connected. Private By Design.</p>
-        </div>
-      </div>
-    </footer>
-  );
+  return <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.24em] text-[#00A76A]">{children}</p>;
 }
 
 export function MarketingShell({ children }: { children: ReactNode }) {
   return (
-    <main className="relative min-h-screen min-h-[100dvh] overflow-hidden bg-brand-black pb-20 text-white md:pb-0">
-      <a href="#main-content" className="bp-skip-link">Skip to content</a>
-      <div className="pointer-events-none fixed inset-0">
-        <div className="bp-grid-bg absolute inset-0 opacity-60" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_10%,rgba(0,255,157,0.1),transparent_24%),radial-gradient(circle_at_88%_12%,rgba(57,255,20,0.06),transparent_18%)]" />
-        <div className="absolute inset-x-0 top-0 h-[560px] bg-[linear-gradient(180deg,rgba(1,50,32,0.62),rgba(0,0,0,0))]" />
-        <div className="absolute inset-x-0 bottom-0 h-[420px] bg-[linear-gradient(0deg,rgba(1,50,32,0.32),rgba(0,0,0,0))]" />
-      </div>
-      <div className="relative z-10">
-        <SiteHeader />
-        <div id="main-content">{children}</div>
-        <SiteFooter />
-      </div>
-      <div role="navigation" aria-label="Mobile conversion actions" className="fixed inset-x-0 bottom-0 z-50 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 md:hidden">
-        <Show when="signed-out">
-          <div className="grid grid-cols-2 gap-3 rounded-full border border-white/10 bg-brand-black/92 p-2 shadow-[0_-20px_60px_rgba(0,0,0,0.44)] backdrop-blur-xl">
-            <Link href="/auth/signup" className="bp-primary-action flex min-h-12 items-center justify-center rounded-full px-4 py-3 text-xs font-semibold uppercase">
-              Get Started
-            </Link>
-            <Link href="/auth/login" className="bp-secondary-action flex min-h-12 items-center justify-center rounded-full px-4 py-3 text-xs font-semibold uppercase">
-              Sign In
-            </Link>
-          </div>
-        </Show>
-        <Show when="signed-in">
-          <Link href="/dashboard" className="bp-primary-action flex min-h-12 items-center justify-center rounded-full px-4 py-3 text-xs font-semibold uppercase shadow-[0_-20px_60px_rgba(0,0,0,0.44)]">
-            Open Dashboard
-          </Link>
-        </Show>
-      </div>
+    <main className="min-h-screen bg-[#f4f7f3] text-[#07140f]">
+      <a href="#main-content" className="sr-only focus:not-sr-only">
+        Skip to content
+      </a>
+      <MarketingHeader />
+      <div id="main-content">{children}</div>
+      <MarketingFooter />
     </main>
   );
 }
 
 export function BulletList({ items }: { items: string[] }) {
   return (
-    <ul className="space-y-3 text-sm text-white/66">
+    <ul className="space-y-3 text-sm text-[#375245]">
       {items.map((item) => (
         <li key={item} className="flex items-start gap-3">
-          <Check className="mt-0.5 h-4 w-4 flex-none text-brand-green" />
+          <Check className="mt-0.5 h-4 w-4 flex-none text-[#00A76A]" />
           <span>{item}</span>
         </li>
       ))}
@@ -369,18 +67,22 @@ export function FeatureCard({ card }: { card: MarketingCard }) {
   const content = (
     <article
       id={card.anchorId}
-      className="bp-card group h-full scroll-mt-28 rounded-bp-lg p-7 transition duration-300 hover:-translate-y-1 hover:border-brand-green/24 hover:shadow-[0_34px_90px_rgba(0,255,157,0.11)]"
+      className="group h-full rounded-[1.75rem] border border-black/6 bg-white p-7 shadow-[0_18px_48px_rgba(2,20,12,0.06)] transition hover:-translate-y-1 hover:border-[#00FF9D]/24 hover:shadow-[0_28px_80px_rgba(0,255,157,0.1)]"
     >
       <div className="flex items-start justify-between gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-bp-md border border-white/8 bg-white/[0.03]">
-          <Icon className="h-6 w-6 text-brand-green" />
+        <div className="flex h-14 w-14 items-center justify-center rounded-[1rem] bg-[#013220] text-[#00FF9D]">
+          <Icon className="h-6 w-6" />
         </div>
-        {card.meta ? <span className="rounded-full border border-brand-green/18 bg-brand-green/8 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-brand-green/90">{card.meta}</span> : null}
+        {card.meta ? (
+          <span className="rounded-full border border-[#00FF9D]/18 bg-[#effcf5] px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-[#00A76A]">
+            {card.meta}
+          </span>
+        ) : null}
       </div>
-      <h3 className="mt-7 font-mono text-lg font-semibold uppercase tracking-[0.08em] text-white">{card.title}</h3>
-      <p className="mt-4 text-sm leading-7 text-white/58">{card.text}</p>
+      <h3 className="mt-7 text-lg font-semibold text-[#07140f]">{card.title}</h3>
+      <p className="mt-4 text-sm leading-7 text-[#456052]">{card.text}</p>
       {card.cta ? (
-        <div className="mt-6 inline-flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-green">
+        <div className="mt-6 inline-flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-[#00A76A]">
           {card.cta}
           <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
         </div>
@@ -394,50 +96,57 @@ export function FeatureCard({ card }: { card: MarketingCard }) {
 export function MarketingPage({ page }: { page: MarketingPageContent }) {
   return (
     <MarketingShell>
-      <section className="bp-section-shell relative py-14 md:py-28" aria-labelledby={`${page.slug}-hero-title`}>
-        <div className="mx-auto grid max-w-[1680px] gap-12 px-5 sm:px-6 lg:grid-cols-12 lg:items-center xl:px-10 2xl:py-8">
-          <div className="lg:col-span-7">
+      <section className="relative overflow-hidden py-14 md:py-24">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(0,255,157,0.12),transparent_24%),radial-gradient(circle_at_84%_10%,rgba(1,50,32,0.12),transparent_26%),linear-gradient(180deg,#f8fbf9,#edf5f0)]" />
+          <div className="absolute -left-16 top-0 h-72 w-72 rounded-full bg-[#00FF9D]/12 blur-3xl" />
+          <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-[#9FA6B2]/18 blur-3xl" />
+        </div>
+
+        <div className="relative mx-auto grid max-w-[92rem] gap-10 px-4 sm:px-6 lg:grid-cols-[1.08fr_0.92fr] lg:px-8">
+          <div>
             <Eyebrow>{page.eyebrow}</Eyebrow>
-            <h1 id={`${page.slug}-hero-title`} className="max-w-6xl text-4xl font-semibold uppercase leading-[0.98] text-white sm:text-5xl md:text-7xl xl:text-8xl 2xl:text-[6.6rem]">{page.title}</h1>
-            <p className="mt-7 max-w-3xl text-base leading-8 text-white/62 md:text-xl md:leading-9">{page.description}</p>
+            <h1 className="mt-5 max-w-5xl text-4xl font-black leading-[0.96] text-[#07140f] sm:text-5xl lg:text-7xl">
+              {page.title}
+            </h1>
+            <p className="mt-6 max-w-3xl text-base leading-8 text-[#456052] md:text-lg">
+              {page.description}
+            </p>
+
             {(page.primaryCta || page.secondaryCta) ? (
-              <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+              <div className="mt-8 flex flex-col gap-4 sm:flex-row">
                 {page.primaryCta ? (
-                  <BpButton
-                    href={page.primaryCta.href}
-                    variant="primary"
-                    size="md"
-                  >
+                  <BpButton href={page.primaryCta.href} variant="primary" size="md">
                     {page.primaryCta.label}
                   </BpButton>
                 ) : null}
                 {page.secondaryCta ? (
-                  <BpButton
+                  <Link
                     href={page.secondaryCta.href}
-                    variant="secondary"
-                    size="md"
-                    icon={null}
+                    className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/10 bg-white/80 px-5 text-sm font-semibold text-[#07140f] transition hover:border-[#00FF9D]/28 hover:bg-white"
                   >
                     {page.secondaryCta.label}
-                  </BpButton>
+                  </Link>
                 ) : null}
               </div>
             ) : null}
           </div>
-          <div className="bp-card rounded-bp-lg p-5 transition duration-300 hover:border-brand-green/22 hover:shadow-[0_34px_100px_rgba(0,255,157,0.1)] md:p-8 lg:col-span-5">
-            <div className="rounded-bp-lg border border-brand-green/15 bg-brand-black p-5 md:p-6">
-              <div className="flex items-center justify-between">
-                <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-brand-green">Burner Point</div>
-                <ShieldCheck className="h-5 w-5 text-brand-green" />
-              </div>
-              <div className="mt-8 text-4xl font-semibold uppercase leading-none text-white md:text-5xl">Private<br /><span className="bp-outline">By Design</span></div>
-              <p className="mt-5 text-sm leading-7 text-white/58">Stay Anonymous. Stay Connected. Use phone, data, routing, and verification tools without exposing your personal line.</p>
+
+          <div className="rounded-[2rem] bg-[linear-gradient(135deg,#07140f,#013220_58%,#07140f)] p-5 text-white shadow-[0_28px_90px_rgba(2,20,12,0.16)] md:p-8">
+            <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.05] p-5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#00FF9D]">Burner Point</p>
+              <h2 className="mt-4 text-3xl font-black leading-[0.92] text-white md:text-4xl">
+                Private by design. Built for control.
+              </h2>
+              <p className="mt-4 text-sm leading-7 text-white/72">
+                A premium privacy-first experience for private numbers, messaging, verification, rentals, travel connectivity, proxies, and secure access.
+              </p>
               {page.highlights?.length ? (
-                <div className="mt-7 space-y-3">
+                <div className="mt-6 grid gap-3">
                   {page.highlights.map((item) => (
-                    <div key={item} className="flex items-center gap-3 rounded-bp-md border border-white/7 bg-white/[0.025] px-4 py-3">
-                      <span className="h-2.5 w-2.5 rounded-full bg-brand-green shadow-[0_0_14px_rgba(0,255,157,0.8)]" />
-                      <span className="text-sm text-white/72">{item}</span>
+                    <div key={item} className="flex items-center gap-3 rounded-[1rem] border border-white/10 bg-black/20 px-4 py-3">
+                      <span className="h-2.5 w-2.5 rounded-full bg-[#00FF9D]" />
+                      <span className="text-sm text-white/78">{item}</span>
                     </div>
                   ))}
                 </div>
@@ -446,24 +155,45 @@ export function MarketingPage({ page }: { page: MarketingPageContent }) {
           </div>
         </div>
       </section>
-      <div className="bp-divider" />
-      {page.cards?.length ? <section className="bp-section-shell relative py-14 md:py-24" aria-label={`${page.title} feature cards`}><div className="mx-auto grid max-w-[1680px] gap-5 px-5 sm:px-6 md:grid-cols-2 xl:grid-cols-3 xl:px-10">{page.cards.map((card) => <FeatureCard key={`${page.slug}-${card.title}`} card={card} />)}</div></section> : null}
+
+      {page.cards?.length ? (
+        <section className="py-6 md:py-10">
+          <div className="mx-auto grid max-w-[92rem] gap-5 px-4 sm:px-6 md:grid-cols-2 xl:grid-cols-3 lg:px-8">
+            {page.cards.map((card) => (
+              <FeatureCard key={`${page.slug}-${card.title}`} card={card} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {page.sections?.length ? (
-        <section className="bp-section-shell relative py-14 md:py-24" aria-label={`${page.title} details`}>
-          <div className="mx-auto grid max-w-[1680px] gap-5 px-5 sm:px-6 lg:grid-cols-12 xl:px-10">
-            {page.sections.map((section) => (
+        <section className="py-8 md:py-12">
+          <div className="mx-auto grid max-w-[92rem] gap-5 px-4 sm:px-6 lg:grid-cols-12 lg:px-8">
+            {page.sections.map((section, index) => (
               <article
                 key={section.title}
                 id={section.anchorId}
-                className="bp-card scroll-mt-28 rounded-bp-lg p-5 transition duration-300 hover:border-brand-green/22 hover:shadow-[0_34px_90px_rgba(0,255,157,0.09)] md:p-8 lg:col-span-6"
+                className={[
+                  'rounded-[1.8rem] p-6 shadow-[0_18px_48px_rgba(2,20,12,0.06)] lg:col-span-6',
+                  index % 3 === 0
+                    ? 'border border-black/6 bg-white text-[#07140f]'
+                    : 'bg-[linear-gradient(180deg,#07140f,#03140d)] text-white',
+                ].join(' ')}
               >
                 {section.meta ? (
-                  <span className="inline-flex rounded-full border border-brand-green/18 bg-brand-green/8 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-brand-green/90">
+                  <span
+                    className={[
+                      'inline-flex rounded-full px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em]',
+                      index % 3 === 0
+                        ? 'border border-[#00FF9D]/18 bg-[#effcf5] text-[#00A76A]'
+                        : 'border border-white/10 bg-white/[0.06] text-[#00FF9D]',
+                    ].join(' ')}
+                  >
                     {section.meta}
                   </span>
                 ) : null}
-                <h2 className="mt-4 font-mono text-xl font-semibold uppercase text-white first:mt-0">{section.title}</h2>
-                <p className="mt-5 text-base leading-8 text-white/60">{section.text}</p>
+                <h2 className="mt-4 text-2xl font-semibold first:mt-0">{section.title}</h2>
+                <p className={`mt-5 text-base leading-8 ${index % 3 === 0 ? 'text-[#456052]' : 'text-white/72'}`}>{section.text}</p>
                 {section.items?.length ? (
                   <div className="mt-6">
                     <BulletList items={section.items} />
@@ -474,7 +204,28 @@ export function MarketingPage({ page }: { page: MarketingPageContent }) {
           </div>
         </section>
       ) : null}
-      {page.faqs?.length ? <section className="bp-section-shell relative py-14 md:py-24" aria-labelledby={`${page.slug}-answers-title`}><div className="mx-auto max-w-6xl px-5 sm:px-6 xl:px-10"><Eyebrow>Answers</Eyebrow><h2 id={`${page.slug}-answers-title`} className="sr-only">{page.title} answers</h2><div className="space-y-4">{page.faqs.map((faq) => <BpAccordion key={faq.question} question={faq.question} answer={faq.answer} />)}</div></div></section> : null}
+
+      {page.faqs?.length ? (
+        <section className="py-10 md:py-14">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <Eyebrow>Answers</Eyebrow>
+            <div className="mt-6 space-y-4">
+              {page.faqs.map((faq) => (
+                <details
+                  key={faq.question}
+                  className="rounded-[1.4rem] border border-black/6 bg-white p-5 shadow-[0_18px_48px_rgba(2,20,12,0.06)]"
+                >
+                  <summary className="cursor-pointer list-none text-sm font-semibold text-[#07140f]">
+                    {faq.question}
+                  </summary>
+                  <p className="mt-3 text-sm leading-7 text-[#456052]">{faq.answer}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       {page.slug === 'contact' ? <ContactFormSection /> : null}
     </MarketingShell>
   );
@@ -482,23 +233,88 @@ export function MarketingPage({ page }: { page: MarketingPageContent }) {
 
 function ContactFormSection() {
   return (
-    <section className="bp-section-shell relative pb-20 md:pb-28" aria-labelledby="contact-support-title">
-      <div className="mx-auto grid max-w-[1680px] gap-6 px-5 sm:px-6 lg:grid-cols-12 xl:px-10">
-        <div className="lg:col-span-5">
-          <BpSupportWidget />
-        </div>
-        <form action="mailto:info.burnerpoint@gmail.com" method="post" encType="text/plain" className="bp-card rounded-bp-lg p-7 lg:col-span-7">
-          <h2 id="contact-support-title" className="sr-only">Contact Burner Point support</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="text-sm text-white/70">Name<BpInput name="name" required autoComplete="name" autoCapitalize="words" enterKeyHint="next" className="mt-2" placeholder="Your name" /></label>
-            <label className="text-sm text-white/70">Email<BpInput name="email" type="email" required inputMode="email" autoComplete="email" autoCapitalize="none" enterKeyHint="next" className="mt-2" placeholder="you@example.com" /></label>
+    <section className="pb-20 md:pb-28">
+      <div className="mx-auto grid max-w-[92rem] gap-6 px-4 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:px-8">
+        <div className="rounded-[1.8rem] bg-[linear-gradient(135deg,#07140f,#013220_62%,#0a1d14)] p-6 text-white shadow-[0_28px_90px_rgba(2,20,12,0.16)]">
+          <Eyebrow>Support</Eyebrow>
+          <h2 className="mt-4 text-3xl font-black leading-[0.94] text-white">Talk to Burner Point.</h2>
+          <p className="mt-4 text-base leading-8 text-white/72">
+            Reach support for pricing, access, verification, rentals, travel data, proxy plans, secure tunnel, and account issues.
+          </p>
+          <div className="mt-6 grid gap-3">
+            <ContactLine label="Email" value="info.burnerpoint@gmail.com" href="mailto:info.burnerpoint@gmail.com" />
+            <ContactLine label="Telegram" value="@burnerpoint" href="https://t.me/burnerpoint" />
+            <ContactLine label="Community" value="@burnerpointapp" href="https://t.me/burnerpointapp" />
           </div>
-          <label className="mt-4 block text-sm text-white/70">Message<BpTextarea name="message" required rows={6} autoComplete="off" enterKeyHint="send" className="mt-2" placeholder="Tell us what you need help with..." /></label>
+        </div>
+
+        <form action="mailto:info.burnerpoint@gmail.com" method="post" encType="text/plain" className="rounded-[1.8rem] border border-black/6 bg-white p-6 shadow-[0_18px_48px_rgba(2,20,12,0.06)]">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Name">
+              <input
+                name="name"
+                required
+                autoComplete="name"
+                className="mt-2 w-full rounded-[1rem] border border-black/8 bg-[#f7fbf8] px-4 py-3 text-sm text-[#07140f] outline-none transition focus:border-[#00FF9D]/30"
+                placeholder="Your name"
+              />
+            </Field>
+            <Field label="Email">
+              <input
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                className="mt-2 w-full rounded-[1rem] border border-black/8 bg-[#f7fbf8] px-4 py-3 text-sm text-[#07140f] outline-none transition focus:border-[#00FF9D]/30"
+                placeholder="you@example.com"
+              />
+            </Field>
+          </div>
+          <Field label="Message">
+            <textarea
+              name="message"
+              required
+              rows={6}
+              className="mt-2 w-full rounded-[1rem] border border-black/8 bg-[#f7fbf8] px-4 py-3 text-sm text-[#07140f] outline-none transition focus:border-[#00FF9D]/30"
+              placeholder="Tell us what you need help with..."
+            />
+          </Field>
           <BpButton type="submit" className="mt-5 w-full md:w-auto">
             Send Support Email
           </BpButton>
         </form>
       </div>
     </section>
+  );
+}
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <label className="block text-sm font-medium text-[#274437]">
+      {label}
+      {children}
+    </label>
+  );
+}
+
+function ContactLine({
+  label,
+  value,
+  href,
+}: {
+  label: string;
+  value: string;
+  href: string;
+}) {
+  return (
+    <a
+      href={href}
+      target={href.startsWith('http') ? '_blank' : undefined}
+      rel={href.startsWith('http') ? 'noreferrer' : undefined}
+      className="rounded-[1rem] border border-white/10 bg-white/[0.05] px-4 py-3 transition hover:border-[#00FF9D]/24"
+    >
+      <p className="text-xs uppercase tracking-[0.18em] text-white/46">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-white">{value}</p>
+    </a>
   );
 }

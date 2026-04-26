@@ -53,7 +53,7 @@ export default function SettingsPage() {
             tabs={[
               { label: 'Profile', href: '/dashboard/profile' },
               { label: 'Billing & Subscription', href: '/dashboard/billing' },
-              { label: 'API & Developer', href: '/dashboard/api' },
+              { label: 'Advanced Access', href: '/dashboard/api' },
               { label: 'Support', href: '/dashboard/support' },
               { label: 'Account', href: '/dashboard/settings' },
             ]}
@@ -137,15 +137,15 @@ export default function SettingsPage() {
         <article className="rounded-[1.5rem] border border-white/8 bg-brand-card p-5">
           <div className="flex items-center gap-3">
             <KeyRound className="h-5 w-5 text-brand-green" />
-            <h3 className="text-base font-semibold text-white">API & Developer</h3>
+            <h3 className="text-base font-semibold text-white">Advanced Access</h3>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <Link href="/dashboard/api" className="rounded-[1rem] border border-white/8 bg-black/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
-              <p className="text-sm font-semibold text-white">API keys</p>
-              <p className="mt-2 text-sm leading-6 text-white/50">Generate and revoke keys for BP Verify Hub and related automations.</p>
+              <p className="text-sm font-semibold text-white">Access keys</p>
+              <p className="mt-2 text-sm leading-6 text-white/50">Generate and revoke scoped keys for approved private workflows.</p>
             </Link>
             <Link href="/dashboard/webhooks" className="rounded-[1rem] border border-white/8 bg-black/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
-              <p className="text-sm font-semibold text-white">Webhooks</p>
+              <p className="text-sm font-semibold text-white">Event delivery</p>
               <p className="mt-2 text-sm leading-6 text-white/50">Configure outbound event delivery and signing secrets.</p>
             </Link>
           </div>
@@ -191,7 +191,7 @@ export default function SettingsPage() {
             <h3 className="text-base font-semibold text-white">Account</h3>
           </div>
           <p className="mt-4 text-sm leading-6 text-white/58">
-            Sign out from this device at any time. Destructive account deletion should remain gated behind a dedicated confirmed flow once the full account-deletion backend is enabled.
+            Sign out from this device at any time. Destructive account deletion should remain gated behind a dedicated confirmed flow once full account deletion is available.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <button

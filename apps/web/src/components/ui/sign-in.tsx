@@ -73,16 +73,16 @@ const GlassInputWrapper = ({ children }: { children: React.ReactNode }) => (
 const TestimonialCard = ({ testimonial, delay }: { testimonial: Testimonial; delay: string }) => (
   <div
     className={cn(
-      'flex w-72 items-start gap-3 rounded-[1.4rem] border border-white/10 bg-black/40 p-4 backdrop-blur-xl',
+      'flex w-72 items-start gap-3 rounded-[1.4rem] border border-black/6 bg-white p-4 shadow-[0_14px_40px_rgba(2,20,12,0.08)]',
       delay,
     )}
   >
     {/* eslint-disable-next-line @next/next/no-img-element */}
     <img src={testimonial.avatarSrc} className="h-10 w-10 rounded-2xl object-cover" alt={testimonial.name} />
     <div className="text-sm leading-snug">
-      <p className="font-medium text-white">{testimonial.name}</p>
-      <p className="text-white/48">{testimonial.handle}</p>
-      <p className="mt-1 text-white/80">{testimonial.text}</p>
+      <p className="font-medium text-[#07140f]">{testimonial.name}</p>
+      <p className="text-[#6f877b]">{testimonial.handle}</p>
+      <p className="mt-1 text-[#3c584b]">{testimonial.text}</p>
     </div>
   </div>
 );
@@ -128,20 +128,21 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   const renderCustomContent = children || formContent;
 
   return (
-    <div className="relative min-h-[100dvh] overflow-hidden bg-brand-black text-white">
+    <div className="relative min-h-[100dvh] overflow-hidden bg-[linear-gradient(180deg,#f8fbf9,#edf5f0)] text-white">
       <div className="pointer-events-none absolute inset-0">
-        <div className="bp-grid-bg absolute inset-0 opacity-45" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(0,255,157,0.16),transparent_28%),radial-gradient(circle_at_84%_16%,rgba(57,255,20,0.07),transparent_20%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(0,255,157,0.12),transparent_24%),radial-gradient(circle_at_88%_14%,rgba(1,50,32,0.12),transparent_20%)]" />
+        <div className="absolute -left-12 top-10 h-72 w-72 rounded-full bg-[#00FF9D]/12 blur-3xl" />
+        <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-[#9FA6B2]/20 blur-3xl" />
       </div>
 
       <div className="relative z-10 mx-auto grid min-h-[100dvh] max-w-[96rem] gap-6 px-4 py-4 sm:px-6 lg:grid-cols-[minmax(0,34rem)_minmax(0,1fr)] lg:px-8 lg:py-6">
-        <section className="rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(7,20,15,0.88),rgba(0,0,0,0.98))] p-5 shadow-[0_40px_110px_rgba(0,0,0,0.4)] sm:p-6 lg:p-7">
+        <section className="rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(7,20,15,0.9),rgba(0,0,0,0.98))] p-5 shadow-[0_40px_110px_rgba(0,0,0,0.28)] sm:p-6 lg:p-7">
           <div className="flex items-center justify-between gap-4">
             <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
               <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} className="h-9 w-9" />
               <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={170} height={26} className="h-6 w-auto" />
             </Link>
-            <Link href="/#pricing" className="hidden text-sm font-medium text-white/52 transition hover:text-white sm:inline-flex">
+            <Link href="/pricing" className="hidden text-sm font-medium text-white/56 transition hover:text-white sm:inline-flex">
               Pricing
             </Link>
           </div>
@@ -149,12 +150,12 @@ export const SignInPage: React.FC<SignInPageProps> = ({
           <div className="mt-8">
             <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[#00FF9D]">Private account access</p>
             {title ? (
-              <h1 className="mt-4 text-4xl font-black uppercase leading-[0.94] text-white sm:text-[2.8rem]">
+              <h1 className="mt-4 text-4xl font-black leading-[0.94] text-white sm:text-[2.8rem]">
                 {title}
               </h1>
             ) : null}
             {description ? (
-              <p className="mt-4 text-sm leading-7 text-white/60 sm:text-base">
+              <p className="mt-4 text-sm leading-7 text-white/66 sm:text-base">
                 {description}
               </p>
             ) : null}
@@ -271,7 +272,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               <ShieldCheck className="mt-0.5 h-5 w-5 flex-none text-[#00FF9D]" />
               <div>
                 <p className="text-sm font-semibold text-white">One account across all Burner Point products.</p>
-                <p className="mt-1.5 text-sm leading-6 text-white/62">
+                <p className="mt-1.5 text-sm leading-6 text-white/66">
                   Sign in once to access numbers, verification, rentals, eSIM orders, proxy credentials, billing, and support.
                 </p>
                 <Link href="/#products" className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-[#00FF9D] transition hover:gap-3">
@@ -283,46 +284,56 @@ export const SignInPage: React.FC<SignInPageProps> = ({
           </div>
         </section>
 
-        <section className="relative hidden overflow-hidden rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(7,20,15,0.72),rgba(0,0,0,0.98))] p-7 lg:flex lg:flex-col lg:justify-between">
+        <section className="relative hidden overflow-hidden rounded-[2rem] border border-black/6 bg-white p-7 shadow-[0_36px_100px_rgba(2,20,12,0.12)] lg:flex lg:flex-col lg:justify-between">
           {heroImageSrc ? (
             <div
-              className="absolute inset-4 rounded-[2rem] bg-cover bg-center opacity-20"
+              className="absolute inset-4 rounded-[2rem] bg-cover bg-center opacity-10"
               style={{ backgroundImage: `url(${heroImageSrc})` }}
             />
           ) : null}
+
           <div className="relative z-10">
-            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[#00FF9D]">Stay Anonymous. Stay Connected.</p>
-            <h2 className="mt-4 max-w-xl text-[3rem] font-black uppercase leading-[0.92] text-white xl:text-[3.7rem]">
+            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[#00A76A]">Stay Anonymous. Stay Connected.</p>
+            <h2 className="mt-4 max-w-xl text-[3rem] font-black leading-[0.92] text-[#07140f] xl:text-[3.7rem]">
               Private by design from the first screen.
             </h2>
-            <p className="mt-4 max-w-2xl text-base leading-8 text-white/60">
+            <p className="mt-4 max-w-2xl text-base leading-8 text-[#456052]">
               Burner Point account entry should feel like a premium telecom platform, not a generic utility flow. Authentication stays direct, support stays visible, and the brand stays consistent across login, signup, recovery, and verification.
             </p>
           </div>
 
           <div className="relative z-10 mt-8 grid gap-4 xl:grid-cols-2">
-            {productLinks.slice(0, 4).map((item) => (
+            {productLinks.slice(0, 4).map((item, index) => (
               <article
                 key={item.name}
-                className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-5 backdrop-blur-xl"
+                className={cn(
+                  'rounded-[1.35rem] border p-5',
+                  index === 0
+                    ? 'border-transparent bg-[linear-gradient(135deg,#07140f,#013220)] text-white shadow-[0_20px_48px_rgba(2,20,12,0.14)]'
+                    : 'border-black/6 bg-[#f7fbf8] text-[#07140f]',
+                )}
               >
-                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#00FF9D]">{item.name}</p>
-                <p className="mt-3 text-sm leading-7 text-white/58">{item.description}</p>
+                <p className={cn('font-mono text-[10px] uppercase tracking-[0.22em]', index === 0 ? 'text-[#00FF9D]' : 'text-[#00A76A]')}>
+                  {item.name}
+                </p>
+                <p className={cn('mt-3 text-sm leading-7', index === 0 ? 'text-white/74' : 'text-[#456052]')}>
+                  {item.description}
+                </p>
               </article>
             ))}
           </div>
 
           <div className="relative z-10 mt-8 grid gap-4 xl:grid-cols-[1fr_auto] xl:items-end">
-            <div className="rounded-[1.45rem] border border-white/8 bg-white/[0.03] p-5">
-              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#00FF9D]">Support contacts</p>
-              <div className="mt-3 space-y-2 text-sm text-white/64">
-                <a href={`mailto:${supportContacts.email}`} className="block transition hover:text-white">
+            <div className="rounded-[1.45rem] border border-black/6 bg-[#f7fbf8] p-5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#00A76A]">Support contacts</p>
+              <div className="mt-3 space-y-2 text-sm text-[#456052]">
+                <a href={`mailto:${supportContacts.email}`} className="block transition hover:text-[#07140f]">
                   {supportContacts.email}
                 </a>
-                <a href={supportContacts.telegramPrimary} target="_blank" rel="noreferrer" className="block transition hover:text-white">
+                <a href={supportContacts.telegramPrimary} target="_blank" rel="noreferrer" className="block transition hover:text-[#07140f]">
                   Telegram: @burnerpoint
                 </a>
-                <a href={supportContacts.telegramApp} target="_blank" rel="noreferrer" className="block transition hover:text-white">
+                <a href={supportContacts.telegramApp} target="_blank" rel="noreferrer" className="block transition hover:text-[#07140f]">
                   Telegram: @burnerpointapp
                 </a>
               </div>

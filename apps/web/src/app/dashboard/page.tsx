@@ -281,8 +281,8 @@ export default function DashboardPage() {
           <Link href="/dashboard/security" className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-4 text-sm text-white/70 transition hover:border-brand-green/24 hover:text-brand-green">
             2FA and security
           </Link>
-          <Link href="/api/docs" className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-4 text-sm text-white/70 transition hover:border-brand-green/24 hover:text-brand-green">
-            API Docs
+          <Link href="/dashboard/api" className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-4 text-sm text-white/70 transition hover:border-brand-green/24 hover:text-brand-green">
+            Access keys
           </Link>
         </div>
       </section>

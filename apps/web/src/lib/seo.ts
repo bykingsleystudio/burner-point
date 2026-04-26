@@ -85,14 +85,16 @@ export const publicSeoPages: SeoPage[] = [
     changeFrequency: 'yearly',
     priority: 0.4,
   },
-  ...Object.values(marketingPages).map((page) => ({
+  ...Object.values(marketingPages)
+    .filter((page) => page.slug !== 'api' && page.slug !== 'api-docs')
+    .map((page) => ({
     route: routeForSlug(page.slug),
     title: page.title,
     description: page.description,
     changeFrequency: page.slug === 'blog' || page.slug === 'updates' ? 'weekly' as const : 'monthly' as const,
     priority: page.slug === 'pricing' || page.slug === 'verifications' || page.slug === 'rentals'
       ? 0.9
-      : page.slug === 'blog' || page.slug === 'api'
+      : page.slug === 'blog'
         ? 0.8
         : 0.7,
     page,

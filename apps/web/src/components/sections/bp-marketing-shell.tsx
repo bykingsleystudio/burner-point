@@ -7,8 +7,8 @@ import { ArrowRight, ChevronDown, Menu, X } from 'lucide-react';
 import { FaFacebook, FaInstagram, FaLinkedin, FaTelegram, FaTiktok, FaYoutube } from 'react-icons/fa6';
 import { FaXTwitter } from 'react-icons/fa6';
 import { BpButton } from '@/components/ui/bp-landing-primitives';
-import { cn } from '@/lib/utils';
 import { headerLinks, productLinks, socialProfiles, supportContacts } from '@/lib/homepage-content';
+import { cn } from '@/lib/utils';
 
 const socialIconMap = {
   Instagram: FaInstagram,
@@ -23,6 +23,7 @@ const socialIconMap = {
 export function MarketingHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [desktopProductsOpen, setDesktopProductsOpen] = useState(false);
+
   const fullMobileLinks = useMemo(
     () => [
       ...headerLinks,
@@ -32,14 +33,14 @@ export function MarketingHeader() {
   );
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/8 bg-[rgba(1,9,5,0.72)] backdrop-blur-2xl">
+    <header className="sticky top-0 z-50 border-b border-black/6 bg-white/86 backdrop-blur-2xl">
       <div className="mx-auto flex min-h-20 max-w-[92rem] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
           <Image src="/assets/logo-mark.svg" alt="" width={40} height={40} className="h-10 w-10" priority />
-          <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={184} height={28} className="h-6 w-auto" />
+          <Image src="/assets/wordmark-black.svg" alt="Burner Point" width={184} height={28} className="h-6 w-auto" />
         </Link>
 
-        <nav className="hidden items-center gap-2 lg:flex" aria-label="Primary">
+        <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
           <div
             className="relative"
             onMouseEnter={() => setDesktopProductsOpen(true)}
@@ -47,23 +48,23 @@ export function MarketingHeader() {
           >
             <button
               type="button"
-              className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-medium text-white/68 transition hover:bg-white/[0.04] hover:text-white"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-medium text-[#10261c] transition hover:bg-[#eaf8f1]"
               onClick={() => setDesktopProductsOpen((value) => !value)}
             >
               Products
               <ChevronDown className={cn('h-4 w-4 transition', desktopProductsOpen ? 'rotate-180' : '')} />
             </button>
             {desktopProductsOpen ? (
-              <div className="absolute left-0 top-full mt-3 w-[28rem] rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(7,20,15,0.98),rgba(0,0,0,0.98))] p-4 shadow-[0_32px_90px_rgba(0,0,0,0.5)]">
+              <div className="absolute left-0 top-full mt-3 w-[30rem] rounded-[1.75rem] border border-black/8 bg-white p-4 shadow-[0_32px_90px_rgba(3,28,18,0.16)]">
                 <div className="grid gap-3 sm:grid-cols-2">
                   {productLinks.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="rounded-[1.25rem] border border-white/8 bg-white/[0.03] p-4 transition hover:-translate-y-0.5 hover:border-[#00FF9D]/28 hover:bg-[#00FF9D]/[0.05]"
+                      className="rounded-[1.25rem] border border-black/6 bg-[linear-gradient(180deg,#ffffff,#f3faf6)] p-4 transition hover:-translate-y-0.5 hover:border-[#00FF9D]/32 hover:shadow-[0_14px_40px_rgba(0,255,157,0.12)]"
                     >
-                      <p className="text-sm font-semibold text-white">{item.name}</p>
-                      <p className="mt-2 text-sm leading-6 text-white/52">{item.description}</p>
+                      <p className="text-sm font-semibold text-[#07140f]">{item.name}</p>
+                      <p className="mt-2 text-sm leading-6 text-[#365447]">{item.description}</p>
                     </Link>
                   ))}
                 </div>
@@ -75,7 +76,7 @@ export function MarketingHeader() {
             <Link
               key={item.label}
               href={item.href}
-              className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-medium text-white/68 transition hover:bg-white/[0.04] hover:text-white"
+              className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-medium text-[#10261c] transition hover:bg-[#eaf8f1]"
             >
               {item.label}
             </Link>
@@ -85,7 +86,7 @@ export function MarketingHeader() {
         <div className="hidden items-center gap-3 lg:flex">
           <Link
             href="/auth/login"
-            className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/10 px-5 text-sm font-semibold text-white/80 transition hover:border-[#00FF9D]/24 hover:text-white"
+            className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/10 px-5 text-sm font-semibold text-[#07140f] transition hover:border-[#00FF9D]/30 hover:bg-[#effcf5]"
           >
             Sign In
           </Link>
@@ -94,18 +95,26 @@ export function MarketingHeader() {
           </BpButton>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setMobileMenuOpen((value) => !value)}
-          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white transition hover:border-[#00FF9D]/28 lg:hidden"
-          aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-        >
-          {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        <div className="flex items-center gap-3 lg:hidden">
+          <Link
+            href="/auth/signup"
+            className="inline-flex min-h-10 items-center rounded-full bg-[#07140f] px-4 text-sm font-semibold text-white transition hover:bg-[#013220]"
+          >
+            Get Started
+          </Link>
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((value) => !value)}
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-black/10 bg-white text-[#07140f] transition hover:border-[#00FF9D]/28"
+            aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
 
       {mobileMenuOpen ? (
-        <div className="border-t border-white/8 bg-[rgba(1,9,5,0.96)] lg:hidden">
+        <div className="border-t border-black/6 bg-white lg:hidden">
           <div className="mx-auto max-w-[92rem] space-y-6 px-4 py-5 sm:px-6">
             <div className="grid gap-2">
               {fullMobileLinks.map((item) => (
@@ -113,23 +122,23 @@ export function MarketingHeader() {
                   key={`${item.label}-${item.href}`}
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-[1rem] border border-white/8 bg-white/[0.03] px-4 py-3 text-sm font-semibold text-white transition hover:border-[#00FF9D]/24 hover:bg-[#00FF9D]/[0.05]"
+                  className="rounded-[1rem] border border-black/6 bg-[linear-gradient(180deg,#ffffff,#f5faf7)] px-4 py-3 text-sm font-semibold text-[#07140f] transition hover:border-[#00FF9D]/24"
                 >
                   {item.label}
                 </Link>
               ))}
             </div>
 
-            <div className="rounded-[1.25rem] border border-white/8 bg-white/[0.03] p-4">
-              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#00FF9D]">Support</p>
-              <div className="mt-3 space-y-2 text-sm text-white/68">
-                <a href={`mailto:${supportContacts.email}`} className="block transition hover:text-white">
+            <div className="rounded-[1.25rem] border border-black/6 bg-[linear-gradient(180deg,#ffffff,#f4faf6)] p-4">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#00A76A]">Support</p>
+              <div className="mt-3 space-y-2 text-sm text-[#365447]">
+                <a href={`mailto:${supportContacts.email}`} className="block transition hover:text-[#07140f]">
                   {supportContacts.email}
                 </a>
-                <a href={supportContacts.telegramPrimary} target="_blank" rel="noreferrer" className="block transition hover:text-white">
+                <a href={supportContacts.telegramPrimary} target="_blank" rel="noreferrer" className="block transition hover:text-[#07140f]">
                   Telegram support
                 </a>
-                <a href={supportContacts.telegramApp} target="_blank" rel="noreferrer" className="block transition hover:text-white">
+                <a href={supportContacts.telegramApp} target="_blank" rel="noreferrer" className="block transition hover:text-[#07140f]">
                   Telegram community
                 </a>
               </div>
@@ -138,13 +147,14 @@ export function MarketingHeader() {
             <div className="flex flex-wrap gap-3">
               {socialProfiles.map((item) => {
                 const Icon = socialIconMap[item.label as keyof typeof socialIconMap];
+
                 return (
                   <a
                     key={item.label}
                     href={item.href}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/70 transition hover:border-[#00FF9D]/28 hover:text-[#00FF9D]"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/8 bg-[#f7fbf8] text-[#153126] transition hover:border-[#00FF9D]/28 hover:text-[#00A76A]"
                     aria-label={item.label}
                   >
                     {Icon ? <Icon className="h-4 w-4" /> : null}
@@ -157,7 +167,7 @@ export function MarketingHeader() {
               <Link
                 href="/auth/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/10 text-sm font-semibold text-white"
+                className="inline-flex min-h-12 items-center justify-center rounded-full border border-black/10 text-sm font-semibold text-[#07140f]"
               >
                 Sign In
               </Link>
@@ -178,18 +188,25 @@ export function MarketingHeader() {
 
 export function MarketingFooter() {
   return (
-    <footer id="support" className="border-t border-white/8 bg-[linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,0.42))]">
-      <div className="mx-auto max-w-[92rem] px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid gap-10 xl:grid-cols-[1.5fr_repeat(4,1fr)]">
+    <footer
+      id="support"
+      className="relative overflow-hidden border-t border-white/8 bg-[linear-gradient(180deg,#04110b,#07140f_52%,#000000)] text-white"
+    >
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(0,255,157,0.16),transparent_22%),radial-gradient(circle_at_82%_8%,rgba(159,166,178,0.16),transparent_18%)]" />
+      </div>
+
+      <div className="relative mx-auto max-w-[92rem] px-4 py-16 sm:px-6 lg:px-8">
+        <div className="grid gap-10 xl:grid-cols-[1.4fr_repeat(4,1fr)]">
           <div>
             <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
               <Image src="/assets/logo-mark.svg" alt="" width={40} height={40} className="h-10 w-10" />
               <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={184} height={28} className="h-6 w-auto" />
             </Link>
-            <p className="mt-5 max-w-sm text-sm leading-7 text-white/56">
+            <p className="mt-5 max-w-sm text-sm leading-7 text-white/74">
               Stay Anonymous. Stay Connected. Private by Design.
             </p>
-            <p className="mt-3 max-w-md text-sm leading-7 text-white/48">
+            <p className="mt-3 max-w-md text-sm leading-7 text-white/56">
               Private numbers, OTP tools, rentals, eSIM, proxies, and secure connectivity from one account.
             </p>
           </div>
@@ -203,9 +220,10 @@ export function MarketingFooter() {
             links={[
               { label: 'About', href: '/about' },
               { label: 'Blog', href: '/blog' },
-              { label: 'Pricing', href: '/#pricing' },
+              { label: 'Pricing', href: '/pricing' },
               { label: 'FAQ', href: '/faq' },
-              { label: 'Support', href: '/#support' },
+              { label: 'Support', href: '/support' },
+              { label: 'Contact', href: '/contact' },
             ]}
           />
           <FooterGroup
@@ -221,7 +239,7 @@ export function MarketingFooter() {
 
           <div>
             <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#00FF9D]">Support</p>
-            <div className="mt-4 space-y-3 text-sm text-white/60">
+            <div className="mt-4 space-y-3 text-sm text-white/64">
               <a href={`mailto:${supportContacts.email}`} className="block transition hover:text-white">
                 {supportContacts.email}
               </a>
@@ -236,6 +254,7 @@ export function MarketingFooter() {
             <div className="mt-6 flex flex-wrap gap-3">
               {socialProfiles.map((item) => {
                 const Icon = socialIconMap[item.label as keyof typeof socialIconMap];
+
                 return (
                   <a
                     key={item.label}
@@ -253,9 +272,9 @@ export function MarketingFooter() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-4 border-t border-white/8 pt-6 text-sm text-white/40 md:flex-row md:items-center md:justify-between">
+        <div className="mt-12 flex flex-col gap-4 border-t border-white/8 pt-6 text-sm text-white/44 md:flex-row md:items-center md:justify-between">
           <p>Private numbers • OTP tools • Rentals • eSIM • Proxies • VPN</p>
-          <Link href="/auth/signup" className="inline-flex items-center gap-2 text-white/60 transition hover:text-white">
+          <Link href="/auth/signup" className="inline-flex items-center gap-2 text-white/72 transition hover:text-white">
             Create account
             <ArrowRight className="h-4 w-4" />
           </Link>

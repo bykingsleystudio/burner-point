@@ -104,12 +104,12 @@ export default function WebhooksPage() {
       <section className="rounded-bp-lg border border-brand-border bg-brand-card p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Developer Webhooks</p>
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Event Delivery</p>
             <h1 className="mt-2 text-3xl font-black uppercase leading-none text-white md:text-5xl">
               Event delivery for private telecom workflows.
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-brand-muted">
-              Send message, call, number, payment, verification, and subscription events to your backend with signed delivery and idempotent processing.
+              Send message, call, number, payment, verification, and subscription events to your approved destination with signed delivery and idempotent processing.
             </p>
           </div>
           <div className="rounded-bp-lg border border-brand-green/16 bg-brand-green/[0.045] p-4 text-sm leading-6 text-white/64 lg:max-w-sm">
