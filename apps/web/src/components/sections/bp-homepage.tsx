@@ -700,7 +700,7 @@ function DashboardPreviewSection() {
                           VPN Connected - New York
                         </div>
                         <div className="rounded-[1rem] border border-white/8 bg-black/22 px-4 py-3 text-sm text-white/66">
-                          eSIM ready • Travel data active • Messaging synced
+                          eSIM ready / Travel data active / Messaging synced
                         </div>
                       </div>
                     </div>
@@ -736,7 +736,10 @@ function ComparisonSection() {
               )}
             >
               <div className="text-white/74">{feature}</div>
-              <div className="text-[#39FF14]">✅ {burnerPoint}</div>
+              <div className="flex items-center gap-2 text-[#39FF14]">
+                <Check className="h-4 w-4" />
+                <span>{burnerPoint}</span>
+              </div>
               <div className="text-white/56">{typical}</div>
             </div>
           ))}
@@ -894,7 +897,7 @@ function LandingFooter() {
         </div>
 
         <div className="mt-10 border-t border-white/8 pt-6 text-sm text-white/42 sm:flex sm:items-center sm:justify-between">
-          <p>© 2026 Burner Point. All rights reserved.</p>
+          <p>(c) 2026 Burner Point. All rights reserved.</p>
           <div className="mt-3 flex flex-wrap gap-4 sm:mt-0">
             <Link href="/terms-of-service" className="transition hover:text-[#00FF9D]">Terms of Service</Link>
             <Link href="/privacy-policy" className="transition hover:text-[#00FF9D]">Privacy Policy</Link>
