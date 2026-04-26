@@ -98,15 +98,15 @@ export const socialLinks = [
 ];
 
 export const trustBadges: MarketingLink[] = [
-  { label: '256-bit AES Encryption', href: '/security' },
-  { label: 'No Logs Policy', href: '/privacy-policy' },
-  { label: 'GDPR Compliant', href: '/privacy-policy' },
-  { label: 'Real SIM Numbers', href: '/verifications' },
+  { label: 'Private Number Access', href: '/verifications' },
+  { label: 'SMS & Voice OTP', href: '/verifications' },
+  { label: 'Secure Account Controls', href: '/security' },
+  { label: 'Privacy Policy', href: '/privacy-policy' },
 ];
 
 const faqItems = [
   ['What is a burner number?', 'A burner number is a temporary or renewable phone number you use instead of exposing your personal number online. Burner Point numbers are designed for account verification, controlled communication, rentals, recovery, and everyday privacy separation.'],
-  ['Are Burner Point numbers real mobile numbers?', 'Burner Point is positioned around real mobile and SIM-backed number access so SMS, OTP, and voice verification flows have stronger acceptance than generic VoIP-only numbers. Availability still depends on country, carrier, service, and inventory.'],
+  ['Are Burner Point numbers private numbers?', 'Burner Point is positioned around private number access for SMS, OTP, voice verification, rentals, recovery, and communication. Availability still depends on country, service rules, telecom routing, and inventory.'],
   ['How does the US/Canada conversation inbox work?', 'Conversation numbers are designed for US and Canada messaging and calling. A supported number can receive or send text, SMS, secure audio, photo and video sharing, calls, and voicemail over WiFi & Data from Burner Point web and mobile apps.'],
   ['How do verifications work?', 'Choose a country, service, and available number, submit that number to the third-party platform, and watch Burner Point for SMS OTP or voice OTP delivery. Codes remain tied to the number and verification workflow.'],
   ['How do rentals work?', 'Rentals give you a number for a defined window. Use short-term rentals for temporary access, or monthly rentals when you need continuity for repeat verifications, recovery messages, or communication history.'],
@@ -115,10 +115,10 @@ const faqItems = [
   ['How does eSIM work?', 'Buy a destination-ready data plan, activate the eSIM on a compatible device, and manage travel connectivity without swapping physical SIM cards. Burner Point positions eSIM as connectivity inside the same privacy account.'],
   ['How do proxies work?', 'Proxy access gives you controlled routing through supported regions for privacy-enhanced browsing, localization, testing, and account separation. Access details are managed inside your Burner Point account.'],
   ['Is VPN protection a separate product?', 'No. VPN privacy and protection is an in-platform Burner Point feature. It is designed to reduce exposure while using Burner Point services, not to operate as a standalone VPN brand.'],
-  ['What payment methods does Burner Point support?', 'The product architecture supports Paystack, Paddle, and NOWPayments for core revenue flows, with Flutterwave, Squad by GTCO, Korapay, and OPay deferred until core payment stability is proven.'],
+  ['What payment methods does Burner Point support?', 'Supported payment options may include cards, Paystack, Paddle subscriptions, NOWPayments crypto deposits, and additional regional gateways as available.'],
   ['How do refunds and billing work?', 'Refund eligibility depends on the product, provider delivery, whether a verification or rental was consumed, payment status, and number lifecycle. Billing surfaces should show references, status, credits, receipts, and support paths.'],
   ['What is required to create an account?', 'Account creation requires first name, last name, email, phone number, and password. By continuing, users agree to the Terms of Service and Privacy Policy. Burner Point supports email, phone, OAuth, password reset, and optional 2FA through a managed authentication layer.'],
-  ['How does Burner Point handle privacy and data?', 'Burner Point is designed around data minimization, private access control, a no-logs posture for sensitive privacy workflows, and operational telemetry limited to security, billing, fraud prevention, support, and reliability.'],
+  ['How does Burner Point handle privacy and data?', 'Burner Point is designed around data minimization, private access control, account protection, support visibility, and clear privacy policies.'],
   ['How do I reach support?', 'Email info.burnerpoint@gmail.com or message Telegram support at @burnerpoint and @burnerpointapp for account, verification, rental, billing, eSIM, proxy, or VPN help.'],
 ].map(([question, answer]) => ({ question, answer }));
 
@@ -130,7 +130,7 @@ export const marketingPages: Record<string, MarketingPageContent> = {
     description: 'Burner Point brings verifications, rentals, eSIM connectivity, proxies, and privacy protection into one platform for users who do not want to hand out their real number.',
     primaryCta: { label: 'Get Started', href: '/auth/signup' },
     secondaryCta: { label: 'View Pricing', href: '/pricing' },
-    highlights: ['Real SIM-backed numbers', 'SMS, OTP, voice, and MMS workflows', 'Privacy-first platform expansion'],
+    highlights: ['Private number access', 'SMS, OTP, voice, and MMS workflows', 'Privacy-first platform expansion'],
     cards: [
       { icon: 'smartphone', title: 'Real Numbers', text: 'Choose country and area-code inventory for verifications, rentals, recovery, and private communication.', href: '/verifications', cta: 'Get Verification' },
       { icon: 'globe', title: 'Global Services', text: 'Use Burner Point across marketplaces, social apps, travel flows, and business registrations without overusing your personal number.', href: '/rentals', cta: 'Rent A Number' },
@@ -194,7 +194,7 @@ export const marketingPages: Record<string, MarketingPageContent> = {
     highlights: ['Product guidance only', 'No operational exposure', 'Support available for approved requests'],
     sections: [
       { title: 'What you can do here', text: 'Use the public site to understand products, pricing, availability, onboarding, trust, and support.' },
-      { title: 'What stays private', text: 'Operational routing, sensitive credentials, and restricted access details stay behind approved support and account workflows.' },
+      { title: 'What stays private', text: 'Internal routing and restricted operational details stay behind approved support and account workflows.' },
     ],
   },
   pricing: {
@@ -223,7 +223,7 @@ export const marketingPages: Record<string, MarketingPageContent> = {
       { icon: 'file', meta: 'Communication - 5 min read', title: 'How Burner Numbers Protect Your Identity', text: 'Compartmentalize marketplaces, social apps, business communication, and short-term signups.', href: '/blog#post-burner-identity', anchorId: 'post-burner-identity' },
       { icon: 'file', meta: 'Security - 7 min read', title: 'Understanding Non-VoIP Numbers', text: 'Why SIM-backed inventory matters for OTP reliability, recovery, and trust.', href: '/blog#post-nonvoip', anchorId: 'post-nonvoip' },
       { icon: 'file', meta: 'Anonymous and Connected - 4 min read', title: 'Privacy in the Digital Age: Anonymous and Connected', text: 'Keep access, recovery, and messages portable while reducing identity exposure.', href: '/blog#post-anonymous-connected', anchorId: 'post-anonymous-connected' },
-      { icon: 'file', meta: 'Product Updates - 5 min read', title: 'How Burner Point Handles Secure Communication', text: 'A practical look at private inboxes, provider routing, no-logs posture, and account control.', href: '/blog#post-secure-communication', anchorId: 'post-secure-communication' },
+      { icon: 'file', meta: 'Product Updates - 5 min read', title: 'How Burner Point Handles Secure Communication', text: 'A practical look at private inboxes, supported routing, privacy policies, and account control.', href: '/blog#post-secure-communication', anchorId: 'post-secure-communication' },
     ],
     sections: [
       {
@@ -244,7 +244,7 @@ export const marketingPages: Record<string, MarketingPageContent> = {
         anchorId: 'post-nonvoip',
         meta: 'Security - 7 min read',
         title: 'Understanding Non-VoIP Numbers',
-        text: 'Non-VoIP numbers are positioned around real mobile-number infrastructure rather than generic internet-only calling identities. Many services apply stricter checks to phone numbers during OTP, recovery, and anti-abuse flows. That is why Burner Point emphasizes real SIM-backed access, provider quality, country selection, and verification reliability instead of treating every phone number as interchangeable.',
+        text: 'Private numbers are positioned around supported telecom routes rather than generic internet-only calling identities. Many services apply stricter checks to phone numbers during OTP, recovery, and anti-abuse flows. That is why Burner Point emphasizes country selection, service availability, and verification reliability instead of treating every phone number as interchangeable.',
         items: ['Real mobile number access can improve acceptance for SMS and voice verification', 'Country, carrier, service, and route quality still matter for delivery', 'Users should see clear availability, delivery, and support guidance in the interface'],
       },
       {
@@ -278,7 +278,7 @@ export const marketingPages: Record<string, MarketingPageContent> = {
       { icon: 'phone', meta: 'December 2025', title: 'US/Canada WiFi & Data Communication Improvements', text: 'Refined the conversation roadmap for SMS, calls, voicemail, and secure audio, photo and video sharing over WiFi & Data.', href: '/updates#update-conversation-usca', anchorId: 'update-conversation-usca' },
     ],
     sections: [
-      { anchorId: 'update-country-numbers', meta: 'April 2026', title: 'New Country Number Coverage Added', text: 'Burner Point expanded number coverage planning for additional country routes and area-code selection. The product direction prioritizes SIM-backed access, verification reliability, provider health, and clear user controls before exposing inventory broadly.', items: ['More route planning for SMS and voice verification', 'Sharper country and area-code inventory display', 'Support-ready states for unavailable or degraded routes'] },
+      { anchorId: 'update-country-numbers', meta: 'April 2026', title: 'New Country Number Coverage Added', text: 'Burner Point expanded number coverage planning for additional country routes and area-code selection. The product direction prioritizes verification reliability, inventory quality, and clear user controls before exposing availability broadly.', items: ['More route planning for SMS and voice verification', 'Sharper country and area-code inventory display', 'Support-ready states for unavailable or degraded routes'] },
       { anchorId: 'update-wallet-improvements', meta: 'March 2026', title: 'Wallet and Checkout Flow Improvements', text: 'Burner Point refined product pricing visibility, payment-state messaging, and wallet balance updates so users can understand what happened after each purchase more easily.', items: ['Sharper purchase confirmations and balance updates', 'Clearer payment and pending states', 'More direct support paths when funding or assignment needs review'] },
       { anchorId: 'update-esim-regions', meta: 'February 2026', title: 'New eSIM Regions Released', text: 'Burner Point added more complete eSIM content and product routing around destination-ready data plans. The experience focuses on instant activation, compatible device guidance, multi-country coverage, and plan visibility.', items: ['Travel-ready data plan positioning', 'Activation and usage state framework', 'Support path for eSIM install and connectivity issues'] },
       { anchorId: 'update-proxy-durability', meta: 'January 2026', title: 'New Proxy Region and Durability Improvements', text: 'Proxy purchase and management now has clearer product language for residential and mobile proxy access, region control, session durability, and health messaging. This keeps proxy access practical without overloading users with operational detail.', items: ['Region and proxy type framework', 'Durability, rotation, and health messaging', 'Cleaner account-level access guidance'] },
@@ -322,7 +322,7 @@ marketingPages.numbers = {
     { icon: 'message', title: 'Conversation Numbers', text: 'US/Canada numbers support SMS, secure audio, photo and video sharing, calls, voicemail, contacts, and call history.', href: '/overview', cta: 'See Overview' },
   ],
   sections: [
-    { title: 'Search and filters', text: 'The authenticated number experience should support country, area code, service type, renewal mode, provider health, and price filters.' },
+    { title: 'Search and filters', text: 'The authenticated number experience should support country, area code, service type, renewal mode, availability, and price filters.' },
     { title: 'Lifecycle controls', text: 'Every number needs clear status, expiration, renewal, release, usage history, and support escalation states so users always know what will happen next.' },
   ],
 };
@@ -427,7 +427,7 @@ marketingPages.about = {
 marketingPages.terms = { slug: 'terms', eyebrow: 'Legal', title: 'Terms of Service.', description: 'These product-facing terms summarize expected usage for Burner Point services and should be reviewed with counsel before production launch.', sections: [
   { title: 'Acceptable use', text: 'Burner Point is intended for lawful privacy, verification, communication, travel, and connectivity workflows. Abuse, fraud, harassment, spam, and platform misuse are prohibited.' },
   { title: 'Service availability', text: 'Telecommunications delivery depends on carriers, country coverage, provider inventory, and platform-specific acceptance rules.' },
-  { title: 'User responsibility', text: 'Users are responsible for credentials, third-party platform compliance, and lawful use of numbers, proxies, eSIM plans, and privacy tools.' },
+  { title: 'User responsibility', text: 'Users are responsible for account security, third-party platform compliance, and lawful use of numbers, proxies, eSIM plans, and privacy tools.' },
 ] };
 marketingPages.privacy = { slug: 'privacy', eyebrow: 'Legal', title: 'Privacy Policy.', description: 'Burner Point is designed around minimizing exposure and giving users more control over communication identity.', sections: [
   { title: 'Data minimization', text: 'We collect the account and transaction data needed to operate the platform, protect users, support billing, and troubleshoot service delivery.' },
@@ -444,9 +444,9 @@ marketingPages.proxies = { slug: 'proxies', eyebrow: 'Proxies Purchase', title: 
   { icon: 'shield', title: 'Privacy Layer', text: 'Add separation between your personal connection and the tasks you need to complete.' },
   { icon: 'wifi', title: 'Fast Routing', text: 'Designed for practical browsing, testing, and app workflows.' },
 ] };
-marketingPages.security = { slug: 'security', eyebrow: 'VPN Privacy and Protection', title: 'Stay Anonymous. Stay Connected. Private By Design.', description: 'Burner Point brings encrypted browsing concepts, secure routing, and no-personal-number communication into one privacy-first platform experience.', primaryCta: { label: 'Learn More', href: '/overview' }, highlights: ['256-bit AES posture', 'No Logs Policy', 'Integrated privacy protection'], cards: [
+marketingPages.security = { slug: 'security', eyebrow: 'Secure Tunnel and Privacy', title: 'Stay Anonymous. Stay Connected. Private By Design.', description: 'Burner Point brings secure connectivity, private routing, and no-personal-number communication into one privacy-first platform experience.', primaryCta: { label: 'Learn More', href: '/overview' }, highlights: ['Secure tunnel access', 'Account protection', 'Integrated privacy tools'], cards: [
   { icon: 'lock', title: 'Encrypted Layer', text: 'A security-first product posture for private browsing and communication workflows.' },
-  { icon: 'shield', title: 'No Logs Policy', text: 'A privacy promise that keeps the product focused on user control and minimal exposure.' },
+  { icon: 'shield', title: 'Privacy Controls', text: 'Clear account settings and privacy policies keep the product focused on user control and minimal exposure.' },
   { icon: 'globe', title: 'Integrated Routing', text: 'Proxy and VPN-style protection paired with private numbers and eSIM connectivity.' },
 ] };
 

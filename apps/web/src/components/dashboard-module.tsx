@@ -5,13 +5,11 @@ import {
   Bell,
   CalendarDays,
   CheckCircle2,
-  Code2,
   CreditCard,
   FileText,
   Globe2,
   Headphones,
   Image as ImageIcon,
-  KeyRound,
   Lock,
   MessageSquare,
   Phone,
@@ -27,13 +25,11 @@ type IconKey =
   | 'bell'
   | 'calendar'
   | 'check'
-  | 'code'
   | 'credit'
   | 'file'
   | 'globe'
   | 'headphones'
   | 'image'
-  | 'key'
   | 'lock'
   | 'message'
   | 'phone'
@@ -63,13 +59,11 @@ const icons: Record<IconKey, LucideIcon> = {
   bell: Bell,
   calendar: CalendarDays,
   check: CheckCircle2,
-  code: Code2,
   credit: CreditCard,
   file: FileText,
   globe: Globe2,
   headphones: Headphones,
   image: ImageIcon,
-  key: KeyRound,
   lock: Lock,
   message: MessageSquare,
   phone: Phone,
@@ -190,43 +184,43 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
     eyebrow: 'BP Proxy Store',
     title: 'Proxy access for location-aware privacy workflows.',
     description:
-      'Proxy management gives users secure routing options, location flexibility, and connection health visibility without exposing sensitive details.',
-    status: 'Provisioning and credential delivery',
+      'Proxy management gives users approved routing options, location flexibility, and connection health visibility from one clean account surface.',
+    status: 'Plan access and session health',
     primaryAction: { label: 'Buy Credits', href: '/dashboard/credits' },
-    secondaryAction: { label: 'Open API Tools', href: '/dashboard/api' },
+    secondaryAction: { label: 'Open Support', href: '/dashboard/support' },
     stats: [
       { label: 'Types', value: 'Mobile/Residential' },
       { label: 'Regions', value: 'Selectable' },
-      { label: 'Secrets', value: 'Server-side' },
+      { label: 'Use', value: 'Approved' },
     ],
     cards: [
       { icon: 'globe', title: 'Region Control', text: 'Select routing regions for browsing, testing, and account separation.', meta: 'Location' },
-      { icon: 'lock', title: 'Credential Masking', text: 'Show proxy credentials once, mask stored values, and rotate safely.', meta: 'Secrets' },
+      { icon: 'lock', title: 'Access Delivery', text: 'View setup details only when a proxy plan is active on your account.', meta: 'Access' },
       { icon: 'radio', title: 'Health Checks', text: 'Track active routes, durability, rotation, and connection issues.', meta: 'Reliability' },
     ],
-    workflow: ['Choose proxy type and region', 'Confirm price and duration', 'Activate access', 'Display masked credentials and rotation status'],
-    note: 'Routing regions, masked credentials, and session status should stay easy to read without exposing sensitive details.',
+    workflow: ['Choose proxy type and region', 'Confirm price and duration', 'Activate access', 'Review setup details and session status'],
+    note: 'Proxy access is for lawful, approved use cases and should stay easy to manage without exposing unnecessary technical details.',
   },
   vpn: {
     eyebrow: 'BP Secure Tunnel',
-    title: 'Privacy protection inside Burner Point, not a standalone VPN.',
+    title: 'Secure your connection with BP Secure Tunnel.',
     description:
-      'The VPN layer should reduce exposure while users operate Burner Point services. It belongs to the platform security model, paired with numbers, eSIM, proxies, and account controls.',
-    status: 'Secure tunnel control plane',
+      'BP Secure Tunnel gives users encrypted connectivity, device setup guidance, server location choice, and dedicated IP options where available.',
+    status: 'Secure tunnel access',
     primaryAction: { label: 'See Security', href: '/security' },
     secondaryAction: { label: 'Open Support', href: '/dashboard/support' },
     stats: [
-      { label: 'Mode', value: 'Integrated' },
-      { label: 'Profile', value: 'Secure export' },
-      { label: 'Logs', value: 'Minimized' },
+      { label: 'Protocol', value: 'WireGuard' },
+      { label: 'IP', value: 'Dedicated' },
+      { label: 'Devices', value: 'Managed' },
     ],
     cards: [
       { icon: 'lock', title: 'Protected Session', text: 'Toggle protection while using communication, billing, and account workflows.', meta: 'Security' },
-      { icon: 'globe', title: 'Server Selection', text: 'Expose regions clearly without selling the VPN as a separate product.', meta: 'Routing' },
+      { icon: 'globe', title: 'Server Selection', text: 'Choose from available secure tunnel regions and plan options.', meta: 'Routing' },
       { icon: 'shield', title: 'No-Logs Posture', text: 'Keep telemetry limited to abuse prevention, reliability, and billing safety.', meta: 'Trust' },
     ],
-    workflow: ['Check account eligibility', 'Prepare your secure connection', 'Connect to the selected region', 'Display status and rotate credentials safely'],
-    note: 'Protection status, region selection, and reconnect guidance should stay clear while you move through the rest of the product.',
+    workflow: ['Choose a plan', 'Select server location', 'Set up your device', 'Review connection status and renewal timing'],
+    note: 'Secure Tunnel is designed for privacy, account protection, and safer connectivity under Burner Point usage policies.',
   },
   support: {
     eyebrow: 'Support',
@@ -292,25 +286,25 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
     note: 'Purchases should appear clearly with status, references, and the next action if something needs attention.',
   },
   developer: {
-    eyebrow: 'Advanced Access',
-    title: 'Access keys, event delivery, and controlled automation.',
+    eyebrow: 'Account Controls',
+    title: 'Approved access requests and account support.',
     description:
-      'Manage secure account access for approved verification, number, inbox, and event-driven workflows without exposing operational details on the frontend.',
-    status: 'Advanced controls',
-    primaryAction: { label: 'Manage Access Keys', href: '/dashboard/api' },
-    secondaryAction: { label: 'Support', href: '/dashboard/support' },
+      'Advanced account needs should be handled through support-reviewed workflows so users see clear product actions instead of internal system tools.',
+    status: 'Support-reviewed access',
+    primaryAction: { label: 'Open Support', href: '/dashboard/support' },
+    secondaryAction: { label: 'View Settings', href: '/dashboard/settings' },
     stats: [
-      { label: 'Access', value: 'Scoped' },
-      { label: 'Events', value: 'Signed' },
+      { label: 'Review', value: 'Support' },
+      { label: 'Privacy', value: 'Scoped' },
       { label: 'Control', value: 'Account' },
     ],
     cards: [
-      { icon: 'key', title: 'Scoped Keys', text: 'Create and revoke access keys with least-privilege scopes for approved workflows.', meta: 'Keys' },
-      { icon: 'bell', title: 'Event Delivery', text: 'Route payment, message, call, number, and verification events to approved destinations.', meta: 'Events' },
-      { icon: 'code', title: 'Workflow Control', text: 'Keep advanced access organized, rate-limited, and easy to review from your account.', meta: 'Control' },
+      { icon: 'shield', title: 'Privacy Review', text: 'Use support for account access requests that require additional review.', meta: 'Trust' },
+      { icon: 'bell', title: 'Clear Updates', text: 'Track responses, next steps, and account actions without technical setup noise.', meta: 'Updates' },
+      { icon: 'lock', title: 'Safe Defaults', text: 'Keep sensitive account actions controlled, reversible, and easy to understand.', meta: 'Safety' },
     ],
-    workflow: ['Create a named access key', 'Configure event delivery and event types', 'Store secrets safely', 'Review access and delivery history when needed'],
-    note: 'Keys, signing secrets, and delivery history should stay organized, reversible, and easy for teams to manage safely.',
+    workflow: ['Open a support request', 'Attach the relevant product reference', 'Wait for account review', 'Follow the approved next step'],
+    note: 'Customer-facing screens should focus on clear product actions, billing status, support paths, and account security.',
   },
 };
 

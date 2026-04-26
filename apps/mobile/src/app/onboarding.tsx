@@ -103,7 +103,7 @@ export default function OnboardingScreen() {
           <Text style={s.secondaryText}>Sign In</Text>
         </TouchableOpacity>
 
-        <Text style={s.footer}>No standalone VPN. No exposed provider secrets. Burner Point routes sensitive service work through the backend.</Text>
+        <Text style={s.footer}>Private numbers, verification tools, travel data, proxies, and secure tunnel access from one privacy-first account.</Text>
       </ScrollView>
     </SafeAreaView>
   );

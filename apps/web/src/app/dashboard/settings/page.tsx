@@ -7,7 +7,6 @@ import {
   Bell,
   CreditCard,
   HelpCircle,
-  KeyRound,
   LogOut,
   ShieldCheck,
   Trash2,
@@ -32,7 +31,7 @@ export default function SettingsPage() {
               <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Settings</p>
               <h2 className="mt-2 text-3xl font-semibold text-white">{user?.fullName || 'Burner Point account'}</h2>
               <p className="mt-2 text-sm leading-6 text-white/52">
-                Manage profile details, billing, API access, support paths, and secure account controls from one settings index.
+                Manage profile details, billing, support paths, and secure account controls from one settings index.
               </p>
             </div>
           </div>
@@ -53,7 +52,6 @@ export default function SettingsPage() {
             tabs={[
               { label: 'Profile', href: '/dashboard/profile' },
               { label: 'Billing & Subscription', href: '/dashboard/billing' },
-              { label: 'Advanced Access', href: '/dashboard/api' },
               { label: 'Support', href: '/dashboard/support' },
               { label: 'Account', href: '/dashboard/settings' },
             ]}
@@ -113,7 +111,7 @@ export default function SettingsPage() {
             ))}
           </div>
           <p className="mt-4 text-sm leading-6 text-white/50">
-            Notification controls are surfaced here while Clerk manages the secure account channel settings used for sign-in, recovery, and 2FA.
+            Notification controls are surfaced here while account security settings manage sign-in, recovery, and 2FA.
           </p>
         </article>
 
@@ -130,23 +128,6 @@ export default function SettingsPage() {
             <Link href="/dashboard/credits" className="rounded-[1rem] border border-white/8 bg-black/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
               <p className="text-sm font-semibold text-white">Deposit options</p>
               <p className="mt-2 text-sm leading-6 text-white/50">Fund the wallet for usage-based products and renewals.</p>
-            </Link>
-          </div>
-        </article>
-
-        <article className="rounded-[1.5rem] border border-white/8 bg-brand-card p-5">
-          <div className="flex items-center gap-3">
-            <KeyRound className="h-5 w-5 text-brand-green" />
-            <h3 className="text-base font-semibold text-white">Advanced Access</h3>
-          </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <Link href="/dashboard/api" className="rounded-[1rem] border border-white/8 bg-black/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
-              <p className="text-sm font-semibold text-white">Access keys</p>
-              <p className="mt-2 text-sm leading-6 text-white/50">Generate and revoke scoped keys for approved private workflows.</p>
-            </Link>
-            <Link href="/dashboard/webhooks" className="rounded-[1rem] border border-white/8 bg-black/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
-              <p className="text-sm font-semibold text-white">Event delivery</p>
-              <p className="mt-2 text-sm leading-6 text-white/50">Configure outbound event delivery and signing secrets.</p>
             </Link>
           </div>
         </article>

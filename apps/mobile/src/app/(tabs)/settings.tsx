@@ -2,7 +2,7 @@ import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuth, useUser } from '@clerk/clerk-expo';
-import { Bell, ChevronRight, HelpCircle, Key, LogOut, ShieldCheck, SlidersHorizontal, User } from 'lucide-react-native';
+import { Bell, ChevronRight, HelpCircle, LogOut, ShieldCheck, SlidersHorizontal, User } from 'lucide-react-native';
 
 import { clearApiSession } from '../../lib/auth';
 import { BRAND } from '../../lib/brand';
@@ -13,7 +13,6 @@ import { triggerHaptic } from '../../lib/native-ux';
 const settings = [
   { label: 'Profile', text: 'Name, email, phone, and account identity', Icon: User, href: '/profile' },
   { label: 'Security and 2FA', text: 'Email, phone, MFA, and active sessions', Icon: ShieldCheck, externalUrl: `${WEB_APP_URL}/dashboard/security` },
-  { label: 'API keys', text: 'Developer access, keys, and webhooks', Icon: Key, href: '/developer' },
   { label: 'Notifications', text: 'OTP, rentals, billing, and alerts', Icon: Bell },
   { label: 'Preferences', text: 'Motion, region, privacy defaults', Icon: SlidersHorizontal },
   { label: 'Terms of Service', text: 'Current Burner Point legal terms', Icon: ShieldCheck, externalUrl: `${WEB_APP_URL}/terms-of-service` },
@@ -82,7 +81,7 @@ export default function SettingsScreen() {
           ))}
         </View>
 
-        <Text style={s.sectionTitle}>Stack</Text>
+        <Text style={s.sectionTitle}>Products</Text>
         <View style={s.stackGrid}>
           {BURNER_POINT_STACK.map((item) => (
             <View key={item.label} style={s.stackItem}>

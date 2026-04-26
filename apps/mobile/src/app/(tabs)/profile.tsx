@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Activity, CreditCard, LogOut, Shield, Copy, Share2, Key, HelpCircle, ChevronRight } from 'lucide-react-native';
+import { Activity, CreditCard, LogOut, Shield, Copy, Share2, HelpCircle, ChevronRight } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
@@ -57,7 +57,6 @@ export default function ProfileScreen() {
 
   const menuItems = [
     { icon: CreditCard, label: 'Billing', action: () => router.push('/billing' as any) },
-    { icon: Key, label: 'API Keys', action: () => router.push('/developer' as any) },
     { icon: Shield, label: 'Security & Settings', action: () => router.push('/settings' as any) },
     { icon: Activity, label: 'Activity', action: () => router.push('/activity' as any) },
     { icon: Share2, label: 'Referral Program', action: copyReferral },

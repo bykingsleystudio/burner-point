@@ -1,34 +1,34 @@
 export const BURNER_POINT_STACK = [
   {
-    label: 'Web',
-    value: 'Next.js / Vercel',
+    label: 'Messenger',
+    value: 'Private numbers, SMS, calls, contacts',
   },
   {
-    label: 'API',
-    value: 'NestJS / Railway',
+    label: 'Verify Hub',
+    value: 'SMS and voice OTP where supported',
   },
   {
-    label: 'Data',
-    value: 'Neon Postgres',
+    label: 'Rentals',
+    value: 'Temporary and renewable number access',
   },
   {
-    label: 'Auth',
-    value: 'Clerk + global OTP',
+    label: 'eSIM',
+    value: 'Country and regional travel data',
   },
   {
-    label: 'Mobile',
-    value: 'Expo / EAS',
+    label: 'Proxies',
+    value: 'Residential, datacenter, rotating plans',
   },
   {
-    label: 'Payments',
-    value: 'Paystack, Paddle, NOWPayments',
+    label: 'Secure Tunnel',
+    value: 'Encrypted tunnel and dedicated IP options',
   },
   {
-    label: 'Telecom',
-    value: 'Multi-route messaging and verification',
+    label: 'Billing',
+    value: 'USD wallet with local currency display',
   },
   {
-    label: 'Privacy',
-    value: 'Secure tunnel, proxies, eSIM',
+    label: 'Support',
+    value: 'Email, Telegram, and ticket support',
   },
 ] as const;

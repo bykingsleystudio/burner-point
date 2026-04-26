@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import {
   CalendarDays,
-  Code2,
   Globe2,
+  HelpCircle,
   Lock,
   Server,
   ShieldCheck,
@@ -31,7 +31,7 @@ const SERVICES: Array<{ href: string; label: string; Icon: LucideIcon; mot: stri
   { href: '/rentals', label: 'Rentals', Icon: CalendarDays, mot: 'bp-svc-mot-2' },
   { href: '/esim', label: 'eSIM', Icon: Globe2, mot: 'bp-svc-mot-3' },
   { href: '/proxies', label: 'Proxies', Icon: Server, mot: 'bp-svc-mot-4' },
-  { href: '/api/docs', label: 'API', Icon: Code2, mot: 'bp-svc-mot-5' },
+  { href: '/support', label: 'Support', Icon: HelpCircle, mot: 'bp-svc-mot-5' },
   { href: '/security', label: 'VPN', Icon: Lock, mot: 'bp-svc-mot-6' },
 ];
 

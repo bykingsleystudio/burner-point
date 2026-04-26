@@ -13,7 +13,6 @@ import {
   FileText,
   Globe2,
   HelpCircle,
-  KeyRound,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -83,21 +82,21 @@ const NAV_ITEMS: NavItem[] = [
     href: '/dashboard/proxies',
     label: 'BP Proxy Store',
     shortLabel: 'Proxy Store',
-    description: 'Proxy plans, credentials, and active sessions.',
+    description: 'Proxy plans, setup details, and active sessions.',
     icon: Globe2,
   },
   {
     href: '/dashboard/vpn',
     label: 'BP Secure Tunnel',
     shortLabel: 'Secure Tunnel',
-    description: 'Secure tunnel access, server regions, and profile export.',
+    description: 'Secure tunnel access, server regions, and device setup.',
     icon: Shield,
   },
   {
     href: '/dashboard/settings',
     label: 'Settings',
     shortLabel: 'Settings',
-    description: 'Profile, billing, access keys, and support.',
+    description: 'Profile, billing, support, and security controls.',
     icon: Settings,
   },
 ];
@@ -110,14 +109,14 @@ const PAGE_META: Array<{ match: string; title: string; description: string }> = 
   { match: '/dashboard/verification', title: 'BP Verify Hub', description: 'Tiered verification routing with a live OTP surface.' },
   { match: '/dashboard/rentals', title: 'BP Number Rentals', description: 'Browse inventory, activate rentals, and manage renewal timing.' },
   { match: '/dashboard/esim', title: 'BP eSIM Store', description: 'Provision travel data plans and manage installed eSIMs.' },
-  { match: '/dashboard/proxies', title: 'BP Proxy Store', description: 'Filter proxy plans, reveal credentials, and review active sessions.' },
-  { match: '/dashboard/vpn', title: 'BP Secure Tunnel', description: 'Secure routing, server choice, and profile provisioning.' },
-  { match: '/dashboard/settings', title: 'Settings', description: 'Profile, billing, access keys, support, and security controls.' },
+  { match: '/dashboard/proxies', title: 'BP Proxy Store', description: 'Filter proxy plans, review setup details, and monitor active sessions.' },
+  { match: '/dashboard/vpn', title: 'BP Secure Tunnel', description: 'Secure routing, server choice, and device setup guidance.' },
+  { match: '/dashboard/settings', title: 'Settings', description: 'Profile, billing, support, and security controls.' },
   { match: '/dashboard/profile', title: 'Settings', description: 'Manage personal details and recovery information.' },
   { match: '/dashboard/billing', title: 'Billing & Subscription', description: 'Wallet movements, invoices, plans, and active subscriptions.' },
   { match: '/dashboard/credits', title: 'Billing & Subscription', description: 'Fund the wallet for verification, rentals, eSIM, and proxies.' },
-  { match: '/dashboard/api', title: 'Advanced Access', description: 'Manage access keys, event delivery, and integration security.' },
-  { match: '/dashboard/developer', title: 'Advanced Access', description: 'Advanced access, event delivery control, and automation paths.' },
+  { match: '/dashboard/api', title: 'Account Access', description: 'Request support-reviewed access and account controls.' },
+  { match: '/dashboard/developer', title: 'Account Access', description: 'Request support-reviewed access and account controls.' },
   { match: '/dashboard/support', title: 'Support', description: 'Tickets, Telegram, and account issue handling.' },
   { match: '/dashboard', title: 'Dashboard', description: 'Private telecom operations, funding, and account visibility.' },
 ];
@@ -389,10 +388,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Link href="/dashboard/billing" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-white/68 transition hover:bg-white/[0.04] hover:text-white">
                 <CreditCard className="h-4 w-4 text-brand-green" />
                 Billing
-              </Link>
-              <Link href="/dashboard/api" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-white/68 transition hover:bg-white/[0.04] hover:text-white">
-                <KeyRound className="h-4 w-4 text-brand-green" />
-                Access Keys
               </Link>
               <Link href="/dashboard/support" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-white/68 transition hover:bg-white/[0.04] hover:text-white">
                 <HelpCircle className="h-4 w-4 text-brand-green" />

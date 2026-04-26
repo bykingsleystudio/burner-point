@@ -108,7 +108,7 @@ export const legalDocuments: Record<LegalDocument['slug'], LegalDocument> = {
           {
             title: '4.5 Refunds',
             paragraphs: [
-              'Unless required by law or expressly stated, payments are non-refundable once Services are provisioned, numbers assigned, eSIMs issued, OTP workflows completed, proxy credentials delivered, or VPN access activated.',
+              'Unless required by law or expressly stated, payments are non-refundable once Services are provisioned, numbers assigned, eSIMs issued, OTP workflows completed, proxy access details delivered, or VPN access activated.',
             ],
           },
           {

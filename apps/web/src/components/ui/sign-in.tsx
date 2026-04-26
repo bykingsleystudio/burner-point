@@ -273,7 +273,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               <div>
                 <p className="text-sm font-semibold text-white">One account across all Burner Point products.</p>
                 <p className="mt-1.5 text-sm leading-6 text-white/66">
-                  Sign in once to access numbers, verification, rentals, eSIM orders, proxy credentials, billing, and support.
+                  Sign in once to access numbers, verification, rentals, eSIM orders, proxy access, billing, and support.
                 </p>
                 <Link href="/#products" className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-[#00FF9D] transition hover:gap-3">
                   Explore products

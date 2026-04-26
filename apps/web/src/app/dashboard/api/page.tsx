@@ -1,138 +1,65 @@
-'use client';
-
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import toast from 'react-hot-toast';
-import { Copy, Key, Plus, Trash2, Webhook } from 'lucide-react';
-import { developerApi } from '@/lib/api';
+import { ArrowRight, HelpCircle, Lock, ShieldCheck } from 'lucide-react';
 
-type ApiKeyRecord = {
-  id: string;
-  name: string;
-  keyPrefix: string;
-  rawKey?: string;
-  usageCount?: number;
-};
+const requestTypes = [
+  'Bulk verification workflow review',
+  'Business account controls',
+  'Compliance and usage policy questions',
+  'Product access that needs manual approval',
+];
 
-export default function ApiPage() {
-  const [keys, setKeys] = useState<ApiKeyRecord[]>([]);
-  const [newKeyName, setNewKeyName] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [revealedKey, setRevealedKey] = useState<string | null>(null);
-
-  useEffect(() => {
-    setLoading(true);
-    developerApi.keys().then((r) => setKeys(r.data)).finally(() => setLoading(false));
-  }, []);
-
-  const createKey = async () => {
-    if (!newKeyName.trim()) return;
-    setCreating(true);
-    try {
-      const r = await developerApi.createKey({ name: newKeyName, scopes: ['read', 'write'] });
-      setKeys((current) => [...current, r.data as ApiKeyRecord]);
-      setRevealedKey(r.data.rawKey);
-      setNewKeyName('');
-      toast.success('Access key created. Copy it now because it will not be shown again.');
-    } catch {
-      toast.error('Failed to create key');
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  const revoke = async (id: string) => {
-    if (!confirm('Revoke this key?')) return;
-    await developerApi.revokeKey(id);
-    setKeys((current) => current.filter((key) => key.id !== id));
-    toast.success('Key revoked');
-  };
-
+export default function AccountAccessPage() {
   return (
-    <div className="max-w-3xl space-y-6">
-      <div>
-        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Private access</p>
-        <h1 className="mt-1 text-xl font-bold">Access Keys</h1>
-        <p className="mt-1 text-sm leading-6 text-brand-muted">
-          Manage secure account keys for approved private workflows without exposing operational details on the frontend.
+    <div className="mx-auto max-w-4xl space-y-5">
+      <section className="overflow-hidden rounded-[1.9rem] border border-white/8 bg-[linear-gradient(180deg,rgba(1,50,32,0.9),rgba(0,0,0,0.96))] p-6 shadow-[0_28px_80px_rgba(0,0,0,0.32)] md:p-8">
+        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Account access</p>
+        <h1 className="mt-3 max-w-3xl text-3xl font-black uppercase leading-none text-white md:text-5xl">
+          Advanced access is handled through support review.
+        </h1>
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-brand-muted md:text-base">
+          Burner Point keeps customer screens focused on products, billing, privacy, and support. If your account needs a higher-touch workflow, open a support request with the product, country, and use case.
         </p>
-      </div>
-
-      <Link
-        href="/dashboard/webhooks"
-        className="flex items-start gap-3 rounded-bp-lg border border-brand-green/16 bg-brand-green/[0.045] p-4 transition hover:border-brand-green/32 hover:bg-brand-green/[0.075]"
-      >
-        <span className="flex h-10 w-10 flex-none items-center justify-center rounded-bp border border-brand-green/20 bg-black/20">
-          <Webhook className="h-5 w-5 text-brand-green" />
-        </span>
-        <span>
-          <span className="block text-sm font-semibold uppercase text-white">Manage Event Notifications</span>
-          <span className="mt-1 block text-sm leading-6 text-brand-muted">
-            Configure signed delivery for messages, calls, number lifecycle, verification, payment, and subscription events.
-          </span>
-        </span>
-      </Link>
-
-      {revealedKey ? (
-        <div className="rounded-lg border border-brand-green/30 bg-brand-green/10 p-4">
-          <p className="mb-2 text-xs font-semibold text-brand-green">Your new access key. Copy it now. It is shown once.</p>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 overflow-auto rounded-lg bg-brand-black px-3 py-2 font-mono text-xs">{revealedKey}</code>
-            <button
-              type="button"
-              onClick={() => { navigator.clipboard.writeText(revealedKey); toast.success('Copied'); }}
-              className="rounded-lg p-2 text-brand-green transition-colors hover:bg-brand-green/10"
-            >
-              <Copy size={14} />
-            </button>
-          </div>
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <Link
+            href="/dashboard/support"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[1rem] bg-brand-green px-5 text-xs font-semibold uppercase tracking-[0.16em] text-black transition hover:bg-[#1cffac]"
+          >
+            Open Support
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link
+            href="/dashboard/settings"
+            className="inline-flex min-h-12 items-center justify-center rounded-[1rem] border border-white/10 px-5 text-xs font-semibold uppercase tracking-[0.16em] text-white/72 transition hover:border-brand-green/35 hover:text-white"
+          >
+            Back To Settings
+          </Link>
         </div>
-      ) : null}
+      </section>
 
-      <div className="flex gap-3">
-        <input
-          value={newKeyName}
-          onChange={(e) => setNewKeyName(e.target.value)}
-          placeholder="Key name, for example Production"
-          onKeyDown={(e) => e.key === 'Enter' && createKey()}
-          className="flex-1 rounded-lg border border-brand-border bg-brand-card px-4 py-2.5 text-sm transition-colors placeholder:text-brand-muted focus:border-brand-green focus:outline-none"
-        />
-        <button
-          type="button"
-          onClick={createKey}
-          disabled={creating || !newKeyName.trim()}
-          className="flex items-center gap-2 rounded-lg bg-brand-green px-4 py-2.5 text-sm font-semibold text-black transition-all hover:bg-opacity-90 disabled:opacity-50"
-        >
-          <Plus size={14} />
-          Create
-        </button>
-      </div>
+      <section className="grid gap-4 md:grid-cols-3">
+        {[
+          { icon: ShieldCheck, title: 'Privacy First', text: 'Only product context needed for review should be included in a request.' },
+          { icon: HelpCircle, title: 'Support Reviewed', text: 'Support confirms eligibility, availability, and next steps before access changes.' },
+          { icon: Lock, title: 'Safe Defaults', text: 'Sensitive operational controls are not exposed in the customer dashboard.' },
+        ].map(({ icon: Icon, title, text }) => (
+          <article key={title} className="rounded-[1.5rem] border border-white/8 bg-brand-card p-5">
+            <Icon className="h-5 w-5 text-brand-green" />
+            <h2 className="mt-4 text-base font-semibold text-white">{title}</h2>
+            <p className="mt-2 text-sm leading-6 text-white/54">{text}</p>
+          </article>
+        ))}
+      </section>
 
-      {loading ? (
-        <div className="space-y-3">{[1, 2].map((i) => <div key={i} className="h-16 animate-pulse rounded-lg border border-brand-border bg-brand-card" />)}</div>
-      ) : keys.length === 0 ? (
-        <div className="rounded-lg border border-brand-border bg-brand-card p-8 text-center text-brand-muted">
-          <Key size={24} className="mx-auto mb-2" />
-          <p className="text-sm">No access keys yet</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {keys.map((key) => (
-            <div key={key.id} className="flex items-center gap-3 rounded-lg border border-brand-border bg-brand-card px-4 py-3">
-              <Key size={14} className="flex-shrink-0 text-brand-muted" />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium">{key.name}</p>
-                <p className="font-mono text-xs text-brand-muted">{key.keyPrefix}........</p>
-              </div>
-              <span className="text-xs text-brand-muted">{key.usageCount} calls</span>
-              <button type="button" onClick={() => revoke(key.id)} className="p-1 text-brand-muted transition-colors hover:text-red-400">
-                <Trash2 size={13} />
-              </button>
+      <section className="rounded-[1.5rem] border border-white/8 bg-brand-card p-5">
+        <h2 className="text-base font-semibold text-white">Good request examples</h2>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          {requestTypes.map((item) => (
+            <div key={item} className="rounded-[1rem] border border-white/8 bg-black/20 px-4 py-3 text-sm text-white/62">
+              {item}
             </div>
           ))}
         </div>
-      )}
+      </section>
     </div>
   );
 }

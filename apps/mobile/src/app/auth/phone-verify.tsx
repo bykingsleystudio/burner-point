@@ -132,7 +132,7 @@ export default function PhoneVerifyScreen() {
           </View>
           <Text style={s.kicker}>Secure OTP delivery</Text>
           <Text style={s.title}>Verify your account phone.</Text>
-          <Text style={s.sub}>Burner Point sends OTP through the Railway API so routing credentials stay off the device.</Text>
+          <Text style={s.sub}>Burner Point uses this phone number for account protection, recovery, and secure sign-in checks.</Text>
 
           <Text style={s.label}>Account phone number</Text>
           <TextInput

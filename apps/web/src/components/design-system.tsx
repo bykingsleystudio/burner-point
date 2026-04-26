@@ -143,7 +143,7 @@ export function BpSupportWidget() {
       <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-brand-green">Support</p>
       <h3 className="mt-3 text-lg font-semibold uppercase text-white">Need privacy-safe help?</h3>
       <p className="mt-3 text-sm leading-7 text-white/58">
-        Use scoped references for verification, rentals, billing, eSIM, proxies, VPN, API, or account issues.
+        Use scoped references for verification, rentals, billing, eSIM, proxies, secure tunnel, or account issues.
       </p>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         <BpButton href="mailto:info.burnerpoint@gmail.com" variant="secondary" size="sm" icon={<Mail className="h-4 w-4" />}>

@@ -204,7 +204,7 @@ export default function ContactsPage() {
           <ShieldCheck className="h-6 w-6 text-brand-green" />
           <h3 className="mt-4 text-sm font-semibold uppercase tracking-[0.12em] text-white">Contact detail view</h3>
           <p className="mt-3 text-sm leading-6 text-white/52">
-            Contact editing, save, delete, and block actions belong here once the dedicated contacts API is enabled for the account.
+            Contact editing, save, delete, and block actions belong here once first-class contact controls are enabled for the account.
           </p>
           <div className="mt-4 rounded-[1rem] border border-white/8 bg-black/20 p-4 text-sm leading-6 text-white/48">
             This screen already reads live conversation relationships. The next step is wiring a first-class contact record layer on top of those threads.

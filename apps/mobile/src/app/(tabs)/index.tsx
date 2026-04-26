@@ -85,7 +85,7 @@ export default function HomeScreen() {
           <Text style={s.heroTitle}>Private By Design.</Text>
           <Text style={s.heroSub}>Quick access to verifications, rentals, inbox, wallet, and privacy add-ons.</Text>
           <View style={s.heroPills}>
-            {['256-bit AES', 'No Logs', 'Real SIM'].map((item) => <Text key={item} style={s.pill}>{item}</Text>)}
+            {['Private numbers', 'OTP tools', 'Secure access'].map((item) => <Text key={item} style={s.pill}>{item}</Text>)}
           </View>
         </View>
 

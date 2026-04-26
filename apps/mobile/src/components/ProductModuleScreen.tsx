@@ -68,7 +68,7 @@ export function ProductModuleScreen({ module }: { module: MobileProductModule })
           ))}
         </View>
 
-        <SectionLabel>Module Controls</SectionLabel>
+        <SectionLabel>Product Controls</SectionLabel>
         <View style={s.cards}>
           {module.cards.map((card) => (
             <NativeCard key={card.title}>
@@ -93,7 +93,7 @@ export function ProductModuleScreen({ module }: { module: MobileProductModule })
 
         <View style={s.cards}>
           <NativeCard>
-            <Text style={s.noteLabel}>Security Note</Text>
+            <Text style={s.noteLabel}>Good To Know</Text>
             <Text style={s.noteText}>{module.note}</Text>
           </NativeCard>
         </View>

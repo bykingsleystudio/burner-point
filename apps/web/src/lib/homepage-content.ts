@@ -253,7 +253,7 @@ export const productSections: ProductSection[] = [
     features: [
       'Residential, datacenter, and rotating proxies',
       'Location filtering',
-      'Usage dashboard and credential delivery',
+      'Usage dashboard and setup guidance',
       'Renewal management',
     ],
   },
@@ -473,6 +473,12 @@ export const testimonialPlaceholders = [
       'Having a dedicated private number for messaging helps me stay organized without carrying another SIM.',
   },
   {
+    name: 'Digital Operator',
+    location: 'Dubai, UAE',
+    quote:
+      'BP Rentals helps when I need continuity instead of losing access after one code.',
+  },
+  {
     name: 'Traveler',
     location: 'Nairobi, Kenya',
     quote:
@@ -488,6 +494,24 @@ export const testimonialPlaceholders = [
     name: 'Consultant',
     location: 'Manchester, UK',
     quote: 'BP Messenger feels like a private second line for my work life.',
+  },
+  {
+    name: 'Student Founder',
+    location: 'Abuja, Nigeria',
+    quote:
+      'The dashboard is simple. Balance, numbers, rentals, and activity are easy to understand.',
+  },
+  {
+    name: 'Creator',
+    location: 'Cape Town, South Africa',
+    quote:
+      'Seeing prices in USD with local currency display helps me understand what I am spending.',
+  },
+  {
+    name: 'Product Tester',
+    location: 'Berlin, Germany',
+    quote:
+      'SMS and voice OTP support is useful when a service only offers one verification option.',
   },
   {
     name: 'QA Analyst',
@@ -721,7 +745,7 @@ export const faqCategories: FaqCategory[] = [
       {
         question: 'How do I receive proxy access?',
         answer:
-          'After purchase, proxy credentials and setup instructions should appear in the dashboard.',
+          'After purchase, proxy setup details and instructions should appear in the dashboard.',
       },
       {
         question: 'Can I select proxy country?',
