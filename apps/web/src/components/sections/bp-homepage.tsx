@@ -2,74 +2,56 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import {
   ArrowRight,
-  BadgeCheck,
-  CalendarClock,
   Check,
   ChevronRight,
-  CreditCard,
-  Globe2,
-  LockKeyhole,
   MessageSquareText,
   Phone,
   Route,
   Server,
   ShieldCheck,
   Smartphone,
-  Wifi,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { MarketingFooter, MarketingHeader } from '@/components/sections/bp-marketing-shell';
 import { BpButton, BpKicker } from '@/components/ui/bp-landing-primitives';
 import {
-  availabilityItems,
-  dashboardPreviewCards,
   faqPreviewItems,
   heroTrustItems,
   howItWorksSteps,
-  paymentMethods,
   pricingCards,
-  problemCards,
   productSections,
   productStripCards,
   safetyFeatures,
-  solutionFeatures,
-  testimonialPlaceholders,
 } from '@/lib/homepage-content';
 
 const productIcons = [MessageSquareText, ShieldCheck, Phone, Smartphone, Server, Route] as const;
-const solutionIcons = [LockKeyhole, MessageSquareText, CalendarClock, CreditCard, Globe2, Wifi] as const;
-const problemIcons = [Phone, BadgeCheck, Globe2] as const;
 
 const trustedChips = [
   'Private number layer',
-  'SMS & voice OTP',
+  'SMS & voice codes',
   'Renewable rentals',
   'Travel eSIM',
   'Proxy plans',
   'Secure tunnel',
 ] as const;
 
-const dashboardSignals = [
+const accountSignals = [
   { label: 'Wallet', value: '$25.00', meta: 'USD balance ready' },
   { label: 'Number', value: '+1 United States', meta: 'Active private line' },
-  { label: 'OTP', value: '482901', meta: 'Code received live' },
-  { label: 'Tunnel', value: 'Active', meta: 'Encrypted session' },
+  { label: 'Code', value: '482901', meta: 'Ready to copy' },
+  { label: 'Access', value: 'Protected', meta: 'Secure connection' },
 ] as const;
 
 export function BurnerPointHomepage() {
   return (
-    <main className="min-h-screen overflow-hidden bg-[#f5f8f4] text-[#07140f]">
+    <main className="min-h-screen overflow-hidden bg-[#f5f8f4] text-[#07140f] dark:bg-[#06120d] dark:text-white">
       <MarketingHeader />
       <HeroSection />
       <ProductStripSection />
-      <ProblemSolutionSection />
       <ProductShowcaseSection />
       <HowItWorksSection />
-      <DashboardPreviewSection />
-      <PricingSection />
-      <PaymentsAvailabilitySection />
       <TrustSafetySection />
-      <TestimonialsSection />
+      <PricingSection />
       <FaqPreviewSection />
       <FinalCtaSection />
       <MarketingFooter />
@@ -88,17 +70,16 @@ function HeroSection() {
 
       <div className="relative mx-auto grid max-w-[92rem] gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[0.96fr_1.04fr] lg:px-8 lg:py-24">
         <div className="flex flex-col justify-center">
-          <BpKicker>Private communication operating system</BpKicker>
+          <BpKicker>Private telecom platform</BpKicker>
           <h1 className="mt-5 max-w-5xl text-5xl font-black leading-[0.9] tracking-[-0.05em] sm:text-6xl lg:text-7xl xl:text-[5.9rem]">
-            Private by Design.
+            Keep your real number private.
             <span className="block bg-[linear-gradient(105deg,#00FF9D,#E5E7EB_48%,#39FF14)] bg-clip-text text-transparent">
               Stay Anonymous. Stay Connected.
             </span>
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-white/72">
-            Don&apos;t want to give out your real phone number? No problem. Use ours. Burner Point gives you private
-            numbers, messaging, verification codes, rentals, eSIM data, proxy access, and secure VPN tools from one
-            clean dashboard.
+            Use Burner Point for private numbers, messaging, verification codes, rentals, travel data, proxies, and
+            secure access from one account.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -111,7 +92,7 @@ function HeroSection() {
           </div>
 
           <div className="mt-7 flex flex-wrap gap-2">
-            {heroTrustItems.map((item) => (
+            {heroTrustItems.slice(0, 3).map((item) => (
               <span
                 key={item}
                 className="inline-flex min-h-10 items-center rounded-full border border-white/10 bg-white/[0.045] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-white/70"
@@ -133,9 +114,9 @@ function HeroSection() {
           </div>
 
           <div className="absolute right-2 top-6 w-48 rounded-[2rem] border border-[#00FF9D]/20 bg-[#00FF9D]/10 p-4 shadow-[0_24px_70px_rgba(0,255,157,.12)] backdrop-blur-xl sm:right-8 lg:right-0">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#00FF9D]">Live OTP</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#00FF9D]">Code received</p>
             <p className="mt-3 font-mono text-3xl font-black text-white">482901</p>
-            <p className="mt-2 text-xs leading-5 text-white/58">Code delivered to BP Verify Hub.</p>
+            <p className="mt-2 text-xs leading-5 text-white/68">Ready when you need it.</p>
           </div>
         </div>
       </div>
@@ -148,8 +129,8 @@ function DashboardGlass() {
     <div className="rounded-[2rem] border border-white/10 bg-[#07140f] p-4 text-white sm:p-5">
       <div className="flex items-center justify-between gap-4 rounded-[1.4rem] border border-white/10 bg-white/[0.04] px-4 py-3">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#00FF9D]">Burner Point Dashboard</p>
-          <p className="mt-1 text-sm text-white/52">One privacy account. Six product lanes.</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#00FF9D]">Burner Point</p>
+          <p className="mt-1 text-sm text-white/68">One account for privacy tools.</p>
         </div>
         <span className="rounded-full bg-[#00FF9D] px-3 py-1 text-xs font-black uppercase tracking-[0.12em] text-black">
           Live
@@ -157,11 +138,11 @@ function DashboardGlass() {
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        {dashboardSignals.map((item) => (
+        {accountSignals.map((item) => (
           <div key={item.label} className="rounded-[1.25rem] border border-white/10 bg-black/24 p-4">
-            <p className="text-xs uppercase tracking-[0.16em] text-white/38">{item.label}</p>
+            <p className="text-xs uppercase tracking-[0.16em] text-white/70">{item.label}</p>
             <p className="mt-2 text-xl font-black text-white">{item.value}</p>
-            <p className="mt-1 text-xs text-white/46">{item.meta}</p>
+            <p className="mt-1 text-xs text-white/72">{item.meta}</p>
           </div>
         ))}
       </div>
@@ -172,9 +153,9 @@ function DashboardGlass() {
             <ShieldCheck className="h-4 w-4 text-[#00FF9D]" />
           </span>
           <div>
-            <p className="text-sm font-semibold text-white">Secure Tunnel Active</p>
-            <p className="mt-1 text-sm leading-6 text-white/58">
-              eSIM plan, proxy access, and private messages stay visible without exposing technical setup.
+            <p className="text-sm font-semibold text-white">Secure access active</p>
+            <p className="mt-1 text-sm leading-6 text-white/72">
+              Numbers, codes, travel data, proxies, and support stay easy to manage.
             </p>
           </div>
         </div>
@@ -187,9 +168,9 @@ function ProductStripSection() {
   return (
     <SectionShell id="products" className="pt-12">
       <SectionHeading
-        kicker="One account. Six privacy tools."
-        title="Every Burner Point product is positioned from the first screen."
-        body="The homepage, dashboard, and mobile flow all lead users to the same product stack: BP Messenger, Verify Hub, Rentals, eSIM Store, Proxy Store, and Secure Tunnel."
+        kicker="What you can do"
+        title="One account for private communication and access."
+        body="Call, text, receive supported codes, rent numbers, buy travel data, choose proxy plans, and protect your connection."
         align="center"
       />
       <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -204,69 +185,13 @@ function ProductStripSection() {
   );
 }
 
-function ProblemSolutionSection() {
-  return (
-    <SectionShell>
-      <div className="grid gap-5 lg:grid-cols-[0.88fr_1.12fr]">
-        <DarkPanel>
-          <BpKicker>Your real number should not be everywhere</BpKicker>
-          <h2 className="mt-4 text-4xl font-black leading-[0.94] tracking-[-0.04em] text-white sm:text-5xl">
-            Too many apps ask for your number before they earn your trust.
-          </h2>
-          <p className="mt-5 text-base leading-8 text-white/70">
-            Apps, marketplaces, signups, rideshares, online sellers, and unknown contacts can expose users to spam,
-            tracking, unwanted calls, and account recovery problems.
-          </p>
-          <div className="mt-7 grid gap-3 sm:grid-cols-3">
-            {['Spam', 'Tracking', 'Recovery'].map((item) => (
-              <div key={item} className="rounded-[1.25rem] border border-white/10 bg-white/[0.05] p-4">
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#00FF9D]">{item}</p>
-                <p className="mt-2 text-sm leading-6 text-white/52">Reduced by adding a controlled privacy layer.</p>
-              </div>
-            ))}
-          </div>
-        </DarkPanel>
-
-        <div className="grid gap-4">
-          {problemCards.map((item, index) => {
-            const Icon = problemIcons[index];
-            return (
-              <LightPanel key={item.title} className="grid gap-4 sm:grid-cols-[auto_1fr] sm:items-start">
-                <IconBadge icon={Icon} />
-                <div>
-                  <h3 className="text-xl font-black tracking-[-0.02em] text-[#07140f]">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-7 text-[#456052]">{item.description}</p>
-                </div>
-              </LightPanel>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="mt-5 rounded-[2rem] border border-black/6 bg-white p-5 shadow-[0_20px_70px_rgba(2,20,12,0.06)] sm:p-7">
-        <SectionHeading
-          kicker="Solution"
-          title="Built for private, global communication."
-          body="Burner Point combines second-number access, verification tools, rentals, eSIM connectivity, proxies, and secure VPN access into one platform built around privacy, control, and flexibility."
-        />
-        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {solutionFeatures.map((item, index) => {
-            const Icon = solutionIcons[index];
-            return <FeatureTile key={item.title} icon={Icon} title={item.title} text={item.description} compact />;
-          })}
-        </div>
-      </div>
-    </SectionShell>
-  );
-}
-
 function ProductShowcaseSection() {
   return (
     <SectionShell>
       <SectionHeading
-        kicker="Product System"
-        title="A full privacy stack, not another one-feature number app."
-        body="Each product has a clear purpose, a user-safe message, and a direct entry point. Internal routing, provider details, and operational controls stay out of the customer interface."
+        kicker="Products"
+        title="Choose the privacy tool you need."
+        body="Every Burner Point product has a clear purpose and a direct path to get started."
         align="center"
       />
 
@@ -275,14 +200,14 @@ function ProductShowcaseSection() {
           <article
             key={section.id}
             id={section.id}
-            className="grid overflow-hidden rounded-[2.25rem] border border-black/6 bg-white shadow-[0_24px_90px_rgba(2,20,12,0.08)] lg:grid-cols-[1.02fr_0.98fr]"
+            className="grid overflow-hidden rounded-[2.25rem] border border-black/6 bg-white shadow-[0_24px_90px_rgba(2,20,12,0.08)] dark:border-white/10 dark:bg-[#07140f] lg:grid-cols-[1.02fr_0.98fr]"
           >
             <div className={`p-6 sm:p-8 lg:p-10 ${index % 2 ? 'lg:order-2' : ''}`}>
               <BpKicker className="text-[#008f5c]">{section.eyebrow}</BpKicker>
-              <h3 className="mt-4 text-4xl font-black leading-[0.94] tracking-[-0.04em] text-[#07140f] sm:text-5xl">
+              <h3 className="mt-4 text-4xl font-black leading-[0.94] tracking-[-0.04em] text-[#07140f] dark:text-white sm:text-5xl">
                 {section.title}
               </h3>
-              <p className="mt-5 max-w-2xl text-base leading-8 text-[#456052]">{section.description}</p>
+              <p className="mt-5 max-w-2xl text-base leading-8 text-[#2f4d40] dark:text-white/76">{section.description}</p>
               {section.note ? (
                 <p className="mt-5 rounded-[1.2rem] border border-[#00FF9D]/24 bg-[#effcf5] px-4 py-3 text-sm leading-7 text-[#274437]">
                   {section.note}
@@ -290,7 +215,7 @@ function ProductShowcaseSection() {
               ) : null}
               <ul className="mt-6 grid gap-3 sm:grid-cols-2">
                 {section.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-3 rounded-[1rem] bg-[#f5faf7] px-4 py-3 text-sm leading-6 text-[#274437]">
+                  <li key={feature} className="flex items-start gap-3 rounded-[1rem] bg-[#f5faf7] px-4 py-3 text-sm leading-6 text-[#274437] dark:bg-white/[0.06] dark:text-white/78">
                     <Check className="mt-1 h-4 w-4 flex-none text-[#008f5c]" />
                     <span>{feature}</span>
                   </li>
@@ -302,7 +227,7 @@ function ProductShowcaseSection() {
                 </BpButton>
                 <Link
                   href="/faq"
-                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/10 bg-white px-5 text-sm font-semibold text-[#07140f] transition hover:border-[#00FF9D]/28"
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/10 bg-white px-5 text-sm font-semibold text-[#07140f] transition hover:border-[#00FF9D]/28 dark:border-white/12 dark:bg-white/[0.04] dark:text-white"
                 >
                   View FAQ
                 </Link>
@@ -334,13 +259,13 @@ function ProductVisual({ sectionIndex }: { sectionIndex: number }) {
         <div className="rounded-[1.6rem] border border-white/10 bg-white/[0.06] p-5 backdrop-blur-xl">
           <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#00FF9D]">{label}</p>
           <p className="mt-4 text-4xl font-black tracking-[-0.04em]">{value}</p>
-          <p className="mt-3 text-sm leading-6 text-white/58">
+          <p className="mt-3 text-sm leading-6 text-white/72">
             Managed from one account with clear status, pricing, and support paths.
           </p>
         </div>
 
         <div className="grid gap-3">
-          {['Choose product', 'Confirm availability', 'Activate from dashboard'].map((step, index) => (
+          {['Choose product', 'Confirm availability', 'Start using it'].map((step, index) => (
             <div key={step} className="flex items-center gap-3 rounded-[1.2rem] border border-white/10 bg-black/28 px-4 py-3">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#00FF9D]/12 font-mono text-xs font-black text-[#00FF9D]">
                 {index + 1}
@@ -364,48 +289,17 @@ function HowItWorksSection() {
             Get started in minutes.
           </h2>
           <p className="mt-5 text-base leading-8 text-white/68">
-            Create an account, fund your wallet or choose a plan, pick a product, then manage your numbers, codes,
-            plans, and connectivity tools from one dashboard.
+            Create an account, choose a product, and manage your private tools from one place.
           </p>
         </DarkPanel>
         <div className="grid gap-4 sm:grid-cols-2">
           {howItWorksSteps.map((item) => (
             <LightPanel key={item.step}>
               <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#008f5c]">{item.step}</p>
-              <h3 className="mt-4 text-xl font-black tracking-[-0.02em] text-[#07140f]">{item.title}</h3>
-              <p className="mt-2 text-sm leading-7 text-[#456052]">{item.description}</p>
+              <h3 className="mt-4 text-xl font-black tracking-[-0.02em] text-[#07140f] dark:text-white">{item.title}</h3>
+              <p className="mt-2 text-sm leading-7 text-[#2f4d40] dark:text-white/76">{item.description}</p>
             </LightPanel>
           ))}
-        </div>
-      </div>
-    </SectionShell>
-  );
-}
-
-function DashboardPreviewSection() {
-  return (
-    <SectionShell>
-      <div className="rounded-[2.25rem] bg-[linear-gradient(135deg,#07140f,#013220_62%,#000000)] p-5 text-white shadow-[0_34px_110px_rgba(2,20,12,0.18)] sm:p-8">
-        <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-          <div>
-            <BpKicker>Dashboard Preview</BpKicker>
-            <h2 className="mt-4 text-4xl font-black leading-[0.94] tracking-[-0.04em] text-white sm:text-5xl">
-              Everything runs from one dashboard.
-            </h2>
-            <p className="mt-5 text-base leading-8 text-white/68">
-              No more switching between fragmented telecom tools. Burner Point gives users one place to manage wallet,
-              numbers, verifications, rentals, eSIMs, proxies, VPN, messages, billing, and support.
-            </p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {dashboardPreviewCards.map((card) => (
-              <div key={card.label} className="rounded-[1.4rem] border border-white/10 bg-white/[0.06] p-4">
-                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#00FF9D]">{card.label}</p>
-                <p className="mt-3 text-2xl font-black text-white">{card.value}</p>
-                <p className="mt-2 text-sm leading-6 text-white/56">{card.meta}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </SectionShell>
@@ -425,11 +319,11 @@ function PricingSection() {
         {pricingCards.map((card) => (
           <LightPanel key={card.title} className="flex h-full flex-col">
             <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#008f5c]">{card.title}</p>
-            <p className="mt-4 text-2xl font-black leading-tight tracking-[-0.03em] text-[#07140f]">{card.price}</p>
-            <p className="mt-3 text-sm leading-7 text-[#456052]">{card.description}</p>
+            <p className="mt-4 text-2xl font-black leading-tight tracking-[-0.03em] text-[#07140f] dark:text-white">{card.price}</p>
+            <p className="mt-3 text-sm leading-7 text-[#2f4d40] dark:text-white/76">{card.description}</p>
             <ul className="mt-5 flex-1 space-y-3">
               {card.highlights.map((item) => (
-                <li key={item} className="flex items-start gap-3 text-sm leading-6 text-[#274437]">
+                <li key={item} className="flex items-start gap-3 text-sm leading-6 text-[#274437] dark:text-white/78">
                   <Check className="mt-1 h-4 w-4 flex-none text-[#008f5c]" />
                   <span>{item}</span>
                 </li>
@@ -445,49 +339,6 @@ function PricingSection() {
   );
 }
 
-function PaymentsAvailabilitySection() {
-  return (
-    <SectionShell>
-      <div className="grid gap-5 lg:grid-cols-2">
-        <LightPanel>
-          <SectionHeading
-            kicker="Payments"
-            title="Pay globally. View locally."
-            body="Burner Point stores balances in USD and can display local exchange-rate estimates for NGN and other supported currencies."
-          />
-          <div className="mt-6 flex flex-wrap gap-3">
-            {paymentMethods.map((item) => (
-              <span key={item} className="inline-flex min-h-11 items-center rounded-full border border-black/8 bg-[#f4faf6] px-4 text-sm font-semibold text-[#274437]">
-                {item}
-              </span>
-            ))}
-          </div>
-          <p className="mt-5 text-sm leading-7 text-[#567265]">
-            Exchange rates are shown for convenience. Final payment amounts may vary depending on gateway fees, network
-            fees, and provider rates.
-          </p>
-        </LightPanel>
-
-        <LightPanel>
-          <SectionHeading
-            kicker="Availability"
-            title="Built for global users."
-            body="Availability depends on country, telecom inventory, route quality, plan type, and compliance requirements."
-          />
-          <div className="mt-6 grid gap-3">
-            {availabilityItems.map((item) => (
-              <div key={item.title} className="flex flex-col gap-2 rounded-[1rem] border border-black/6 bg-[#f6fbf8] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm font-black text-[#07140f]">{item.title}</p>
-                <p className="text-sm text-[#456052]">{item.description}</p>
-              </div>
-            ))}
-          </div>
-        </LightPanel>
-      </div>
-    </SectionShell>
-  );
-}
-
 function TrustSafetySection() {
   return (
     <SectionShell>
@@ -498,9 +349,8 @@ function TrustSafetySection() {
             <h2 className="mt-4 text-4xl font-black leading-[0.94] tracking-[-0.04em] text-white sm:text-5xl">
               Privacy-first does not mean abuse-friendly.
             </h2>
-            <p className="mt-5 text-base leading-8 text-white/70">
-              Burner Point is built for privacy, not fraud. Product screens should protect users while also supporting
-              platform, provider, and network safety.
+            <p className="mt-5 text-base leading-8 text-white/78">
+              Burner Point is built for privacy, control, and responsible use. Clear rules protect users and keep products reliable.
             </p>
             <div className="mt-7">
               <BpButton href="/terms-of-service" variant="outline" size="md">
@@ -522,35 +372,6 @@ function TrustSafetySection() {
   );
 }
 
-function TestimonialsSection() {
-  return (
-    <SectionShell>
-      <SectionHeading
-        kicker="Testimonials"
-        title="What users will love about Burner Point."
-        body="These are launch-ready testimonial placeholders. Replace them with verified customer feedback before presenting them as real reviews."
-        align="center"
-      />
-      <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {testimonialPlaceholders.map((item) => (
-          <LightPanel key={`${item.name}-${item.location}`} className="p-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#013220] text-sm font-black text-[#00FF9D]">
-                {item.name.split(' ').map((part) => part[0]).join('').slice(0, 2)}
-              </div>
-              <div>
-                <p className="text-sm font-black text-[#07140f]">{item.name}</p>
-                <p className="text-sm text-[#6c8578]">{item.location}</p>
-              </div>
-            </div>
-            <p className="mt-5 text-sm leading-7 text-[#3d594c]">“{item.quote}”</p>
-          </LightPanel>
-        ))}
-      </div>
-    </SectionShell>
-  );
-}
-
 function FaqPreviewSection() {
   return (
     <SectionShell>
@@ -558,8 +379,8 @@ function FaqPreviewSection() {
         <LightPanel>
           <SectionHeading
             kicker="FAQ"
-            title="Questions? We’ve got answers."
-            body="The full FAQ page includes tabs for General, BP Messenger, BP Verify Hub, BP Rentals, Wallet & Payments, eSIM, Proxies, Secure Tunnel, and Account & Security."
+            title="Questions? We've got answers."
+            body="Find clear answers about products, pricing, payments, availability, support, and account safety."
           />
           <div className="mt-7">
             <BpButton href="/faq" size="md">
@@ -569,12 +390,12 @@ function FaqPreviewSection() {
         </LightPanel>
         <div className="space-y-3">
           {faqPreviewItems.map((item) => (
-            <details key={item.question} className="rounded-[1.35rem] border border-black/6 bg-white p-5 shadow-[0_18px_48px_rgba(2,20,12,0.06)]">
-              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-5 text-sm font-black text-[#07140f]">
+            <details key={item.question} className="rounded-[1.35rem] border border-black/6 bg-white p-5 shadow-[0_18px_48px_rgba(2,20,12,0.06)] dark:border-white/10 dark:bg-[#07140f]">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-5 text-sm font-black text-[#07140f] dark:text-white">
                 <span>{item.question}</span>
                 <ChevronRight className="h-4 w-4 flex-none text-[#008f5c]" />
               </summary>
-              <p className="mt-3 text-sm leading-7 text-[#456052]">{item.answer}</p>
+              <p className="mt-3 text-sm leading-7 text-[#2f4d40] dark:text-white/76">{item.answer}</p>
             </details>
           ))}
         </div>
@@ -638,15 +459,15 @@ function SectionHeading({
   return (
     <div className={centered ? 'mx-auto max-w-4xl text-center' : 'max-w-4xl'}>
       <BpKicker className="text-[#008f5c]">{kicker}</BpKicker>
-      <h2 className="mt-4 text-4xl font-black leading-[0.94] tracking-[-0.04em] text-[#07140f] sm:text-5xl lg:text-6xl">{title}</h2>
-      {body ? <p className="mt-5 text-base leading-8 text-[#456052]">{body}</p> : null}
+      <h2 className="mt-4 text-4xl font-black leading-[0.94] tracking-[-0.04em] text-[#07140f] dark:text-white sm:text-5xl lg:text-6xl">{title}</h2>
+      {body ? <p className="mt-5 text-base leading-8 text-[#2f4d40] dark:text-white/76">{body}</p> : null}
     </div>
   );
 }
 
 function LightPanel({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`rounded-[1.75rem] border border-black/6 bg-white p-6 shadow-[0_18px_48px_rgba(2,20,12,0.06)] ${className || ''}`}>
+    <div className={`rounded-[1.75rem] border border-black/6 bg-white p-6 shadow-[0_18px_48px_rgba(2,20,12,0.06)] dark:border-white/10 dark:bg-[#07140f] ${className || ''}`}>
       {children}
     </div>
   );
@@ -680,10 +501,10 @@ function FeatureTile({
   compact?: boolean;
 }) {
   return (
-    <article className={`group rounded-[1.75rem] border border-black/6 bg-white p-6 shadow-[0_18px_48px_rgba(2,20,12,0.06)] transition hover:-translate-y-1 hover:border-[#00FF9D]/28 hover:shadow-[0_28px_80px_rgba(0,255,157,0.11)] ${compact ? 'p-5' : ''}`}>
+    <article className={`group rounded-[1.75rem] border border-black/6 bg-white p-6 shadow-[0_18px_48px_rgba(2,20,12,0.06)] transition hover:-translate-y-1 hover:border-[#00FF9D]/28 hover:shadow-[0_28px_80px_rgba(0,255,157,0.11)] dark:border-white/10 dark:bg-[#07140f] ${compact ? 'p-5' : ''}`}>
       <IconBadge icon={Icon} />
-      <h3 className="mt-5 text-lg font-black tracking-[-0.02em] text-[#07140f]">{title}</h3>
-      <p className="mt-3 text-sm leading-7 text-[#456052]">{text}</p>
+      <h3 className="mt-5 text-lg font-black tracking-[-0.02em] text-[#07140f] dark:text-white">{title}</h3>
+      <p className="mt-3 text-sm leading-7 text-[#2f4d40] dark:text-white/76">{text}</p>
       {!compact ? (
         <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#008f5c]">
           Explore

@@ -42,7 +42,7 @@ export default function LoginPage() {
   const canSubmit = identifier.trim().length >= 3 && password.length >= 8;
 
   const finishSignIn = async () => {
-    if (!signIn) throw new Error('Authentication is still loading.');
+    if (!signIn) throw new Error('Auth not ready');
 
     const { error } = await signIn.finalize({
       navigate: ({ decorateUrl }) => {
@@ -54,7 +54,7 @@ export default function LoginPage() {
   };
 
   const prepareSecondFactor = async () => {
-    if (!signIn) throw new Error('Authentication is still loading.');
+    if (!signIn) throw new Error('Auth not ready');
 
     const factor = signIn.supportedSecondFactors?.[0] as { strategy?: SecondFactorStrategy } | undefined;
     const strategy = factor?.strategy ?? 'totp';
@@ -87,18 +87,18 @@ export default function LoginPage() {
       return;
     }
 
-    toast.error('Another verification step is required before sign-in can continue.');
+    toast.error('Something went wrong. Please sign in again.');
   };
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!signIn) {
-      toast.error('Authentication is still loading.');
+      toast.error('Something went wrong. Please sign in again.');
       return;
     }
 
     if (!canSubmit) {
-      toast.error('Enter your account email or phone and a valid password.');
+      toast.error('Enter your email or phone and password.');
       return;
     }
 
@@ -112,7 +112,7 @@ export default function LoginPage() {
       if (error) throw error;
       await completeOrContinueSignIn();
     } catch (err) {
-      toast.error(getClerkErrorMessage(err, 'Login failed'));
+      toast.error(getClerkErrorMessage(err, 'Something went wrong. Please sign in again.'));
     } finally {
       setLoading(false);
     }
@@ -120,13 +120,13 @@ export default function LoginPage() {
 
   const startPhoneSignIn = async () => {
     if (!signIn) {
-      toast.error('Authentication is still loading.');
+      toast.error('Something went wrong. Please sign in again.');
       return;
     }
 
     const value = phoneIdentifier.trim();
     if (!/^\+[1-9]\d{6,14}$/.test(value)) {
-      toast.error('Enter your phone number in E.164 format, for example +14155550182.');
+      toast.error('Enter your phone number with country code.');
       return;
     }
 
@@ -141,7 +141,7 @@ export default function LoginPage() {
       setAuthMode('phone-code');
       toast.success('Verification code sent to your phone.');
     } catch (err) {
-      toast.error(getClerkErrorMessage(err, 'Unable to start phone sign-in'));
+      toast.error(getClerkErrorMessage(err, 'Could not send the code. Try again.'));
     } finally {
       setLoading(false);
     }
@@ -149,7 +149,7 @@ export default function LoginPage() {
 
   const verifyPhoneSignIn = async () => {
     if (!signIn) {
-      toast.error('Authentication is still loading.');
+      toast.error('Something went wrong. Please sign in again.');
       return;
     }
 
@@ -165,7 +165,7 @@ export default function LoginPage() {
       if (error) throw error;
       await completeOrContinueSignIn();
     } catch (err) {
-      toast.error(getClerkErrorMessage(err, 'Phone sign-in verification failed'));
+      toast.error(getClerkErrorMessage(err, 'Verification failed. Try again.'));
     } finally {
       setLoading(false);
     }
@@ -173,7 +173,7 @@ export default function LoginPage() {
 
   const startPasswordReset = async () => {
     if (!signIn) {
-      toast.error('Authentication is still loading.');
+      toast.error('Something went wrong. Please sign in again.');
       return;
     }
 
@@ -200,7 +200,7 @@ export default function LoginPage() {
       setAuthMode('reset-code');
       toast.success(`Check your ${method === 'email' ? 'email' : 'phone'} for the reset code.`);
     } catch (err) {
-      toast.error(getClerkErrorMessage(err, 'Unable to send password reset code'));
+      toast.error(getClerkErrorMessage(err, 'Could not send the reset code. Try again.'));
     } finally {
       setLoading(false);
     }
@@ -208,7 +208,7 @@ export default function LoginPage() {
 
   const verifyPasswordResetCode = async () => {
     if (!signIn) {
-      toast.error('Authentication is still loading.');
+      toast.error('Something went wrong. Please sign in again.');
       return;
     }
 
@@ -230,7 +230,7 @@ export default function LoginPage() {
       setAuthMode('reset-password');
       toast.success('Code verified. Set your new password.');
     } catch (err) {
-      toast.error(getClerkErrorMessage(err, 'Password reset verification failed'));
+      toast.error(getClerkErrorMessage(err, 'Verification failed. Try again.'));
     } finally {
       setLoading(false);
     }
@@ -238,7 +238,7 @@ export default function LoginPage() {
 
   const submitNewPassword = async () => {
     if (!signIn) {
-      toast.error('Authentication is still loading.');
+      toast.error('Something went wrong. Please sign in again.');
       return;
     }
 
@@ -259,7 +259,7 @@ export default function LoginPage() {
       await finishSignIn();
       toast.success('Password reset. Welcome back.');
     } catch (err) {
-      toast.error(getClerkErrorMessage(err, 'Unable to set new password'));
+      toast.error(getClerkErrorMessage(err, 'Could not save the new password. Try again.'));
     } finally {
       setLoading(false);
     }
@@ -286,7 +286,7 @@ export default function LoginPage() {
       if (error) throw error;
       await completeOrContinueSignIn();
     } catch (err) {
-      toast.error(getClerkErrorMessage(err, '2FA verification failed'));
+      toast.error(getClerkErrorMessage(err, 'Verification failed. Try again.'));
     } finally {
       setLoading(false);
     }
@@ -294,7 +294,7 @@ export default function LoginPage() {
 
   const startOAuth = async (strategy: (typeof oauthProviders)[number]['strategy']) => {
     if (!signIn) {
-      toast.error('Authentication is still loading.');
+      toast.error('Something went wrong. Please sign in again.');
       return;
     }
 
@@ -306,7 +306,7 @@ export default function LoginPage() {
       });
       if (error) throw error;
     } catch (err) {
-      toast.error(getClerkErrorMessage(err, 'OAuth sign-in failed'));
+      toast.error(getClerkErrorMessage(err, 'Something went wrong. Please sign in again.'));
     }
   };
 
@@ -323,8 +323,8 @@ export default function LoginPage() {
 
   return (
     <SignInPage
-      title="Access your private dashboard."
-      description="Sign in to manage private numbers, verification sessions, rentals, eSIM plans, proxy access, and Secure Tunnel from one Burner Point account."
+      title="Sign in to Burner Point."
+      description="Access private numbers, codes, rentals, travel data, proxies, billing, and support."
       testimonials={[]}
       onResetPassword={() => setAuthMode('reset-request')}
     >
@@ -341,17 +341,11 @@ export default function LoginPage() {
                   disabled={isSubmitting}
                 />
               ))}
-              <AuthProviderButton
-                provider="Phone"
-                label="Continue with Phone"
-                onClick={() => setAuthMode('phone-request')}
-                disabled={isSubmitting}
-              />
             </div>
 
             <div className="relative flex items-center justify-center">
               <span className="w-full border-t border-white/10" />
-              <span className="absolute bg-[#04120C] px-4 font-mono text-[11px] uppercase tracking-[0.22em] text-white/34">
+              <span className="absolute bg-[#04120C] px-4 font-mono text-[11px] uppercase tracking-[0.22em] text-white/70">
                 OR
               </span>
             </div>
@@ -370,7 +364,7 @@ export default function LoginPage() {
                   inputMode="tel"
                   autoComplete="tel"
                   placeholder="+14155550182"
-                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
+                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
                 />
               </GlassInputWrapper>
             </label>
@@ -395,7 +389,7 @@ export default function LoginPage() {
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   placeholder="Enter code"
-                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
+                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
                 />
               </GlassInputWrapper>
             </label>
@@ -419,7 +413,7 @@ export default function LoginPage() {
                   type="text"
                   autoComplete="username"
                   placeholder="you@example.com or +14155550182"
-                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
+                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
                 />
               </GlassInputWrapper>
             </label>
@@ -444,7 +438,7 @@ export default function LoginPage() {
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   placeholder="Enter reset code"
-                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
+                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
                 />
               </GlassInputWrapper>
             </label>
@@ -468,7 +462,7 @@ export default function LoginPage() {
                   type="password"
                   autoComplete="new-password"
                   placeholder="Enter a new password"
-                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
+                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
                 />
               </GlassInputWrapper>
             </label>
@@ -493,7 +487,7 @@ export default function LoginPage() {
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   placeholder="Enter verification code"
-                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
+                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
                 />
               </GlassInputWrapper>
             </label>
@@ -518,7 +512,7 @@ export default function LoginPage() {
                   type="text"
                   autoComplete="username"
                   placeholder="you@example.com or +14155550182"
-                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
+                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
                 />
               </GlassInputWrapper>
             </label>
@@ -532,7 +526,7 @@ export default function LoginPage() {
                   type="password"
                   autoComplete="current-password"
                   placeholder="Enter your password"
-                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
+                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
                 />
               </GlassInputWrapper>
             </label>
@@ -569,22 +563,22 @@ export default function LoginPage() {
 
         {authMode !== 'sign-in' || secondFactorStrategy ? (
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/8 pt-4">
-            <button type="button" onClick={returnToSignIn} className="inline-flex items-center gap-2 text-sm text-white/46 transition hover:text-white">
+            <button type="button" onClick={returnToSignIn} className="inline-flex items-center gap-2 text-sm text-white/72 transition hover:text-white">
               <ArrowRight className="h-4 w-4 rotate-180" />
               Back
             </button>
             <Link href="/dashboard/security" className="text-sm text-brand-green transition hover:text-[#39FF14]">
-              Manage 2FA after sign-in
+              Security settings after sign-in
             </Link>
           </div>
         ) : null}
 
-        <p className="text-xs leading-6 text-white/42">
+        <p className="text-xs leading-6 text-white/70">
           Need an account?{' '}
           <Link href="/auth/signup" className="text-brand-green transition hover:text-[#39FF14]">
             Create one
           </Link>
-          <span className="mx-2 text-white/24">•</span>
+          <span className="mx-2 text-white/70">•</span>
           By continuing you agree to the{' '}
           <Link href="/terms-of-service" className="text-brand-green transition hover:text-[#39FF14]">
             Terms of Service
@@ -602,5 +596,11 @@ export default function LoginPage() {
 
 function getClerkErrorMessage(error: unknown, fallback: string) {
   const clerkError = error as { longMessage?: string; message?: string; errors?: Array<{ longMessage?: string; message?: string }> };
-  return clerkError.errors?.[0]?.longMessage || clerkError.errors?.[0]?.message || clerkError.longMessage || clerkError.message || fallback;
+  const raw = clerkError.errors?.[0]?.longMessage || clerkError.errors?.[0]?.message || clerkError.longMessage || clerkError.message || '';
+  if (/captcha|challenge|browser/i.test(raw)) return 'Verification failed. Try again or switch browser.';
+  if (/password|identifier|not found|invalid|incorrect/i.test(raw)) return 'Email/phone or password is incorrect.';
+  return fallback;
 }
+
+
+

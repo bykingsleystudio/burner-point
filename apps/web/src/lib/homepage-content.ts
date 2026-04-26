@@ -65,7 +65,7 @@ export const productLinks: ProductLink[] = [
   },
   {
     name: 'BP Verify Hub',
-    description: 'Receive supported SMS and voice verification codes from one clean dashboard.',
+    description: 'Receive supported SMS and voice codes without using your personal number.',
     href: '/#bp-verify-hub',
   },
   {
@@ -85,7 +85,7 @@ export const productLinks: ProductLink[] = [
   },
   {
     name: 'BP Secure Tunnel',
-    description: 'Use WireGuard-based VPN access with dedicated IP options and device controls.',
+    description: 'Protect your connection with secure access and dedicated IP options.',
     href: '/#bp-secure-tunnel',
   },
 ];
@@ -100,12 +100,12 @@ export const headerLinks = [
 ] as const;
 
 export const heroTrustItems = [
-  'US, UK & Canada numbers',
-  'SMS & Voice OTP',
+  'Private numbers',
+  'SMS & voice codes',
   'Renewable rentals',
-  'eSIM data',
-  'Secure VPN',
-  'Proxy access',
+  'Travel eSIM',
+  'Proxy plans',
+  'Secure access',
 ] as const;
 
 export const productStripCards: FeatureCard[] = [
@@ -115,7 +115,7 @@ export const productStripCards: FeatureCard[] = [
   },
   {
     title: 'BP Verify Hub',
-    description: 'Receive supported SMS or voice verification codes for services and countries where available.',
+    description: 'Receive supported SMS or voice codes for services and countries where available.',
   },
   {
     title: 'BP Rentals',
@@ -131,7 +131,7 @@ export const productStripCards: FeatureCard[] = [
   },
   {
     title: 'BP Secure Tunnel',
-    description: 'Use encrypted connectivity with WireGuard-based VPN access and dedicated IP options.',
+    description: 'Protect your connection with secure access and dedicated IP options.',
   },
 ];
 
@@ -142,11 +142,11 @@ export const problemCards: FeatureCard[] = [
   },
   {
     title: 'Verification can be messy',
-    description: 'Receive supported SMS or voice OTP through a wallet-powered, real-time dashboard.',
+    description: 'Receive supported SMS or voice codes in a clear, guided flow.',
   },
   {
     title: 'Privacy tools are fragmented',
-    description: 'Messaging, rentals, eSIMs, proxies, and VPN access should not live in five separate products.',
+    description: 'Messaging, rentals, eSIMs, proxies, and secure access should not live in five separate products.',
   },
 ];
 
@@ -156,8 +156,8 @@ export const solutionFeatures: FeatureCard[] = [
     description: 'Choose a number for calls, texts, and contact separation without exposing your personal line.',
   },
   {
-    title: 'SMS and voice OTP',
-    description: 'Receive supported verification codes directly inside your dashboard where service and route support exist.',
+    title: 'SMS and voice codes',
+    description: 'Receive supported verification codes where service and country availability allow.',
   },
   {
     title: 'Temporary or renewable rentals',
@@ -165,7 +165,7 @@ export const solutionFeatures: FeatureCard[] = [
   },
   {
     title: 'Wallet-based billing',
-    description: 'Fund once and spend across usage-based products with a single account balance.',
+    description: 'Add balance once and use it across eligible products.',
   },
   {
     title: 'Local currency display',
@@ -173,7 +173,7 @@ export const solutionFeatures: FeatureCard[] = [
   },
   {
     title: 'Secure connectivity',
-    description: 'Add travel data, proxy access, and secure VPN sessions to the same privacy-first platform.',
+    description: 'Add travel data, proxy access, and protected connectivity to the same account.',
   },
 ];
 
@@ -183,7 +183,7 @@ export const productSections: ProductSection[] = [
     eyebrow: 'BP Messenger',
     title: "Your phone's other number.",
     description:
-      'BP Messenger gives you a dedicated private number for communication without exposing your personal number. Choose a supported US, Canada, or UK number, then call, text, manage contacts, block spam, and keep conversations separate.',
+      'BP Messenger gives you a private number for calls, texts, contacts, and work-life separation.',
     href: '/auth/signup',
     cta: 'Start BP Messenger',
     features: [
@@ -200,15 +200,15 @@ export const productSections: ProductSection[] = [
     eyebrow: 'BP Verify Hub',
     title: 'Receive codes without using your personal number.',
     description:
-      'Select a supported service, choose a country, request a number, and receive SMS or voice OTP live inside Burner Point. Pricing varies by country, service, availability, and route quality.',
+      'Choose a supported service and country, get a number, and receive SMS or voice codes where available.',
     href: '/auth/signup',
     cta: 'Get Verification',
     note: 'Use BP Verify Hub only for accounts, services, and workflows you are authorized to access.',
     features: [
       'Select service and country',
-      'Get assigned number instantly',
-      'Receive SMS or voice OTP live',
-      'Pay only when a code is received under supported billing rules',
+      'Get a private number',
+      'Receive SMS or voice codes',
+      'See clear pricing before you continue',
     ],
   },
   {
@@ -216,12 +216,12 @@ export const productSections: ProductSection[] = [
     eyebrow: 'BP Rentals',
     title: 'Keep a number when you need continuity.',
     description:
-      'Some workflows require more than a single code. BP Rentals lets you rent temporary or renewable numbers for longer access, continuity, account recovery, and repeated messages where supported.',
+      'Rent temporary or renewable numbers for repeated messages, recovery, and longer access where supported.',
     href: '/auth/signup',
     cta: 'Rent a Number',
     features: [
       'Daily, weekly, monthly, or yearly durations',
-      'SMS support and voice OTP where available',
+      'SMS and voice codes where available',
       'Renewal reminders and auto-renew options',
       'Rental history and number status tracking',
     ],
@@ -246,14 +246,14 @@ export const productSections: ProductSection[] = [
     eyebrow: 'BP Proxy Store',
     title: 'Private network access for approved use cases.',
     description:
-      'BP Proxy Store gives users access to proxy plans for business, testing, research, geo-checking, and approved routing use cases.',
+      'Choose proxy plans for business, testing, research, geo-checking, and approved routing use cases.',
     href: '/auth/signup',
     cta: 'View Proxy Plans',
     note: "Proxy access must be used lawfully and in accordance with Burner Point's Acceptable Use Policy.",
     features: [
       'Residential, datacenter, and rotating proxies',
       'Location filtering',
-      'Usage dashboard and setup guidance',
+      'Usage view and setup guidance',
       'Renewal management',
     ],
   },
@@ -262,14 +262,14 @@ export const productSections: ProductSection[] = [
     eyebrow: 'BP Secure Tunnel',
     title: 'Secure your connection with BP Secure Tunnel.',
     description:
-      "BP Secure Tunnel is Burner Point's WireGuard-based VPN system for private, encrypted connectivity and dedicated IP access.",
+      'Protect your connection with secure access, location choices, and dedicated IP options where available.',
     href: '/auth/signup',
     cta: 'Activate Secure Tunnel',
     features: [
-      'WireGuard-based security',
+      'Protected connectivity',
       'Dedicated IP options',
-      'Server location selection',
-      'Config generation and device management',
+      'Location selection',
+      'Device setup guidance',
     ],
   },
 ];
@@ -278,46 +278,32 @@ export const howItWorksSteps = [
   {
     step: '01',
     title: 'Create your account',
-    description: 'Sign up once and access your Burner Point dashboard on web and, when available, mobile.',
+    description: 'Sign up with your email or phone and choose the product you need.',
   },
   {
     step: '02',
-    title: 'Fund your wallet or choose a plan',
-    description: 'Add USD balance through supported payment methods or subscribe to recurring products.',
+    title: 'Choose a product',
+    description: 'Use Messenger, Verify Hub, Rentals, eSIM, Proxies, or Secure Tunnel.',
   },
   {
     step: '03',
-    title: 'Choose a product',
-    description: 'Use BP Messenger, Verify Hub, Rentals, eSIM Store, Proxy Store, or Secure Tunnel.',
-  },
-  {
-    step: '04',
-    title: 'Stay private and connected',
-    description: 'Manage numbers, codes, plans, and connectivity tools from one unified control center.',
+    title: 'Stay in control',
+    description: 'Manage numbers, codes, plans, billing, and support from one account.',
   },
 ];
-
-export const dashboardPreviewCards = [
-  { label: 'Available balance', value: '$25.00', meta: 'Wallet ready for verification, rentals, and travel data' },
-  { label: 'Active number', value: '+1 United States', meta: 'Private messaging line in use' },
-  { label: 'OTP received', value: '482901', meta: 'Live Verify Hub session' },
-  { label: 'eSIM plan', value: 'USA 5GB active', meta: 'Travel connectivity in one tap' },
-  { label: 'Proxy plan', value: 'Residential online', meta: 'Approved routing available' },
-  { label: 'Secure Tunnel', value: 'Dedicated IP connected', meta: 'Encrypted session running' },
-] as const;
 
 export const pricingCards: PricingCard[] = [
   {
     title: 'BP Verify Hub',
     price: 'Starting at $0.99+ / verification',
-    description: 'Receive supported SMS or voice OTP codes for supported services.',
+    description: 'Receive supported SMS or voice codes for supported services.',
     href: '/auth/signup',
     cta: 'Get Verification',
     highlights: [
-      'SMS OTP support',
-      'Voice OTP where available',
-      'Real-time code delivery',
-      'Wallet deduction only when a code is received under supported billing rules',
+      'SMS code support',
+      'Voice codes where available',
+      'Clear country-based pricing',
+      'Pay when eligible codes arrive',
     ],
   },
   {
@@ -329,7 +315,7 @@ export const pricingCards: PricingCard[] = [
     highlights: [
       'Short-term number access',
       'SMS support',
-      'Voice OTP where available',
+      'Voice codes where available',
       'No long-term commitment',
     ],
   },
@@ -382,20 +368,20 @@ export const pricingCards: PricingCard[] = [
       'Residential proxies',
       'Datacenter proxies',
       'Rotating proxies',
-      'Credentials dashboard',
+      'Setup guidance',
     ],
   },
   {
     title: 'BP Secure Tunnel',
-    price: 'Dedicated IP VPN plans',
-    description: 'Secure VPN access powered by WireGuard.',
+    price: 'Dedicated IP plans',
+    description: 'Protected connectivity with dedicated IP options.',
     href: '/auth/signup',
     cta: 'Secure My Connection',
     highlights: [
-      'Secure tunneling',
+      'Protected connectivity',
       'Dedicated IP options',
-      'Server location selection',
-      'Config generation',
+      'Location selection',
+      'Device setup guidance',
     ],
   },
 ];
@@ -415,7 +401,7 @@ export const availabilityItems = [
   },
   {
     title: 'BP Verify Hub',
-    description: 'Global support depending on service and route availability',
+    description: 'Availability depends on service and country',
   },
   {
     title: 'BP Rentals',
@@ -431,7 +417,7 @@ export const availabilityItems = [
   },
   {
     title: 'BP Secure Tunnel',
-    description: 'VPN server locations and dedicated IP options',
+    description: 'Secure locations and dedicated IP options',
   },
 ];
 
@@ -464,7 +450,7 @@ export const testimonialPlaceholders = [
     name: 'Founder',
     location: 'London, UK',
     quote:
-      'The wallet system makes it easy. I fund once and use it across verifications, rentals, and other tools.',
+      'The wallet makes it easy. I fund once and use it across verifications, rentals, and other tools.',
   },
   {
     name: 'Freelancer',
@@ -488,7 +474,7 @@ export const testimonialPlaceholders = [
     name: 'Business User',
     location: 'New York, USA',
     quote:
-      'I use different tools for privacy, proxies, and connectivity. Burner Point brings them together in one dashboard.',
+      'I use different tools for privacy, proxies, and connectivity. Burner Point brings them together in one account.',
   },
   {
     name: 'Consultant',
@@ -499,7 +485,7 @@ export const testimonialPlaceholders = [
     name: 'Student Founder',
     location: 'Abuja, Nigeria',
     quote:
-      'The dashboard is simple. Balance, numbers, rentals, and activity are easy to understand.',
+      'The account view is simple. Balance, numbers, rentals, and activity are easy to understand.',
   },
   {
     name: 'Creator',
@@ -511,12 +497,12 @@ export const testimonialPlaceholders = [
     name: 'Product Tester',
     location: 'Berlin, Germany',
     quote:
-      'SMS and voice OTP support is useful when a service only offers one verification option.',
+      'SMS and voice code support is useful when a service only offers one verification option.',
   },
   {
     name: 'QA Analyst',
     location: 'Austin, USA',
-    quote: 'The VPN and proxy tools make the platform feel bigger than a normal second-number app.',
+    quote: 'Secure access and proxy tools make the platform feel bigger than a normal second-number app.',
   },
 ];
 
@@ -529,12 +515,12 @@ export const faqCategories: FaqCategory[] = [
       {
         question: 'What is Burner Point?',
         answer:
-          'Burner Point is a privacy-first communication and connectivity platform that provides private numbers, messaging tools, verification workflows, rentals, eSIM data, proxy access, and secure VPN tools.',
+          'Burner Point is a privacy-first communication and connectivity platform for private numbers, messaging, verification, rentals, eSIM data, proxy access, and secure connectivity.',
       },
       {
         question: 'How does Burner Point work?',
         answer:
-          'Create an account, fund your wallet or choose a subscription, select a product, and manage your services from the Burner Point dashboard.',
+          'Create an account, add balance or choose a plan, select a product, and manage everything from one place.',
       },
       {
         question: 'Is Burner Point only for phone numbers?',
@@ -549,12 +535,12 @@ export const faqCategories: FaqCategory[] = [
       {
         question: 'Do I need to download an app?',
         answer:
-          'Burner Point supports web dashboard access today and is designed to extend across mobile surfaces when the app experience is available.',
+          'Burner Point works in the browser and is designed for mobile access as the app experience expands.',
       },
       {
         question: 'Can I use Burner Point outside Nigeria?',
         answer:
-          'Yes. Burner Point is built for global users. Product availability depends on country, provider inventory, telecom routing, and compliance requirements.',
+          'Yes. Burner Point is built for global users. Product availability depends on country, service support, inventory, and compliance requirements.',
       },
     ],
   },
@@ -584,14 +570,14 @@ export const faqCategories: FaqCategory[] = [
       {
         question: 'Can I choose my area code?',
         answer:
-          'Where supported by provider inventory, users should be able to select from available area codes.',
+          'Where available, users can choose from supported area codes.',
       },
     ],
   },
   {
     id: 'verify',
     label: 'BP Verify Hub',
-    description: 'Supported verification flows, billing behavior, timing, and service coverage.',
+    description: 'Supported codes, timing, pricing, and service coverage.',
     items: [
       {
         question: 'What is BP Verify Hub?',
@@ -599,14 +585,14 @@ export const faqCategories: FaqCategory[] = [
           'BP Verify Hub allows users to receive supported SMS or voice verification codes through Burner Point.',
       },
       {
-        question: 'Does BP Verify Hub support voice OTP?',
+        question: 'Does BP Verify Hub support voice codes?',
         answer:
-          'Yes, voice OTP is supported where available by country, service, and provider route.',
+          'Yes, voice codes are supported where available by country and service.',
       },
       {
         question: 'How much does verification cost?',
         answer:
-          'Pricing starts at $0.99+ and varies by country, service, provider cost, and route availability.',
+          'Pricing starts at $0.99+ and varies by country, service, and availability.',
       },
       {
         question: 'When am I charged?',
@@ -616,12 +602,12 @@ export const faqCategories: FaqCategory[] = [
       {
         question: 'What if no code arrives?',
         answer:
-          'If no code arrives within the allowed time and the session is marked unsuccessful, the user should not be charged or should receive an automatic credit reversal according to product rules.',
+          'If no code arrives within the allowed time, the charge should be reversed or not applied according to product rules.',
       },
       {
         question: 'Are all services guaranteed?',
         answer:
-          'No. Delivery depends on provider routes, target service rules, telecom filtering, and availability.',
+          'No. Delivery depends on service rules, country support, filtering, and availability.',
       },
     ],
   },
@@ -640,9 +626,9 @@ export const faqCategories: FaqCategory[] = [
           'Non-renewable rentals are temporary and expire after the selected duration. Renewable rentals can be kept active through recurring renewal payments.',
       },
       {
-        question: 'Do rentals support SMS OTP and voice OTP?',
+        question: 'Do rentals support SMS and voice codes?',
         answer:
-          'Yes. Rentals are designed to support SMS OTP and voice OTP where availability allows.',
+          'Yes. Rentals are designed to support SMS and voice codes where availability allows.',
       },
       {
         question: 'Can I keep the same rental number?',
@@ -659,7 +645,7 @@ export const faqCategories: FaqCategory[] = [
   {
     id: 'wallet-payments',
     label: 'Wallet & Payments',
-    description: 'USD wallet behavior, local currency display, funding, and refund expectations.',
+    description: 'USD wallet, local currency display, funding, and refund expectations.',
     items: [
       {
         question: 'What currency does Burner Point use?',
@@ -673,7 +659,7 @@ export const faqCategories: FaqCategory[] = [
       {
         question: 'Is local currency stored in my wallet?',
         answer:
-          'No. The wallet stores USD internally. Local currency display is only an estimate.',
+          'No. Wallet balance is kept in USD. Local currency display is only an estimate.',
       },
       {
         question: 'What can I use my wallet balance for?',
@@ -688,7 +674,7 @@ export const faqCategories: FaqCategory[] = [
       {
         question: 'Can I get a refund?',
         answer:
-          'Refund eligibility depends on the Terms of Service, provider status, product type, and whether the service has already been provisioned.',
+          'Refund eligibility depends on the Terms of Service, product type, and whether the service has already been delivered.',
       },
     ],
   },
@@ -705,12 +691,12 @@ export const faqCategories: FaqCategory[] = [
       {
         question: 'How do I receive my eSIM?',
         answer:
-          'After purchase, the user should receive an eSIM QR code or installation instructions in the dashboard.',
+          'After purchase, the user should receive an eSIM QR code or installation instructions in the account.',
       },
       {
         question: 'Can I renew an eSIM?',
         answer:
-          'Some plans may support renewal or repurchase depending on provider rules.',
+          'Some plans may support renewal or repurchase depending on plan rules.',
       },
       {
         question: 'Does eSIM work on every phone?',
@@ -735,17 +721,17 @@ export const faqCategories: FaqCategory[] = [
       {
         question: 'What proxy types are available?',
         answer:
-          'Residential, datacenter, and rotating proxies may be offered depending on provider availability.',
+          'Residential, datacenter, and rotating proxies may be offered depending on availability.',
       },
       {
         question: 'Are proxies allowed for any activity?',
         answer:
-          'No. Users must follow the Acceptable Use Policy and provider restrictions.',
+          'No. Users must follow the Acceptable Use Policy and product restrictions.',
       },
       {
         question: 'How do I receive proxy access?',
         answer:
-          'After purchase, proxy setup details and instructions should appear in the dashboard.',
+          'After purchase, proxy setup details and instructions should appear in the account.',
       },
       {
         question: 'Can I select proxy country?',
@@ -757,12 +743,12 @@ export const faqCategories: FaqCategory[] = [
   {
     id: 'secure-tunnel',
     label: 'Secure Tunnel',
-    description: 'VPN questions covering device access, locations, and dedicated IPs.',
+    description: 'Secure access questions covering devices, locations, and dedicated IPs.',
     items: [
       {
         question: 'What is BP Secure Tunnel?',
         answer:
-          "BP Secure Tunnel is Burner Point's VPN product powered by WireGuard-based secure tunneling.",
+          'BP Secure Tunnel helps protect your connection with secure access and dedicated IP options where available.',
       },
       {
         question: 'What is a dedicated IP?',
@@ -775,13 +761,13 @@ export const faqCategories: FaqCategory[] = [
           'Device limits should depend on the selected plan.',
       },
       {
-        question: 'Can I choose VPN location?',
+        question: 'Can I choose a Secure Tunnel location?',
         answer: 'Users should be able to select from available server locations.',
       },
       {
-        question: 'Is VPN access free?',
+        question: 'Is Secure Tunnel access free?',
         answer:
-          'Basic access may be offered depending on product strategy, but dedicated IP or full VPN access should be paid.',
+          'Basic access may be offered in some cases, but dedicated IP and full Secure Tunnel plans are paid.',
       },
     ],
   },
@@ -793,12 +779,12 @@ export const faqCategories: FaqCategory[] = [
       {
         question: 'How do I reach support?',
         answer:
-          'Email info.burnerpoint@gmail.com or message Telegram support at @burnerpoint or @burnerpointapp for account, verification, rental, billing, eSIM, proxy, or VPN help.',
+          'Email info.burnerpoint@gmail.com or message Telegram support at @burnerpoint or @burnerpointapp for account, verification, rental, billing, eSIM, proxy, or Secure Tunnel help.',
       },
       {
         question: 'Does privacy-first mean no rules?',
         answer:
-          'No. Burner Point is privacy-first, not abuse-friendly. The platform should enforce terms, fraud controls, and provider compliance requirements.',
+          'No. Burner Point is privacy-first, not abuse-friendly. Users must follow the Terms, Acceptable Use Policy, and product rules.',
       },
       {
         question: 'What happens if suspicious activity is detected?',
@@ -808,7 +794,7 @@ export const faqCategories: FaqCategory[] = [
       {
         question: 'What information should I provide to support?',
         answer:
-          'Provide your account email, the relevant product, timestamps, payment reference if applicable, and screenshots or session details when available.',
+          'Provide your account email, the relevant product, time, payment reference if applicable, and helpful screenshots when available.',
       },
     ],
   },

@@ -31,15 +31,6 @@ const MicrosoftIcon = () => (
   </svg>
 );
 
-const PhoneIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
-    <path
-      d="M6.2 2.5h3.2c.4 0 .8.3.9.7l.9 4.3c.1.4-.1.8-.5 1l-1.8.9c1 2 2.6 3.6 4.6 4.6l.9-1.8c.2-.4.7-.6 1-.5l4.3.9c.4.1.7.5.7.9v3.2c0 .5-.4 1-.9 1C9.6 21.5 2.5 14.4 2.5 5.4c0-.5.4-.9.9-.9Z"
-      fill="#00FF9D"
-    />
-  </svg>
-);
-
 export interface Testimonial {
   avatarSrc: string;
   name: string;
@@ -56,7 +47,6 @@ interface SignInPageProps {
   onGoogleSignIn?: () => void;
   onAppleSignIn?: () => void;
   onMicrosoftSignIn?: () => void;
-  onPhoneSignIn?: () => void;
   onResetPassword?: () => void;
   onCreateAccount?: () => void;
   formContent?: React.ReactNode;
@@ -109,15 +99,14 @@ function SocialButton({
 }
 
 export const SignInPage: React.FC<SignInPageProps> = ({
-  title = 'Access your private dashboard.',
-  description = 'Sign in to manage private numbers, verifications, rentals, eSIM, proxy access, and secure tunnel sessions from one account.',
+  title = 'Sign in to Burner Point.',
+  description = 'Manage private numbers, codes, rentals, travel data, proxies, billing, and support from one account.',
   heroImageSrc,
   testimonials = [],
   onSignIn,
   onGoogleSignIn,
   onAppleSignIn,
   onMicrosoftSignIn,
-  onPhoneSignIn,
   onResetPassword,
   onCreateAccount,
   formContent,
@@ -138,17 +127,17 @@ export const SignInPage: React.FC<SignInPageProps> = ({
       <div className="relative z-10 mx-auto grid min-h-[100dvh] max-w-[96rem] gap-6 px-4 py-4 sm:px-6 lg:grid-cols-[minmax(0,34rem)_minmax(0,1fr)] lg:px-8 lg:py-6">
         <section className="rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(7,20,15,0.9),rgba(0,0,0,0.98))] p-5 shadow-[0_40px_110px_rgba(0,0,0,0.28)] sm:p-6 lg:p-7">
           <div className="flex items-center justify-between gap-4">
-            <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
-              <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} className="h-9 w-9" />
-              <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={170} height={26} className="h-6 w-auto" />
+            <Link href="/" className="inline-flex items-center gap-2.5" aria-label="Burner Point home">
+              <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} className="h-8 w-8 sm:h-9 sm:w-9" />
+              <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={166} height={26} className="h-[1.15rem] w-auto sm:h-5" />
             </Link>
-            <Link href="/pricing" className="hidden text-sm font-medium text-white/56 transition hover:text-white sm:inline-flex">
+            <Link href="/pricing" className="hidden text-sm font-medium text-white/72 transition hover:text-white sm:inline-flex">
               Pricing
             </Link>
           </div>
 
           <div className="mt-8">
-            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[#00FF9D]">Private account access</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[#00FF9D]">Account access</p>
             {title ? (
               <h1 className="mt-4 text-4xl font-black leading-[0.94] text-white sm:text-[2.8rem]">
                 {title}
@@ -162,7 +151,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            {heroTrustItems.slice(0, 4).map((item) => (
+            {heroTrustItems.slice(0, 3).map((item) => (
               <span
                 key={item}
                 className="inline-flex min-h-9 items-center rounded-full border border-white/10 bg-white/[0.03] px-3 text-xs font-medium text-white/72"
@@ -181,38 +170,37 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                   <SocialButton icon={<GoogleIcon />} label="Continue with Google" onClick={onGoogleSignIn} />
                   <SocialButton icon={<AppleIcon />} label="Continue with Apple" onClick={onAppleSignIn} />
                   <SocialButton icon={<MicrosoftIcon />} label="Continue with Microsoft" onClick={onMicrosoftSignIn} />
-                  <SocialButton icon={<PhoneIcon />} label="Continue with Phone" onClick={onPhoneSignIn} />
                 </div>
 
                 <div className="relative my-5 flex items-center justify-center">
                   <span className="w-full border-t border-white/10" />
-                  <span className="absolute bg-[#04120C] px-4 font-mono text-[11px] uppercase tracking-[0.24em] text-white/34">
+                  <span className="absolute bg-[#04120C] px-4 font-mono text-[11px] uppercase tracking-[0.24em] text-white/70">
                     OR
                   </span>
                 </div>
 
                 <form className="space-y-5" onSubmit={onSignIn}>
                   <div>
-                    <label className="text-sm font-medium text-white/64">Email address</label>
+                    <label className="text-sm font-medium text-white/76">Email or phone</label>
                     <GlassInputWrapper>
                       <input
-                        name="email"
-                        type="email"
-                        placeholder="Enter your email address"
-                        className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
+                        name="identifier"
+                        type="text"
+                        placeholder="you@example.com or +14155550182"
+                        className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
                       />
                     </GlassInputWrapper>
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium text-white/64">Password</label>
+                    <label className="text-sm font-medium text-white/76">Password</label>
                     <GlassInputWrapper>
                       <div className="relative">
                         <input
                           name="password"
                           type={showPassword ? 'text' : 'password'}
                           placeholder="Enter your password"
-                          className="w-full rounded-2xl bg-transparent p-4 pr-12 text-sm text-white placeholder:text-white/28 focus:outline-none"
+                          className="w-full rounded-2xl bg-transparent p-4 pr-12 text-sm text-white placeholder:text-white/56 focus:outline-none"
                         />
                         <button
                           type="button"
@@ -220,9 +208,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                           className="absolute inset-y-0 right-3 flex items-center"
                         >
                           {showPassword ? (
-                            <EyeOff className="h-5 w-5 text-white/46 transition-colors hover:text-white" />
+                            <EyeOff className="h-5 w-5 text-white/70 transition-colors hover:text-white" />
                           ) : (
-                            <Eye className="h-5 w-5 text-white/46 transition-colors hover:text-white" />
+                            <Eye className="h-5 w-5 text-white/70 transition-colors hover:text-white" />
                           )}
                         </button>
                       </div>
@@ -251,7 +239,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                   </button>
                 </form>
 
-                <p className="mt-5 text-center text-sm text-white/48">
+                <p className="mt-5 text-center text-sm text-white/72">
                   New to Burner Point?{' '}
                   <button
                     type="button"
@@ -295,10 +283,10 @@ export const SignInPage: React.FC<SignInPageProps> = ({
           <div className="relative z-10">
             <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[#00A76A]">Stay Anonymous. Stay Connected.</p>
             <h2 className="mt-4 max-w-xl text-[3rem] font-black leading-[0.92] text-[#07140f] xl:text-[3.7rem]">
-              Private by design from the first screen.
+              Private access, without the noise.
             </h2>
-            <p className="mt-4 max-w-2xl text-base leading-8 text-[#456052]">
-              Burner Point account entry should feel like a premium telecom platform, not a generic utility flow. Authentication stays direct, support stays visible, and the brand stays consistent across login, signup, recovery, and verification.
+            <p className="mt-4 max-w-2xl text-base leading-8 text-[#2f4d40]">
+              Sign in quickly, manage your privacy tools, and keep support close when you need help.
             </p>
           </div>
 
@@ -316,7 +304,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 <p className={cn('font-mono text-[10px] uppercase tracking-[0.22em]', index === 0 ? 'text-[#00FF9D]' : 'text-[#00A76A]')}>
                   {item.name}
                 </p>
-                <p className={cn('mt-3 text-sm leading-7', index === 0 ? 'text-white/74' : 'text-[#456052]')}>
+                <p className={cn('mt-3 text-sm leading-7', index === 0 ? 'text-white/78' : 'text-[#2f4d40]')}>
                   {item.description}
                 </p>
               </article>
@@ -326,7 +314,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
           <div className="relative z-10 mt-8 grid gap-4 xl:grid-cols-[1fr_auto] xl:items-end">
             <div className="rounded-[1.45rem] border border-black/6 bg-[#f7fbf8] p-5">
               <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#00A76A]">Support contacts</p>
-              <div className="mt-3 space-y-2 text-sm text-[#456052]">
+              <div className="mt-3 space-y-2 text-sm text-[#2f4d40]">
                 <a href={`mailto:${supportContacts.email}`} className="block transition hover:text-[#07140f]">
                   {supportContacts.email}
                 </a>
@@ -352,4 +340,5 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   );
 };
 
-export { AppleIcon, GoogleIcon, MicrosoftIcon, PhoneIcon, GlassInputWrapper, TestimonialCard };
+export { AppleIcon, GoogleIcon, MicrosoftIcon, GlassInputWrapper, TestimonialCard };
+

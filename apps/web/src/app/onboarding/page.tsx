@@ -25,8 +25,9 @@ function OnboardingContent() {
   const userMetadata = (user?.unsafeMetadata ?? {}) as Record<string, string | boolean | undefined>;
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
-    firstName: user?.firstName || String(userMetadata.firstName || ''),
-    lastName: user?.lastName || String(userMetadata.lastName || ''),
+    displayName: [user?.firstName || String(userMetadata.firstName || ''), user?.lastName || String(userMetadata.lastName || '')]
+      .filter(Boolean)
+      .join(' '),
     email: user?.primaryEmailAddress?.emailAddress || '',
     phoneNumber: user?.primaryPhoneNumber?.phoneNumber || String(userMetadata.phoneNumber || ''),
   });
@@ -34,8 +35,11 @@ function OnboardingContent() {
   useEffect(() => {
     setForm((current) => ({
       ...current,
-      firstName: current.firstName || user?.firstName || String(userMetadata.firstName || ''),
-      lastName: current.lastName || user?.lastName || String(userMetadata.lastName || ''),
+      displayName:
+        current.displayName ||
+        [user?.firstName || String(userMetadata.firstName || ''), user?.lastName || String(userMetadata.lastName || '')]
+          .filter(Boolean)
+          .join(' '),
       email: current.email || user?.primaryEmailAddress?.emailAddress || '',
       phoneNumber: current.phoneNumber || user?.primaryPhoneNumber?.phoneNumber || String(userMetadata.phoneNumber || ''),
     }));
@@ -46,24 +50,30 @@ function OnboardingContent() {
   };
 
   const completeOnboarding = async () => {
-    if (!form.firstName || !form.lastName || !form.email || !form.phoneNumber) {
-      toast.error('First name, last name, email, and phone number are required.');
+    if (!form.displayName || !form.email || !form.phoneNumber) {
+      toast.error('Add your name, email, and phone number to continue.');
       return;
     }
 
     const normalizedPhone = form.phoneNumber.trim().replace(/[^\d+]/g, '');
     if (!E164_PATTERN.test(normalizedPhone)) {
-      toast.error('Enter your phone number in E.164 format (example: +14155550182).');
+      toast.error('Enter your phone number with country code.');
       return;
     }
 
     setLoading(true);
     try {
       const clerkToken = await getToken();
-      if (!clerkToken) throw new Error('No secure session token');
+      if (!clerkToken) throw new Error('Auth not ready');
+
+      const nameParts = form.displayName.trim().split(/\s+/);
+      const firstName = nameParts.shift() || 'Burner';
+      const lastName = nameParts.join(' ') || 'Point';
 
         const { data } = await authApi.exchangeClerkToken(clerkToken, {
-          ...form,
+          firstName,
+          lastName,
+          email: form.email,
           phoneNumber: normalizedPhone,
           acceptTerms: true,
           acceptPrivacy: true,
@@ -72,7 +82,7 @@ function OnboardingContent() {
       setApiSession(data.accessToken, data.refreshToken);
 
       if (data.needsOnboarding) {
-        toast.error('A few profile details are still missing.');
+        toast.error('Check the highlighted details and try again.');
         return;
       }
 
@@ -82,15 +92,10 @@ function OnboardingContent() {
         return;
       }
 
-      toast.success('Profile secured.');
+      toast.success("You're all set.");
       router.push(redirectTo);
-    } catch (error: unknown) {
-      const responseError = error as Error & {
-        response?: {
-          data?: { message?: string };
-        };
-      };
-      toast.error(responseError.response?.data?.message || responseError.message || 'Onboarding failed');
+    } catch {
+      toast.error('Something went wrong. Please sign in again.');
     } finally {
       setLoading(false);
     }
@@ -98,30 +103,27 @@ function OnboardingContent() {
 
   return (
     <AuthShell
-      title="Complete your Burner Point profile"
-      description="Finish the recovery and security details tied to your Burner Point account, then move straight into your dashboard."
-      asideTitle="Profile completion should feel like progress, not another auth wall."
-      asideDescription="This step only collects the account details users actually need for secure recovery, verification, and private communication continuity."
+      title="Finish setup"
+      description="Add the details needed to protect your account."
+      asideTitle="Private access, without the noise."
+      asideDescription="Add your recovery details once, then manage Burner Point from one account."
     >
       <div className="space-y-4">
         <div className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
           <div className="flex items-start gap-3">
             <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-brand-green" />
             <div>
-              <p className="text-sm font-semibold text-white">What this unlocks</p>
-              <p className="mt-1.5 text-sm leading-6 text-white/56">
-                Once this profile is complete you can verify your phone, enter the dashboard, and manage numbers, conversations, billing, and account support from one place.
+              <p className="text-sm font-semibold text-white">Almost done</p>
+              <p className="mt-1.5 text-sm leading-6 text-white/72">
+                Add your contact details so you can recover your account and receive important updates.
               </p>
             </div>
           </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="First name">
-            <input value={form.firstName} onChange={(event) => setField('firstName')(event.target.value)} className="auth-input" autoComplete="given-name" autoCapitalize="words" enterKeyHint="next" />
-          </Field>
-          <Field label="Last name">
-            <input value={form.lastName} onChange={(event) => setField('lastName')(event.target.value)} className="auth-input" autoComplete="family-name" autoCapitalize="words" enterKeyHint="next" />
+          <Field label="Full name">
+            <input value={form.displayName} onChange={(event) => setField('displayName')(event.target.value)} className="auth-input" autoComplete="name" autoCapitalize="words" enterKeyHint="next" />
           </Field>
           <Field label="Email address">
             <input value={form.email} onChange={(event) => setField('email')(event.target.value)} type="email" inputMode="email" className="auth-input" autoComplete="email" autoCapitalize="none" enterKeyHint="next" />
@@ -144,7 +146,7 @@ function OnboardingContent() {
         </div>
 
         <button type="button" disabled={loading} onClick={completeOnboarding} className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60">
-          {loading ? 'Saving profile...' : 'Continue to secure verification'}
+          {loading ? 'Saving...' : 'Continue'}
         </button>
       </div>
     </AuthShell>
@@ -167,7 +169,7 @@ export default function OnboardingPage() {
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <label className="block text-xs font-medium text-white/58">
+    <label className="block text-xs font-medium text-white/76">
       {label}
       <div className="mt-2">{children}</div>
     </label>

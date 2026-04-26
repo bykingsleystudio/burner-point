@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { ArrowRight, ChevronDown, Menu, X } from 'lucide-react';
 import { FaFacebook, FaInstagram, FaLinkedin, FaTelegram, FaTiktok, FaYoutube } from 'react-icons/fa6';
 import { FaXTwitter } from 'react-icons/fa6';
@@ -23,21 +23,42 @@ const socialIconMap = {
 export function MarketingHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [desktopProductsOpen, setDesktopProductsOpen] = useState(false);
-
-  const fullMobileLinks = useMemo(
-    () => [
-      ...headerLinks,
-      ...productLinks.map((item) => ({ label: item.name, href: item.href })),
-    ],
-    [],
-  );
+  const productMenuLinks = productLinks.map((item) => ({
+    label: item.name.replace(/^BP\s+/, ''),
+    href: item.href,
+  }));
+  const mobileGroups = [
+    { title: 'Products', links: productMenuLinks },
+    {
+      title: 'Company',
+      links: [
+        { label: 'Pricing', href: '/#pricing' },
+        { label: 'How It Works', href: '/#how-it-works' },
+        { label: 'FAQ', href: '/faq' },
+        { label: 'Blog', href: '/blog' },
+      ],
+    },
+    {
+      title: 'Support',
+      links: [
+        { label: 'Help / Support', href: '/#support' },
+        { label: 'Contact', href: '/contact' },
+      ],
+    },
+  ];
+  const legalLinks = [
+    { label: 'Terms', href: '/terms-of-service' },
+    { label: 'Privacy', href: '/privacy-policy' },
+    { label: 'Acceptable Use', href: '/terms-of-service' },
+  ];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-black/6 bg-white/86 backdrop-blur-2xl">
+    <header className="sticky top-0 z-50 border-b border-black/6 bg-white/86 backdrop-blur-2xl dark:border-white/8 dark:bg-[#06120d]/88">
       <div className="mx-auto flex min-h-20 max-w-[92rem] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
-          <Image src="/assets/logo-mark.svg" alt="" width={40} height={40} className="h-10 w-10" priority />
-          <Image src="/assets/wordmark-black.svg" alt="Burner Point" width={184} height={28} className="h-6 w-auto" />
+        <Link href="/" className="inline-flex items-center gap-2.5" aria-label="Burner Point home">
+          <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} className="h-8 w-8 sm:h-9 sm:w-9" priority />
+          <Image src="/assets/wordmark-black.svg" alt="Burner Point" width={166} height={26} className="h-[1.15rem] w-auto dark:hidden sm:h-5" />
+          <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={166} height={26} className="hidden h-[1.15rem] w-auto dark:block sm:h-5" />
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
@@ -48,23 +69,23 @@ export function MarketingHeader() {
           >
             <button
               type="button"
-              className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-medium text-[#10261c] transition hover:bg-[#eaf8f1]"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-medium text-[#10261c] transition hover:bg-[#eaf8f1] dark:text-white/78 dark:hover:bg-white/[0.06]"
               onClick={() => setDesktopProductsOpen((value) => !value)}
             >
               Products
               <ChevronDown className={cn('h-4 w-4 transition', desktopProductsOpen ? 'rotate-180' : '')} />
             </button>
             {desktopProductsOpen ? (
-              <div className="absolute left-0 top-full mt-3 w-[30rem] rounded-[1.75rem] border border-black/8 bg-white p-4 shadow-[0_32px_90px_rgba(3,28,18,0.16)]">
+              <div className="absolute left-0 top-full mt-3 w-[30rem] rounded-[1.75rem] border border-black/8 bg-white p-4 shadow-[0_32px_90px_rgba(3,28,18,0.16)] dark:border-white/10 dark:bg-[#07140f]">
                 <div className="grid gap-3 sm:grid-cols-2">
                   {productLinks.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="rounded-[1.25rem] border border-black/6 bg-[linear-gradient(180deg,#ffffff,#f3faf6)] p-4 transition hover:-translate-y-0.5 hover:border-[#00FF9D]/32 hover:shadow-[0_14px_40px_rgba(0,255,157,0.12)]"
+                      className="rounded-[1.25rem] border border-black/6 bg-[linear-gradient(180deg,#ffffff,#f3faf6)] p-4 transition hover:-translate-y-0.5 hover:border-[#00FF9D]/32 hover:shadow-[0_14px_40px_rgba(0,255,157,0.12)] dark:border-white/10 dark:bg-[linear-gradient(180deg,#0b1c14,#07140f)]"
                     >
-                      <p className="text-sm font-semibold text-[#07140f]">{item.name}</p>
-                      <p className="mt-2 text-sm leading-6 text-[#365447]">{item.description}</p>
+                      <p className="text-sm font-semibold text-[#07140f] dark:text-white">{item.name}</p>
+                      <p className="mt-2 text-sm leading-6 text-[#365447] dark:text-white/72">{item.description}</p>
                     </Link>
                   ))}
                 </div>
@@ -76,7 +97,7 @@ export function MarketingHeader() {
             <Link
               key={item.label}
               href={item.href}
-              className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-medium text-[#10261c] transition hover:bg-[#eaf8f1]"
+              className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-medium text-[#10261c] transition hover:bg-[#eaf8f1] dark:text-white/78 dark:hover:bg-white/[0.06]"
             >
               {item.label}
             </Link>
@@ -86,7 +107,7 @@ export function MarketingHeader() {
         <div className="hidden items-center gap-3 lg:flex">
           <Link
             href="/auth/login"
-            className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/10 px-5 text-sm font-semibold text-[#07140f] transition hover:border-[#00FF9D]/30 hover:bg-[#effcf5]"
+            className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/10 px-5 text-sm font-semibold text-[#07140f] transition hover:border-[#00FF9D]/30 hover:bg-[#effcf5] dark:border-white/12 dark:text-white dark:hover:bg-white/[0.06]"
           >
             Sign In
           </Link>
@@ -98,14 +119,14 @@ export function MarketingHeader() {
         <div className="flex items-center gap-3 lg:hidden">
           <Link
             href="/auth/signup"
-            className="inline-flex min-h-10 items-center rounded-full bg-[#07140f] px-4 text-sm font-semibold text-white transition hover:bg-[#013220]"
+            className="inline-flex min-h-10 items-center rounded-full bg-[#07140f] px-3.5 text-xs font-semibold text-white transition hover:bg-[#013220] dark:bg-[#00FF9D] dark:text-black sm:px-4 sm:text-sm"
           >
             Get Started
           </Link>
           <button
             type="button"
             onClick={() => setMobileMenuOpen((value) => !value)}
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-black/10 bg-white text-[#07140f] transition hover:border-[#00FF9D]/28"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-black/10 bg-white text-[#07140f] transition hover:border-[#00FF9D]/28 dark:border-white/12 dark:bg-white/[0.04] dark:text-white"
             aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
           >
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -114,37 +135,47 @@ export function MarketingHeader() {
       </div>
 
       {mobileMenuOpen ? (
-        <div className="border-t border-black/6 bg-white lg:hidden">
-          <div className="mx-auto max-w-[92rem] space-y-6 px-4 py-5 sm:px-6">
-            <div className="grid gap-2">
-              {fullMobileLinks.map((item) => (
-                <Link
-                  key={`${item.label}-${item.href}`}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-[1rem] border border-black/6 bg-[linear-gradient(180deg,#ffffff,#f5faf7)] px-4 py-3 text-sm font-semibold text-[#07140f] transition hover:border-[#00FF9D]/24"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
+        <div className="border-t border-black/6 bg-white dark:border-white/8 dark:bg-[#06120d] lg:hidden">
+          <div className="mx-auto max-w-[92rem] space-y-4 px-4 py-5 sm:px-6">
+            {mobileGroups.map((group) => (
+              <section key={group.title} className="rounded-[1.25rem] border border-black/6 bg-[linear-gradient(180deg,#ffffff,#f6fbf8)] p-3 dark:border-white/10 dark:bg-[linear-gradient(180deg,#0b1c14,#07140f)]">
+                <p className="px-2 pb-2 font-mono text-[10px] uppercase tracking-[0.22em] text-[#008f5c]">{group.title}</p>
+                <div className="grid gap-1.5">
+                  {group.links.map((item) => (
+                    <Link
+                      key={`${group.title}-${item.label}`}
+                      href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex min-h-11 items-center justify-between rounded-[0.9rem] px-3 text-sm font-semibold text-[#07140f] transition hover:bg-[#eaf8f1] dark:text-white dark:hover:bg-white/[0.06]"
+                    >
+                      {item.label}
+                      <ArrowRight className="h-3.5 w-3.5 text-[#008f5c]" />
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            ))}
 
-            <div className="rounded-[1.25rem] border border-black/6 bg-[linear-gradient(180deg,#ffffff,#f4faf6)] p-4">
-              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#00A76A]">Support</p>
-              <div className="mt-3 space-y-2 text-sm text-[#365447]">
-                <a href={`mailto:${supportContacts.email}`} className="block transition hover:text-[#07140f]">
-                  {supportContacts.email}
-                </a>
-                <a href={supportContacts.telegramPrimary} target="_blank" rel="noreferrer" className="block transition hover:text-[#07140f]">
-                  Telegram support
-                </a>
-                <a href={supportContacts.telegramApp} target="_blank" rel="noreferrer" className="block transition hover:text-[#07140f]">
-                  Telegram community
-                </a>
+            <details className="rounded-[1.25rem] border border-black/6 bg-[#f7fbf8] p-3 dark:border-white/10 dark:bg-white/[0.04]">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between px-2 font-mono text-[10px] uppercase tracking-[0.22em] text-[#008f5c]">
+                Legal
+                <ChevronDown className="h-4 w-4" />
+              </summary>
+              <div className="mt-1 grid gap-1.5">
+                {legalLinks.map((item) => (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex min-h-11 items-center rounded-[0.9rem] px-3 text-sm font-semibold text-[#07140f] transition hover:bg-white dark:text-white dark:hover:bg-white/[0.06]"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
               </div>
-            </div>
+            </details>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap justify-center gap-2">
               {socialProfiles.map((item) => {
                 const Icon = socialIconMap[item.label as keyof typeof socialIconMap];
 
@@ -154,7 +185,7 @@ export function MarketingHeader() {
                     href={item.href}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/8 bg-[#f7fbf8] text-[#153126] transition hover:border-[#00FF9D]/28 hover:text-[#00A76A]"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/8 bg-[#f7fbf8] text-[#153126] transition hover:border-[#00FF9D]/28 hover:text-[#00A76A] dark:border-white/10 dark:bg-white/[0.04] dark:text-white/72 dark:hover:text-[#00FF9D]"
                     aria-label={item.label}
                   >
                     {Icon ? <Icon className="h-4 w-4" /> : null}
@@ -167,7 +198,7 @@ export function MarketingHeader() {
               <Link
                 href="/auth/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="inline-flex min-h-12 items-center justify-center rounded-full border border-black/10 text-sm font-semibold text-[#07140f]"
+                className="inline-flex min-h-12 items-center justify-center rounded-full border border-black/10 text-sm font-semibold text-[#07140f] dark:border-white/12 dark:text-white"
               >
                 Sign In
               </Link>
@@ -199,15 +230,15 @@ export function MarketingFooter() {
       <div className="relative mx-auto max-w-[92rem] px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-10 xl:grid-cols-[1.4fr_repeat(4,1fr)]">
           <div>
-            <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
-              <Image src="/assets/logo-mark.svg" alt="" width={40} height={40} className="h-10 w-10" />
-              <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={184} height={28} className="h-6 w-auto" />
+            <Link href="/" className="inline-flex items-center gap-2.5" aria-label="Burner Point home">
+              <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} className="h-8 w-8 sm:h-9 sm:w-9" />
+              <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={166} height={26} className="h-[1.15rem] w-auto sm:h-5" />
             </Link>
             <p className="mt-5 max-w-sm text-sm leading-7 text-white/74">
               Stay Anonymous. Stay Connected. Private by Design.
             </p>
-            <p className="mt-3 max-w-md text-sm leading-7 text-white/56">
-              Private numbers, OTP tools, rentals, eSIM, proxies, and secure connectivity from one account.
+            <p className="mt-3 max-w-md text-sm leading-7 text-white/70">
+              Private numbers, codes, rentals, eSIM, proxies, and secure access from one account.
             </p>
           </div>
 
@@ -272,8 +303,8 @@ export function MarketingFooter() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-4 border-t border-white/8 pt-6 text-sm text-white/44 md:flex-row md:items-center md:justify-between">
-          <p>Private numbers • OTP tools • Rentals • eSIM • Proxies • VPN</p>
+        <div className="mt-12 flex flex-col gap-4 border-t border-white/8 pt-6 text-sm text-white/70 md:flex-row md:items-center md:justify-between">
+          <p>Private numbers • Codes • Rentals • eSIM • Proxies • Secure access</p>
           <Link href="/auth/signup" className="inline-flex items-center gap-2 text-white/72 transition hover:text-white">
             Create account
             <ArrowRight className="h-4 w-4" />
@@ -296,7 +327,7 @@ function FooterGroup({
       <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#00FF9D]">{title}</p>
       <div className="mt-4 space-y-3">
         {links.map((item) => (
-          <Link key={`${title}-${item.label}`} href={item.href} className="block text-sm text-white/56 transition hover:text-white">
+          <Link key={`${title}-${item.label}`} href={item.href} className="block text-sm text-white/70 transition hover:text-white">
             {item.label}
           </Link>
         ))}
@@ -304,3 +335,4 @@ function FooterGroup({
     </div>
   );
 }
+

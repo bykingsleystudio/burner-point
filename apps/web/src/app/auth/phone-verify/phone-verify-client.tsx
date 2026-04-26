@@ -48,7 +48,7 @@ export default function PhoneVerifyPage() {
     async function prepareApiSession() {
       try {
         const clerkToken = await getToken();
-        if (!clerkToken) throw new Error('Missing secure session token');
+        if (!clerkToken) throw new Error('Auth not ready');
 
         const pendingPhone = typeof window !== 'undefined' ? sessionStorage.getItem('burnerPointPendingPhone') : null;
         const { data } = await authApi.exchangeClerkToken(clerkToken, {
@@ -71,18 +71,9 @@ export default function PhoneVerifyPage() {
         }
 
         setStep('ready');
-      } catch (error: unknown) {
+      } catch {
         if (cancelled) return;
-        const responseError = error as Error & {
-          response?: {
-            data?: { message?: string };
-          };
-        };
-        const message =
-          responseError.response?.data?.message ||
-          responseError.message ||
-          'Unable to prepare secure phone verification.';
-        toast.error(message);
+        toast.error('Something went wrong. Please sign in again.');
         router.replace('/dashboard');
       }
     }
@@ -95,7 +86,7 @@ export default function PhoneVerifyPage() {
 
   const sendCode = async () => {
     if (!phoneIsValid) {
-      setLastError('Enter your account phone number in E.164 format, for example +14155550182.');
+      setLastError('Enter your phone number with country code.');
       return;
     }
 
@@ -108,7 +99,7 @@ export default function PhoneVerifyPage() {
       setStep('sent');
       toast.success(`${channel === 'sms' ? 'SMS' : 'Voice'} code sent.`);
     } catch (error) {
-      setLastError(getOtpError(error, 'Unable to send verification code.'));
+      setLastError(getOtpError(error, 'Could not send the code. Try again.'));
     } finally {
       setLoading(false);
     }
@@ -129,7 +120,7 @@ export default function PhoneVerifyPage() {
       toast.success('Phone verified. Opening Burner Point.');
       router.replace(sanitizeRedirect(data.redirectTo || redirectTo));
     } catch (error) {
-      const message = getOtpError(error, 'Verification failed. Check the code and try again.');
+      const message = getOtpError(error, 'Verification failed. Try again.');
       setLastError(message);
       const remaining = (error as { response?: { data?: { attemptsRemaining?: number } } })?.response?.data?.attemptsRemaining;
       if (typeof remaining === 'number') setAttemptsRemaining(remaining);
@@ -156,10 +147,10 @@ export default function PhoneVerifyPage() {
             <div className="mt-5 flex h-12 w-12 items-center justify-center rounded-bp-md border border-brand-green/25 bg-brand-green/10">
               <ShieldCheck className="h-6 w-6 text-brand-green" />
             </div>
-            <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.22em] text-brand-green">Secure phone verification</p>
+            <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.22em] text-brand-green">Phone verification</p>
             <h1 className="mt-3 text-[1.8rem] font-semibold uppercase leading-none sm:text-[2rem]">Verify your account phone</h1>
-            <p className="mt-2 text-sm leading-5 text-white/52">
-              Use SMS or voice delivery to verify the number attached to your Burner Point account. International numbers are supported when entered in E.164 format.
+            <p className="mt-2 text-sm leading-5 text-white/72">
+              Choose SMS or voice and enter your number with country code.
             </p>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_0.55fr]">
@@ -176,7 +167,7 @@ export default function PhoneVerifyPage() {
                   className="auth-input mt-1.5"
                   disabled={step === 'approved'}
                 />
-                <span className="mt-1.5 block text-xs text-brand-muted">Use your Burner Point profile phone in E.164 format, for example +14155550182 or +2348012345678.</span>
+                <span className="mt-1.5 block text-xs text-white/68">Include country code, for example +14155550182.</span>
               </label>
 
               <fieldset className="block text-sm font-medium text-white/70">
@@ -223,7 +214,7 @@ export default function PhoneVerifyPage() {
                 <div className="flex flex-wrap items-center gap-3 text-sm text-brand-green">
                   <TimerReset className="h-4 w-4" />
                   {expiresAt ? `Code expires ${new Date(expiresAt).toLocaleTimeString()}` : 'Code sent'}
-                  {attemptsRemaining !== null ? <span className="text-white/44">Attempts left: {attemptsRemaining}</span> : null}
+                  {attemptsRemaining !== null ? <span className="text-white/72">Attempts left: {attemptsRemaining}</span> : null}
                 </div>
 
                 {step === 'approved' ? (
@@ -265,8 +256,8 @@ export default function PhoneVerifyPage() {
               </div>
             ) : null}
 
-            <div className="mt-4 rounded-bp-lg border border-white/8 bg-white/[0.02] p-3.5 text-xs leading-5 text-white/46">
-              Codes expire after 10 minutes. If you do not receive one, switch between SMS and voice delivery and confirm the number is typed in full international format.
+            <div className="mt-4 rounded-bp-lg border border-white/8 bg-white/[0.02] p-3.5 text-xs leading-5 text-white/72">
+              Codes expire after 10 minutes. If one does not arrive, try the other delivery option and check your number.
             </div>
           </div>
         </div>
@@ -285,5 +276,6 @@ function getOtpError(error: unknown, fallback: string) {
   const message = response?.data?.message;
   const retryAfter = response?.data?.retryAfter ?? response?.headers?.['retry-after'];
   const text = typeof message === 'string' ? message : message?.message;
-  return retryAfter ? `${text || fallback} Retry after ${retryAfter} seconds.` : (text || fallback);
+  if (/captcha|challenge|browser/i.test(text || '')) return 'Verification failed. Try again or switch browser.';
+  return retryAfter ? `Try again in ${retryAfter} seconds.` : fallback;
 }

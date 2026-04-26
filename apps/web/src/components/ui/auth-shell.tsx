@@ -7,23 +7,23 @@ import { cn } from '@/lib/utils';
 const proofItems = [
   {
     icon: ShieldCheck,
-    title: 'One auth path',
-    text: 'Email, OAuth, recovery, and phone verification move through one calmer Burner Point entry flow.',
+    title: 'Simple sign in',
+    text: 'Use email, phone, or a trusted account to get back in quickly.',
   },
   {
     icon: Globe2,
-    title: 'Global verification',
-    text: 'Phone verification is designed around international numbers instead of country-locked account setup.',
+    title: 'Global access',
+    text: 'Use Burner Point wherever supported products are available.',
   },
   {
     icon: MessageSquareText,
-    title: 'Cleaner UX',
-    text: 'Users see direct next steps, privacy-first copy, and fewer dead-end redirects.',
+    title: 'Clear next steps',
+    text: 'Every screen tells you exactly what to do next.',
   },
   {
     icon: Smartphone,
     title: 'Web and mobile ready',
-    text: 'The same Burner Point language scales across browser and Expo surfaces.',
+    text: 'The same clean experience carries across browser and mobile.',
   },
 ];
 
@@ -53,17 +53,17 @@ export function AuthShell({
       <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-[96rem] gap-6 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_minmax(28rem,34rem)] lg:items-center lg:px-6 xl:px-8">
         <section className={cn('hidden rounded-[2rem] border border-white/8 bg-[linear-gradient(135deg,rgba(1,50,32,0.92),rgba(0,0,0,0.96)_58%)] p-8 shadow-[0_40px_120px_rgba(0,0,0,0.42)] lg:flex lg:min-h-[44rem] lg:flex-col lg:justify-between', className)}>
           <div>
-            <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
-              <Image src="/assets/logo-mark.svg" alt="" width={30} height={30} />
-              <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={172} height={30} />
+            <Link href="/" className="inline-flex items-center gap-2.5" aria-label="Burner Point home">
+              <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} className="h-8 w-8 sm:h-9 sm:w-9" />
+              <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={166} height={26} className="h-[1.15rem] w-auto sm:h-5" />
             </Link>
 
-            <p className="mt-10 font-mono text-[11px] uppercase tracking-[0.24em] text-brand-green">Authentication rebuilt</p>
+            <p className="mt-10 font-mono text-[11px] uppercase tracking-[0.24em] text-brand-green">Account access</p>
             <h1 className="mt-5 max-w-[11ch] text-[3.6rem] font-semibold uppercase leading-[0.9] text-white xl:text-[4.4rem]">
               {asideTitle || 'Private entry that feels calm, direct, and fast.'}
             </h1>
-            <p className="mt-5 max-w-xl text-base leading-8 text-white/62">
-              {asideDescription || 'Burner Point should feel like a premium communication platform from the first screen, not a technical control panel. This shell keeps the language focused on what people can do next while preserving the cyber-green brand system.'}
+            <p className="mt-5 max-w-xl text-base leading-8 text-white/72">
+              {asideDescription || 'Access your private numbers, codes, rentals, travel data, proxies, billing, and support from one clean account.'}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -85,7 +85,7 @@ export function AuthShell({
                     <Icon className="h-5 w-5" />
                   </div>
                   <h2 className="mt-4 text-base font-semibold text-white">{item.title}</h2>
-                  <p className="mt-2 text-sm leading-6 text-white/56">{item.text}</p>
+                  <p className="mt-2 text-sm leading-6 text-white/72">{item.text}</p>
                 </article>
               );
             })}
@@ -95,13 +95,13 @@ export function AuthShell({
         <section className="bp-card rounded-[2rem] p-4 sm:p-5 md:p-6">
           <div className="rounded-[1.6rem] border border-white/8 bg-black/24 p-5 sm:p-6">
             <div className="mb-6">
-              <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
-                <Image src="/assets/logo-mark.svg" alt="" width={26} height={26} />
-                <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={156} height={28} />
+              <Link href="/" className="inline-flex items-center gap-2.5" aria-label="Burner Point home">
+                <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} className="h-8 w-8" />
+                <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={156} height={26} className="h-[1.15rem] w-auto" />
               </Link>
               <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Account access</p>
               <h2 className="mt-3 text-[2rem] font-semibold leading-none text-white sm:text-[2.35rem]">{title}</h2>
-              <p className="mt-3 max-w-lg text-sm leading-6 text-white/56">{description}</p>
+              <p className="mt-3 max-w-lg text-sm leading-6 text-white/72">{description}</p>
             </div>
 
             {children}
@@ -110,9 +110,9 @@ export function AuthShell({
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-brand-green" />
                 <div>
-                  <p className="text-sm font-semibold text-white">One account across numbers, inbox, verification, billing, and support.</p>
-                  <p className="mt-1.5 text-sm leading-6 text-white/52">
-                    Sign in with email or OAuth, recover access safely, and verify your account phone from the dedicated secure step without re-onboarding loops.
+                  <p className="text-sm font-semibold text-white">One account for every Burner Point product.</p>
+                  <p className="mt-1.5 text-sm leading-6 text-white/72">
+                    Access numbers, codes, rentals, eSIM orders, proxy plans, billing, and support.
                   </p>
                   <Link href="/pricing" className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-brand-green transition hover:gap-3">
                     View pricing
