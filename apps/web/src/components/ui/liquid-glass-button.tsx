@@ -142,6 +142,7 @@ type ColorVariant = 'default' | 'primary' | 'success' | 'error' | 'gold' | 'bron
 
 interface MetalButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ColorVariant;
+  asChild?: boolean;
 }
 
 const colorVariants: Record<
@@ -253,10 +254,11 @@ const ShineEffect = ({ isPressed }: { isPressed: boolean }) => {
   );
 };
 
-const MetalButton = React.forwardRef<HTMLButtonElement, MetalButtonProps>(({ children, className, variant = 'default', ...props }, ref) => {
+const MetalButton = React.forwardRef<HTMLButtonElement, MetalButtonProps>(({ children, className, variant = 'default', asChild = false, ...props }, ref) => {
   const [isPressed, setIsPressed] = React.useState(false);
   const [isHovered, setIsHovered] = React.useState(false);
   const [isTouchDevice, setIsTouchDevice] = React.useState(false);
+  const Comp = asChild ? Slot : 'button';
 
   React.useEffect(() => {
     setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
@@ -268,7 +270,7 @@ const MetalButton = React.forwardRef<HTMLButtonElement, MetalButtonProps>(({ chi
   return (
     <div className={variants.wrapper} style={variants.wrapperStyle}>
       <div className={variants.inner} style={variants.innerStyle} />
-      <button
+      <Comp
         ref={ref}
         className={cn(variants.button, className)}
         style={variants.buttonStyle}
@@ -291,7 +293,7 @@ const MetalButton = React.forwardRef<HTMLButtonElement, MetalButtonProps>(({ chi
         {isHovered && !isPressed && !isTouchDevice ? (
           <div className="pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-t from-transparent to-white/5" />
         ) : null}
-      </button>
+      </Comp>
     </div>
   );
 });
@@ -314,4 +316,64 @@ function LinkButton({
   );
 }
 
-export { Button, buttonVariants, liquidbuttonVariants, LiquidButton, MetalButton, LinkButton };
+function LiquidLink({
+  href,
+  className,
+  children,
+  variant,
+  size,
+}: {
+  href: string;
+  className?: string;
+  children: React.ReactNode;
+  variant?: VariantProps<typeof liquidbuttonVariants>['variant'];
+  size?: VariantProps<typeof liquidbuttonVariants>['size'];
+}) {
+  return (
+    <Link href={href} className={cn('relative inline-flex active:scale-[0.98]', liquidbuttonVariants({ variant, size, className }))}>
+      <div
+        className="absolute left-0 top-0 z-0 h-full w-full rounded-full border border-white/15 bg-[linear-gradient(135deg,rgba(229,231,235,0.32),rgba(0,255,157,0.16)_45%,rgba(1,50,32,0.82))] shadow-[0_0_6px_rgba(0,0,0,0.03),0_2px_6px_rgba(0,0,0,0.08),inset_3px_3px_0.5px_-3px_rgba(255,255,255,0.26),inset_-3px_-3px_0.5px_-3px_rgba(0,0,0,0.65),inset_0_0_16px_4px_rgba(0,255,157,0.12),0_0_18px_rgba(255,255,255,0.06)] transition-all"
+      />
+      <div
+        className="absolute left-0 top-0 isolate -z-10 h-full w-full overflow-hidden rounded-full"
+        style={{ backdropFilter: 'url("#container-glass")' }}
+      />
+      <div className="pointer-events-none z-10">{children}</div>
+      <GlassFilter />
+    </Link>
+  );
+}
+
+function MetalLink({
+  href,
+  children,
+  className,
+  variant = 'default',
+}: {
+  href: string;
+  children: React.ReactNode;
+  className?: string;
+  variant?: ColorVariant;
+}) {
+  const colors = colorVariants[variant];
+
+  return (
+    <div className={cn('relative inline-flex transform-gpu rounded-md p-[1.25px] will-change-transform shadow-[0_3px_8px_rgba(0,0,0,0.08)]', colors.outer)}>
+      <div className={cn('absolute inset-[1px] rounded-lg', colors.inner)} />
+      <Link
+        href={href}
+        className={cn(
+          'relative z-10 m-[1px] inline-flex h-11 items-center justify-center overflow-hidden rounded-md px-6 py-2 text-sm font-semibold leading-none outline-none transition duration-200 hover:brightness-105 active:scale-[0.98]',
+          colors.button,
+          colors.textColor,
+          colors.textShadow,
+          className,
+        )}
+      >
+        {children}
+      </Link>
+    </div>
+  );
+}
+
+export { Button, buttonVariants, liquidbuttonVariants, LiquidButton, LiquidLink, MetalButton, MetalLink, LinkButton };

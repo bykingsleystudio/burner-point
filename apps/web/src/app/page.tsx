@@ -1,27 +1,30 @@
 import Link from 'next/link';
 import {
   ArrowRight,
-  CalendarDays,
-  Check,
   Globe2,
-  Lock,
-  MessageSquare,
+  LockKeyhole,
+  MessageSquareText,
   Phone,
+  Route,
+  Server,
   ShieldCheck,
   Smartphone,
-  Wifi,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { BrandMotionBanners } from '@/components/brand-motion-banners';
-import { LandingHero } from '@/components/landing-hero';
 import { LandingPricingSection } from '@/components/landing-pricing-section';
-import { BulletList, Eyebrow, MarketingShell } from '@/components/marketing';
+import { Eyebrow, MarketingShell } from '@/components/marketing';
+import { TestimonialCard, type Testimonial } from '@/components/ui/sign-in';
+import { LiquidLink, MetalLink } from '@/components/ui/liquid-glass-button';
+import { SplineScene } from '@/components/ui/splite';
+import { getAllIsoAlpha2Sorted, isoToFlagEmoji } from '@/lib/iso-countries';
 import { buildMetadata, siteName, siteTagline, siteUrl } from '@/lib/seo';
 
 export const metadata = buildMetadata({
   route: '/',
   title: siteTagline,
-  description: 'Generate secure, non-VoIP numbers instantly and stay in control of your communication anytime, anywhere.',
+  description:
+    'Private telecom access for verification, rentals, messaging, eSIM, proxies, and secure routing inside one premium Burner Point platform.',
 });
 
 const homeStructuredData = [
@@ -29,7 +32,8 @@ const homeStructuredData = [
     '@context': 'https://schema.org',
     '@type': 'WebPage',
     name: `${siteName} - ${siteTagline}`,
-    description: 'Generate secure, non-VoIP numbers instantly and stay in control of your communication anytime, anywhere.',
+    description:
+      'Private telecom access for verification, rentals, messaging, eSIM, proxies, and secure routing inside one premium Burner Point platform.',
     url: siteUrl,
     isPartOf: {
       '@type': 'WebSite',
@@ -42,201 +46,133 @@ const homeStructuredData = [
     '@type': 'ItemList',
     name: 'Burner Point core products',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Phone Number Rentals and Verifications', url: `${siteUrl}/verifications` },
-      { '@type': 'ListItem', position: 2, name: 'eSIM Purchase', url: `${siteUrl}/esim` },
-      { '@type': 'ListItem', position: 3, name: 'Proxies Purchase', url: `${siteUrl}/proxies` },
-      { '@type': 'ListItem', position: 4, name: 'VPN Privacy and Protection', url: `${siteUrl}/security` },
+      { '@type': 'ListItem', position: 1, name: 'BP Verify Hub', url: `${siteUrl}/dashboard/verification` },
+      { '@type': 'ListItem', position: 2, name: 'BP Number Rentals', url: `${siteUrl}/dashboard/rentals` },
+      { '@type': 'ListItem', position: 3, name: 'BP Messenger', url: `${siteUrl}/dashboard/inbox` },
+      { '@type': 'ListItem', position: 4, name: 'BP eSIM Store', url: `${siteUrl}/dashboard/esim` },
+      { '@type': 'ListItem', position: 5, name: 'BP Secure Tunnel', url: `${siteUrl}/dashboard/vpn` },
     ],
   },
 ];
 
-const heroProof: Array<[string, string]> = [
-  ['900+', 'Platforms worldwide'],
-  ['SMS', 'OTP and messages'],
-  ['Voice', 'Call verification'],
-  ['WiFi & Data', 'Private communication'],
+const heroMetrics = [
+  { label: 'Active Lines', value: '06', detail: 'Private number surfaces live now' },
+  { label: 'OTP Success', value: '99.2%', detail: 'Fast delivery across verification flows' },
+  { label: 'Regions Live', value: '180+', detail: 'Global reach for access and routing' },
 ];
 
-const howSteps = [
-  ['01', 'Choose your number', 'Pick a country and area code, then activate a secure non-VoIP number.'],
-  ['02', 'Use it privately', 'Use it for verification, calls, messaging, rentals, or controlled account access.'],
-  ['03', 'Receive instantly', 'View SMS, OTP, voice, MMS, voicemail, and audio, photo and video activity in one private inbox.'],
-  ['04', 'Expire or keep it', 'Let the number expire when the job is done, or keep it as long as you want.'],
-];
-
-const whyBurnerPoint = [
-  'Real mobile numbers backed by physical SIMs',
-  'Works across major platforms and services',
-  'Fast, reliable verification delivery',
-  'Full privacy with no personal exposure',
-  'Built for global access and flexibility',
-  'Communication via WiFi & Data',
-];
-
-const offerCards: Array<{ icon: LucideIcon; title: string; text: string; href: string; cta: string; items: string[] }> = [
-  {
-    icon: Smartphone,
-    title: 'Non-VoIP Phone Numbers',
-    text: 'Use secure, SIM-backed numbers for registrations, recovery, and private access.',
-    href: '/numbers',
-    cta: 'Get Your Number',
-    items: ['Multi-country number access', 'Country and area-code selection', 'Short-term or renewable access'],
-  },
-  {
-    icon: ShieldCheck,
-    title: 'SMS and OTP Verification',
-    text: 'Receive SMS, OTP, and voice verification without exposing your personal number.',
-    href: '/verifications',
-    cta: 'Get Verification',
-    items: ['SMS and OTP support', 'Voice call verification', 'Social and platform verification'],
-  },
-  {
-    icon: CalendarDays,
-    title: 'Temporary and Long-Term Rentals',
-    text: 'Rent numbers for one-time workflows or keep them active for ongoing access.',
-    href: '/rentals',
-    cta: 'Rent A Number',
-    items: ['Non-renewable rentals', 'Renewable monthly rentals', 'Expiration and renewal control'],
-  },
-  {
-    icon: MessageSquare,
-    title: 'Private Communication',
-    text: 'Calls, voicemail, texting, SMS, and secure audio, photo and video sharing for U.S. and Canada numbers.',
-    href: '/rentals',
-    cta: 'Rent A Number',
-    items: ['Free texting', 'Audio, photo and video support', 'WiFi & Data calling'],
-  },
-];
-
-const conversationItems = [
-  'Phone numbers for non-renewable and renewable rentals',
-  'Free texting',
-  'WiFi & Data calling',
-  'Texting, SMS, MMS, calls, and voicemail',
-  'No roaming fees',
-  'Cross-platform access',
-  'Calls, voicemail, texting, SMS, and secure audio, photo and video sharing for U.S. and Canada numbers',
-];
-
-const useCases = [
-  'Online registrations',
-  'Marketplaces',
-  'Business communication',
-  'Dating platforms',
-  'Travel communication',
-  'Everyday privacy protection',
-  'Personal communication',
-];
-
-const expandedFeatures: Array<{
-  eyebrow: string;
+const serviceCards: Array<{
   title: string;
-  text: string;
+  href: string;
+  cta: string;
   icon: LucideIcon;
-  primaryCta: { label: string; href: string };
-  secondaryCta?: { label: string; href: string };
-  stats: Array<[string, string]>;
-  items: string[];
+  text: string;
+  eyebrow: string;
 }> = [
   {
-    eyebrow: 'Phone Number Rentals & Verifications',
-    title: 'Secure access to real mobile numbers for verification and private communication.',
-    text:
-      'Use Burner Point for SMS, OTP, voice verification, short-term rentals, long-term rentals, and US/Canada conversation numbers with calls, voicemail, texting, SMS, and secure audio, photo and video sharing for U.S. and Canada numbers.',
+    title: 'BP Messenger',
+    href: '/dashboard/inbox',
+    cta: 'Learn more',
+    icon: MessageSquareText,
+    eyebrow: 'Messaging',
+    text: 'Private threads, voice context, voicemail, and number-bound message history inside one calmer inbox.',
+  },
+  {
+    title: 'BP Verify Hub',
+    href: '/dashboard/verification',
+    cta: 'Learn more',
+    icon: ShieldCheck,
+    eyebrow: 'Verification',
+    text: 'Run SMS and voice verification workflows with faster routing, cleaner visibility, and less personal exposure.',
+  },
+  {
+    title: 'BP Rentals',
+    href: '/dashboard/rentals',
+    cta: 'Learn more',
     icon: Phone,
-    primaryCta: { label: 'Get Verification', href: '/verifications' },
-    secondaryCta: { label: 'Rent A Number', href: '/rentals' },
-    stats: [
-      ['900+', 'platforms'],
-      ['US/CA', 'conversation'],
-      ['SMS', 'OTP + voice'],
-    ],
-    items: [
-      'Real mobile numbers backed by SIM inventory',
-      'Calls, voicemail, texting, SMS, and secure audio, photo and video sharing for U.S. and Canada numbers',
-      'Short-term rentals, long-term rentals, and multi-country number access',
-      'Verification workflows for online registrations, social platforms, marketplaces, and recovery',
-    ],
+    eyebrow: 'Numbers',
+    text: 'Choose temporary or renewable number rentals for registrations, recovery, short-term operations, and protected communication.',
   },
   {
+    title: 'BP eSIM Store',
+    href: '/dashboard/esim',
+    cta: 'Learn more',
     icon: Smartphone,
-    eyebrow: 'eSIM Purchase',
-    title: 'eSIM Purchase',
-    text:
-      'Travel with global connectivity without physical SIM cards. Burner Point eSIM plans are built for instant activation, multi-country access, and data control from one privacy-first account.',
-    primaryCta: { label: 'Get Your eSIM', href: '/esim' },
-    stats: [
-      ['Instant', 'activation'],
-      ['Multi', 'country'],
-      ['Data', 'control'],
-    ],
-    items: [
-      'Travel-ready connectivity without swapping physical SIMs',
-      'Instant activation with destination-ready data plans',
-      'Multi-country coverage for work, travel, and backup access',
-      'In-account data status, plan visibility, and usage control',
-    ],
+    eyebrow: 'Travel data',
+    text: 'Travel-ready data plans with quick activation and multi-country coverage, all without swapping physical SIM cards.',
   },
   {
-    icon: Globe2,
-    eyebrow: 'Proxies Purchase',
-    title: 'Proxies Purchase',
-    text:
-      'Route sensitive workflows with more control. Burner Point proxy access is positioned around secure access, routing flexibility, residential/mobile proxy options, and privacy-enhanced browsing.',
-    primaryCta: { label: 'Get Proxies', href: '/proxies' },
-    stats: [
-      ['Mobile', 'proxy type'],
-      ['Region', 'control'],
-      ['Private', 'routing'],
-    ],
-    items: [
-      'Residential and mobile proxy access for supported workflows',
-      'Location flexibility for browsing, testing, and account separation',
-      'Provider abstraction so proxy credentials stay controlled',
-      'Routing visibility, session state, and durability messaging',
-    ],
+    title: 'BP Proxy Store',
+    href: '/dashboard/proxies',
+    cta: 'Learn more',
+    icon: Server,
+    eyebrow: 'Routing',
+    text: 'Secure proxy access for location-aware workflows, task separation, and cleaner operational privacy.',
   },
   {
-    icon: Lock,
-    eyebrow: 'VPN Privacy & Protection',
-    title: 'VPN Privacy and Protection',
-    text:
-      'This is built into Burner Point as an in-platform privacy layer, not sold as a standalone VPN product. It helps reduce exposure while using numbers, messages, billing, eSIM, and routing tools.',
-    primaryCta: { label: 'Learn More', href: '/overview' },
-    secondaryCta: { label: 'See Security', href: '/security' },
-    stats: [
-      ['Built-in', 'feature'],
-      ['Secure', 'routing'],
-      ['Reduced', 'exposure'],
-    ],
-    items: [
-      'Seamless protection while using Burner Point',
-      'Secure routing designed to reduce account and network exposure',
-      'No standalone VPN positioning or noisy add-on experience',
-      'Works alongside numbers, eSIM, proxies, and account security controls',
-    ],
+    title: 'BP Secure Tunnel',
+    href: '/dashboard/vpn',
+    cta: 'Learn more',
+    icon: Route,
+    eyebrow: 'Protection',
+    text: 'Integrated security and routing controls that protect the rest of your Burner Point workflow instead of living as a noisy add-on.',
   },
 ];
 
-const quickActions = [
-  { href: '/overview', label: 'Learn More' },
-  { href: '/api/docs', label: 'View API Docs' },
-  { href: '/verifications', label: 'Get Verification' },
-  { href: '/rentals', label: 'Rent A Number' },
-  { href: '/pricing', label: 'Start Monthly Plan' },
-  { href: '/numbers', label: 'Get Your Number' },
-  { href: '/pricing', label: 'View Pricing' },
+const capabilityRows = [
+  'Real mobile-number access',
+  'Non-VoIP verification flows',
+  'Short-term and renewable rentals',
+  'Private messaging and voice context',
+  'Travel data through eSIM activation',
+  'Protected routing and secure tunnel control',
 ];
 
-const sectionAnchors = [
-  { href: '#how-it-works', label: 'How It Works' },
-  { href: '#why-burner-point', label: 'Why Burner Point' },
-  { href: '#what-we-offer', label: 'What We Offer' },
-  { href: '#conversation', label: 'Conversation' },
-  { href: '#pricing', label: 'Pricing' },
-  { href: '#privacy-platform', label: 'Privacy Stack' },
-  { href: '#use-cases', label: 'Use Cases' },
+const testimonials: Testimonial[] = [
+  {
+    avatarSrc:
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
+    name: 'Amina O.',
+    handle: 'Operations Lead',
+    text: 'Burner Point made number rentals and OTP delivery feel immediate instead of fragile. The flow is calm and the routing is reliable.',
+  },
+  {
+    avatarSrc:
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
+    name: 'Daniel K.',
+    handle: 'Growth Builder',
+    text: 'The platform finally feels premium. Verification, messaging, and account privacy now live in one place instead of six scattered tools.',
+  },
+  {
+    avatarSrc:
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80',
+    name: 'Priya S.',
+    handle: 'Privacy Consultant',
+    text: 'The product language is direct, the pricing is clear, and the private-number workflow is far easier to trust than generic verification sites.',
+  },
 ];
+
+const faqItems = [
+  {
+    question: 'What does Burner Point actually replace?',
+    answer:
+      'Burner Point brings private numbers, verification, rentals, messaging, eSIM, proxy access, and secure routing into one account so users do not need separate tools for each step.',
+  },
+  {
+    question: 'Can I go straight from sign-up into the dashboard?',
+    answer:
+      'Yes. Email, OAuth, and phone-based entry are designed to move directly into the account workspace once authentication and required verification are complete.',
+  },
+  {
+    question: 'Is Burner Point only for one-time OTP codes?',
+    answer:
+      'No. It supports one-time verification, renewable rentals, private conversation workflows, travel data, routing, and longer-lived account separation.',
+  },
+];
+
+const allIsoCodes = getAllIsoAlpha2Sorted();
+const flagPreview = allIsoCodes.slice(0, 54);
+const splineScene = process.env.NEXT_PUBLIC_BP_SPLINE_SCENE?.trim();
 
 export default function Home() {
   return (
@@ -247,282 +183,309 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeStructuredData) }}
       />
       <MarketingShell>
-      <LandingHero heroProof={heroProof} quickActions={quickActions} />
-
-      <BrandMotionBanners />
-
-      <section className="sticky top-20 z-40 hidden border-y border-white/6 bg-brand-black/82 backdrop-blur-xl xl:block">
-        <div className="mx-auto grid max-w-[1680px] grid-cols-12 items-center gap-5 px-10 py-4">
-          <nav className="col-span-9 flex items-center gap-2" aria-label="Homepage section navigation">
-            {sectionAnchors.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="rounded-bp border border-white/8 bg-white/[0.025] px-4 py-2 font-mono text-[10px] font-semibold uppercase text-white/48 transition hover:-translate-y-0.5 hover:border-brand-green/32 hover:bg-brand-green/8 hover:text-brand-green"
-              >
-                {item.label}
-              </a>
-            ))}
-          </nav>
-          <div className="col-span-3 flex justify-end gap-3">
-            <Link href="/auth/signup" className="bp-primary-action inline-flex min-h-11 items-center justify-center px-5 py-3 text-xs font-semibold uppercase">
-              Get Started
-            </Link>
-            <Link href="/auth/login" className="bp-secondary-action inline-flex min-h-11 items-center justify-center px-5 py-3 text-xs font-semibold uppercase">
-              Sign In
-            </Link>
-            <Link href="/api/docs" className="bp-secondary-action inline-flex min-h-11 items-center justify-center px-5 py-3 text-xs font-semibold uppercase">
-              API Docs
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <div className="bp-divider" />
-
-      <section className="bp-section-shell relative scroll-mt-28 py-16 md:py-24" id="how-it-works" aria-labelledby="how-it-works-title">
-        <div className="mx-auto max-w-[1680px] px-5 sm:px-6 xl:px-10">
-          <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
-            <div className="lg:col-span-4">
-              <Eyebrow>How It Works</Eyebrow>
-              <h2 id="how-it-works-title" className="text-4xl font-black uppercase leading-none text-white md:text-6xl">Four controlled steps.</h2>
-            </div>
-            <p className="max-w-3xl text-base leading-8 text-white/58 lg:col-span-5">
-              Desktop flows stay scannable and dense: choose inventory, use it privately, monitor delivery, then expire or renew with clear state.
-            </p>
-          </div>
-          <div className="mt-10 grid gap-5 lg:grid-cols-4">
-            {howSteps.map(([number, title, text]) => (
-              <article key={number} className="rounded-bp-lg border border-white/8 bg-white/[0.025] p-5 transition duration-300 hover:-translate-y-1 hover:border-brand-green/30 hover:bg-brand-green/[0.055] hover:shadow-[0_30px_80px_rgba(0,255,157,0.09)] md:p-6">
-                <div className="font-mono text-5xl font-semibold text-white/10">{number}</div>
-                <h3 className="mt-6 font-mono text-lg font-semibold uppercase text-white">{title}</h3>
-                <p className="mt-4 text-sm leading-7 text-white/58">{text}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="bp-section-shell relative scroll-mt-28 py-16 md:py-24" id="why-burner-point" aria-labelledby="why-burner-point-title">
-        <div className="mx-auto grid max-w-[1680px] gap-10 px-5 sm:px-6 lg:grid-cols-12 lg:items-start xl:px-10">
-          <div className="lg:col-span-5">
-            <Eyebrow>Why Burner Point</Eyebrow>
-            <h2 id="why-burner-point-title" className="max-w-3xl text-4xl font-black uppercase leading-[0.98] text-white md:text-7xl">
-              Real access. Less exposure.
-            </h2>
-            <p className="mt-6 text-base leading-8 text-white/60">
-              Burner Point is built for users who need communication access without turning their personal number into a permanent internet identifier.
-            </p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:col-span-7">
-            {whyBurnerPoint.map((item) => (
-              <div key={item} className="rounded-bp-lg border border-white/8 bg-white/[0.025] p-5 transition hover:-translate-y-0.5 hover:border-brand-green/28 hover:bg-brand-green/[0.045]">
-                <Check className="h-5 w-5 text-brand-green" />
-                <p className="mt-4 text-sm font-semibold leading-6 text-white/74">{item}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <div className="bp-divider" />
-
-      <section className="bp-section-shell relative scroll-mt-28 py-16 md:py-24" id="what-we-offer" aria-labelledby="what-we-offer-title">
-        <div className="mx-auto max-w-[1680px] px-5 sm:px-6 xl:px-10">
-          <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-            <div>
-              <Eyebrow>What We Offer</Eyebrow>
-              <h2 id="what-we-offer-title" className="max-w-4xl text-4xl font-black uppercase leading-[0.98] text-white md:text-7xl">
-                Numbers, verifications, rentals, and conversations.
-              </h2>
-              <p className="mt-5 max-w-3xl text-base leading-8 text-white/60">
-                One controlled place for non-VoIP numbers, SMS, OTP, voice verification, multi-country access, platform support, and US/Canada private communication.
+        <section className="bp-section-shell relative overflow-hidden pb-12 pt-8 md:pb-20 md:pt-12">
+          <div className="mx-auto grid max-w-[1680px] gap-8 px-5 sm:px-6 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-center xl:px-10">
+            <div className="max-w-3xl">
+              <Eyebrow>Private Telecom Infrastructure</Eyebrow>
+              <h1 className="bp-headline max-w-[12ch] text-5xl leading-[0.9] text-white sm:text-6xl md:text-7xl xl:text-[6.2rem]">
+                Don&apos;t want to give out your phone number?
+                <span className="mt-3 block bp-metal-text">No problem. Use ours.</span>
+              </h1>
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-white/68 md:text-xl md:leading-9">
+                Private by Design. Stay Anonymous. Stay Connected.
               </p>
-            </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Link href="/auth/signup" className="bp-primary-action inline-flex min-h-12 items-center justify-center px-6 py-4 text-sm font-semibold uppercase">
-                Get Started
-              </Link>
-              <Link href="/pricing" className="bp-secondary-action inline-flex min-h-12 items-center justify-center px-6 py-4 text-sm font-semibold uppercase">
-                View Pricing
-              </Link>
-            </div>
-          </div>
-          <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            {offerCards.map((card) => {
-              const Icon = card.icon;
-              return (
-                <article key={card.title} className="bp-card rounded-bp-lg p-5 transition duration-300 hover:-translate-y-1 hover:border-brand-green/28 hover:shadow-[0_34px_90px_rgba(0,255,157,0.11)] md:p-6">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-bp-md border border-brand-green/20 bg-brand-green/10">
-                    <Icon className="h-6 w-6 text-brand-green" />
+              <p className="mt-4 max-w-2xl text-base leading-8 text-white/56">
+                Generate secure, non-VoIP numbers instantly and keep messages, voice, rentals, eSIM, and protected routing
+                inside one calmer Burner Point surface.
+              </p>
+
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <div className="group relative inline-flex">
+                  <span className="pointer-events-none absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(0,255,157,0.34),transparent_68%)] opacity-0 blur-2xl transition duration-300 group-hover:opacity-100" />
+                  <MetalLink href="/auth/signup" variant="primary">
+                    <span className="inline-flex items-center gap-2 px-1">
+                      Get Started
+                      <ArrowRight className="h-4 w-4" />
+                    </span>
+                  </MetalLink>
+                </div>
+                <LiquidLink href="/pricing" className="text-white">
+                  <span className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white">
+                    View Pricing
                   </span>
-                  <h3 className="mt-6 font-mono text-lg font-semibold uppercase text-white">{card.title}</h3>
-                  <p className="mt-4 text-sm leading-7 text-white/58">{card.text}</p>
-                  <div className="mt-6">
-                    <BulletList items={card.items} />
-                  </div>
-                  <Link href={card.href} className="bp-primary-action mt-7 inline-flex min-h-12 w-full items-center justify-center px-5 py-4 text-sm font-semibold uppercase">
-                    {card.cta}
-                  </Link>
-                </article>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+                </LiquidLink>
+                <Link href="/auth/login" className="bp-secondary-action inline-flex min-h-12 items-center justify-center rounded-full px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em]">
+                  Sign In
+                </Link>
+              </div>
 
-      <section className="bp-section-shell relative scroll-mt-28 py-16 md:py-24" id="conversation" aria-labelledby="conversation-title">
-        <div className="mx-auto grid max-w-[1680px] gap-8 px-5 sm:px-6 lg:grid-cols-12 lg:items-center xl:px-10">
-          <div className="rounded-bp-lg border border-brand-green/14 bg-brand-green/[0.055] p-7 md:p-9 lg:col-span-5">
-            <Eyebrow>Conversation Section</Eyebrow>
-            <h2 id="conversation-title" className="text-4xl font-black uppercase leading-[0.98] text-white md:text-7xl">
-              Talk, text, and receive codes over WiFi & Data.
-            </h2>
-            <p className="mt-6 text-base leading-8 text-white/60">
-              Conversation numbers support private communication for USA and Canada, with calls, voicemail, text, SMS, MMS, and audio, photo and video sharing connected to the same Burner Point identity.
-            </p>
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-              <Link href="/rentals" className="bp-primary-action inline-flex min-h-12 items-center justify-center px-7 py-4 text-sm font-semibold uppercase">
-                Rent A Number
-              </Link>
-              <Link href="/overview" className="bp-secondary-action inline-flex min-h-12 items-center justify-center px-7 py-4 text-sm font-semibold uppercase">
-                Learn More
-              </Link>
+              <div className="mt-4 flex flex-wrap gap-4 text-sm text-white/52">
+                <Link href="/overview" className="inline-flex items-center gap-2 transition hover:text-brand-green">
+                  Learn More
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link href="/api/docs" className="inline-flex items-center gap-2 transition hover:text-brand-green">
+                  View API Docs
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+
+              <div className="mt-10 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {capabilityRows.map((item) => (
+                  <div key={item} className="rounded-[1.25rem] border border-white/8 bg-white/[0.025] px-4 py-3 text-sm text-white/70">
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="bp-card relative min-h-[24rem] overflow-hidden rounded-[2rem] p-4 sm:min-h-[30rem] lg:min-h-[42rem]">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(0,255,157,0.18),transparent_24%),radial-gradient(circle_at_82%_18%,rgba(57,255,20,0.1),transparent_20%),linear-gradient(180deg,rgba(1,50,32,0.4),rgba(0,0,0,0.08))]" />
+                <div className="absolute left-5 top-5 z-10 rounded-full border border-brand-green/24 bg-brand-green/10 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">
+                  Telecom scene
+                </div>
+                <div className="absolute inset-0">
+                  {splineScene ? <SplineScene scene={splineScene} className="h-full w-full" /> : <TelecomHeroFallback />}
+                </div>
+                <div className="absolute bottom-4 left-4 right-4 z-10 grid gap-3 sm:grid-cols-3">
+                  {[
+                    { label: 'Messaging', value: 'Private threads' },
+                    { label: 'Verification', value: 'Live OTP routing' },
+                    { label: 'Security', value: 'Protected sessions' },
+                  ].map((item) => (
+                    <div key={item.label} className="rounded-[1.25rem] border border-white/10 bg-black/38 px-4 py-3 backdrop-blur-xl">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">{item.label}</p>
+                      <p className="mt-2 text-sm text-white/76">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:col-span-7">
-            {conversationItems.map((item) => (
-              <div key={item} className="rounded-bp-lg border border-white/8 bg-white/[0.025] p-5 text-sm font-semibold leading-6 text-white/70 transition hover:-translate-y-0.5 hover:border-brand-green/28 hover:text-white">
-                <Wifi className="mb-3 h-5 w-5 text-brand-green md:mb-4" />
-                {item}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <div className="bp-divider" />
-
-      <LandingPricingSection />
-
-      <section className="bp-section-shell relative scroll-mt-28 py-16 md:py-24" id="privacy-platform" aria-labelledby="privacy-platform-title">
-        <div className="mx-auto max-w-[1680px] px-5 sm:px-6 xl:px-10">
-          <div className="mb-10 max-w-5xl">
-            <Eyebrow>Feature Expansion</Eyebrow>
-            <h2 id="privacy-platform-title" className="text-4xl font-black uppercase leading-[0.98] text-white md:text-7xl">
-              Stay Anonymous. Stay Connected. Private By Design.
-            </h2>
-            <p className="mt-6 max-w-3xl text-base leading-8 text-white/60">
-              Burner Point expands from private numbers into connectivity, routing, and in-platform protection without losing the controlled telecom-grade feel.
-            </p>
-          </div>
-
-          <div className="space-y-5">
-            {expandedFeatures.map((feature, index) => {
-              const Icon = feature.icon;
-              const reverse = index % 2 === 1;
-              return (
+        <section className="bp-section-shell relative pb-12 md:pb-16">
+          <div className="mx-auto max-w-[1680px] px-5 sm:px-6 xl:px-10">
+            <div className="grid gap-4 lg:grid-cols-3">
+              {heroMetrics.map((item, index) => (
                 <article
-                  key={feature.eyebrow}
-                  className="rounded-bp-lg border border-brand-green/12 bg-[linear-gradient(135deg,rgba(0,255,157,0.09),rgba(0,0,0,0.94)_58%)] p-5 transition duration-300 hover:border-brand-green/26 hover:shadow-[0_34px_100px_rgba(0,255,157,0.1)] md:p-7"
+                  key={item.label}
+                  className="animate-element rounded-[1.6rem] border border-white/8 bg-[linear-gradient(180deg,rgba(1,50,32,0.78),rgba(0,0,0,0.92))] p-5"
+                  style={{ animationDelay: `${index * 120}ms` }}
                 >
-                  <div className="grid gap-7 lg:grid-cols-12 lg:items-center">
-                    <div className={`${reverse ? 'lg:order-2' : ''} lg:col-span-5`}>
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-12 w-12 items-center justify-center rounded-bp-md border border-brand-green/20 bg-brand-green/10">
-                          <Icon className="h-6 w-6 text-brand-green" />
-                        </span>
-                        <p className="font-mono text-[10px] font-semibold uppercase text-brand-green">{feature.eyebrow}</p>
-                      </div>
-                      <h3 className="mt-6 text-2xl font-black uppercase leading-none text-white sm:text-3xl md:text-5xl">
-                        {feature.title}
-                      </h3>
-                      <p className="mt-5 text-sm leading-7 text-white/60 md:text-base md:leading-8">
-                        {feature.text}
-                      </p>
-                      <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                        <Link href={feature.primaryCta.href} className="bp-primary-action inline-flex min-h-12 items-center justify-center px-6 py-4 text-sm font-semibold uppercase">
-                          {feature.primaryCta.label}
-                          <ArrowRight className="ml-3 h-4 w-4" />
-                        </Link>
-                        {feature.secondaryCta ? (
-                          <Link href={feature.secondaryCta.href} className="bp-secondary-action inline-flex min-h-12 items-center justify-center px-6 py-4 text-sm font-semibold uppercase">
-                            {feature.secondaryCta.label}
-                          </Link>
-                        ) : null}
-                      </div>
-                    </div>
-
-                    <div className={`rounded-bp-lg border border-white/8 bg-black/25 p-4 md:p-5 lg:col-span-7 ${reverse ? 'lg:order-1' : ''}`}>
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        {feature.stats.map(([value, label]) => (
-                          <div key={`${feature.eyebrow}-${label}`} className="rounded-bp-md border border-white/8 bg-white/[0.025] p-4">
-                            <p className="font-mono text-2xl font-semibold text-brand-green">{value}</p>
-                            <p className="mt-1 font-mono text-[10px] uppercase text-white/42">{label}</p>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-5 grid gap-3 md:grid-cols-2">
-                        {feature.items.map((item) => (
-                          <div key={item} className="rounded-bp-md border border-white/8 bg-white/[0.02] p-4">
-                            <Check className="h-4 w-4 text-brand-green" />
-                            <p className="mt-3 text-sm leading-6 text-white/68">{item}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-brand-green">{item.label}</p>
+                  <p className="mt-3 text-4xl font-semibold text-white">{item.value}</p>
+                  <p className="mt-3 text-sm leading-6 text-white/54">{item.detail}</p>
                 </article>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <section className="bp-section-shell relative scroll-mt-28 py-16 md:py-24" id="use-cases" aria-labelledby="use-cases-title">
-        <div className="mx-auto grid max-w-[1680px] gap-8 px-5 sm:px-6 lg:grid-cols-12 xl:px-10">
-          <div className="lg:col-span-5">
-            <Eyebrow>Use Cases</Eyebrow>
-            <h2 id="use-cases-title" className="text-4xl font-black uppercase leading-[0.98] text-white md:text-7xl">
-              For real-world privacy, work, travel, and personal communication.
-            </h2>
-            <p className="mt-6 text-base leading-8 text-white/60">
-              Use Burner Point anywhere you need to stay reachable without exposing your personal phone number.
-            </p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:col-span-7">
-            {useCases.map((item) => (
-              <div key={item} className="rounded-bp-lg border border-white/8 bg-white/[0.02] px-5 py-5 font-mono text-sm uppercase text-white/70 transition hover:-translate-y-0.5 hover:border-brand-green/28 hover:text-brand-green">
-                {item}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="bp-section-shell relative scroll-mt-28 py-16 md:py-28" id="start" aria-labelledby="start-title">
-        <div className="mx-auto max-w-5xl px-5 text-center sm:px-6 xl:px-8">
-          <div className="rounded-bp-lg border border-brand-green/12 bg-[linear-gradient(135deg,rgba(0,255,157,0.13),rgba(0,0,0,0.96)_62%)] p-8 md:p-12">
-            <Eyebrow>Start Privately</Eyebrow>
-            <h2 id="start-title" className="text-4xl font-black uppercase leading-[0.96] text-white md:text-8xl">
-              Get your number.
-            </h2>
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-white/60">
-              Burner Point is a privacy-focused telecommunications platform built for speed, privacy, and global access.
-            </p>
-            <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
-              <Link href="/auth/signup" className="bp-primary-action inline-flex min-h-12 items-center justify-center px-8 py-4 text-sm font-semibold uppercase">
-                Get Started
-                <ArrowRight className="ml-3 h-4 w-4" />
-              </Link>
-              <Link href="/pricing" className="bp-secondary-action inline-flex min-h-12 items-center justify-center px-8 py-4 text-sm font-semibold uppercase">
-                View Pricing
-              </Link>
+              ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+
+        <section className="bp-section-shell relative py-14 md:py-24" id="services">
+          <div className="mx-auto max-w-[1680px] px-5 sm:px-6 xl:px-10">
+            <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+              <div className="max-w-4xl">
+                <Eyebrow>Platform Services</Eyebrow>
+                <h2 className="bp-headline text-4xl leading-[0.96] text-white md:text-6xl">
+                  Every private-number workflow in one premium surface.
+                </h2>
+                <p className="mt-5 max-w-3xl text-base leading-8 text-white/58">
+                  Burner Point combines the strongest competitor patterns into one tighter experience: immediate utility, clean
+                  pricing, trust-first messaging, and a secure telecom feel instead of a generic dashboard.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {serviceCards.map((card) => {
+                const Icon = card.icon;
+                return (
+                  <article
+                    key={card.title}
+                    className="rounded-[1.75rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.9))] p-6 backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-brand-green/28 hover:shadow-[0_34px_90px_rgba(0,255,157,0.11)]"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="flex h-12 w-12 items-center justify-center rounded-[1rem] border border-brand-green/20 bg-brand-green/10">
+                        <Icon className="h-6 w-6 text-brand-green" />
+                      </span>
+                      <span className="rounded-full border border-white/10 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-white/46">
+                        {card.eyebrow}
+                      </span>
+                    </div>
+                    <h3 className="mt-6 text-xl font-semibold text-white">{card.title}</h3>
+                    <p className="mt-4 text-sm leading-7 text-white/58">{card.text}</p>
+                    <Link href={card.href} className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-brand-green transition hover:gap-3">
+                      {card.cta}
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section className="bp-section-shell relative py-14 md:py-24" id="coverage">
+          <div className="mx-auto grid max-w-[1680px] gap-8 px-5 sm:px-6 lg:grid-cols-[0.84fr_1.16fr] xl:px-10">
+            <div>
+              <Eyebrow>Coverage and Compatibility</Eyebrow>
+              <h2 className="bp-headline text-4xl leading-[0.96] text-white md:text-6xl">
+                252+ ISO regions. 900+ verification destinations.
+              </h2>
+              <p className="mt-5 text-base leading-8 text-white/58">
+                Global access should feel immediate. Burner Point shows region breadth and representative platform support without
+                burying the user in telecom jargon.
+              </p>
+              <div className="mt-8 rounded-[1.6rem] border border-brand-green/18 bg-brand-green/[0.05] p-5">
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-green">Coverage claim</p>
+                <p className="mt-3 text-sm leading-7 text-white/66">
+                  Regions are represented with ISO coverage indicators, while service marks below are identifiers only. Not
+                  affiliated or endorsed.
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-[1.8rem] border border-white/8 bg-[linear-gradient(180deg,rgba(1,50,32,0.72),rgba(0,0,0,0.94))] p-5">
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-6 lg:grid-cols-9">
+                {flagPreview.map((iso, index) => (
+                  <div
+                    key={iso}
+                    className="flex min-h-[4.25rem] flex-col items-center justify-center rounded-[1rem] border border-white/8 bg-white/[0.03] text-center"
+                  >
+                    <span className={`text-2xl ${`bp-flag-mot-${index % 8}`}`} aria-hidden="true">
+                      {isoToFlagEmoji(iso)}
+                    </span>
+                    <span className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-white/58">{iso}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <BrandMotionBanners />
+
+        <LandingPricingSection />
+
+        <section className="bp-section-shell relative py-16 md:py-24" id="testimonials">
+          <div className="mx-auto max-w-[1680px] px-5 sm:px-6 xl:px-10">
+            <div className="max-w-4xl">
+              <Eyebrow>What People Notice</Eyebrow>
+              <h2 className="bp-headline text-4xl leading-[0.96] text-white md:text-6xl">
+                Privacy, clarity, and reliability over noise.
+              </h2>
+            </div>
+            <div className="mt-10 grid gap-5 lg:grid-cols-3">
+              {testimonials.map((testimonial, index) => (
+                <div key={testimonial.handle} className="flex">
+                  <TestimonialCard testimonial={testimonial} delay={`animate-delay-${(index + 1) * 200}`} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="bp-section-shell relative py-14 md:py-24" id="faq">
+          <div className="mx-auto max-w-[1680px] px-5 sm:px-6 xl:px-10">
+            <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
+              <div>
+                <Eyebrow>FAQ</Eyebrow>
+                <h2 className="bp-headline text-4xl leading-[0.96] text-white md:text-6xl">Clear answers before sign-up.</h2>
+              </div>
+              <div className="space-y-4">
+                {faqItems.map((item) => (
+                  <article key={item.question} className="rounded-[1.5rem] border border-white/8 bg-white/[0.025] p-5">
+                    <h3 className="text-lg font-semibold text-white">{item.question}</h3>
+                    <p className="mt-3 text-sm leading-7 text-white/58">{item.answer}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="bp-section-shell relative pb-20 pt-6 md:pb-28">
+          <div className="mx-auto max-w-5xl px-5 text-center sm:px-6 xl:px-10">
+            <div className="rounded-[2rem] border border-brand-green/16 bg-[linear-gradient(135deg,rgba(0,255,157,0.12),rgba(0,0,0,0.96)_60%)] p-8 md:p-12">
+              <Eyebrow>Start Privately</Eyebrow>
+              <h2 className="bp-headline text-4xl leading-[0.92] text-white md:text-7xl">
+                Stay Anonymous. Stay Connected.
+              </h2>
+              <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-white/60">
+                Create your Burner Point account, move through one calm authentication flow, and open the dashboard with private
+                numbers, messaging, verification, and secure routing already aligned.
+              </p>
+              <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+                <MetalLink href="/auth/signup" variant="primary">
+                  <span className="inline-flex items-center gap-2 px-1">
+                    Get Started
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
+                </MetalLink>
+                <LiquidLink href="/auth/login" className="text-white">
+                  <span className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white">
+                    Sign In
+                  </span>
+                </LiquidLink>
+              </div>
+            </div>
+          </div>
+        </section>
       </MarketingShell>
     </>
+  );
+}
+
+function TelecomHeroFallback() {
+  return (
+    <div className="relative h-full w-full overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_28%,rgba(0,255,157,0.16),transparent_28%),radial-gradient(circle_at_76%_24%,rgba(57,255,20,0.12),transparent_24%)]" />
+      <div className="absolute left-[12%] top-[18%] h-[18rem] w-[8.5rem] rounded-[2rem] border border-white/12 bg-[linear-gradient(180deg,rgba(229,231,235,0.16),rgba(0,0,0,0.88))] shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:h-[21rem] sm:w-[10rem]">
+        <div className="p-4">
+          <div className="mx-auto h-1.5 w-16 rounded-full bg-white/10" />
+          <div className="mt-5 space-y-3">
+            <div className="rounded-2xl border border-brand-green/18 bg-brand-green/[0.08] p-3">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">BP Verify Hub</p>
+              <p className="mt-2 text-xs text-white/64">OTP received</p>
+              <p className="mt-1 font-mono text-lg text-white">482 119</p>
+            </div>
+            <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/46">Private route</p>
+              <p className="mt-2 text-xs text-white/64">Messaging active</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="absolute right-[10%] top-[12%] h-[20rem] w-[9rem] rounded-[2rem] border border-white/12 bg-[linear-gradient(180deg,rgba(0,255,157,0.14),rgba(0,0,0,0.92))] shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:h-[24rem] sm:w-[11rem]">
+        <div className="p-4">
+          <div className="mx-auto h-1.5 w-16 rounded-full bg-white/10" />
+          <div className="mt-5 space-y-3">
+            <div className="rounded-2xl border border-white/8 bg-black/24 p-3">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">BP Messenger</p>
+              <p className="mt-2 text-xs text-white/64">Stay connected</p>
+            </div>
+            <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/46">Secure tunnel</p>
+              <p className="mt-2 text-xs text-white/64">Protected session live</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="absolute left-1/2 top-1/2 h-[2px] w-[48%] -translate-x-1/2 -translate-y-1/2 bg-[linear-gradient(90deg,transparent,rgba(0,255,157,0.85),transparent)]" />
+      <div className="absolute left-1/2 top-[32%] h-[36%] w-[2px] -translate-x-1/2 bg-[linear-gradient(180deg,transparent,rgba(229,231,235,0.75),transparent)]" />
+      <div className="absolute left-[46%] top-[44%] flex h-12 w-12 items-center justify-center rounded-full border border-brand-green/30 bg-black/60 shadow-[0_0_40px_rgba(0,255,157,0.22)]">
+        <LockKeyhole className="h-5 w-5 text-brand-green" />
+      </div>
+      <div className="absolute right-[26%] top-[49%] flex h-12 w-12 items-center justify-center rounded-full border border-white/12 bg-black/50">
+        <Globe2 className="h-5 w-5 text-white/70" />
+      </div>
+      <div className="absolute left-[28%] top-[56%] flex h-12 w-12 items-center justify-center rounded-full border border-white/12 bg-black/50">
+        <ShieldCheck className="h-5 w-5 text-white/70" />
+      </div>
+    </div>
   );
 }

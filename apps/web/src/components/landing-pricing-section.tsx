@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowRight, Globe2, MessageSquareText, Phone, Server, ShieldCheck, Smartphone } from 'lucide-react';
+import { ArrowRight, Globe2, MessageSquareText, Phone, ShieldCheck, Smartphone } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { LiquidButton, MetalButton } from '@/components/ui/liquid-glass-button';
 
@@ -20,9 +20,9 @@ const MODULES: Array<{
   {
     title: 'BP Verify Hub',
     price: '$0.99+ per verification',
-    description: 'SMS & Voice OTP across 180+ countries.',
+    description: 'Fast SMS and voice verification routing across private-number workflows.',
     href: '/dashboard/verification',
-    cta: 'Run Verification',
+    cta: 'Get Verified',
     icon: ShieldCheck,
     eyebrow: 'Usage based',
     highlights: ['SMS and voice OTP', 'Live verification routing'],
@@ -30,8 +30,8 @@ const MODULES: Array<{
   },
   {
     title: 'BP Number Rentals',
-    price: '$5.99',
-    description: 'Temporary or renewable numbers with SMS + Voice support.',
+    price: 'From $5.99',
+    description: 'Temporary or renewable private numbers for account setup, recovery, and controlled messaging.',
     href: '/dashboard/rentals',
     cta: 'Rent Number',
     icon: Phone,
@@ -41,17 +41,17 @@ const MODULES: Array<{
   {
     title: 'BP Messenger',
     price: '$9.99/mo',
-    description: 'Private messaging + dedicated US/UK/CA number.',
+    description: 'Private threads, call context, voicemail, and calmer conversation control.',
     href: '/dashboard/inbox',
-    cta: 'Start Messaging',
+    cta: 'Open Messenger',
     icon: MessageSquareText,
     eyebrow: 'Subscription',
     highlights: ['Private message threads', 'Voicemail and calling'],
   },
   {
     title: 'BP eSIM Store',
-    price: '$4.99',
-    description: 'Travel data plans in 100+ countries.',
+    price: 'From $4.99',
+    description: 'Travel-ready data activation without swapping physical SIM cards.',
     href: '/dashboard/esim',
     cta: 'Buy eSIM',
     icon: Smartphone,
@@ -59,19 +59,9 @@ const MODULES: Array<{
     highlights: ['QR delivery', 'Global roaming access'],
   },
   {
-    title: 'BP Proxy Store',
-    price: '$7.99/mo',
-    description: 'Residential and datacenter routing for safer task separation.',
-    href: '/dashboard/proxies',
-    cta: 'View Proxies',
-    icon: Server,
-    eyebrow: 'Secure routing',
-    highlights: ['Dedicated credentials', 'Session isolation'],
-  },
-  {
     title: 'BP Secure Tunnel',
     price: '$5.99/mo',
-    description: 'Dedicated IP VPN powered by Burner Point secure routing.',
+    description: 'Protected routing, secure session continuity, and privacy-first connection control.',
     href: '/dashboard/vpn',
     cta: 'Secure Access',
     icon: Globe2,
@@ -94,7 +84,7 @@ export function LandingPricingSection() {
               Wallet funding for usage. Subscriptions for continuity.
             </h2>
             <p className="mt-4 max-w-3xl text-base leading-8 text-white/58">
-              Choose the Burner Point product surface you need now, then move between wallet-funded usage and recurring privacy subscriptions without changing accounts.
+              Choose the Burner Point surface you need now, then move between wallet-funded usage and recurring privacy subscriptions without changing accounts.
             </p>
           </div>
         </div>

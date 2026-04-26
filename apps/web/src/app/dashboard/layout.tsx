@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth, useClerk, useUser } from '@clerk/nextjs';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Bell,
   ChevronDown,
@@ -292,7 +293,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex min-h-screen bg-brand-black pb-24 text-white md:pb-0">
+    <div className="relative flex min-h-screen bg-brand-black pb-24 text-white md:pb-0">
+      <div className="pointer-events-none fixed inset-0">
+        <div className="bp-grid-bg absolute inset-0 opacity-30" />
+        <div className="absolute left-0 top-0 h-[28rem] w-[32rem] rounded-full bg-[radial-gradient(circle,rgba(0,255,157,0.12),transparent_68%)] blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-[24rem] w-[28rem] rounded-full bg-[radial-gradient(circle,rgba(57,255,20,0.08),transparent_68%)] blur-3xl" />
+      </div>
       <aside
         className={clsx(
           'fixed inset-y-0 left-0 z-40 flex w-[19rem] max-w-[88vw] flex-col border-r border-white/8 bg-[linear-gradient(180deg,rgba(1,50,32,0.94),rgba(0,0,0,0.98))] shadow-[28px_0_80px_rgba(0,0,0,0.48)] transition-transform duration-300 md:static md:max-w-none',
@@ -422,7 +428,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         />
       ) : null}
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="relative z-10 flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 border-b border-white/8 bg-brand-black/86 px-4 py-4 backdrop-blur-xl md:px-6">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex items-start gap-3">
@@ -484,7 +490,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           missingFields={user?.onboardingMissingFields}
         />
 
-        <main className="flex-1 px-4 py-5 md:px-6 md:py-6">{children}</main>
+        <main className="flex-1 px-4 py-5 md:px-6 md:py-6">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={pathname}
+              initial={{ opacity: 0, y: 14, filter: 'blur(8px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, y: -10, filter: 'blur(8px)' }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
+        </main>
       </div>
 
       <nav className="fixed inset-x-3 bottom-3 z-20 rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(7,20,15,0.96),rgba(0,0,0,0.96))] p-2 shadow-[0_24px_80px_rgba(0,0,0,0.44)] backdrop-blur-xl md:hidden" aria-label="Mobile dashboard">

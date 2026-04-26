@@ -38,19 +38,29 @@ export const primaryNav: MarketingLink[] = [
   { label: 'Pricing', href: '/pricing' },
   { label: 'About', href: '/about' },
   { label: 'Blog', href: '/blog' },
-  { label: 'Help', href: '/help-center' },
+  { label: 'Help', href: '/help' },
 ];
 
 export const footerGroups = [
   {
-    title: 'Product',
-    href: '/pricing',
+    title: 'Platform',
+    href: '/dashboard',
     links: [
       { label: 'Dashboard', href: '/dashboard' },
       { label: 'Pricing', href: '/pricing' },
       { label: 'About', href: '/about' },
       { label: 'Blog', href: '/blog' },
-      { label: 'Help', href: '/help-center' },
+      { label: 'Help', href: '/help' },
+    ],
+  },
+  {
+    title: 'Developers',
+    href: '/api/docs',
+    links: [
+      { label: 'API Docs', href: '/api/docs' },
+      { label: 'Developer API', href: '/api' },
+      { label: 'Support', href: '/support' },
+      { label: 'Contact', href: '/contact' },
     ],
   },
   {
@@ -59,17 +69,8 @@ export const footerGroups = [
     links: [
       { label: 'About', href: '/about' },
       { label: 'Blog', href: '/blog' },
-      { label: 'Updates', href: '/updates' },
+      { label: 'Help', href: '/help' },
       { label: 'Careers', href: '/careers' },
-    ],
-  },
-  {
-    title: 'Support',
-    href: '/support',
-    links: [
-      { label: 'FAQ', href: '/faq' },
-      { label: 'Help Center', href: '/help-center' },
-      { label: 'Contact', href: '/contact' },
     ],
   },
   {
@@ -78,6 +79,7 @@ export const footerGroups = [
     links: [
       { label: 'Terms of Service', href: '/terms-of-service' },
       { label: 'Privacy Policy', href: '/privacy-policy' },
+      { label: 'Security', href: '/security' },
     ],
   },
 ];

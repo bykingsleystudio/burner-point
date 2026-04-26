@@ -136,14 +136,14 @@ export const SignInPage: React.FC<SignInPageProps> = ({
         </div>
 
         <div className="relative z-10 w-full max-w-xl">
-          <div className="mb-8">
+          <div className="mb-6">
             <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
               <Image src="/assets/logo-mark.svg" alt="" width={36} height={36} className="h-9 w-9" />
               <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={188} height={24} className="h-6 w-auto" />
             </Link>
           </div>
 
-          <div className="rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(1,50,32,0.68),rgba(0,0,0,0.96)_44%,rgba(0,0,0,0.98))] p-6 shadow-[0_40px_120px_rgba(0,0,0,0.42)] sm:p-8">
+          <div className="rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(1,50,32,0.6),rgba(0,0,0,0.97)_46%,rgba(0,0,0,0.99))] p-6 shadow-[0_40px_120px_rgba(0,0,0,0.42)] sm:p-8">
             <div className="flex flex-col gap-5">
               {title ? (
                 <h1 className="animate-element animate-delay-100 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
@@ -282,21 +282,22 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
         <div className="relative z-10 flex h-full flex-col justify-between p-8 xl:p-10">
           <div className="max-w-xl">
-            <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-brand-green">Private entry</p>
+            <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-brand-green">Private by design</p>
             <h2 className="mt-4 max-w-lg text-[2.6rem] font-semibold leading-[0.96] text-white xl:text-[3.4rem]">
-              One account for numbers, verification, routing, and support.
+              Stay Anonymous. Stay Connected.
             </h2>
             <p className="mt-4 max-w-xl text-base leading-8 text-white/60">
-              OAuth, password access, recovery, phone verification, and 2FA are staged to move forward cleanly instead of repeating the same decision twice.
+              Burner Point account access is built to feel immediate: one entry surface for sign-in, sign-up, recovery, phone verification,
+              and 2FA without repeated loops or duplicated choices.
             </p>
           </div>
 
           <div className="grid gap-4 xl:grid-cols-2">
             {[
-              ['BP Verify Hub', 'OTP capture, SMS routing, and live code delivery.'],
-              ['BP Messenger', 'Messages, voice, voicemail, and private threads.'],
-              ['BP Secure Tunnel', 'Integrated protection and calmer session control.'],
-              ['Billing & Support', 'Wallet, renewals, receipts, and scoped support paths.'],
+              ['BP Verify Hub', 'OTP capture and live delivery with private-number context.'],
+              ['BP Messenger', 'Private threads, voice context, and message continuity.'],
+              ['BP Rentals', 'Temporary or renewable access without exposing your real line.'],
+              ['Secure Access', 'Recovery, 2FA, and phone verification in one controlled path.'],
             ].map(([titleText, text], index) => (
               <article
                 key={titleText}

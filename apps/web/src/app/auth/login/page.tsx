@@ -16,7 +16,7 @@ const oauthProviders = [
 ] as const;
 
 type SecondFactorStrategy = 'email_code' | 'phone_code' | 'totp' | 'backup_code';
-type AuthMode = 'sign-in' | 'reset-request' | 'reset-code' | 'reset-password';
+type AuthMode = 'sign-in' | 'phone-request' | 'phone-code' | 'reset-request' | 'reset-code' | 'reset-password';
 type ResetPasswordMethod = 'email' | 'phone';
 
 export default function LoginPage() {
@@ -25,10 +25,13 @@ export default function LoginPage() {
   const { signIn, fetchStatus } = useSignIn();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [keepSignedIn, setKeepSignedIn] = useState(true);
   const [loading, setLoading] = useState(false);
   const [secondFactorStrategy, setSecondFactorStrategy] = useState<SecondFactorStrategy | null>(null);
   const [secondFactorCode, setSecondFactorCode] = useState('');
   const [authMode, setAuthMode] = useState<AuthMode>('sign-in');
+  const [phoneIdentifier, setPhoneIdentifier] = useState('');
+  const [phoneCode, setPhoneCode] = useState('');
   const [resetIdentifier, setResetIdentifier] = useState('');
   const [resetCode, setResetCode] = useState('');
   const [resetPassword, setResetPassword] = useState('');
@@ -110,6 +113,59 @@ export default function LoginPage() {
       await completeOrContinueSignIn();
     } catch (err) {
       toast.error(getClerkErrorMessage(err, 'Login failed'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startPhoneSignIn = async () => {
+    if (!signIn) {
+      toast.error('Authentication is still loading.');
+      return;
+    }
+
+    const value = phoneIdentifier.trim();
+    if (!/^\+[1-9]\d{6,14}$/.test(value)) {
+      toast.error('Enter your phone number in E.164 format, for example +14155550182.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await signIn.create({ identifier: value });
+      if (error) throw error;
+
+      const { error: sendError } = await signIn.phoneCode.sendCode({ phoneNumber: value });
+      if (sendError) throw sendError;
+
+      setAuthMode('phone-code');
+      toast.success('Verification code sent to your phone.');
+    } catch (err) {
+      toast.error(getClerkErrorMessage(err, 'Unable to start phone sign-in'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyPhoneSignIn = async () => {
+    if (!signIn) {
+      toast.error('Authentication is still loading.');
+      return;
+    }
+
+    const code = phoneCode.trim();
+    if (!/^\d{4,10}$/.test(code)) {
+      toast.error('Enter the code sent to your phone.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await signIn.phoneCode.verifyCode({ code });
+      if (error) throw error;
+      await completeOrContinueSignIn();
+    } catch (err) {
+      toast.error(getClerkErrorMessage(err, 'Phone sign-in verification failed'));
     } finally {
       setLoading(false);
     }
@@ -258,6 +314,8 @@ export default function LoginPage() {
     setAuthMode('sign-in');
     setSecondFactorStrategy(null);
     setSecondFactorCode('');
+    setPhoneIdentifier('');
+    setPhoneCode('');
     setResetIdentifier('');
     setResetCode('');
     setResetPassword('');
@@ -271,26 +329,6 @@ export default function LoginPage() {
       onResetPassword={() => setAuthMode('reset-request')}
     >
       <div className="space-y-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">
-            {secondFactorStrategy
-              ? 'Two-factor verification'
-              : authMode === 'reset-request'
-                ? 'Reset password'
-                : authMode === 'reset-code'
-                  ? 'Verify reset code'
-                  : authMode === 'reset-password'
-                    ? 'Create a new password'
-                    : 'Sign in'}
-          </p>
-          <p className="text-sm text-white/46">
-            Need an account?{' '}
-            <Link href="/auth/register" className="text-brand-green transition hover:text-[#39FF14]">
-              Create one
-            </Link>
-          </p>
-        </div>
-
         {!secondFactorStrategy && authMode === 'sign-in' ? (
           <>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -306,7 +344,7 @@ export default function LoginPage() {
               <AuthProviderButton
                 provider="Phone"
                 label="Continue with Phone"
-                onClick={() => identifierRef.current?.focus()}
+                onClick={() => setAuthMode('phone-request')}
                 disabled={isSubmitting}
               />
             </div>
@@ -320,11 +358,58 @@ export default function LoginPage() {
           </>
         ) : null}
 
-        {authMode === 'reset-request' ? (
+        {authMode === 'phone-request' ? (
           <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
-            <p className="text-sm leading-6 text-white/56">
-              Use the email address or phone number on your Burner Point account to request a secure password reset code.
-            </p>
+            <label className="block text-sm font-medium text-white/70">
+              Phone number
+              <GlassInputWrapper>
+                <input
+                  value={phoneIdentifier}
+                  onChange={(event) => setPhoneIdentifier(event.target.value)}
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="+14155550182"
+                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
+                />
+              </GlassInputWrapper>
+            </label>
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={startPhoneSignIn}
+              className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSubmitting ? 'Sending code...' : 'Send code'}
+            </button>
+          </div>
+        ) : authMode === 'phone-code' ? (
+          <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
+            <label className="block text-sm font-medium text-white/70">
+              Verification code
+              <GlassInputWrapper>
+                <input
+                  value={phoneCode}
+                  onChange={(event) => setPhoneCode(event.target.value)}
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  placeholder="Enter code"
+                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
+                />
+              </GlassInputWrapper>
+            </label>
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={verifyPhoneSignIn}
+              className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSubmitting ? 'Verifying...' : 'Continue with phone'}
+            </button>
+          </div>
+        ) : authMode === 'reset-request' ? (
+          <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
             <label className="block text-sm font-medium text-white/70">
               Email or phone number
               <GlassInputWrapper>
@@ -349,9 +434,6 @@ export default function LoginPage() {
           </div>
         ) : authMode === 'reset-code' ? (
           <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
-            <p className="text-sm leading-6 text-white/56">
-              Enter the code you received so we can confirm the recovery request before changing the password.
-            </p>
             <label className="block text-sm font-medium text-white/70">
               Reset code
               <GlassInputWrapper>
@@ -377,9 +459,6 @@ export default function LoginPage() {
           </div>
         ) : authMode === 'reset-password' ? (
           <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
-            <p className="text-sm leading-6 text-white/56">
-              Set a new password for this Burner Point account, then continue straight into the dashboard.
-            </p>
             <label className="block text-sm font-medium text-white/70">
               New password
               <GlassInputWrapper>
@@ -404,9 +483,6 @@ export default function LoginPage() {
           </div>
         ) : secondFactorStrategy ? (
           <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
-            <p className="text-sm leading-6 text-white/56">
-              Two-factor authentication is enabled on this account. Enter the security code to continue.
-            </p>
             <label className="block text-sm font-medium text-white/70">
               Security code
               <GlassInputWrapper>
@@ -462,6 +538,15 @@ export default function LoginPage() {
             </label>
 
             <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
+              <label className="flex items-center gap-3 text-white/68">
+                <input
+                  checked={keepSignedIn}
+                  onChange={(event) => setKeepSignedIn(event.target.checked)}
+                  type="checkbox"
+                  className="h-4 w-4 accent-[#00FF9D]"
+                />
+                <span>Keep me signed in</span>
+              </label>
               <button type="button" onClick={() => setAuthMode('reset-request')} className="font-medium text-brand-green transition hover:text-[#1cffac]">
                 Forgot password?
               </button>
@@ -477,23 +562,30 @@ export default function LoginPage() {
               ) : (
                 <Zap size={16} />
               )}
-              {isSubmitting ? 'Signing in...' : 'Continue'}
+              {isSubmitting ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
         )}
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/8 pt-4">
-          <button type="button" onClick={returnToSignIn} className="inline-flex items-center gap-2 text-sm text-white/46 transition hover:text-white">
-            <ArrowRight className="h-4 w-4 rotate-180" />
-            Back
-          </button>
-          <Link href="/dashboard/security" className="text-sm text-brand-green transition hover:text-[#39FF14]">
-            Manage 2FA after sign-in
-          </Link>
-        </div>
+        {authMode !== 'sign-in' || secondFactorStrategy ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/8 pt-4">
+            <button type="button" onClick={returnToSignIn} className="inline-flex items-center gap-2 text-sm text-white/46 transition hover:text-white">
+              <ArrowRight className="h-4 w-4 rotate-180" />
+              Back
+            </button>
+            <Link href="/dashboard/security" className="text-sm text-brand-green transition hover:text-[#39FF14]">
+              Manage 2FA after sign-in
+            </Link>
+          </div>
+        ) : null}
 
         <p className="text-xs leading-6 text-white/42">
-          By continuing you agree to the Burner Point{' '}
+          Need an account?{' '}
+          <Link href="/auth/signup" className="text-brand-green transition hover:text-[#39FF14]">
+            Create one
+          </Link>
+          <span className="mx-2 text-white/24">•</span>
+          By continuing you agree to the{' '}
           <Link href="/terms-of-service" className="text-brand-green transition hover:text-[#39FF14]">
             Terms of Service
           </Link>{' '}

@@ -333,7 +333,7 @@ function ExternalAwareLink({ action, className, children }: { action: ModuleActi
 export function DashboardModulePage({ module }: { module: DashboardModuleContent }) {
   return (
     <div className="mx-auto max-w-6xl space-y-5">
-      <section className="overflow-hidden rounded-lg border border-brand-border bg-brand-card">
+      <section className="overflow-hidden rounded-[1.9rem] border border-white/8 bg-[linear-gradient(180deg,rgba(1,50,32,0.9),rgba(0,0,0,0.96))] shadow-[0_28px_80px_rgba(0,0,0,0.32)]">
         <div className="grid gap-6 p-6 lg:grid-cols-[1.05fr_0.95fr] lg:p-7">
           <div>
             <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-brand-green">{module.eyebrow}</p>
@@ -362,7 +362,7 @@ export function DashboardModulePage({ module }: { module: DashboardModuleContent
             </div>
           </div>
 
-          <div className="rounded-lg border border-brand-green/18 bg-brand-green/[0.055] p-5">
+          <div className="rounded-[1.5rem] border border-brand-green/18 bg-brand-green/[0.055] p-5">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-brand-green">Module status</p>
@@ -374,7 +374,7 @@ export function DashboardModulePage({ module }: { module: DashboardModuleContent
             </div>
             <div className="mt-5 grid grid-cols-3 gap-2">
               {module.stats.map((stat) => (
-                <div key={stat.label} className="rounded-lg border border-white/8 bg-black/20 p-3">
+                <div key={`${stat.label}-${stat.value}`} className="rounded-[1rem] border border-white/8 bg-black/20 p-3">
                   <p className="font-mono text-base font-semibold text-brand-green">{stat.value}</p>
                   <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-white/38">{stat.label}</p>
                 </div>
@@ -388,13 +388,13 @@ export function DashboardModulePage({ module }: { module: DashboardModuleContent
         {module.cards.map((card) => {
           const Icon = icons[card.icon];
           return (
-            <article key={card.title} className="rounded-lg border border-brand-border bg-brand-card p-5">
+            <article key={card.title} className="rounded-[1.5rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.9))] p-5">
               <div className="flex items-start justify-between gap-4">
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-brand-green/20 bg-brand-green/10">
+                <span className="flex h-10 w-10 items-center justify-center rounded-[1rem] border border-brand-green/20 bg-brand-green/10">
                   <Icon className="h-5 w-5 text-brand-green" />
                 </span>
                 {card.meta ? (
-                  <span className="rounded-lg border border-white/10 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-white/48">
+                  <span className="rounded-full border border-white/10 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-white/48">
                     {card.meta}
                   </span>
                 ) : null}
@@ -407,12 +407,12 @@ export function DashboardModulePage({ module }: { module: DashboardModuleContent
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="rounded-lg border border-brand-border bg-brand-card p-5">
+        <div className="rounded-[1.5rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.9))] p-5">
           <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Workflow</p>
           <div className="mt-4 space-y-3">
             {module.workflow.map((step, index) => (
               <div key={step} className="flex gap-3">
-                <span className="flex h-7 w-7 flex-none items-center justify-center rounded-lg border border-brand-green/20 bg-brand-green/10 font-mono text-xs text-brand-green">
+                <span className="flex h-7 w-7 flex-none items-center justify-center rounded-[0.9rem] border border-brand-green/20 bg-brand-green/10 font-mono text-xs text-brand-green">
                   {index + 1}
                 </span>
                 <p className="text-sm leading-6 text-white/66">{step}</p>
@@ -420,7 +420,7 @@ export function DashboardModulePage({ module }: { module: DashboardModuleContent
             ))}
           </div>
         </div>
-        <div className="rounded-lg border border-brand-green/16 bg-brand-green/[0.045] p-5">
+        <div className="rounded-[1.5rem] border border-brand-green/16 bg-brand-green/[0.045] p-5">
           <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Need to know</p>
           <p className="mt-4 text-sm leading-7 text-white/66">{module.note}</p>
         </div>

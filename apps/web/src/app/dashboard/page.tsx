@@ -10,7 +10,10 @@ import {
   MessageSquareText,
   Phone,
   RadioTower,
+  Route,
+  Server,
   ShieldCheck,
+  Smartphone,
   Sparkles,
 } from 'lucide-react';
 import { billingApi, numbersApi } from '@/lib/api';
@@ -229,6 +232,59 @@ export default function DashboardPage() {
             )}
           </div>
         </aside>
+      </section>
+
+      <section className="rounded-[1.6rem] border border-white/8 bg-[linear-gradient(180deg,rgba(1,50,32,0.78),rgba(0,0,0,0.94))] p-5 md:p-6">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Platform map</p>
+            <h3 className="mt-3 text-2xl font-semibold text-white">Move across every Burner Point module from one shell.</h3>
+          </div>
+          <div className="text-sm text-white/48">
+            Email support: <a href="mailto:info.burnerpoint@gmail.com" className="text-brand-green transition hover:text-[#39FF14]">info.burnerpoint@gmail.com</a>
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {[
+            { href: '/dashboard/inbox', title: 'BP Messenger', text: 'Private threads, media context, and conversation continuity.', icon: MessageSquareText },
+            { href: '/dashboard/verification', title: 'BP Verify Hub', text: 'Verification routing, OTP visibility, and cleaner status control.', icon: ShieldCheck },
+            { href: '/dashboard/rentals', title: 'BP Number Rentals', text: 'Temporary and renewable number lifecycle management.', icon: Phone },
+            { href: '/dashboard/esim', title: 'BP eSIM Store', text: 'Travel data plans and activation state inside the platform.', icon: Smartphone },
+            { href: '/dashboard/proxies', title: 'BP Proxy Store', text: 'Secure routing options and location-aware connection control.', icon: Server },
+            { href: '/dashboard/vpn', title: 'BP Secure Tunnel', text: 'Integrated protection and private session continuity.', icon: Route },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="group rounded-[1.35rem] border border-white/8 bg-black/24 p-4 transition hover:-translate-y-0.5 hover:border-brand-green/28 hover:bg-brand-green/[0.05]"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-[1rem] border border-brand-green/18 bg-brand-green/10">
+                    <Icon className="h-5 w-5 text-brand-green" />
+                  </span>
+                  <ArrowRight className="h-4 w-4 text-white/28 transition group-hover:translate-x-1 group-hover:text-brand-green" />
+                </div>
+                <p className="mt-4 text-base font-semibold text-white">{item.title}</p>
+                <p className="mt-2 text-sm leading-6 text-white/50">{item.text}</p>
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link href="/dashboard/support" className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-4 text-sm text-white/70 transition hover:border-brand-green/24 hover:text-brand-green">
+            Support
+          </Link>
+          <Link href="/dashboard/security" className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-4 text-sm text-white/70 transition hover:border-brand-green/24 hover:text-brand-green">
+            2FA and security
+          </Link>
+          <Link href="/api/docs" className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-4 text-sm text-white/70 transition hover:border-brand-green/24 hover:text-brand-green">
+            API Docs
+          </Link>
+        </div>
       </section>
     </div>
   );

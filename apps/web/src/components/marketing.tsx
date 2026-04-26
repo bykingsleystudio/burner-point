@@ -1,6 +1,5 @@
 'use client';
 
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { Show, UserButton } from '@clerk/nextjs';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -12,7 +11,6 @@ import {
   Briefcase,
   CalendarDays,
   Check,
-  ChevronDown,
   Code2,
   CreditCard,
   X,
@@ -29,7 +27,10 @@ import {
   Wifi,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { FaFacebook, FaInstagram, FaLinkedin, FaTelegram, FaTiktok, FaYoutube } from 'react-icons/fa6';
+import { FaXTwitter } from 'react-icons/fa6';
 import { BpAccordion, BpButton, BpInput, BpSupportWidget, BpTextarea, BpTrustBadge } from '@/components/design-system';
+import { LiquidLink } from '@/components/ui/liquid-glass-button';
 import {
   footerGroups,
   primaryNav,
@@ -59,6 +60,16 @@ const icons: Record<IconKey, LucideIcon> = {
   smartphone: Smartphone,
   wifi: Wifi,
 };
+
+const socialIcons = {
+  Instagram: FaInstagram,
+  Facebook: FaFacebook,
+  LinkedIn: FaLinkedin,
+  TikTok: FaTiktok,
+  'Twitter/X': FaXTwitter,
+  Telegram: FaTelegram,
+  YouTube: FaYoutube,
+} as const;
 
 export function Eyebrow({ children }: { children: ReactNode }) {
   return (
@@ -118,15 +129,15 @@ export function SiteHeader() {
     { label: 'Pricing', href: '/pricing' },
     { label: 'About', href: '/about' },
     { label: 'Blog', href: '/blog' },
-    { label: 'Help', href: '/help-center' },
+    { label: 'Help', href: '/help' },
     { label: 'Sign In', href: '/auth/login' },
   ];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/6 bg-[rgba(1,7,4,0.82)] shadow-[0_18px_70px_rgba(0,0,0,0.34)] backdrop-blur-2xl">
+    <header className="sticky top-0 z-50 border-b border-white/6 bg-[rgba(1,7,4,0.8)] shadow-[0_18px_70px_rgba(0,0,0,0.34)] backdrop-blur-2xl">
       <div className="mx-auto flex min-h-20 max-w-[1680px] items-center justify-between gap-4 px-5 sm:px-6 xl:px-10 2xl:min-h-24">
         <BurnerLogo />
-        <nav className="hidden items-center gap-3 text-sm xl:flex 2xl:gap-4" aria-label="Primary">
+        <nav className="hidden items-center gap-2 text-sm lg:flex xl:gap-3" aria-label="Primary">
           {primaryNav.map((item) => (
             <Link
               key={item.href}
@@ -138,39 +149,15 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="hidden items-center gap-3 lg:flex">
-          <Menu as="div" className="relative hidden xl:block">
-            <MenuButton className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 bg-white/[0.025] px-4 py-2 text-sm font-semibold text-white/76 transition hover:border-brand-green/28 hover:text-white">
-              Menu
-              <ChevronDown className="h-4 w-4 text-brand-green" />
-            </MenuButton>
-            <MenuItems
-              transition
-              anchor="bottom end"
-              className="mt-3 w-72 origin-top-right rounded-[1.4rem] border border-white/10 bg-[rgba(2,10,6,0.96)] p-3 shadow-[0_28px_80px_rgba(0,0,0,0.58)] transition duration-200 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
-            >
-              <div className="mb-2 px-2">
-                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-green">Navigation</p>
-              </div>
-              {headerMenuLinks.map((item) => (
-                <MenuItem key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="flex min-h-12 items-center justify-between rounded-[1rem] px-4 py-3 text-sm text-white/72 transition hover:bg-white/[0.04] hover:text-white"
-                  >
-                    <span>{item.label}</span>
-                    <ArrowRight className="h-4 w-4 text-brand-green" />
-                  </Link>
-                </MenuItem>
-              ))}
-            </MenuItems>
-          </Menu>
           <Show when="signed-out">
-            <Link href="/auth/signup" className="bp-primary-action rounded-full px-5 py-3 text-xs font-semibold uppercase">
-              Get Started
-            </Link>
             <Link href="/auth/login" className="bp-secondary-action rounded-full px-5 py-3 text-xs font-semibold uppercase">
               Sign In
             </Link>
+            <LiquidLink href="/auth/signup" className="text-black">
+              <span className="inline-flex items-center gap-2 px-5 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-black">
+                Get Started
+              </span>
+            </LiquidLink>
           </Show>
           <Show when="signed-in">
             <Link href="/dashboard" className="bp-secondary-action rounded-full px-5 py-3 text-xs font-semibold uppercase">
@@ -220,11 +207,11 @@ export function SiteHeader() {
             </div>
             <div className="mt-4 grid gap-2 border-t border-brand-green/25 pt-4">
               <Show when="signed-out">
-                <Link href="/auth/signup" onClick={closeMobileNav} className="rounded-full bg-brand-green px-4 py-3 text-center text-xs font-semibold uppercase text-black transition duration-[220ms] ease-out active:scale-[0.98]">
-                  Get Started
-                </Link>
                 <Link href="/auth/login" onClick={closeMobileNav} className="rounded-full border border-white/20 bg-black px-4 py-3 text-center text-xs font-semibold uppercase text-white transition duration-[220ms] ease-out active:scale-[0.98]">
                   Sign In
+                </Link>
+                <Link href="/auth/signup" onClick={closeMobileNav} className="rounded-full bg-brand-green px-4 py-3 text-center text-xs font-semibold uppercase text-black transition duration-[220ms] ease-out active:scale-[0.98]">
+                  Get Started
                 </Link>
               </Show>
               <Show when="signed-in">
@@ -251,12 +238,29 @@ export function SiteFooter() {
           <div className="lg:col-span-4">
             <BurnerLogo />
             <p className="mt-6 max-w-md text-sm leading-8 text-white/56">
-              Burner Point is a privacy-focused telecommunications platform built for speed, privacy, and global access.
+              Don&apos;t want to give out your phone number? No problem. Use ours. Burner Point keeps messaging, verification, rentals, eSIM, and protected routing inside one private telecom surface.
             </p>
             <div className="mt-6 space-y-2 text-sm text-white/54">
               <a href="mailto:info.burnerpoint@gmail.com" className="block transition hover:text-brand-green">Email: info.burnerpoint@gmail.com</a>
               <a href="https://t.me/burnerpoint" className="block transition hover:text-brand-green">Telegram: @burnerpoint</a>
               <a href="https://t.me/burnerpointapp" className="block transition hover:text-brand-green">Telegram App: @burnerpointapp</a>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              {socialLinks.map((item) => {
+                const Icon = socialIcons[item.label as keyof typeof socialIcons];
+                return (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`${item.label} ${item.handle}`}
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/64 transition hover:border-brand-green/28 hover:text-brand-green"
+                  >
+                    {Icon ? <Icon className="h-4 w-4" /> : <span className="font-mono text-[10px] uppercase">{item.short}</span>}
+                  </a>
+                );
+              })}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-6 sm:gap-8 lg:col-span-8 lg:grid-cols-4">
@@ -279,14 +283,20 @@ export function SiteFooter() {
         <div className="bp-panel mt-12 p-5">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/36">Social Media</p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/36">Support and trust</p>
               <div className="mt-4 flex flex-wrap gap-3">
-                {socialLinks.map((item) => (
-                  <a key={item.label} href={item.href} target="_blank" rel="noreferrer" aria-label={`${item.label} ${item.handle}`} className="inline-flex items-center gap-2 rounded-full bg-white/[0.03] px-4 py-2 text-sm text-white/64 transition hover:bg-white/[0.05] hover:text-brand-green">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-brand-green/80">{item.short}</span>
-                    <span>{item.label}</span>
-                  </a>
-                ))}
+                <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-full bg-white/[0.03] px-4 py-2 text-sm text-white/64 transition hover:bg-white/[0.05] hover:text-brand-green">
+                  Dashboard
+                </Link>
+                <Link href="/pricing" className="inline-flex items-center gap-2 rounded-full bg-white/[0.03] px-4 py-2 text-sm text-white/64 transition hover:bg-white/[0.05] hover:text-brand-green">
+                  Pricing
+                </Link>
+                <Link href="/api/docs" className="inline-flex items-center gap-2 rounded-full bg-white/[0.03] px-4 py-2 text-sm text-white/64 transition hover:bg-white/[0.05] hover:text-brand-green">
+                  API Docs
+                </Link>
+                <Link href="/help" className="inline-flex items-center gap-2 rounded-full bg-white/[0.03] px-4 py-2 text-sm text-white/64 transition hover:bg-white/[0.05] hover:text-brand-green">
+                  Help
+                </Link>
               </div>
             </div>
             <div className="flex flex-wrap gap-3">

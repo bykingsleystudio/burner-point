@@ -173,16 +173,6 @@ export default function RegisterPage() {
       testimonials={[]}
     >
       <div className="space-y-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Create account</p>
-          <p className="text-sm text-white/46">
-            Already have an account?{' '}
-            <Link href="/auth/login" className="text-brand-green transition hover:text-[#39FF14]">
-              Sign in
-            </Link>
-          </p>
-        </div>
-
         {!pendingEmailVerification ? (
           <>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -214,12 +204,6 @@ export default function RegisterPage() {
 
         {pendingEmailVerification ? (
           <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">Email verification</p>
-              <p className="mt-2 text-sm leading-6 text-white/56">
-                Enter the secure code sent to your email to complete account creation and continue into phone verification.
-              </p>
-            </div>
             <label className="block text-sm font-medium text-white/70">
               Email verification code
               <GlassInputWrapper>
@@ -327,6 +311,11 @@ export default function RegisterPage() {
 
         <div className="border-t border-white/8 pt-4 text-xs leading-6 text-white/42">
           <p>
+            Already have an account?{' '}
+            <Link href="/auth/login" className="text-brand-green transition hover:text-[#39FF14]">
+              Sign in
+            </Link>
+            <span className="mx-2 text-white/24">•</span>
             By continuing you agree to the{' '}
             <Link href="/terms-of-service" className="text-brand-green transition hover:text-[#39FF14]">
               Terms of Service
