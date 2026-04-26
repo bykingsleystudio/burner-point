@@ -323,8 +323,8 @@ export default function LoginPage() {
 
   return (
     <SignInPage
-      title={null}
-      description={null}
+      title="Access your private dashboard."
+      description="Sign in to manage private numbers, verification sessions, rentals, eSIM plans, proxy access, and Secure Tunnel from one Burner Point account."
       testimonials={[]}
       onResetPassword={() => setAuthMode('reset-request')}
     >

@@ -24,15 +24,15 @@ const homeStructuredData = [
   },
   {
     '@context': 'https://schema.org',
-    '@type': 'ItemList',
-    name: 'Burner Point core products',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'BP Messenger', url: `${siteUrl}/dashboard/inbox` },
-      { '@type': 'ListItem', position: 2, name: 'BP Verify Hub', url: `${siteUrl}/dashboard/verification` },
-      { '@type': 'ListItem', position: 3, name: 'BP Rentals', url: `${siteUrl}/dashboard/rentals` },
-      { '@type': 'ListItem', position: 4, name: 'BP eSIM Store', url: `${siteUrl}/dashboard/esim` },
-      { '@type': 'ListItem', position: 5, name: 'BP Secure Tunnel', url: `${siteUrl}/dashboard/vpn` },
-      { '@type': 'ListItem', position: 6, name: 'BP Proxy Store', url: `${siteUrl}/dashboard/proxies` },
+      '@type': 'ItemList',
+      name: 'Burner Point core products',
+      itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'BP Messenger', url: `${siteUrl}/#bp-messenger` },
+      { '@type': 'ListItem', position: 2, name: 'BP Verify Hub', url: `${siteUrl}/#bp-verify-hub` },
+      { '@type': 'ListItem', position: 3, name: 'BP Rentals', url: `${siteUrl}/#bp-rentals` },
+      { '@type': 'ListItem', position: 4, name: 'BP eSIM Store', url: `${siteUrl}/#bp-esim-store` },
+      { '@type': 'ListItem', position: 5, name: 'BP Secure Tunnel', url: `${siteUrl}/#bp-secure-tunnel` },
+      { '@type': 'ListItem', position: 6, name: 'BP Proxy Store', url: `${siteUrl}/#bp-proxy-store` },
     ],
   },
 ];

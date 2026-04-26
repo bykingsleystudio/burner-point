@@ -3,8 +3,9 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Eye, EyeOff } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { heroTrustItems, productLinks, supportContacts } from '@/lib/homepage-content';
 
 const GoogleIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 48 48" aria-hidden="true">
@@ -64,7 +65,7 @@ interface SignInPageProps {
 }
 
 const GlassInputWrapper = ({ children }: { children: React.ReactNode }) => (
-  <div className="rounded-[1.2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.018))] backdrop-blur-md transition-colors focus-within:border-brand-green/60 focus-within:bg-brand-green/[0.08]">
+  <div className="rounded-[1.15rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.02))] backdrop-blur-md transition-colors focus-within:border-[#00FF9D]/40 focus-within:bg-[#00FF9D]/[0.05]">
     {children}
   </div>
 );
@@ -72,14 +73,14 @@ const GlassInputWrapper = ({ children }: { children: React.ReactNode }) => (
 const TestimonialCard = ({ testimonial, delay }: { testimonial: Testimonial; delay: string }) => (
   <div
     className={cn(
-      'animate-testimonial flex w-64 items-start gap-3 rounded-3xl border border-white/10 bg-black/45 p-5 backdrop-blur-xl',
+      'flex w-72 items-start gap-3 rounded-[1.4rem] border border-white/10 bg-black/40 p-4 backdrop-blur-xl',
       delay,
     )}
   >
     {/* eslint-disable-next-line @next/next/no-img-element */}
     <img src={testimonial.avatarSrc} className="h-10 w-10 rounded-2xl object-cover" alt={testimonial.name} />
     <div className="text-sm leading-snug">
-      <p className="flex items-center gap-1 font-medium text-white">{testimonial.name}</p>
+      <p className="font-medium text-white">{testimonial.name}</p>
       <p className="text-white/48">{testimonial.handle}</p>
       <p className="mt-1 text-white/80">{testimonial.text}</p>
     </div>
@@ -99,7 +100,7 @@ function SocialButton({
     <button
       type="button"
       onClick={onClick}
-      className="animate-element flex min-h-[54px] w-full items-center justify-center gap-3 rounded-[1.2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-4 py-4 text-sm font-medium text-white transition-colors hover:border-brand-green/35 hover:bg-brand-green/[0.06]"
+      className="flex min-h-[54px] w-full items-center justify-center gap-3 rounded-[1.15rem] border border-white/10 bg-white/[0.03] px-4 py-4 text-sm font-medium text-white transition-colors hover:border-[#00FF9D]/30 hover:bg-[#00FF9D]/[0.05]"
     >
       {icon}
       {label}
@@ -108,8 +109,8 @@ function SocialButton({
 }
 
 export const SignInPage: React.FC<SignInPageProps> = ({
-  title = null,
-  description = null,
+  title = 'Access your private dashboard.',
+  description = 'Sign in to manage private numbers, verifications, rentals, eSIM, proxy access, and secure tunnel sessions from one account.',
   heroImageSrc,
   testimonials = [],
   onSignIn,
@@ -127,206 +128,215 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   const renderCustomContent = children || formContent;
 
   return (
-    <div className="flex min-h-[100dvh] w-full flex-col bg-brand-black font-sans text-white md:flex-row">
-      <section className="relative flex flex-1 items-center justify-center overflow-hidden p-6 sm:p-8 md:p-10">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="bp-grid-bg absolute inset-0 opacity-60" />
-          <div className="absolute left-0 top-0 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(0,255,157,0.18),transparent_68%)] blur-3xl" />
-          <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(57,255,20,0.12),transparent_68%)] blur-3xl" />
-        </div>
+    <div className="relative min-h-[100dvh] overflow-hidden bg-brand-black text-white">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="bp-grid-bg absolute inset-0 opacity-45" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(0,255,157,0.16),transparent_28%),radial-gradient(circle_at_84%_16%,rgba(57,255,20,0.07),transparent_20%)]" />
+      </div>
 
-        <div className="relative z-10 w-full max-w-xl">
-          <div className="mb-6">
+      <div className="relative z-10 mx-auto grid min-h-[100dvh] max-w-[96rem] gap-6 px-4 py-4 sm:px-6 lg:grid-cols-[minmax(0,34rem)_minmax(0,1fr)] lg:px-8 lg:py-6">
+        <section className="rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(7,20,15,0.88),rgba(0,0,0,0.98))] p-5 shadow-[0_40px_110px_rgba(0,0,0,0.4)] sm:p-6 lg:p-7">
+          <div className="flex items-center justify-between gap-4">
             <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
-              <Image src="/assets/logo-mark.svg" alt="" width={36} height={36} className="h-9 w-9" />
-              <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={188} height={24} className="h-6 w-auto" />
+              <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} className="h-9 w-9" />
+              <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={170} height={26} className="h-6 w-auto" />
+            </Link>
+            <Link href="/#pricing" className="hidden text-sm font-medium text-white/52 transition hover:text-white sm:inline-flex">
+              Pricing
             </Link>
           </div>
 
-          <div className="rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(1,50,32,0.6),rgba(0,0,0,0.97)_46%,rgba(0,0,0,0.99))] p-6 shadow-[0_40px_120px_rgba(0,0,0,0.42)] sm:p-8">
-            <div className="flex flex-col gap-5">
-              {title ? (
-                <h1 className="animate-element animate-delay-100 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
-                  {title}
-                </h1>
-              ) : null}
-              {description ? (
-                <p className="animate-element animate-delay-200 max-w-xl text-sm leading-7 text-white/62 sm:text-base">
-                  {description}
-                </p>
-              ) : null}
+          <div className="mt-8">
+            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[#00FF9D]">Private account access</p>
+            {title ? (
+              <h1 className="mt-4 text-4xl font-black uppercase leading-[0.94] text-white sm:text-[2.8rem]">
+                {title}
+              </h1>
+            ) : null}
+            {description ? (
+              <p className="mt-4 text-sm leading-7 text-white/60 sm:text-base">
+                {description}
+              </p>
+            ) : null}
+          </div>
 
-              {renderCustomContent ? (
-                <div className="animate-element animate-delay-300">{renderCustomContent}</div>
-              ) : (
-                <>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <SocialButton icon={<GoogleIcon />} label="Continue with Google" onClick={onGoogleSignIn} />
-                    <SocialButton icon={<AppleIcon />} label="Continue with Apple" onClick={onAppleSignIn} />
-                    <SocialButton icon={<MicrosoftIcon />} label="Continue with Microsoft" onClick={onMicrosoftSignIn} />
-                    <SocialButton icon={<PhoneIcon />} label="Continue with Phone" onClick={onPhoneSignIn} />
+          <div className="mt-6 flex flex-wrap gap-3">
+            {heroTrustItems.slice(0, 4).map((item) => (
+              <span
+                key={item}
+                className="inline-flex min-h-9 items-center rounded-full border border-white/10 bg-white/[0.03] px-3 text-xs font-medium text-white/72"
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-8">
+            {renderCustomContent ? (
+              <div>{renderCustomContent}</div>
+            ) : (
+              <>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <SocialButton icon={<GoogleIcon />} label="Continue with Google" onClick={onGoogleSignIn} />
+                  <SocialButton icon={<AppleIcon />} label="Continue with Apple" onClick={onAppleSignIn} />
+                  <SocialButton icon={<MicrosoftIcon />} label="Continue with Microsoft" onClick={onMicrosoftSignIn} />
+                  <SocialButton icon={<PhoneIcon />} label="Continue with Phone" onClick={onPhoneSignIn} />
+                </div>
+
+                <div className="relative my-5 flex items-center justify-center">
+                  <span className="w-full border-t border-white/10" />
+                  <span className="absolute bg-[#04120C] px-4 font-mono text-[11px] uppercase tracking-[0.24em] text-white/34">
+                    OR
+                  </span>
+                </div>
+
+                <form className="space-y-5" onSubmit={onSignIn}>
+                  <div>
+                    <label className="text-sm font-medium text-white/64">Email address</label>
+                    <GlassInputWrapper>
+                      <input
+                        name="email"
+                        type="email"
+                        placeholder="Enter your email address"
+                        className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
+                      />
+                    </GlassInputWrapper>
                   </div>
 
-                  <div className="animate-element animate-delay-400 relative flex items-center justify-center">
-                    <span className="w-full border-t border-white/10" />
-                    <span className="absolute bg-[#04120C] px-4 font-mono text-[11px] uppercase tracking-[0.24em] text-white/34">
-                      OR
-                    </span>
-                  </div>
-
-                  <form className="space-y-5" onSubmit={onSignIn}>
-                    <div className="animate-element animate-delay-500">
-                      <label className="text-sm font-medium text-white/64">Email Address</label>
-                      <GlassInputWrapper>
+                  <div>
+                    <label className="text-sm font-medium text-white/64">Password</label>
+                    <GlassInputWrapper>
+                      <div className="relative">
                         <input
-                          name="email"
-                          type="email"
-                          placeholder="Enter your email address"
-                          className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/28 focus:outline-none"
+                          name="password"
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="Enter your password"
+                          className="w-full rounded-2xl bg-transparent p-4 pr-12 text-sm text-white placeholder:text-white/28 focus:outline-none"
                         />
-                      </GlassInputWrapper>
-                    </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute inset-y-0 right-3 flex items-center"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-5 w-5 text-white/46 transition-colors hover:text-white" />
+                          ) : (
+                            <Eye className="h-5 w-5 text-white/46 transition-colors hover:text-white" />
+                          )}
+                        </button>
+                      </div>
+                    </GlassInputWrapper>
+                  </div>
 
-                    <div className="animate-element animate-delay-600">
-                      <label className="text-sm font-medium text-white/64">Password</label>
-                      <GlassInputWrapper>
-                        <div className="relative">
-                          <input
-                            name="password"
-                            type={showPassword ? 'text' : 'password'}
-                            placeholder="Enter your password"
-                            className="w-full rounded-2xl bg-transparent p-4 pr-12 text-sm text-white placeholder:text-white/28 focus:outline-none"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute inset-y-0 right-3 flex items-center"
-                          >
-                            {showPassword ? (
-                              <EyeOff className="h-5 w-5 text-white/46 transition-colors hover:text-white" />
-                            ) : (
-                              <Eye className="h-5 w-5 text-white/46 transition-colors hover:text-white" />
-                            )}
-                          </button>
-                        </div>
-                      </GlassInputWrapper>
-                    </div>
-
-                    <div className="animate-element animate-delay-700 flex items-center justify-between text-sm">
-                      <label className="flex items-center gap-3 text-white/76">
-                        <input type="checkbox" name="rememberMe" className="h-4 w-4 accent-[#00FF9D]" />
-                        <span>Keep me signed in</span>
-                      </label>
-                      <button
-                        type="button"
-                        onClick={onResetPassword}
-                        className="text-brand-green transition-colors hover:text-[#39FF14]"
-                      >
-                        Reset password
-                      </button>
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="animate-element animate-delay-800 w-full rounded-2xl bg-[#00FF9D] py-4 font-medium text-black transition-colors hover:bg-[#39FF14]"
-                    >
-                      Continue
-                    </button>
-                  </form>
-
-                  <p className="animate-element animate-delay-900 text-center text-sm text-white/48">
-                    New to Burner Point?{' '}
+                  <div className="flex items-center justify-between text-sm">
+                    <label className="flex items-center gap-3 text-white/76">
+                      <input type="checkbox" name="rememberMe" className="h-4 w-4 accent-[#00FF9D]" />
+                      <span>Keep me signed in</span>
+                    </label>
                     <button
                       type="button"
-                      onClick={onCreateAccount}
-                      className="text-brand-green transition-colors hover:text-[#39FF14]"
+                      onClick={onResetPassword}
+                      className="text-[#00FF9D] transition-colors hover:text-[#39FF14]"
                     >
-                      Create account
+                      Reset password
                     </button>
-                  </p>
-                </>
-              )}
+                  </div>
 
-              {footerContent ? <div className="pt-2">{footerContent}</div> : null}
+                  <button
+                    type="submit"
+                    className="w-full rounded-[1.15rem] bg-[#00FF9D] py-4 text-sm font-semibold uppercase tracking-[0.18em] text-black transition-colors hover:bg-[#39FF14]"
+                  >
+                    Continue
+                  </button>
+                </form>
+
+                <p className="mt-5 text-center text-sm text-white/48">
+                  New to Burner Point?{' '}
+                  <button
+                    type="button"
+                    onClick={onCreateAccount}
+                    className="text-[#00FF9D] transition-colors hover:text-[#39FF14]"
+                  >
+                    Create account
+                  </button>
+                </p>
+              </>
+            )}
+
+            {footerContent ? <div className="pt-3">{footerContent}</div> : null}
+          </div>
+
+          <div className="mt-8 rounded-[1.4rem] border border-[#00FF9D]/16 bg-[#00FF9D]/[0.06] p-4">
+            <div className="flex items-start gap-3">
+              <ShieldCheck className="mt-0.5 h-5 w-5 flex-none text-[#00FF9D]" />
+              <div>
+                <p className="text-sm font-semibold text-white">One account across all Burner Point products.</p>
+                <p className="mt-1.5 text-sm leading-6 text-white/62">
+                  Sign in once to access numbers, verification, rentals, eSIM orders, proxy credentials, billing, and support.
+                </p>
+                <Link href="/#products" className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-[#00FF9D] transition hover:gap-3">
+                  Explore products
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="relative hidden flex-1 overflow-hidden border-l border-white/8 md:block">
-        {heroImageSrc ? (
-          <div
-            className="absolute inset-4 rounded-[2rem] bg-cover bg-center opacity-35"
-            style={{ backgroundImage: `url(${heroImageSrc})` }}
-          />
-        ) : null}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_16%_18%,rgba(0,255,157,0.14),transparent_24%),radial-gradient(circle_at_82%_20%,rgba(57,255,20,0.08),transparent_22%),linear-gradient(180deg,rgba(1,50,32,0.72),rgba(0,0,0,0.96)_54%)]" />
-        <div className="absolute inset-4 rounded-[2rem] border border-white/6 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))]" />
-
-        <div className="pointer-events-none absolute inset-0">
-          {Array.from({ length: 10 }).map((_, index) => (
-            <span
-              key={`auth-particle-${index}`}
-              className="absolute rounded-full bg-brand-green/70 shadow-[0_0_18px_rgba(0,255,157,0.55)]"
-              style={{
-                width: `${index % 3 === 0 ? 7 : 4}px`,
-                height: `${index % 3 === 0 ? 7 : 4}px`,
-                left: `${12 + index * 8}%`,
-                top: `${10 + ((index * 11) % 62)}%`,
-                opacity: 0.18 + (index % 4) * 0.12,
-                animation: `bp-orbit-drift ${7 + index * 0.6}s ease-in-out ${index * 0.18}s infinite`,
-              }}
+        <section className="relative hidden overflow-hidden rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(7,20,15,0.72),rgba(0,0,0,0.98))] p-7 lg:flex lg:flex-col lg:justify-between">
+          {heroImageSrc ? (
+            <div
+              className="absolute inset-4 rounded-[2rem] bg-cover bg-center opacity-20"
+              style={{ backgroundImage: `url(${heroImageSrc})` }}
             />
-          ))}
-        </div>
-
-        <div className="relative z-10 flex h-full flex-col justify-between p-8 xl:p-10">
-          <div className="max-w-xl">
-            <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-brand-green">Private by design</p>
-            <h2 className="mt-4 max-w-lg text-[2.6rem] font-semibold leading-[0.96] text-white xl:text-[3.4rem]">
-              Stay Anonymous. Stay Connected.
+          ) : null}
+          <div className="relative z-10">
+            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[#00FF9D]">Stay Anonymous. Stay Connected.</p>
+            <h2 className="mt-4 max-w-xl text-[3rem] font-black uppercase leading-[0.92] text-white xl:text-[3.7rem]">
+              Private by design from the first screen.
             </h2>
-            <p className="mt-4 max-w-xl text-base leading-8 text-white/60">
-              Burner Point account access is built to feel immediate: one entry surface for sign-in, sign-up, recovery, phone verification,
-              and 2FA without repeated loops or duplicated choices.
+            <p className="mt-4 max-w-2xl text-base leading-8 text-white/60">
+              Burner Point account entry should feel like a premium telecom platform, not a generic utility flow. Authentication stays direct, support stays visible, and the brand stays consistent across login, signup, recovery, and verification.
             </p>
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-2">
-            {[
-              ['BP Verify Hub', 'OTP capture and live delivery with private-number context.'],
-              ['BP Messenger', 'Private threads, voice context, and message continuity.'],
-              ['BP Rentals', 'Temporary or renewable access without exposing your real line.'],
-              ['Secure Access', 'Recovery, 2FA, and phone verification in one controlled path.'],
-            ].map(([titleText, text], index) => (
+          <div className="relative z-10 mt-8 grid gap-4 xl:grid-cols-2">
+            {productLinks.slice(0, 4).map((item) => (
               <article
-                key={titleText}
-                className="animate-slide-right rounded-[1.45rem] border border-white/8 bg-black/28 p-5 backdrop-blur-xl"
-                style={{ animationDelay: `${220 + index * 110}ms` }}
+                key={item.name}
+                className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-5 backdrop-blur-xl"
               >
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">{titleText}</p>
-                <p className="mt-3 text-sm leading-7 text-white/62">{text}</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#00FF9D]">{item.name}</p>
+                <p className="mt-3 text-sm leading-7 text-white/58">{item.description}</p>
               </article>
             ))}
           </div>
 
-          {testimonials.length > 0 ? (
-            <div className="absolute bottom-8 left-1/2 flex w-full -translate-x-1/2 justify-center gap-4 px-8">
-              <TestimonialCard testimonial={testimonials[0]} delay="animate-delay-1000" />
-              {testimonials[1] ? (
-                <div className="hidden xl:flex">
-                  <TestimonialCard testimonial={testimonials[1]} delay="animate-delay-1200" />
-                </div>
-              ) : null}
-              {testimonials[2] ? (
-                <div className="hidden 2xl:flex">
-                  <TestimonialCard testimonial={testimonials[2]} delay="animate-delay-1400" />
-                </div>
-              ) : null}
+          <div className="relative z-10 mt-8 grid gap-4 xl:grid-cols-[1fr_auto] xl:items-end">
+            <div className="rounded-[1.45rem] border border-white/8 bg-white/[0.03] p-5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#00FF9D]">Support contacts</p>
+              <div className="mt-3 space-y-2 text-sm text-white/64">
+                <a href={`mailto:${supportContacts.email}`} className="block transition hover:text-white">
+                  {supportContacts.email}
+                </a>
+                <a href={supportContacts.telegramPrimary} target="_blank" rel="noreferrer" className="block transition hover:text-white">
+                  Telegram: @burnerpoint
+                </a>
+                <a href={supportContacts.telegramApp} target="_blank" rel="noreferrer" className="block transition hover:text-white">
+                  Telegram: @burnerpointapp
+                </a>
+              </div>
             </div>
-          ) : null}
-        </div>
-      </section>
+
+            {testimonials.length > 0 ? (
+              <div className="hidden xl:flex xl:flex-col xl:gap-3">
+                <TestimonialCard testimonial={testimonials[0]} delay="" />
+                {testimonials[1] ? <TestimonialCard testimonial={testimonials[1]} delay="" /> : null}
+              </div>
+            ) : null}
+          </div>
+        </section>
+      </div>
     </div>
   );
 };

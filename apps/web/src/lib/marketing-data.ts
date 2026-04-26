@@ -36,6 +36,7 @@ export type MarketingPageContent = {
 export const primaryNav: MarketingLink[] = [
   { label: 'Dashboard', href: '/dashboard' },
   { label: 'Pricing', href: '/pricing' },
+  { label: 'FAQ', href: '/faq' },
   { label: 'About', href: '/about' },
   { label: 'Blog', href: '/blog' },
   { label: 'Help', href: '/help' },
@@ -48,6 +49,7 @@ export const footerGroups = [
     links: [
       { label: 'Dashboard', href: '/dashboard' },
       { label: 'Pricing', href: '/pricing' },
+      { label: 'FAQ', href: '/faq' },
       { label: 'About', href: '/about' },
       { label: 'Blog', href: '/blog' },
       { label: 'Help', href: '/help' },
@@ -69,6 +71,7 @@ export const footerGroups = [
     links: [
       { label: 'About', href: '/about' },
       { label: 'Blog', href: '/blog' },
+      { label: 'FAQ', href: '/faq' },
       { label: 'Help', href: '/help' },
       { label: 'Careers', href: '/careers' },
     ],

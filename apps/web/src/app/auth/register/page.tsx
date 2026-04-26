@@ -168,8 +168,8 @@ export default function RegisterPage() {
 
   return (
     <SignInPage
-      title={null}
-      description={null}
+      title="Create your Burner Point account."
+      description="Set up one account for private numbers, supported verifications, rentals, travel data, proxy access, and Secure Tunnel."
       testimonials={[]}
     >
       <div className="space-y-5">

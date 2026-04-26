@@ -49,6 +49,13 @@ export const publicSeoPages: SeoPage[] = [
     priority: 1,
   },
   {
+    route: '/faq',
+    title: 'Burner Point FAQ',
+    description: 'Answers about Burner Point products, verifications, rentals, wallet billing, eSIM, proxies, and Secure Tunnel.',
+    changeFrequency: 'monthly',
+    priority: 0.75,
+  },
+  {
     route: '/announcements',
     title: 'Announcements',
     description: marketingPages.updates.description,
