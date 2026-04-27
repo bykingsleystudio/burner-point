@@ -19,7 +19,7 @@ export class OpayAdapter {
       productDesc: 'BurnerPoint wallet top-up',
       supplierReference: params.reference,
       callbackUrl: `${resolveApiUrl(this.cfg)}/payments/webhook/opay`,
-      returnUrl: `${this.cfg.get('WEB_URL')}/dashboard/credits?ref=${params.reference}`,
+      returnUrl: `${this.cfg.get('WEB_URL')}/dashboard/billing?ref=${params.reference}`,
       expireAt: 30,
       userInfo: { userEmail: params.email },
       amount: { total: params.amountKobo / 100, currency: 'NGN' },

@@ -17,4 +17,4 @@ export const WEB_APP_URL = trimTrailingSlash(
   process.env.EXPO_PUBLIC_WEB_URL?.trim() || PRODUCTION_WEB,
 );
 
-export const WEB_BILLING_URL = `${WEB_APP_URL}/dashboard/credits`;
+export const WEB_BILLING_URL = `${WEB_APP_URL}/dashboard/billing`;

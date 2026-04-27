@@ -1,8 +1,8 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { type FormEvent, useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { useSignIn } from '@clerk/nextjs';
 import toast from 'react-hot-toast';
 import { ArrowRight, Zap } from 'lucide-react';
@@ -21,6 +21,7 @@ type ResetPasswordMethod = 'email' | 'phone';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const identifierRef = useRef<HTMLInputElement>(null);
   const { signIn, fetchStatus } = useSignIn();
   const [identifier, setIdentifier] = useState('');
@@ -36,6 +37,12 @@ export default function LoginPage() {
   const [resetCode, setResetCode] = useState('');
   const [resetPassword, setResetPassword] = useState('');
   const [resetMethod, setResetMethod] = useState<ResetPasswordMethod>('email');
+
+  useEffect(() => {
+    if (searchParams.get('mode') === 'reset-request') {
+      setAuthMode('reset-request');
+    }
+  }, [searchParams]);
 
   const authReady = Boolean(signIn);
   const isSubmitting = loading || fetchStatus === 'fetching' || !authReady;
@@ -331,7 +338,7 @@ export default function LoginPage() {
       <div className="space-y-5">
         {!secondFactorStrategy && authMode === 'sign-in' ? (
           <>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-3">
               {oauthProviders.map((provider) => (
                 <AuthProviderButton
                   key={provider.label}
@@ -567,7 +574,7 @@ export default function LoginPage() {
               <ArrowRight className="h-4 w-4 rotate-180" />
               Back
             </button>
-            <Link href="/dashboard/security" className="text-sm text-brand-green transition hover:text-[#39FF14]">
+            <Link href="/dashboard/settings" className="text-sm text-brand-green transition hover:text-[#39FF14]">
               Security settings after sign-in
             </Link>
           </div>
@@ -575,10 +582,10 @@ export default function LoginPage() {
 
         <p className="text-xs leading-6 text-white/70">
           Need an account?{' '}
-          <Link href="/auth/signup" className="text-brand-green transition hover:text-[#39FF14]">
+          <Link href="/sign-up" className="text-brand-green transition hover:text-[#39FF14]">
             Create one
           </Link>
-          <span className="mx-2 text-white/70">•</span>
+          <span className="mx-2 text-white/70">&bull;</span>
           By continuing you agree to the{' '}
           <Link href="/terms-of-service" className="text-brand-green transition hover:text-[#39FF14]">
             Terms of Service
@@ -601,6 +608,7 @@ function getClerkErrorMessage(error: unknown, fallback: string) {
   if (/password|identifier|not found|invalid|incorrect/i.test(raw)) return 'Email/phone or password is incorrect.';
   return fallback;
 }
+
 
 
 

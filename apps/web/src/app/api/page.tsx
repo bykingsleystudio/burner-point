@@ -30,7 +30,7 @@ export default function ApiPage() {
               Burner Point keeps restricted operational access and sensitive setup details out of the public marketing experience. Use your account, support, or approved onboarding channels when deeper access is required.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <BpButton href="/auth/signup" size="lg">
+              <BpButton href="/sign-up" size="lg">
                 Create account
               </BpButton>
               <Link

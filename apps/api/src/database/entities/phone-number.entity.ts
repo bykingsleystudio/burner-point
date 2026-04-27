@@ -10,6 +10,8 @@ export enum NumberType { BURNER = 'burner', RENTAL = 'rental', VERIFICATION = 'v
 export enum NumberProvider {
   TWILIO = 'twilio',
   TELNYX = 'telnyx',
+  BANDWIDTH = 'bandwidth',
+  TREMIL = 'tremil',
   PLIVO = 'plivo',
   TERMII = 'termii',
 }

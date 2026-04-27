@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Image from 'next/image';
 import Link from 'next/link';
@@ -32,8 +32,8 @@ export function MarketingHeader() {
     {
       title: 'Company',
       links: [
-        { label: 'Pricing', href: '/#pricing' },
-        { label: 'How It Works', href: '/#how-it-works' },
+        { label: 'Pricing', href: '/pricing' },
+        { label: 'How It Works', href: '/how-it-works' },
         { label: 'FAQ', href: '/faq' },
         { label: 'Blog', href: '/blog' },
       ],
@@ -41,7 +41,7 @@ export function MarketingHeader() {
     {
       title: 'Support',
       links: [
-        { label: 'Help / Support', href: '/#support' },
+        { label: 'Help / Support', href: '/support' },
         { label: 'Contact', href: '/contact' },
       ],
     },
@@ -49,16 +49,18 @@ export function MarketingHeader() {
   const legalLinks = [
     { label: 'Terms', href: '/terms-of-service' },
     { label: 'Privacy', href: '/privacy-policy' },
-    { label: 'Acceptable Use', href: '/terms-of-service' },
+    { label: 'Acceptable Use', href: '/acceptable-use-policy' },
   ];
 
   return (
     <header className="sticky top-0 z-50 border-b border-black/6 bg-white/86 backdrop-blur-2xl dark:border-white/8 dark:bg-[#06120d]/88">
       <div className="mx-auto flex min-h-20 max-w-[92rem] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="inline-flex items-center gap-2.5" aria-label="Burner Point home">
-          <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} className="h-8 w-8 sm:h-9 sm:w-9" priority />
-          <Image src="/assets/wordmark-black.svg" alt="Burner Point" width={166} height={26} className="h-[1.15rem] w-auto dark:hidden sm:h-5" />
-          <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={166} height={26} className="hidden h-[1.15rem] w-auto dark:block sm:h-5" />
+        <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
+          <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} className="h-8 w-8 flex-none sm:h-9 sm:w-9" priority />
+          <span className="flex items-center rounded-full bg-black/[0.03] px-3 py-2 dark:bg-white/[0.04]">
+            <Image src="/assets/wordmark-black.svg" alt="Burner Point" width={166} height={26} className="h-[1.05rem] w-auto dark:hidden sm:h-[1.15rem]" />
+            <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={166} height={26} className="hidden h-[1.05rem] w-auto dark:block sm:h-[1.15rem]" />
+          </span>
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
@@ -106,20 +108,20 @@ export function MarketingHeader() {
 
         <div className="hidden items-center gap-3 lg:flex">
           <Link
-            href="/auth/login"
-            className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/10 px-5 text-sm font-semibold text-[#07140f] transition hover:border-[#00FF9D]/30 hover:bg-[#effcf5] dark:border-white/12 dark:text-white dark:hover:bg-white/[0.06]"
+            href="/sign-in"
+            className="inline-flex min-h-12 min-w-[8.75rem] items-center justify-center rounded-full border border-black/10 bg-white px-5 text-sm font-semibold text-[#07140f] shadow-[0_8px_24px_rgba(2,20,12,0.05)] transition hover:-translate-y-0.5 hover:border-[#00FF9D]/30 hover:bg-[#effcf5] dark:border-white/12 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08]"
           >
             Sign In
           </Link>
-          <BpButton href="/auth/signup" size="md" className="px-5">
+          <BpButton href="/sign-up" size="md" className="min-w-[9.5rem] px-5 shadow-[0_18px_36px_rgba(0,255,157,0.18)]">
             Get Started
           </BpButton>
         </div>
 
         <div className="flex items-center gap-3 lg:hidden">
           <Link
-            href="/auth/signup"
-            className="inline-flex min-h-10 items-center rounded-full bg-[#07140f] px-3.5 text-xs font-semibold text-white transition hover:bg-[#013220] dark:bg-[#00FF9D] dark:text-black sm:px-4 sm:text-sm"
+            href="/sign-up"
+            className="inline-flex min-h-11 items-center rounded-full bg-[#07140f] px-4 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(2,20,12,0.16)] transition hover:-translate-y-0.5 hover:bg-[#013220] dark:bg-[#00FF9D] dark:text-black"
           >
             Get Started
           </Link>
@@ -196,14 +198,14 @@ export function MarketingHeader() {
 
             <div className="grid gap-2 sm:grid-cols-2">
               <Link
-                href="/auth/login"
+                href="/sign-in"
                 onClick={() => setMobileMenuOpen(false)}
                 className="inline-flex min-h-12 items-center justify-center rounded-full border border-black/10 text-sm font-semibold text-[#07140f] dark:border-white/12 dark:text-white"
               >
                 Sign In
               </Link>
               <Link
-                href="/auth/signup"
+                href="/sign-up"
                 onClick={() => setMobileMenuOpen(false)}
                 className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#00FF9D] text-sm font-semibold text-black"
               >
@@ -262,9 +264,9 @@ export function MarketingFooter() {
             links={[
               { label: 'Terms of Service', href: '/terms-of-service' },
               { label: 'Privacy Policy', href: '/privacy-policy' },
-              { label: 'Acceptable Use Policy', href: '/terms-of-service' },
-              { label: 'Refund Policy', href: '/terms-of-service' },
-              { label: 'Cookie Policy', href: '/privacy-policy' },
+              { label: 'Acceptable Use Policy', href: '/acceptable-use-policy' },
+              { label: 'Refund Policy', href: '/refund-policy' },
+              { label: 'Cookie Policy', href: '/cookie-policy' },
             ]}
           />
 
@@ -304,8 +306,8 @@ export function MarketingFooter() {
         </div>
 
         <div className="mt-12 flex flex-col gap-4 border-t border-white/8 pt-6 text-sm text-white/70 md:flex-row md:items-center md:justify-between">
-          <p>Private numbers • Codes • Rentals • eSIM • Proxies • Secure access</p>
-          <Link href="/auth/signup" className="inline-flex items-center gap-2 text-white/72 transition hover:text-white">
+          <p>Private numbers &bull; Codes &bull; Rentals &bull; eSIM &bull; Proxies &bull; Secure access</p>
+          <Link href="/sign-up" className="inline-flex items-center gap-2 text-white/72 transition hover:text-white">
             Create account
             <ArrowRight className="h-4 w-4" />
           </Link>
@@ -335,4 +337,5 @@ function FooterGroup({
     </div>
   );
 }
+
 

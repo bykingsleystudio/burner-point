@@ -1,6 +1,7 @@
 export type BackendIntegrationId =
   | 'twilio'
   | 'telnyx'
+  | 'bandwidth'
   | 'tremil'
   | 'openai'
   | 'airalo'
@@ -74,6 +75,29 @@ export const BACKEND_INTEGRATION_CONTRACTS: BackendIntegrationContract[] = [
       { method: 'POST', path: '/messaging/sms/send', auth: 'user', purpose: 'Send routed SMS through Telnyx fallback infrastructure' },
       { method: 'GET', path: '/numbers/search', auth: 'user', purpose: 'Search Telnyx-backed conversation inventory through the backend' },
       { method: 'POST', path: '/webhooks/telnyx', auth: 'provider-signature', purpose: 'Receive Telnyx messaging and number lifecycle events' },
+    ],
+  },
+  {
+    id: 'bandwidth',
+    name: 'Bandwidth',
+    category: 'telecom',
+    backendOnly: true,
+    secretEnv: ['BANDWIDTH_ACCOUNT_ID', 'BANDWIDTH_USERNAME', 'BANDWIDTH_PASSWORD'],
+    optionalEnv: [
+      'BANDWIDTH_API_TOKEN',
+      'BANDWIDTH_MESSAGING_APPLICATION_ID',
+      'BANDWIDTH_VOICE_APPLICATION_ID',
+      'BANDWIDTH_SITE_ID',
+      'BANDWIDTH_SIPPEER_ID',
+      'BANDWIDTH_WEBHOOK_SECRET',
+    ],
+    publicClientEnv: [],
+    frontendRule: 'Use Burner Point messaging, calling, numbers, and verification flows only; Bandwidth remains server-side.',
+    endpoints: [
+      { method: 'POST', path: '/messaging/sms/send', auth: 'user', purpose: 'Send routed SMS through Bandwidth when selected by provider routing' },
+      { method: 'GET', path: '/numbers/search', auth: 'user', purpose: 'Search Bandwidth-backed North America inventory through the backend' },
+      { method: 'POST', path: '/webhooks/bandwidth', auth: 'provider-signature', purpose: 'Receive Bandwidth messaging and delivery events' },
+      { method: 'POST', path: '/webhooks/bandwidth/voice', auth: 'provider-signature', purpose: 'Respond to Bandwidth voice callbacks with BXML' },
     ],
   },
   {

@@ -37,7 +37,7 @@ function PaymentCancelContent() {
         ) : null}
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <Link href="/dashboard/credits" className="flex min-h-12 items-center justify-center rounded-xl bg-brand-green px-5 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-black">
+          <Link href="/dashboard/billing" className="flex min-h-12 items-center justify-center rounded-xl bg-brand-green px-5 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-black">
             <RotateCcw className="mr-2 h-4 w-4" />
             Try Again
           </Link>

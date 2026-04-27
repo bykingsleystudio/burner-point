@@ -54,6 +54,30 @@ export class WebhooksController {
     return this.service.handleTelnyxWebhook(body, headers);
   }
 
+  @Post('bandwidth')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Bandwidth webhook receiver' })
+  async bandwidthWebhook(
+    @Body() body: Record<string, unknown>,
+    @Headers() headers: Record<string, string>,
+    @Req() req: RawBodyRequest<Request>,
+  ) {
+    return this.service.handleBandwidthWebhook(body, headers, req.rawBody);
+  }
+
+  @Post('bandwidth/voice')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Bandwidth voice callback responder' })
+  async bandwidthVoice(
+    @Body() body: Record<string, unknown>,
+    @Headers() headers: Record<string, string>,
+    @Res() res: Response,
+  ) {
+    const bxml = await this.service.handleBandwidthVoiceWebhook(body, headers);
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    res.send(bxml);
+  }
+
   @Post('airalo')
   @HttpCode(200)
   @ApiOperation({ summary: 'Airalo webhook receiver' })

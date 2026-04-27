@@ -1,7 +1,8 @@
 import { MarketingPage } from '@/components/marketing';
+import type { MarketingPageContent } from '@/lib/marketing-data';
 import { buildMarketingMetadata, pageStructuredData } from '@/lib/seo';
 
-const page = {
+const page: MarketingPageContent = {
   slug: 'cookie-policy',
   eyebrow: 'Legal',
   title: 'Cookie Policy.',
@@ -21,7 +22,7 @@ const page = {
       text: 'Blocking some cookies may affect sign-in, onboarding, or dashboard behavior, especially on mobile browsers.',
     },
   ],
-} as const;
+};
 
 export const metadata = buildMarketingMetadata(page, '/cookie-policy');
 

@@ -74,7 +74,7 @@ export default function PhoneVerifyPage() {
       } catch {
         if (cancelled) return;
         toast.error('Something went wrong. Please sign in again.');
-        router.replace('/dashboard');
+        router.replace('/sign-in');
       }
     }
 
@@ -148,9 +148,9 @@ export default function PhoneVerifyPage() {
               <ShieldCheck className="h-6 w-6 text-brand-green" />
             </div>
             <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.22em] text-brand-green">Phone verification</p>
-            <h1 className="mt-3 text-[1.8rem] font-semibold uppercase leading-none sm:text-[2rem]">Verify your account phone</h1>
+            <h1 className="mt-3 text-[1.8rem] font-semibold uppercase leading-none sm:text-[2rem]">Verify your phone number</h1>
             <p className="mt-2 text-sm leading-5 text-white/72">
-              Choose SMS or voice and enter your number with country code.
+              Choose SMS or voice, enter your phone number, and confirm the code to finish account security.
             </p>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_0.55fr]">
@@ -257,7 +257,7 @@ export default function PhoneVerifyPage() {
             ) : null}
 
             <div className="mt-4 rounded-bp-lg border border-white/8 bg-white/[0.02] p-3.5 text-xs leading-5 text-white/72">
-              Codes expire after 10 minutes. If one does not arrive, try the other delivery option and check your number.
+              Codes expire after 10 minutes. If one does not arrive, send another code or switch delivery method.
             </div>
           </div>
         </div>

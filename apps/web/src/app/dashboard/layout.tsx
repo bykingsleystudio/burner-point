@@ -51,17 +51,17 @@ const NAV_ITEMS: NavItem[] = [
     icon: LayoutDashboard,
   },
   {
-    href: '/dashboard/inbox',
+    href: '/dashboard/messenger',
     label: 'BP Messenger',
     shortLabel: 'Messenger',
     description: 'Messaging, calls, contacts, and shared media.',
     icon: MessageSquareText,
   },
   {
-    href: '/dashboard/verification',
+    href: '/dashboard/verify-hub',
     label: 'BP Verify Hub',
     shortLabel: 'Verify Hub',
-    description: 'Tiered verification routing and live OTP visibility.',
+    description: 'Codes, number activity, and verification history.',
     icon: ShieldCheck,
   },
   {
@@ -79,14 +79,14 @@ const NAV_ITEMS: NavItem[] = [
     icon: Smartphone,
   },
   {
-    href: '/dashboard/proxies',
+    href: '/dashboard/proxy',
     label: 'BP Proxy Store',
     shortLabel: 'Proxy Store',
-    description: 'Proxy plans, setup details, and active sessions.',
+    description: 'Proxy plans, setup details, and active connections.',
     icon: Globe2,
   },
   {
-    href: '/dashboard/vpn',
+    href: '/dashboard/secure-tunnel',
     label: 'BP Secure Tunnel',
     shortLabel: 'Secure Tunnel',
     description: 'Secure tunnel access, server regions, and device setup.',
@@ -102,15 +102,15 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 const PAGE_META: Array<{ match: string; title: string; description: string }> = [
-  { match: '/dashboard/inbox', title: 'BP Messenger', description: 'Messaging, calling, and contacts across your private number stack.' },
+  { match: '/dashboard/messenger', title: 'BP Messenger', description: 'Messaging, calling, and contacts across your private number stack.' },
   { match: '/dashboard/calls', title: 'BP Messenger', description: 'Missed, incoming, and outgoing activity tied to Burner Point lines.' },
   { match: '/dashboard/contacts', title: 'BP Messenger', description: 'Contact control, dialing, and private communication identity.' },
   { match: '/dashboard/messages', title: 'BP Messenger', description: 'Conversation context, media, and secure message history.' },
-  { match: '/dashboard/verification', title: 'BP Verify Hub', description: 'Tiered verification routing with a live OTP surface.' },
+  { match: '/dashboard/verify-hub', title: 'BP Verify Hub', description: 'Codes, status, and number activity in one place.' },
   { match: '/dashboard/rentals', title: 'BP Number Rentals', description: 'Browse inventory, activate rentals, and manage renewal timing.' },
   { match: '/dashboard/esim', title: 'BP eSIM Store', description: 'Provision travel data plans and manage installed eSIMs.' },
-  { match: '/dashboard/proxies', title: 'BP Proxy Store', description: 'Filter proxy plans, review setup details, and monitor active sessions.' },
-  { match: '/dashboard/vpn', title: 'BP Secure Tunnel', description: 'Secure routing, server choice, and device setup guidance.' },
+  { match: '/dashboard/proxy', title: 'BP Proxy Store', description: 'Filter proxy plans, review setup details, and monitor active connections.' },
+  { match: '/dashboard/secure-tunnel', title: 'BP Secure Tunnel', description: 'Secure routing, server choice, and device setup guidance.' },
   { match: '/dashboard/settings', title: 'Settings', description: 'Profile, billing, support, and security controls.' },
   { match: '/dashboard/profile', title: 'Settings', description: 'Manage personal details and recovery information.' },
   { match: '/dashboard/billing', title: 'Billing & Subscription', description: 'Wallet movements, invoices, plans, and active subscriptions.' },
@@ -123,11 +123,11 @@ const PAGE_META: Array<{ match: string; title: string; description: string }> = 
 
 const QUICK_ACTIONS = [
   { href: '/dashboard/rentals', label: 'Buy Number' },
-  { href: '/dashboard/inbox', label: 'Start Chat' },
-  { href: '/dashboard/verification', label: 'Run Verification' },
+  { href: '/dashboard/messenger', label: 'Start Chat' },
+  { href: '/dashboard/verify-hub', label: 'Run Verification' },
 ];
 
-const MOBILE_NAV_ITEMS = ['/dashboard', '/dashboard/inbox', '/dashboard/verification', '/dashboard/rentals', '/dashboard/settings'] as const;
+const MOBILE_NAV_ITEMS = ['/dashboard', '/dashboard/messenger', '/dashboard/verify-hub', '/dashboard/rentals', '/dashboard/settings'] as const;
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -151,7 +151,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (!isSignedIn) {
       clearAuth();
       clearApiSession();
-      router.replace('/auth/login');
+      router.replace('/sign-in');
       return;
     }
 
@@ -162,7 +162,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       try {
         const clerkToken = await getToken();
-        if (!clerkToken) throw new Error('Missing secure session token');
+        if (!clerkToken) throw new Error('Missing session token');
 
         const { data } = await authApi.exchangeClerkToken(clerkToken, {
           firstName: clerkUser?.firstName,
@@ -195,8 +195,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         const message =
           responseError.response?.status === 401
-            ? 'Your secure session could not be refreshed. Sign in again to reopen the dashboard.'
-            : responseError.response?.data?.message || 'Unable to start the Burner Point dashboard session.';
+            ? 'Something went wrong. Please sign in again.'
+            : responseError.response?.data?.message || 'We could not open your dashboard right now.';
 
         clearApiSession();
 
@@ -266,7 +266,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
       <main className="flex min-h-screen items-center justify-center bg-brand-black px-4 text-white">
         <div className="w-full max-w-md">
-          <BpLoadingState label="Securing your Burner Point workspace..." />
+          <BpLoadingState label="Opening your Burner Point workspace..." />
         </div>
       </main>
     );
@@ -381,7 +381,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <ChevronDown className="h-4 w-4 text-white/42 transition group-open:rotate-180" />
             </summary>
             <div className="mt-2 rounded-[1.15rem] border border-white/8 bg-black/36 p-2">
-              <Link href="/dashboard/profile" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-white/68 transition hover:bg-white/[0.04] hover:text-white">
+              <Link href="/dashboard/settings" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-white/68 transition hover:bg-white/[0.04] hover:text-white">
                 <UserCircle2 className="h-4 w-4 text-brand-green" />
                 Profile
               </Link>

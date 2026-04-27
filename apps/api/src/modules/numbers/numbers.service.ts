@@ -177,7 +177,7 @@ export class NumbersService {
 
     // Release from provider
     if (num.providerNumberSid) {
-      try { await this.providerService.releaseNumber(num.providerNumberSid, num.provider as unknown as ProviderName); }
+      try { await this.providerService.releaseNumber(num.providerNumberSid, num.provider as unknown as ProviderName, num.number); }
       catch (e) { this.logger.warn(`Provider release failed for ${num.number}: ${e.message}`); }
     }
 
@@ -216,6 +216,10 @@ export class NumbersService {
     switch (provider) {
       case ProviderName.TELNYX:
         return NumberProvider.TELNYX;
+      case ProviderName.BANDWIDTH:
+        return NumberProvider.BANDWIDTH;
+      case ProviderName.TREMIL:
+        return NumberProvider.TREMIL;
       case ProviderName.PLIVO:
         return NumberProvider.PLIVO;
       case ProviderName.TERMII:

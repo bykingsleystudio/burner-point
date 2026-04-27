@@ -5,7 +5,7 @@ import { IsString, IsIn, Matches, Length } from 'class-validator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 class SendOtpDto {
-  @Matches(/^\+[1-9]\d{6,14}$/, { message: 'phoneNumber must be a valid E.164 phone number' })
+  @Matches(/^\+[1-9]\d{6,14}$/, { message: 'Enter your phone number with country code.' })
   phoneNumber: string;
 
   @IsString()
@@ -14,7 +14,7 @@ class SendOtpDto {
 }
 
 class VerifyOtpDto {
-  @Matches(/^\+[1-9]\d{6,14}$/, { message: 'phoneNumber must be a valid E.164 phone number' })
+  @Matches(/^\+[1-9]\d{6,14}$/, { message: 'Enter your phone number with country code.' })
   phoneNumber: string;
 
   @IsString()

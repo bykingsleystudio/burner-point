@@ -126,9 +126,9 @@ export class MessagingService {
         <p>Your payment of ₦${amount / 100} has been successfully processed.</p>
         <p><strong>Reference:</strong> ${reference}</p>
         <p>Your credits have been added to your wallet.</p>
-        <a href="${this.configService.get('WEB_URL')}/dashboard/wallet"
+        <a href="${this.configService.get('WEB_URL')}/dashboard/billing"
            style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-          View Wallet
+          Open Billing
         </a>
       </div>
     `;

@@ -81,7 +81,7 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
     description:
       'Keep text conversations attached to the Burner Point number that received them. The module is designed for US/Canada SMS, secure audio, photo and video sharing, call context, and WiFi & Data communication history.',
     status: 'Threaded communication',
-    primaryAction: { label: 'Open Inbox', href: '/dashboard/inbox' },
+    primaryAction: { label: 'Open Inbox', href: '/dashboard/messenger' },
     secondaryAction: { label: 'Manage Numbers', href: '/dashboard/numbers' },
     stats: [
       { label: 'Media', value: 'MMS' },
@@ -102,7 +102,7 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
     description:
       'Run voice conversations from a Burner Point number without exposing your personal line. Calls are designed for US and Canada conversation numbers with voicemail and activity history.',
     status: 'Conversation infrastructure',
-    primaryAction: { label: 'Open Inbox', href: '/dashboard/inbox' },
+    primaryAction: { label: 'Open Inbox', href: '/dashboard/messenger' },
     secondaryAction: { label: 'Manage Numbers', href: '/dashboard/numbers' },
     stats: [
       { label: 'Region', value: 'US/CA' },
@@ -124,7 +124,7 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
       'Voicemail belongs inside the private conversation layer, so missed calls, recordings, transcripts, and callbacks stay attached to the Burner Point number that received them.',
     status: 'Secure voicemail layer',
     primaryAction: { label: 'Open Calls', href: '/dashboard/calls' },
-    secondaryAction: { label: 'Open Inbox', href: '/dashboard/inbox' },
+    secondaryAction: { label: 'Open Inbox', href: '/dashboard/messenger' },
     stats: [
       { label: 'Playback', value: 'Private' },
       { label: 'Routing', value: 'Number-bound' },
@@ -145,7 +145,7 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
       'Rent secure non-VoIP numbers for one-time workflows or keep a renewable monthly number active for account recovery, messaging, and controlled communication.',
     status: 'Rental lifecycle',
     primaryAction: { label: 'Get Number', href: '/dashboard/numbers' },
-    secondaryAction: { label: 'Buy Credits', href: '/dashboard/credits' },
+    secondaryAction: { label: 'Open Billing', href: '/dashboard/billing' },
     stats: [
       { label: 'Short-term', value: '$5.99+' },
       { label: 'Monthly', value: '$15.99+' },
@@ -165,7 +165,7 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
     description:
       'Burner Point eSIM management is designed for travel-ready data, instant activation, and multi-country connectivity while keeping privacy tooling in one account.',
     status: 'Global data catalog',
-    primaryAction: { label: 'Buy Credits', href: '/dashboard/credits' },
+    primaryAction: { label: 'Open Billing', href: '/dashboard/billing' },
     secondaryAction: { label: 'Contact Support', href: '/dashboard/support' },
     stats: [
       { label: 'Activation', value: 'Instant' },
@@ -186,7 +186,7 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
     description:
       'Proxy management gives users approved routing options, location flexibility, and connection health visibility from one clean account surface.',
     status: 'Plan access and session health',
-    primaryAction: { label: 'Buy Credits', href: '/dashboard/credits' },
+    primaryAction: { label: 'Open Billing', href: '/dashboard/billing' },
     secondaryAction: { label: 'Open Support', href: '/dashboard/support' },
     stats: [
       { label: 'Types', value: 'Mobile/Residential' },
@@ -207,7 +207,7 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
     description:
       'BP Secure Tunnel gives users encrypted connectivity, device setup guidance, server location choice, and dedicated IP options where available.',
     status: 'Secure tunnel access',
-    primaryAction: { label: 'See Security', href: '/security' },
+    primaryAction: { label: 'See Secure Tunnel', href: '/products/secure-tunnel' },
     secondaryAction: { label: 'Open Support', href: '/dashboard/support' },
     stats: [
       { label: 'Protocol', value: 'WireGuard' },
@@ -270,7 +270,7 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
     description:
       'Billing keeps verification credits, rental purchases, monthly plans, checkout status, transaction history, refunds, and account visibility in one controlled surface.',
     status: 'Payment center',
-    primaryAction: { label: 'Buy Credits', href: '/dashboard/credits' },
+    primaryAction: { label: 'Open Billing', href: '/dashboard/billing' },
     secondaryAction: { label: 'Open Support', href: '/dashboard/support' },
     stats: [
       { label: 'Verify', value: '$0.99+' },

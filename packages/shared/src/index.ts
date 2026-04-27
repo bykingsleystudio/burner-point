@@ -24,7 +24,7 @@ export interface User {
 // ─── Phone Number Types ──────────────────────────────────────────────────────
 export type NumberStatus = 'active' | 'expired' | 'released' | 'suspended';
 export type NumberType = 'burner' | 'rental' | 'verification' | 'enterprise';
-export type NumberProvider = 'twilio' | 'telnyx';
+export type NumberProvider = 'twilio' | 'telnyx' | 'bandwidth' | 'tremil';
 
 export interface PhoneNumber {
   id: string;

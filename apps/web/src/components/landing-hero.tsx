@@ -109,7 +109,7 @@ export function LandingHero({
 
           <div className="relative mt-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
             <Spotlight className="-top-24 left-10" fill="#00FF9D" />
-            <MetalButton variant="primary" onClick={() => router.push('/auth/signup')}>
+            <MetalButton variant="primary" onClick={() => router.push('/sign-up')}>
               <span className="inline-flex items-center gap-2 px-1">
                 Get Started
                 <ArrowRight className="h-4 w-4" />
@@ -121,7 +121,7 @@ export function LandingHero({
               </span>
             </LiquidButton>
             <Link
-              href="/auth/login"
+              href="/sign-in"
               className="inline-flex min-h-[54px] items-center justify-center rounded-full border border-white/14 bg-black/20 px-8 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-white transition hover:border-brand-green/35 hover:bg-brand-green/[0.05]"
             >
               Sign In

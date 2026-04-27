@@ -167,7 +167,7 @@ export default function ContactsPage() {
 
                   <div className="flex flex-wrap gap-2">
                     <Link
-                      href="/dashboard/inbox"
+                      href="/dashboard/messenger"
                       className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[0.95rem] border border-white/10 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-white/70 transition hover:border-brand-green/20 hover:text-brand-green"
                     >
                       <MessageSquareText className="h-4 w-4" />
@@ -190,7 +190,7 @@ export default function ContactsPage() {
               text="As soon as BP Messenger has inbound or outbound threads, the counterpart numbers will appear here so you can search and reuse them."
               action={
                 <Link
-                  href="/dashboard/inbox"
+                  href="/dashboard/messenger"
                   className="rounded-[0.95rem] bg-brand-green px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:bg-[#1cffac]"
                 >
                   Open BP Messenger

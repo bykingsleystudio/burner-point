@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan } from 'typeorm';
@@ -46,7 +47,7 @@ export class PhoneAuthService {
 
     if (recentSends >= MAX_SENDS_PER_WINDOW) {
       throw new HttpException(
-        'Too many OTP send attempts. Please try again in 10 minutes.',
+        'Too many attempts. Please try again in 10 minutes.',
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }
@@ -98,14 +99,14 @@ export class PhoneAuthService {
         session.status = 'expired';
         await this.sessionRepo.save(session);
       }
-      throw new BadRequestException('OTP session expired or not found. Request a new code.');
+      throw new BadRequestException('Code expired. Request a new one.');
     }
 
     if (session.attempts >= MAX_VERIFY_ATTEMPTS) {
       session.status = 'failed';
       await this.sessionRepo.save(session);
       throw new HttpException(
-        'Too many invalid verification attempts. Please request a new code.',
+        'Too many incorrect codes. Request a new one.',
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }
@@ -126,7 +127,7 @@ export class PhoneAuthService {
       }
       await this.sessionRepo.save(session);
       throw new BadRequestException({
-        message: 'Invalid OTP code',
+        message: 'That code did not work.',
         attemptsRemaining: Math.max(0, MAX_VERIFY_ATTEMPTS - session.attempts),
       });
     }
@@ -153,7 +154,8 @@ export class PhoneAuthService {
     const sid = this.configService.get<string>('TWILIO_ACCOUNT_SID');
     const token = this.configService.get<string>('TWILIO_AUTH_TOKEN');
     if (!sid || !token) {
-      throw new BadRequestException('Phone auth is not configured. Set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN on the API service.');
+      this.logger.error('Phone verification requested without Twilio account credentials configured.');
+      throw new ServiceUnavailableException('Phone verification is temporarily unavailable. Please try again later.');
     }
 
     this.twilioClientInstance = twilio(sid, token);
@@ -163,7 +165,8 @@ export class PhoneAuthService {
   private getVerifyServiceSidOrThrow(): string {
     const verifyServiceSid = this.configService.get<string>('TWILIO_VERIFY_SERVICE_SID');
     if (!verifyServiceSid) {
-      throw new BadRequestException('Phone auth is not configured. Set TWILIO_VERIFY_SERVICE_SID on the API service.');
+      this.logger.error('Phone verification requested without TWILIO_VERIFY_SERVICE_SID configured.');
+      throw new ServiceUnavailableException('Phone verification is temporarily unavailable. Please try again later.');
     }
     return verifyServiceSid;
   }
@@ -187,7 +190,7 @@ export class PhoneAuthService {
   private normalizePhone(phoneNumber: string) {
     const normalized = phoneNumber.trim().replace(/[^\d+]/g, '');
     if (!E164_PATTERN.test(normalized)) {
-      throw new BadRequestException('Phone number must be in E.164 format, for example +14155550182.');
+      throw new BadRequestException('Enter your phone number with country code.');
     }
     return normalized;
   }
@@ -198,7 +201,7 @@ export class PhoneAuthService {
 
     if (err.status === 429) {
       throw new HttpException(
-        'Twilio is rate limiting this verification. Please wait before trying again.',
+        'Too many verification attempts. Please wait before trying again.',
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }

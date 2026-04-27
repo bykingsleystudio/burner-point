@@ -11,7 +11,7 @@ import { EventsGateway } from '../gateway/events.gateway';
 import { AiService } from '../ai/ai.service';
 import { resolveClerkWebhookSigningSecret, resolveWebhookBaseUrl } from '../../config/runtime-env';
 
-type ProviderWebhookSource = 'airalo' | 'oxylabs' | 'smartproxy' | 'wireguard';
+type ProviderWebhookSource = 'airalo' | 'bandwidth' | 'oxylabs' | 'smartproxy' | 'wireguard';
 
 @Injectable()
 export class WebhooksService {
@@ -200,6 +200,54 @@ export class WebhooksService {
     return { success: true };
   }
 
+  async handleBandwidthWebhook(
+    payload: Record<string, unknown>,
+    headers: Record<string, string>,
+    rawBody?: Buffer,
+  ) {
+    const result = await this.handleProviderWebhook('bandwidth', payload, headers, rawBody);
+    const eventType = this.getProviderEventType(payload).toLowerCase();
+    const from = this.asString(payload.from) || this.asString((payload.message as Record<string, unknown> | undefined)?.from);
+    const to = this.asString(payload.to) || this.asString(payload.owner) || this.asString((payload.message as Record<string, unknown> | undefined)?.to);
+    const body = this.asString(payload.text) || this.asString(payload.body) || this.asString((payload.message as Record<string, unknown> | undefined)?.text);
+
+    if (eventType.includes('message') && from && to) {
+      await this.persistInboundProviderSms({
+        provider: 'bandwidth',
+        eventId:
+          this.asString(payload.messageId) ||
+          this.asString((payload.message as Record<string, unknown> | undefined)?.id) ||
+          `${Date.now()}`,
+        from,
+        to,
+        body,
+        payload,
+      }).catch((error) => {
+        this.logger.warn(`Bandwidth inbound message persistence failed: ${error instanceof Error ? error.message : String(error)}`);
+      });
+    }
+
+    return result;
+  }
+
+  async handleBandwidthVoiceWebhook(
+    payload: Record<string, unknown>,
+    headers: Record<string, string>,
+  ) {
+    await this.storeWebhookEvent(
+      `bandwidth-voice:${this.getProviderEventId(payload, headers) || Date.now()}`,
+      'bandwidth',
+      this.getProviderEventType(payload),
+      payload,
+    );
+
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <SpeakSentence voice="julie">You have reached a Burner Point number. Please leave a message.</SpeakSentence>
+  <Record />
+</Response>`;
+  }
+
   async handleProviderWebhook(
     source: ProviderWebhookSource,
     payload: Record<string, unknown>,
@@ -362,6 +410,7 @@ export class WebhooksService {
   private getProviderWebhookSecretEnv(source: ProviderWebhookSource): string {
     const env: Record<ProviderWebhookSource, string> = {
       airalo: 'AIRALO_WEBHOOK_SECRET',
+      bandwidth: 'BANDWIDTH_WEBHOOK_SECRET',
       oxylabs: 'OXYLABS_WEBHOOK_SECRET',
       smartproxy: 'SMARTPROXY_WEBHOOK_SECRET',
       wireguard: 'WIREGUARD_WEBHOOK_SECRET',
@@ -406,6 +455,7 @@ export class WebhooksService {
       'x-webhook-signature',
       `x-${source}-signature`,
       'x-airalo-signature',
+      'x-bandwidth-signature',
       'x-oxylabs-signature',
       'x-smartproxy-signature',
       'x-wireguard-signature',

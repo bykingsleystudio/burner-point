@@ -5,7 +5,7 @@ export function MessengerTabs({ active }: { active: string }) {
     <BpTabs
       active={active}
       tabs={[
-        { label: 'Messaging', href: '/dashboard/inbox' },
+        { label: 'Messaging', href: '/dashboard/messenger' },
         { label: 'Calls', href: '/dashboard/calls' },
         { label: 'Contacts', href: '/dashboard/contacts' },
       ]}

@@ -1,7 +1,8 @@
 import { MarketingPage } from '@/components/marketing';
+import type { MarketingPageContent } from '@/lib/marketing-data';
 import { buildMarketingMetadata, pageStructuredData } from '@/lib/seo';
 
-const page = {
+const page: MarketingPageContent = {
   slug: 'refund-policy',
   eyebrow: 'Legal',
   title: 'Refund Policy.',
@@ -26,7 +27,7 @@ const page = {
       text: 'If you need a review, include your account email, product, payment reference, timestamp, and screenshots when relevant.',
     },
   ],
-} as const;
+};
 
 export const metadata = buildMarketingMetadata(page, '/refund-policy');
 

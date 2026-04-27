@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import {
   CalendarDays,
   Globe2,
@@ -26,13 +26,13 @@ const FLAG_MOT = [
 ] as const;
 
 const SERVICES: Array<{ href: string; label: string; Icon: LucideIcon; mot: string }> = [
-  { href: '/verifications', label: 'Verifications', Icon: ShieldCheck, mot: 'bp-svc-mot-0' },
-  { href: '/numbers', label: 'Numbers', Icon: Smartphone, mot: 'bp-svc-mot-1' },
-  { href: '/rentals', label: 'Rentals', Icon: CalendarDays, mot: 'bp-svc-mot-2' },
-  { href: '/esim', label: 'eSIM', Icon: Globe2, mot: 'bp-svc-mot-3' },
-  { href: '/proxies', label: 'Proxies', Icon: Server, mot: 'bp-svc-mot-4' },
+  { href: '/products/verify-hub', label: 'Verify Hub', Icon: ShieldCheck, mot: 'bp-svc-mot-0' },
+  { href: '/products/messenger', label: 'Messenger', Icon: Smartphone, mot: 'bp-svc-mot-1' },
+  { href: '/products/rentals', label: 'Rentals', Icon: CalendarDays, mot: 'bp-svc-mot-2' },
+  { href: '/products/esim-store', label: 'eSIM', Icon: Globe2, mot: 'bp-svc-mot-3' },
+  { href: '/products/proxy-store', label: 'Proxies', Icon: Server, mot: 'bp-svc-mot-4' },
   { href: '/support', label: 'Support', Icon: HelpCircle, mot: 'bp-svc-mot-5' },
-  { href: '/security', label: 'VPN', Icon: Lock, mot: 'bp-svc-mot-6' },
+  { href: '/products/secure-tunnel', label: 'Secure Tunnel', Icon: Lock, mot: 'bp-svc-mot-6' },
 ];
 
 function CoverageStrip() {
@@ -133,7 +133,7 @@ export function BrandMotionBanners() {
           Global coverage
         </p>
         <p className="mb-5 text-center text-[11px] text-white/38">
-          {ALL_ISO_CODES.length}+ ISO regions · flag emoji where supported by your device
+          {ALL_ISO_CODES.length}+ ISO regions • flag emoji where supported by your device
         </p>
         <div className="relative overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_5%,black_95%,transparent)]">
           <div className="bp-coverage-marquee flex w-max">
@@ -181,3 +181,4 @@ export function BrandMotionBanners() {
     </div>
   );
 }
+

@@ -1,7 +1,8 @@
 import { MarketingPage } from '@/components/marketing';
+import type { MarketingPageContent } from '@/lib/marketing-data';
 import { buildMarketingMetadata, pageStructuredData } from '@/lib/seo';
 
-const page = {
+const page: MarketingPageContent = {
   slug: 'acceptable-use-policy',
   eyebrow: 'Legal',
   title: 'Acceptable Use Policy.',
@@ -23,7 +24,7 @@ const page = {
       items: ['Fraud, phishing, impersonation, or scams', 'Spam, harassment, or unsolicited messaging', 'Credential attacks, malware, or unauthorized access', 'Any activity that violates applicable law or third-party terms'],
     },
   ],
-} as const;
+};
 
 export const metadata = buildMarketingMetadata(page, '/acceptable-use-policy');
 

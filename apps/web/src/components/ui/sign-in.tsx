@@ -129,7 +129,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
           <div className="flex items-center justify-between gap-4">
             <Link href="/" className="inline-flex items-center gap-2.5" aria-label="Burner Point home">
               <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} className="h-8 w-8 sm:h-9 sm:w-9" />
-              <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={166} height={26} className="h-[1.15rem] w-auto sm:h-5" />
+              <span className="rounded-full bg-white/[0.04] px-3 py-2">
+                <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={166} height={26} className="h-[1.15rem] w-auto sm:h-5" />
+              </span>
             </Link>
             <Link href="/pricing" className="hidden text-sm font-medium text-white/72 transition hover:text-white sm:inline-flex">
               Pricing

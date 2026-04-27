@@ -94,7 +94,7 @@ export default function DashboardPage() {
               {greeting}, <span className="text-brand-green">{headlineName}</span>.
             </h2>
             <p className="mt-4 max-w-3xl text-base leading-8 text-white/58">
-              Stay Anonymous. Stay Connected. Private By Design. This workspace keeps your messaging, verification, rentals, wallet activity, and privacy controls in one production surface.
+              Stay Anonymous. Stay Connected. Private By Design. This workspace keeps your messaging, verification, rentals, billing activity, and privacy controls in one place.
             </p>
           </div>
 
@@ -172,13 +172,13 @@ export default function DashboardPage() {
                 icon: Phone,
               },
               {
-                href: '/dashboard/inbox',
+                href: '/dashboard/messenger',
                 label: 'Start Chat',
                 text: 'Open BP Messenger and continue an existing conversation or create a new one.',
                 icon: MessageSquareText,
               },
               {
-                href: '/dashboard/verification',
+                href: '/dashboard/verify-hub',
                 label: 'Run Verification',
                 text: 'Pick a tier, select a service, and watch live OTP updates in the hub.',
                 icon: ShieldCheck,
@@ -247,12 +247,12 @@ export default function DashboardPage() {
 
         <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {[
-            { href: '/dashboard/inbox', title: 'BP Messenger', text: 'Private threads, media context, and conversation continuity.', icon: MessageSquareText },
-            { href: '/dashboard/verification', title: 'BP Verify Hub', text: 'Verification routing, OTP visibility, and cleaner status control.', icon: ShieldCheck },
+            { href: '/dashboard/messenger', title: 'BP Messenger', text: 'Private threads, media context, and conversation continuity.', icon: MessageSquareText },
+            { href: '/dashboard/verify-hub', title: 'BP Verify Hub', text: 'Codes, status, and number activity in one place.', icon: ShieldCheck },
             { href: '/dashboard/rentals', title: 'BP Number Rentals', text: 'Temporary and renewable number lifecycle management.', icon: Phone },
             { href: '/dashboard/esim', title: 'BP eSIM Store', text: 'Travel data plans and activation state inside the platform.', icon: Smartphone },
-            { href: '/dashboard/proxies', title: 'BP Proxy Store', text: 'Secure routing options and location-aware connection control.', icon: Server },
-            { href: '/dashboard/vpn', title: 'BP Secure Tunnel', text: 'Integrated protection and private session continuity.', icon: Route },
+            { href: '/dashboard/proxy', title: 'BP Proxy Store', text: 'Secure routing options and location-aware connection control.', icon: Server },
+            { href: '/dashboard/secure-tunnel', title: 'BP Secure Tunnel', text: 'Integrated protection and private session continuity.', icon: Route },
           ].map((item) => {
             const Icon = item.icon;
             return (
@@ -281,8 +281,8 @@ export default function DashboardPage() {
           <Link href="/dashboard/security" className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-4 text-sm text-white/70 transition hover:border-brand-green/24 hover:text-brand-green">
             2FA and security
           </Link>
-          <Link href="/dashboard/api" className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-4 text-sm text-white/70 transition hover:border-brand-green/24 hover:text-brand-green">
-            Access keys
+          <Link href="/dashboard/settings" className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-4 text-sm text-white/70 transition hover:border-brand-green/24 hover:text-brand-green">
+            Account settings
           </Link>
         </div>
       </section>

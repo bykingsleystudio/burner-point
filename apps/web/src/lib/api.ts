@@ -68,7 +68,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch {
         clearApiSession();
-        window.location.href = '/auth/login';
+        window.location.href = '/sign-in';
         return Promise.reject(error);
       }
     }

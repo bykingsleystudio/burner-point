@@ -248,7 +248,7 @@ export default function InboxPage() {
         </div>
 
         <div className="mt-5">
-          <MessengerTabs active="/dashboard/inbox" />
+          <MessengerTabs active="/dashboard/messenger" />
         </div>
       </section>
 

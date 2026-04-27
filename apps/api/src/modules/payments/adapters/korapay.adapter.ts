@@ -20,7 +20,7 @@ export class KorapayAdapter {
       amount: params.amountKobo / 100,
       currency: 'NGN',
       customer: { email: params.email },
-      redirect_url: `${this.cfg.get('WEB_URL')}/dashboard/credits?ref=${params.reference}`,
+      redirect_url: `${this.cfg.get('WEB_URL')}/dashboard/billing?ref=${params.reference}`,
       notification_url: `${resolveApiUrl(this.cfg)}/payments/webhook/korapay`,
     }, { headers: this.headers });
     return { checkoutUrl: data.data?.checkout_url, reference: params.reference };

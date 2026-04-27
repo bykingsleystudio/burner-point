@@ -8,6 +8,7 @@ import { resolveWebhookBaseUrl } from '../../config/runtime-env';
 export enum ProviderName {
   TWILIO = 'twilio',
   TELNYX = 'telnyx',
+  BANDWIDTH = 'bandwidth',
   TREMIL = 'tremil',
   PLIVO = 'plivo',
   TERMII = 'termii',
@@ -41,17 +42,90 @@ export interface ProviderSmsResult {
   routeLabel: string;
 }
 
+export interface ProviderNumberSearchResult {
+  number: string;
+  friendlyName: string;
+  countryCode: string;
+  provider: ProviderName;
+  preferredNumberProvider?: ProviderName;
+  capabilities: {
+    sms: boolean;
+    voice: boolean;
+    mms: boolean;
+  };
+}
+
+export interface ProviderNumberPurchaseResult {
+  sid: string;
+  number: string;
+  provider: ProviderName;
+  numberProvider: ProviderName;
+}
+
+export interface ProviderCallResult {
+  sid: string;
+  status: string;
+  provider: ProviderName;
+  routeLabel: string;
+}
+
+export interface ProviderAvailabilityOptions {
+  countryCode: string;
+  areaCode?: string;
+  smsEnabled?: boolean;
+}
+
+export interface ProviderPurchaseOptions {
+  phoneNumber: string;
+  countryCode?: string;
+}
+
+export interface ProviderReleaseOptions {
+  sid: string;
+  phoneNumber?: string;
+}
+
+export interface ProviderPricingResult {
+  provider: ProviderName;
+  product: RouteProduct;
+  countryCode: string;
+  currency: 'USD';
+  notes: string;
+}
+
+export interface MessengerProviderAdapter {
+  provider: ProviderName;
+  sendSMS(to: string, from: string, body: string): Promise<Omit<ProviderSmsResult, 'provider' | 'routeLabel'>>;
+  buyNumber(options: ProviderPurchaseOptions): Promise<ProviderNumberPurchaseResult>;
+  releaseNumber(options: ProviderReleaseOptions): Promise<void>;
+  receiveWebhook(payload: Record<string, unknown>, headers?: Record<string, string>): Promise<{ success: true }>;
+  startCall(to: string, from: string): Promise<Omit<ProviderCallResult, 'provider' | 'routeLabel'>>;
+  endCall(callSid: string): Promise<void>;
+  lookupAvailability(options: ProviderAvailabilityOptions): Promise<ProviderNumberSearchResult[]>;
+  getPricing(countryCode: string, product: RouteProduct): Promise<ProviderPricingResult>;
+}
+
 const HEALTH_TTL_SECONDS = 300;
+
+const CONVERSATION_PROVIDER_PRIORITY: Record<string, ProviderName[]> = {
+  US: [ProviderName.BANDWIDTH, ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.TREMIL],
+  CA: [ProviderName.TELNYX, ProviderName.BANDWIDTH, ProviderName.TWILIO, ProviderName.TREMIL],
+  GB: [ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH, ProviderName.TREMIL],
+  default: [ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH, ProviderName.TREMIL],
+};
 
 @Injectable()
 export class ProviderService {
   private readonly logger = new Logger(ProviderService.name);
   private _twilioClient: Twilio.Twilio | null = null;
+  private readonly messengerAdapters: Partial<Record<ProviderName, MessengerProviderAdapter>>;
 
   constructor(
     private configService: ConfigService,
     private redisService: RedisService,
-  ) {}
+  ) {
+    this.messengerAdapters = this.buildMessengerAdapters();
+  }
 
   private get twilioClient(): Twilio.Twilio | null {
     if (this._twilioClient) return this._twilioClient;
@@ -68,21 +142,17 @@ export class ProviderService {
 
   selectConversationRoute(countryCode: string, preferredProvider?: ProviderName): RouteDecision {
     const country = this.normalizeCountry(countryCode);
-    const fallbackProviders = [ProviderName.TELNYX, ProviderName.TREMIL];
-    const primaryProvider = preferredProvider ?? ProviderName.TWILIO;
+    const providerChain = this.getConversationProviderChain(country);
+    const primaryProvider = preferredProvider ?? providerChain[0];
 
     return {
       product: RouteProduct.CONVERSATION,
       countryCode: country,
-      routeLabel: 'BP Conversation Core',
+      routeLabel: 'BP Messenger Route',
       primaryProvider,
-      fallbackProviders: fallbackProviders.filter((p) => p !== primaryProvider),
-      numberProvider: country === 'US' || country === 'CA'
-        ? ProviderName.TELNYX
-        : ProviderName.TWILIO,
-      reason: country === 'US' || country === 'CA'
-        ? 'US/CA conversation uses Twilio for app messaging and voice, Telnyx for number infrastructure, and Tremil as the economy fallback route.'
-        : 'Conversation is designed for US/CA only; non-US/CA traffic should be routed through verification or blocked by product policy.',
+      fallbackProviders: providerChain.filter((provider) => provider !== primaryProvider),
+      numberProvider: this.getPreferredNumberProvider(country),
+      reason: 'BP Messenger routing weighs provider availability, country fit, deliverability, recent failures, and cost before choosing a route.',
     };
   }
 
@@ -92,16 +162,16 @@ export class ProviderService {
     preferredProvider?: ProviderName,
   ): RouteDecision {
     const country = this.normalizeCountry(countryCode);
-    const chain = this.getVerificationProviderChain(country, serviceCode);
-    const primaryProvider = preferredProvider ?? chain[0];
+    const providerChain = this.getVerificationProviderChain(country, serviceCode);
+    const primaryProvider = preferredProvider ?? providerChain[0];
 
     return {
       product: RouteProduct.VERIFICATION,
       countryCode: country,
       routeLabel: this.getVerificationRouteLabel(primaryProvider),
       primaryProvider,
-      fallbackProviders: chain.filter((p) => p !== primaryProvider),
-      reason: 'Global OTP route selected by country, provider coverage, expected cost, speed, and fallback independence.',
+      fallbackProviders: providerChain.filter((provider) => provider !== primaryProvider),
+      reason: 'Verification routing weighs country, provider reliability, expected cost, queue health, and fallback independence.',
     };
   }
 
@@ -139,23 +209,25 @@ export class ProviderService {
     let lastError: unknown;
 
     for (const provider of providerChain) {
+      const adapter = this.getAdapter(provider);
+      if (!adapter) continue;
+
       if (!(await this.isProviderHealthy(provider, product, countryCode))) {
         this.logger.warn(`Skipping unhealthy ${provider} route for ${product}:${countryCode}`);
         continue;
       }
 
       try {
-        const result = await this.sendSmsWithProvider(provider, to, from, body);
+        const result = await adapter.sendSMS(to, from, body);
         return {
           ...result,
           provider,
           routeLabel: route.routeLabel,
         };
-      } catch (err) {
-        lastError = err;
-        const message = err instanceof Error ? err.message : String(err);
+      } catch (error) {
+        lastError = error;
         this.logger.warn(
-          `${provider} ${product} SMS route failed for ${countryCode}: ${message}`,
+          `${provider} ${product} SMS route failed for ${countryCode}: ${this.describeError(error)}`,
         );
         await this.setProviderHealth(provider, 'degraded', product, countryCode);
       }
@@ -164,103 +236,280 @@ export class ProviderService {
     throw lastError ?? new Error('No healthy SMS provider route available');
   }
 
-  async searchNumbers(countryCode: string, areaCode?: string, smsEnabled = true) {
+  async searchNumbers(countryCode: string, areaCode?: string, smsEnabled = true): Promise<ProviderNumberSearchResult[]> {
     const country = this.normalizeCountry(countryCode);
     const route = this.selectConversationRoute(country);
+    const providersToTry = this.uniqueProviders([
+      route.numberProvider ?? route.primaryProvider,
+      route.primaryProvider,
+      ...route.fallbackProviders,
+    ]);
 
-    if (
-      route.numberProvider === ProviderName.TELNYX &&
-      this.isProviderConfigured(ProviderName.TELNYX)
-    ) {
-      return this.searchTelnyxNumbers(country, areaCode, route.numberProvider, smsEnabled);
+    let lastError: unknown;
+
+    for (const provider of providersToTry) {
+      const adapter = this.getAdapter(provider);
+      if (!adapter) continue;
+      if (!this.isProviderConfigured(provider)) continue;
+
+      try {
+        const numbers = await adapter.lookupAvailability({ countryCode: country, areaCode, smsEnabled });
+        if (numbers.length) {
+          return numbers.map((item) => ({
+            ...item,
+            preferredNumberProvider: route.numberProvider ?? provider,
+          }));
+        }
+      } catch (error) {
+        lastError = error;
+        this.logger.warn(
+          `${provider} number search failed for ${country}: ${this.describeError(error)}`,
+        );
+      }
     }
 
-    if (!this.twilioClient) throw new Error('Twilio not configured');
-    try {
-      const params: Record<string, unknown> = { smsEnabled, limit: 20 };
-      if (areaCode) params.areaCode = areaCode;
-      const numbers = await this.twilioClient.availablePhoneNumbers(country).local.list(params as any);
-      return numbers.map((n) => ({
-        number: n.phoneNumber,
-        friendlyName: n.friendlyName,
-        countryCode: country,
-        provider: ProviderName.TWILIO,
-        preferredNumberProvider: route.numberProvider,
-        capabilities: {
-          sms: n.capabilities.sms,
-          voice: n.capabilities.voice,
-          mms: n.capabilities.mms,
-        },
-      }));
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      this.logger.error(`Number search failed: ${message}`);
-      throw err;
-    }
+    if (lastError) throw lastError;
+    return [];
   }
 
   async purchaseNumber(
     phoneNumber: string,
-  countryCode?: string,
-  ): Promise<{ sid: string; number: string; provider: ProviderName; numberProvider: ProviderName }> {
+    countryCode?: string,
+  ): Promise<ProviderNumberPurchaseResult> {
     const country = countryCode ? this.normalizeCountry(countryCode) : this.inferCountryFromPhone(phoneNumber);
     const route = this.selectConversationRoute(country);
+    const providersToTry = this.uniqueProviders([
+      route.numberProvider ?? route.primaryProvider,
+      route.primaryProvider,
+      ...route.fallbackProviders,
+    ]);
 
-    if (
-      route.numberProvider === ProviderName.TELNYX &&
-      this.isProviderConfigured(ProviderName.TELNYX)
-    ) {
-      return this.purchaseTelnyxNumber(phoneNumber, route.numberProvider);
+    let lastError: unknown;
+
+    for (const provider of providersToTry) {
+      const adapter = this.getAdapter(provider);
+      if (!adapter) continue;
+      if (!this.isProviderConfigured(provider)) continue;
+
+      try {
+        return await adapter.buyNumber({ phoneNumber, countryCode: country });
+      } catch (error) {
+        lastError = error;
+        this.logger.warn(
+          `${provider} number purchase failed for ${country}: ${this.describeError(error)}`,
+        );
+        await this.setProviderHealth(provider, 'degraded', RouteProduct.CONVERSATION, country);
+      }
     }
 
-    if (!this.twilioClient) throw new Error('Twilio not configured');
-    const webhookBaseUrl = this.getWebhookBaseUrl();
+    throw lastError ?? new Error('No provider could assign this number right now');
+  }
 
-    const purchased = await this.twilioClient.incomingPhoneNumbers.create({
-      phoneNumber,
-      smsUrl: `${webhookBaseUrl}/twilio/sms`,
-      voiceUrl: `${webhookBaseUrl}/twilio/voice`,
-      statusCallback: `${webhookBaseUrl}/twilio/status`,
-    });
+  async releaseNumber(
+    sid: string,
+    provider: ProviderName = ProviderName.TWILIO,
+    phoneNumber?: string,
+  ): Promise<void> {
+    const adapter = this.getAdapter(provider);
+    if (!adapter) {
+      this.logger.warn(`Release requested for unsupported provider ${provider}`);
+      return;
+    }
 
+    await adapter.releaseNumber({ sid, phoneNumber });
+  }
+
+  async startCall(
+    to: string,
+    from: string,
+    countryCode?: string,
+    preferredProvider?: ProviderName,
+  ): Promise<ProviderCallResult> {
+    const route = this.selectConversationRoute(countryCode ?? this.inferCountryFromPhone(to), preferredProvider);
+    const providersToTry = this.uniqueProviders([route.primaryProvider, ...route.fallbackProviders]);
+    let lastError: unknown;
+
+    for (const provider of providersToTry) {
+      const adapter = this.getAdapter(provider);
+      if (!adapter) continue;
+
+      try {
+        const result = await adapter.startCall(to, from);
+        return {
+          ...result,
+          provider,
+          routeLabel: route.routeLabel,
+        };
+      } catch (error) {
+        lastError = error;
+        this.logger.warn(`${provider} call route failed: ${this.describeError(error)}`);
+      }
+    }
+
+    throw lastError ?? new Error('No healthy call provider route available');
+  }
+
+  async endCall(callSid: string, provider: ProviderName = ProviderName.TWILIO): Promise<void> {
+    const adapter = this.getAdapter(provider);
+    if (!adapter) {
+      this.logger.warn(`End-call requested for unsupported provider ${provider}`);
+      return;
+    }
+
+    await adapter.endCall(callSid);
+  }
+
+  async receiveWebhook(
+    provider: ProviderName,
+    payload: Record<string, unknown>,
+    headers: Record<string, string> = {},
+  ) {
+    const adapter = this.getAdapter(provider);
+    if (!adapter) return { success: true as const };
+    return adapter.receiveWebhook(payload, headers);
+  }
+
+  async getPricing(provider: ProviderName, countryCode: string, product: RouteProduct) {
+    const adapter = this.getAdapter(provider);
+    if (!adapter) {
+      return {
+        provider,
+        product,
+        countryCode: this.normalizeCountry(countryCode),
+        currency: 'USD' as const,
+        notes: 'Pricing handled by provider contract.',
+      };
+    }
+
+    return adapter.getPricing(countryCode, product);
+  }
+
+  private buildMessengerAdapters(): Partial<Record<ProviderName, MessengerProviderAdapter>> {
     return {
-      sid: purchased.sid,
-      number: purchased.phoneNumber,
-      provider: ProviderName.TWILIO,
-      numberProvider: route.numberProvider ?? ProviderName.TWILIO,
+      [ProviderName.TWILIO]: {
+        provider: ProviderName.TWILIO,
+        sendSMS: (to, from, body) => this.sendTwilioSms(to, from, body),
+        buyNumber: ({ phoneNumber, countryCode }) => this.purchaseTwilioNumber(phoneNumber, countryCode),
+        releaseNumber: ({ sid }) => this.releaseTwilioNumber(sid),
+        receiveWebhook: async () => ({ success: true }),
+        startCall: (to, from) => this.startTwilioCall(to, from),
+        endCall: (callSid) => this.endTwilioCall(callSid),
+        lookupAvailability: ({ countryCode, areaCode, smsEnabled }) => this.searchTwilioNumbers(countryCode, areaCode, smsEnabled ?? true),
+        getPricing: async (countryCode, product) => ({
+          provider: ProviderName.TWILIO,
+          product,
+          countryCode: this.normalizeCountry(countryCode),
+          currency: 'USD',
+          notes: 'Twilio pricing varies by country, capability, and route.',
+        }),
+      },
+      [ProviderName.TELNYX]: {
+        provider: ProviderName.TELNYX,
+        sendSMS: (to, from, body) => this.sendTelnyxSms(to, from, body),
+        buyNumber: ({ phoneNumber }) => this.purchaseTelnyxNumber(phoneNumber),
+        releaseNumber: ({ sid }) => this.releaseTelnyxNumber(sid),
+        receiveWebhook: async () => ({ success: true }),
+        startCall: async () => {
+          throw new Error('Telnyx voice is not active in this release');
+        },
+        endCall: async () => {
+          throw new Error('Telnyx voice is not active in this release');
+        },
+        lookupAvailability: ({ countryCode, areaCode, smsEnabled }) => this.searchTelnyxNumbers(countryCode, areaCode, smsEnabled ?? true),
+        getPricing: async (countryCode, product) => ({
+          provider: ProviderName.TELNYX,
+          product,
+          countryCode: this.normalizeCountry(countryCode),
+          currency: 'USD',
+          notes: 'Telnyx pricing varies by number type, messaging route, and region.',
+        }),
+      },
+      [ProviderName.BANDWIDTH]: {
+        provider: ProviderName.BANDWIDTH,
+        sendSMS: (to, from, body) => this.sendBandwidthSms(to, from, body),
+        buyNumber: ({ phoneNumber }) => this.purchaseBandwidthNumber(phoneNumber),
+        releaseNumber: ({ phoneNumber }) => this.releaseBandwidthNumber(phoneNumber),
+        receiveWebhook: async () => ({ success: true }),
+        startCall: (to, from) => this.startBandwidthCall(to, from),
+        endCall: (callSid) => this.endBandwidthCall(callSid),
+        lookupAvailability: ({ countryCode, areaCode, smsEnabled }) => this.searchBandwidthNumbers(countryCode, areaCode, smsEnabled ?? true),
+        getPricing: async (countryCode, product) => ({
+          provider: ProviderName.BANDWIDTH,
+          product,
+          countryCode: this.normalizeCountry(countryCode),
+          currency: 'USD',
+          notes: 'Bandwidth pricing varies by North America inventory, messaging volume, and voice route.',
+        }),
+      },
+      [ProviderName.TREMIL]: {
+        provider: ProviderName.TREMIL,
+        sendSMS: (to, from, body) => this.sendTremilSms(to, from, body),
+        buyNumber: async () => {
+          throw new Error('Tremil number inventory is not active in this release');
+        },
+        releaseNumber: async () => {},
+        receiveWebhook: async () => ({ success: true }),
+        startCall: async () => {
+          throw new Error('Tremil voice is not active in this release');
+        },
+        endCall: async () => {},
+        lookupAvailability: async () => [],
+        getPricing: async (countryCode, product) => ({
+          provider: ProviderName.TREMIL,
+          product,
+          countryCode: this.normalizeCountry(countryCode),
+          currency: 'USD',
+          notes: 'Tremil is configured as an economy overflow route.',
+        }),
+      },
     };
   }
 
-  async releaseNumber(sid: string, provider: ProviderName = ProviderName.TWILIO): Promise<void> {
-    if (provider === ProviderName.TELNYX) {
-      await this.releaseTelnyxNumber(sid);
-      return;
-    }
-
-    if (provider !== ProviderName.TWILIO) {
-      this.logger.warn(`Release requested for ${provider}; Twilio and Telnyx are the active release adapters.`);
-      return;
-    }
-
-    if (!this.twilioClient) throw new Error('Twilio not configured');
-    await this.twilioClient.incomingPhoneNumbers(sid).remove();
+  private getAdapter(provider: ProviderName) {
+    return this.messengerAdapters[provider];
   }
 
-  private async sendSmsWithProvider(
-    provider: ProviderName,
-    to: string,
-    from: string,
-    body: string,
-  ): Promise<Omit<ProviderSmsResult, 'provider' | 'routeLabel'>> {
+  private getConversationProviderChain(countryCode: string): ProviderName[] {
+    return CONVERSATION_PROVIDER_PRIORITY[countryCode] ?? CONVERSATION_PROVIDER_PRIORITY.default;
+  }
+
+  private getPreferredNumberProvider(countryCode: string): ProviderName {
+    if (countryCode === 'US') return ProviderName.BANDWIDTH;
+    if (countryCode === 'CA') return ProviderName.TELNYX;
+    if (countryCode === 'GB') return ProviderName.TWILIO;
+    return ProviderName.TWILIO;
+  }
+
+  private getVerificationProviderChain(countryCode: string, serviceCode?: string): ProviderName[] {
+    const service = (serviceCode ?? '').toLowerCase();
+    if (['US', 'CA', 'GB'].includes(countryCode)) {
+      return [ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH, ProviderName.TREMIL];
+    }
+    if (['DE', 'FR', 'ES', 'IT', 'NL', 'SE', 'NO', 'FI'].includes(countryCode)) {
+      return [ProviderName.TELNYX, ProviderName.TWILIO, ProviderName.BANDWIDTH, ProviderName.TREMIL];
+    }
+    if (service.includes('high-risk')) {
+      return [ProviderName.TELNYX, ProviderName.TWILIO, ProviderName.BANDWIDTH, ProviderName.TREMIL];
+    }
+    return [ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH, ProviderName.TREMIL];
+  }
+
+  private getVerificationRouteLabel(provider: ProviderName): string {
     switch (provider) {
       case ProviderName.TWILIO:
-        return this.sendTwilioSms(to, from, body);
+        return 'BP Core Verify';
       case ProviderName.TELNYX:
-        return this.sendTelnyxSms(to, from, body);
+        return 'BP Standard Route';
+      case ProviderName.BANDWIDTH:
+        return 'BP Carrier Route';
       case ProviderName.TREMIL:
-        return this.sendTremilSms(to, from, body);
+        return 'BP Economy Route';
+      case ProviderName.PLIVO:
+        return 'BP Budget Route';
+      case ProviderName.TERMII:
+        return 'BP Nigeria Local Route';
       default:
-        throw new Error(`${provider} SMS adapter is deferred for this release`);
+        return 'BP Deferred Route';
     }
   }
 
@@ -280,7 +529,7 @@ export class ProviderService {
       from,
       to,
       text: body,
-      webhook_url: `${webhookBaseUrl}/telnyx`,
+      webhook_url: `${webhookBaseUrl}/webhooks/telnyx`,
     };
     if (messagingProfileId) payload.messaging_profile_id = messagingProfileId;
 
@@ -295,22 +544,46 @@ export class ProviderService {
     return {
       sid: message.id ?? `telnyx-${Date.now()}`,
       status: message.status ?? 'queued',
-    }
+    };
+  }
+
+  private async sendBandwidthSms(to: string, from: string, body: string) {
+    const { accountId, username, password, applicationId } = this.getBandwidthMessagingConfig();
+    const response = await axios.post(
+      `https://messaging.bandwidth.com/api/v2/users/${accountId}/messages`,
+      {
+        to: [to],
+        from,
+        text: body,
+        applicationId,
+        tag: `bp-${Date.now()}`,
+      },
+      {
+        auth: { username, password },
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+      },
+    );
+
+    const message = response.data ?? {};
+    return {
+      sid: String(message.id ?? `bandwidth-${Date.now()}`),
+      status: 'accepted',
+    };
   }
 
   private async sendTremilSms(to: string, from: string, body: string) {
     const baseUrl = this.configService.get<string>('TREMIL_BASE_URL');
     const apiKey = this.configService.get<string>('TREMIL_API_KEY');
-    const apiSecret = this.configService.get<string>('TREMIL_SECRET');
+    const apiSecret =
+      this.configService.get<string>('TREMIL_API_SECRET') ||
+      this.configService.get<string>('TREMIL_SECRET');
     if (!baseUrl || !apiKey) throw new Error('Tremil not configured');
 
     const response = await axios.post(
       `${baseUrl.replace(/\/$/, '')}/messages`,
-      {
-        from,
-        to,
-        text: body,
-      },
+      { from, to, text: body },
       {
         headers: {
           Authorization: `Bearer ${apiKey}`,
@@ -327,12 +600,31 @@ export class ProviderService {
     };
   }
 
+  private async searchTwilioNumbers(country: string, areaCode?: string, smsEnabled = true): Promise<ProviderNumberSearchResult[]> {
+    if (!this.twilioClient) throw new Error('Twilio not configured');
+
+    const params: Record<string, unknown> = { smsEnabled, limit: 20 };
+    if (areaCode) params.areaCode = areaCode;
+
+    const numbers = await this.twilioClient.availablePhoneNumbers(country).local.list(params as any);
+    return numbers.map((item) => ({
+      number: item.phoneNumber,
+      friendlyName: item.friendlyName,
+      countryCode: country,
+      provider: ProviderName.TWILIO,
+      capabilities: {
+        sms: item.capabilities.sms,
+        voice: item.capabilities.voice,
+        mms: item.capabilities.mms,
+      },
+    }));
+  }
+
   private async searchTelnyxNumbers(
     country: string,
-    areaCode: string | undefined,
-    numberProvider: ProviderName,
-    smsEnabled: boolean,
-  ) {
+    areaCode?: string,
+    smsEnabled = true,
+  ): Promise<ProviderNumberSearchResult[]> {
     const apiKey = this.configService.get<string>('TELNYX_API_KEY');
     if (!apiKey) throw new Error('Telnyx not configured');
 
@@ -353,13 +645,15 @@ export class ProviderService {
     });
 
     return (response.data?.data ?? []).map((item: Record<string, unknown>) => {
-      const features = Array.isArray(item.features) ? item.features.map((feature) => String(feature).toLowerCase()) : [];
+      const features = Array.isArray(item.features)
+        ? item.features.map((feature) => String(feature).toLowerCase())
+        : [];
+
       return {
         number: String(item.phone_number ?? ''),
         friendlyName: String(item.phone_number ?? ''),
         countryCode: country,
         provider: ProviderName.TELNYX,
-        preferredNumberProvider: numberProvider,
         capabilities: {
           sms: features.includes('sms'),
           voice: features.includes('voice') || features.includes('emergency'),
@@ -369,10 +663,68 @@ export class ProviderService {
     });
   }
 
-  private async purchaseTelnyxNumber(
+  private async searchBandwidthNumbers(
+    country: string,
+    areaCode?: string,
+    smsEnabled = true,
+  ): Promise<ProviderNumberSearchResult[]> {
+    if (!['US', 'CA'].includes(country)) {
+      return [];
+    }
+
+    const { accountId, username, password } = this.getBandwidthCoreAuth();
+    const params: Record<string, string | number> = { quantity: 20 };
+    if (areaCode) params.areaCode = areaCode;
+
+    const response = await axios.get(
+      `https://api.bandwidth.com/api/accounts/${accountId}/availableNumbers`,
+      {
+        auth: { username, password },
+        params,
+        headers: {
+          Accept: 'application/xml',
+        },
+      },
+    );
+
+    const xml = String(response.data ?? '');
+    return this.extractXmlValues(xml, 'TelephoneNumber').map((number) => ({
+      number: this.ensurePlus(number),
+      friendlyName: this.ensurePlus(number),
+      countryCode: country,
+      provider: ProviderName.BANDWIDTH,
+      capabilities: {
+        sms: smsEnabled,
+        voice: true,
+        mms: false,
+      },
+    }));
+  }
+
+  private async purchaseTwilioNumber(
     phoneNumber: string,
-    numberProvider: ProviderName,
-  ): Promise<{ sid: string; number: string; provider: ProviderName; numberProvider: ProviderName }> {
+    countryCode?: string,
+  ): Promise<ProviderNumberPurchaseResult> {
+    if (!this.twilioClient) throw new Error('Twilio not configured');
+    const webhookBaseUrl = this.getWebhookBaseUrl();
+
+    const purchased = await this.twilioClient.incomingPhoneNumbers.create({
+      phoneNumber,
+      smsUrl: `${webhookBaseUrl}/webhooks/twilio/sms`,
+      voiceUrl: `${webhookBaseUrl}/webhooks/twilio/voice`,
+      statusCallback: `${webhookBaseUrl}/webhooks/twilio/status`,
+    });
+
+    const normalizedCountry = countryCode ? this.normalizeCountry(countryCode) : this.inferCountryFromPhone(phoneNumber);
+    return {
+      sid: purchased.sid,
+      number: purchased.phoneNumber,
+      provider: ProviderName.TWILIO,
+      numberProvider: this.getPreferredNumberProvider(normalizedCountry),
+    };
+  }
+
+  private async purchaseTelnyxNumber(phoneNumber: string): Promise<ProviderNumberPurchaseResult> {
     const apiKey = this.configService.get<string>('TELNYX_API_KEY');
     if (!apiKey) throw new Error('Telnyx not configured');
 
@@ -393,13 +745,61 @@ export class ProviderService {
     });
 
     const purchased = response.data?.data?.phone_numbers?.[0] ?? {};
+    const country = this.inferCountryFromPhone(phoneNumber);
 
     return {
       sid: purchased.id ?? response.data?.data?.id ?? `telnyx-order-${Date.now()}`,
       number: purchased.phone_number ?? phoneNumber,
       provider: ProviderName.TELNYX,
-      numberProvider,
+      numberProvider: this.getPreferredNumberProvider(country),
     };
+  }
+
+  private async purchaseBandwidthNumber(phoneNumber: string): Promise<ProviderNumberPurchaseResult> {
+    const { accountId, username, password, siteId, peerId } = this.getBandwidthNumberOrderingConfig();
+    const normalizedNumber = this.stripPlus(phoneNumber);
+    const peerXml = peerId ? `<PeerId>${peerId}</PeerId>` : '';
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<Order>
+  <Name>Burner Point Number Order</Name>
+  <SiteId>${siteId}</SiteId>
+  ${peerXml}
+  <PartialAllowed>true</PartialAllowed>
+  <ExistingTelephoneNumberOrderType>
+    <TelephoneNumberList>
+      <TelephoneNumber>${normalizedNumber}</TelephoneNumber>
+    </TelephoneNumberList>
+  </ExistingTelephoneNumberOrderType>
+</Order>`;
+
+    const response = await axios.post(
+      `https://api.bandwidth.com/api/accounts/${accountId}/orders`,
+      xml,
+      {
+        auth: { username, password },
+        headers: {
+          'Content-Type': 'application/xml; charset=utf-8',
+          Accept: 'application/xml',
+        },
+      },
+    );
+
+    const responseXml = String(response.data ?? '');
+    const orderId = this.extractXmlValue(responseXml, 'id') ?? `bandwidth-order-${Date.now()}`;
+    const purchasedNumber = this.extractXmlValue(responseXml, 'TelephoneNumber') ?? normalizedNumber;
+    const country = this.inferCountryFromPhone(phoneNumber);
+
+    return {
+      sid: orderId,
+      number: this.ensurePlus(purchasedNumber),
+      provider: ProviderName.BANDWIDTH,
+      numberProvider: this.getPreferredNumberProvider(country),
+    };
+  }
+
+  private async releaseTwilioNumber(sid: string): Promise<void> {
+    if (!this.twilioClient) throw new Error('Twilio not configured');
+    await this.twilioClient.incomingPhoneNumbers(sid).remove();
   }
 
   private async releaseTelnyxNumber(phoneNumberId: string): Promise<void> {
@@ -413,6 +813,97 @@ export class ProviderService {
     });
   }
 
+  private async releaseBandwidthNumber(phoneNumber?: string): Promise<void> {
+    if (!phoneNumber) throw new Error('Bandwidth release requires the phone number');
+
+    const { accountId, username, password } = this.getBandwidthCoreAuth();
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<DisconnectTelephoneNumberOrder>
+  <CustomerOrderId>burner-point-disconnect-${Date.now()}</CustomerOrderId>
+  <DisconnectTelephoneNumberOrderType>
+    <TelephoneNumberList>
+      <TelephoneNumber>${this.stripPlus(phoneNumber)}</TelephoneNumber>
+    </TelephoneNumberList>
+  </DisconnectTelephoneNumberOrderType>
+</DisconnectTelephoneNumberOrder>`;
+
+    await axios.post(
+      `https://api.bandwidth.com/api/accounts/${accountId}/disconnects`,
+      xml,
+      {
+        auth: { username, password },
+        headers: {
+          'Content-Type': 'application/xml; charset=utf-8',
+          Accept: 'application/xml',
+        },
+      },
+    );
+  }
+
+  private async startTwilioCall(to: string, from: string) {
+    if (!this.twilioClient) throw new Error('Twilio not configured');
+    const webhookBaseUrl = this.getWebhookBaseUrl();
+
+    const call = await this.twilioClient.calls.create({
+      to,
+      from,
+      url: `${webhookBaseUrl}/webhooks/twilio/voice`,
+      statusCallback: `${webhookBaseUrl}/webhooks/twilio/status`,
+    });
+
+    return {
+      sid: call.sid,
+      status: call.status ?? 'queued',
+    };
+  }
+
+  private async endTwilioCall(callSid: string): Promise<void> {
+    if (!this.twilioClient) throw new Error('Twilio not configured');
+    await this.twilioClient.calls(callSid).update({ status: 'completed' });
+  }
+
+  private async startBandwidthCall(to: string, from: string) {
+    const { accountId, username, password, applicationId } = this.getBandwidthVoiceConfig();
+    const webhookBaseUrl = this.getWebhookBaseUrl();
+
+    const response = await axios.post(
+      `https://voice.bandwidth.com/api/v2/accounts/${accountId}/calls`,
+      {
+        to,
+        from,
+        applicationId,
+        answerUrl: `${webhookBaseUrl}/webhooks/bandwidth/voice`,
+        disconnectUrl: `${webhookBaseUrl}/webhooks/bandwidth`,
+      },
+      {
+        auth: { username, password },
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    const data = response.data ?? {};
+    return {
+      sid: String(data.callId ?? data.id ?? `bandwidth-call-${Date.now()}`),
+      status: String(data.state ?? 'queued'),
+    };
+  }
+
+  private async endBandwidthCall(callSid: string) {
+    const { accountId, username, password } = this.getBandwidthCoreAuth();
+    await axios.post(
+      `https://voice.bandwidth.com/api/v2/accounts/${accountId}/calls/${callSid}`,
+      { state: 'completed' },
+      {
+        auth: { username, password },
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+  }
+
   private async isProviderHealthy(
     provider: ProviderName,
     product: RouteProduct,
@@ -423,39 +914,18 @@ export class ProviderService {
     return countryStatus !== 'down' && globalStatus !== 'down';
   }
 
-  private getVerificationProviderChain(countryCode: string, serviceCode?: string): ProviderName[] {
-    const service = (serviceCode ?? '').toLowerCase();
-    if (['US', 'CA', 'GB'].includes(countryCode)) return [ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.TREMIL];
-    if (['DE', 'FR', 'ES', 'IT', 'NL', 'SE', 'NO', 'FI'].includes(countryCode)) {
-      return [ProviderName.TELNYX, ProviderName.TWILIO, ProviderName.TREMIL];
-    }
-    if (service.includes('high-risk')) return [ProviderName.TELNYX, ProviderName.TWILIO, ProviderName.TREMIL];
-    return [ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.TREMIL];
-  }
-
-  private getVerificationRouteLabel(provider: ProviderName): string {
-    switch (provider) {
-      case ProviderName.TWILIO:
-        return 'BP Core Verify';
-      case ProviderName.TELNYX:
-        return 'BP Standard Route';
-      case ProviderName.TREMIL:
-        return 'BP Economy Route';
-      case ProviderName.PLIVO:
-        return 'BP Budget Route';
-      case ProviderName.TERMII:
-        return 'BP Nigeria Local Route';
-      default:
-        return 'BP Deferred Route';
-    }
-  }
-
   private isProviderConfigured(provider: ProviderName): boolean {
     switch (provider) {
       case ProviderName.TWILIO:
         return Boolean(this.configService.get('TWILIO_ACCOUNT_SID') && this.configService.get('TWILIO_AUTH_TOKEN'));
       case ProviderName.TELNYX:
         return Boolean(this.configService.get('TELNYX_API_KEY'));
+      case ProviderName.BANDWIDTH:
+        return Boolean(
+          this.configService.get('BANDWIDTH_ACCOUNT_ID') &&
+          this.configService.get('BANDWIDTH_USERNAME') &&
+          this.configService.get('BANDWIDTH_PASSWORD'),
+        );
       case ProviderName.TREMIL:
         return Boolean(this.configService.get('TREMIL_API_KEY') && this.configService.get('TREMIL_BASE_URL'));
       default:
@@ -485,5 +955,84 @@ export class ProviderService {
 
   private stripPlus(value: string): string {
     return value.replace(/^\+/, '');
+  }
+
+  private ensurePlus(value: string): string {
+    return value.startsWith('+') ? value : `+${value}`;
+  }
+
+  private uniqueProviders(providers: Array<ProviderName | undefined>): ProviderName[] {
+    return providers.filter((provider): provider is ProviderName => Boolean(provider)).filter((provider, index, list) => list.indexOf(provider) === index);
+  }
+
+  private describeError(error: unknown): string {
+    if (error instanceof Error) return error.message;
+    return String(error);
+  }
+
+  private extractXmlValues(xml: string, tag: string): string[] {
+    const pattern = new RegExp(`<${tag}>(.*?)</${tag}>`, 'g');
+    const values: string[] = [];
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(xml)) !== null) {
+      values.push(match[1]);
+    }
+    return values;
+  }
+
+  private extractXmlValue(xml: string, tag: string): string | null {
+    return this.extractXmlValues(xml, tag)[0] ?? null;
+  }
+
+  private getBandwidthCoreAuth() {
+    const accountId = this.configService.get<string>('BANDWIDTH_ACCOUNT_ID');
+    const username = this.configService.get<string>('BANDWIDTH_USERNAME');
+    const password = this.configService.get<string>('BANDWIDTH_PASSWORD');
+
+    if (!accountId || !username || !password) {
+      throw new Error('Bandwidth core credentials are not configured');
+    }
+
+    return { accountId, username, password };
+  }
+
+  private getBandwidthMessagingConfig() {
+    const core = this.getBandwidthCoreAuth();
+    const applicationId =
+      this.configService.get<string>('BANDWIDTH_MESSAGING_APPLICATION_ID') ||
+      this.configService.get<string>('BANDWIDTH_APPLICATION_ID');
+
+    if (!applicationId) {
+      throw new Error('Bandwidth messaging application is not configured');
+    }
+
+    return { ...core, applicationId };
+  }
+
+  private getBandwidthVoiceConfig() {
+    const core = this.getBandwidthCoreAuth();
+    const applicationId =
+      this.configService.get<string>('BANDWIDTH_VOICE_APPLICATION_ID') ||
+      this.configService.get<string>('BANDWIDTH_APPLICATION_ID');
+
+    if (!applicationId) {
+      throw new Error('Bandwidth voice application is not configured');
+    }
+
+    return { ...core, applicationId };
+  }
+
+  private getBandwidthNumberOrderingConfig() {
+    const core = this.getBandwidthCoreAuth();
+    const siteId =
+      this.configService.get<string>('BANDWIDTH_SITE_ID') ||
+      this.configService.get<string>('BANDWIDTH_LOCATION_ID');
+    const peerId = this.configService.get<string>('BANDWIDTH_SIPPEER_ID');
+
+    if (!siteId) {
+      throw new Error('Bandwidth number ordering requires BANDWIDTH_SITE_ID');
+    }
+
+    return { ...core, siteId, peerId };
   }
 }

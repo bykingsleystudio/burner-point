@@ -19,7 +19,7 @@ export default function NotFound() {
             Back Home
             <ArrowRight className="h-4 w-4" />
           </BpButton>
-          <BpButton href="/auth/login" variant="outline" size="lg">
+          <BpButton href="/sign-in" variant="outline" size="lg">
             Sign In
           </BpButton>
         </div>

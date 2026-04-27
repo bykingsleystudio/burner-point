@@ -1,4 +1,4 @@
-export type IconKey =
+﻿export type IconKey =
   | 'bell'
   | 'book'
   | 'briefcase'
@@ -34,25 +34,25 @@ export type MarketingPageContent = {
 };
 
 export const primaryNav: MarketingLink[] = [
-  { label: 'Dashboard', href: '/dashboard' },
+  { label: 'Products', href: '/#products' },
   { label: 'Pricing', href: '/pricing' },
+  { label: 'How It Works', href: '/how-it-works' },
   { label: 'FAQ', href: '/faq' },
-  { label: 'About', href: '/about' },
   { label: 'Blog', href: '/blog' },
-  { label: 'Help', href: '/help' },
+  { label: 'Support', href: '/support' },
 ];
 
 export const footerGroups = [
   {
     title: 'Platform',
-    href: '/dashboard',
+    href: '/',
     links: [
-      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Products', href: '/#products' },
       { label: 'Pricing', href: '/pricing' },
+      { label: 'How It Works', href: '/how-it-works' },
       { label: 'FAQ', href: '/faq' },
-      { label: 'About', href: '/about' },
       { label: 'Blog', href: '/blog' },
-      { label: 'Help', href: '/help' },
+      { label: 'Support', href: '/support' },
     ],
   },
   {
@@ -61,7 +61,7 @@ export const footerGroups = [
     links: [
       { label: 'Support', href: '/support' },
       { label: 'Contact', href: '/contact' },
-      { label: 'Help Center', href: '/help' },
+      { label: 'Help Center', href: '/help-center' },
       { label: 'FAQ', href: '/faq' },
     ],
   },
@@ -72,7 +72,7 @@ export const footerGroups = [
       { label: 'About', href: '/about' },
       { label: 'Blog', href: '/blog' },
       { label: 'FAQ', href: '/faq' },
-      { label: 'Help', href: '/help' },
+      { label: 'Support', href: '/support' },
       { label: 'Careers', href: '/careers' },
     ],
   },
@@ -82,7 +82,7 @@ export const footerGroups = [
     links: [
       { label: 'Terms of Service', href: '/terms-of-service' },
       { label: 'Privacy Policy', href: '/privacy-policy' },
-      { label: 'Security', href: '/security' },
+      { label: 'Acceptable Use Policy', href: '/acceptable-use-policy' },
     ],
   },
 ];
@@ -98,9 +98,9 @@ export const socialLinks = [
 ];
 
 export const trustBadges: MarketingLink[] = [
-  { label: 'Private Number Access', href: '/verifications' },
-  { label: 'SMS & Voice OTP', href: '/verifications' },
-  { label: 'Secure Account Controls', href: '/security' },
+  { label: 'Private Number Access', href: '/products/messenger' },
+  { label: 'SMS & Voice OTP', href: '/products/verify-hub' },
+  { label: 'Secure Account Controls', href: '/products/secure-tunnel' },
   { label: 'Privacy Policy', href: '/privacy-policy' },
 ];
 
@@ -128,13 +128,13 @@ export const marketingPages: Record<string, MarketingPageContent> = {
     eyebrow: 'Product Overview',
     title: 'Private telecom infrastructure for modern identity control.',
     description: 'Burner Point brings verifications, rentals, eSIM connectivity, proxies, and privacy protection into one platform for users who do not want to hand out their real number.',
-    primaryCta: { label: 'Get Started', href: '/auth/signup' },
+    primaryCta: { label: 'Get Started', href: '/sign-up' },
     secondaryCta: { label: 'View Pricing', href: '/pricing' },
     highlights: ['Private number access', 'SMS, OTP, voice, and MMS workflows', 'Privacy-first platform expansion'],
     cards: [
-      { icon: 'smartphone', title: 'Real Numbers', text: 'Choose country and area-code inventory for verifications, rentals, recovery, and private communication.', href: '/verifications', cta: 'Get Verification' },
-      { icon: 'globe', title: 'Global Services', text: 'Use Burner Point across marketplaces, social apps, travel flows, and business registrations without overusing your personal number.', href: '/rentals', cta: 'Rent A Number' },
-      { icon: 'shield', title: 'Private By Design', text: 'Keep your personal identity separated from the services, platforms, and accounts you need to access.', href: '/security', cta: 'Learn More' },
+      { icon: 'smartphone', title: 'Real Numbers', text: 'Choose country and area-code inventory for verifications, rentals, recovery, and private communication.', href: '/products/verify-hub', cta: 'Get Verification' },
+      { icon: 'globe', title: 'Global Services', text: 'Use Burner Point across marketplaces, social apps, travel flows, and business registrations without overusing your personal number.', href: '/products/rentals', cta: 'Rent A Number' },
+      { icon: 'shield', title: 'Private By Design', text: 'Keep your personal identity separated from the services, platforms, and accounts you need to access.', href: '/products/secure-tunnel', cta: 'Learn More' },
     ],
     sections: [
       { title: 'How it works', text: 'Choose your number, use it for verification or communication, receive SMS or voice instantly, then expire it or keep it active.', items: ['Country and area-code selection', 'Instant SMS and OTP visibility', 'Renewable access when continuity matters'] },
@@ -146,8 +146,8 @@ export const marketingPages: Record<string, MarketingPageContent> = {
     eyebrow: 'Phone Numbers and Verifications',
     title: 'Get verification codes without exposing your real number.',
     description: 'Use non-VoIP, SIM-backed numbers to receive SMS, OTP, and voice verification from major platforms with fast delivery and clean account separation.',
-    primaryCta: { label: 'Get Verification', href: '/auth/signup' },
-    secondaryCta: { label: 'Rent A Number', href: '/rentals' },
+    primaryCta: { label: 'Get Verification', href: '/sign-up' },
+    secondaryCta: { label: 'Rent A Number', href: '/products/rentals' },
     highlights: ['SMS and OTP verification', 'Voice call verification', '900+ supported platforms'],
     cards: [
       { icon: 'mail', title: 'SMS and OTP', text: 'Receive verification codes in real time with a focused inbox built for fast confirmation.' },
@@ -161,7 +161,7 @@ export const marketingPages: Record<string, MarketingPageContent> = {
     eyebrow: 'Number Rentals',
     title: 'Temporary when you need speed. Renewable when you need continuity.',
     description: 'Rent a number for one to fourteen days, or keep a monthly number active for repeat verifications, messages, and account recovery.',
-    primaryCta: { label: 'Rent A Number', href: '/auth/signup' },
+    primaryCta: { label: 'Rent A Number', href: '/sign-up' },
     secondaryCta: { label: 'Start Monthly Plan', href: '/pricing' },
     highlights: ['1-14 day rentals', 'Renewable monthly numbers', 'Unlimited verification usage on rentals'],
     cards: [
@@ -176,7 +176,7 @@ export const marketingPages: Record<string, MarketingPageContent> = {
     title: 'Sensitive integrations stay behind approved access.',
     description: 'Burner Point does not expose sensitive operational details on public marketing pages. Product setup, support, and approved access are handled through your account and support channels.',
     primaryCta: { label: 'Contact Support', href: '/contact' },
-    secondaryCta: { label: 'Get Started', href: '/auth/signup' },
+    secondaryCta: { label: 'Get Started', href: '/sign-up' },
     highlights: ['User-facing setup only', 'Private operational access', 'Support-led onboarding when needed'],
     cards: [
       { icon: 'shield', title: 'Protected Access', text: 'Sensitive product operations are not presented on public marketing pages.' },
@@ -202,13 +202,13 @@ export const marketingPages: Record<string, MarketingPageContent> = {
     eyebrow: 'Pricing',
     title: 'Wallet-based usage plus recurring subscriptions.',
     description: 'Fund a USD-priced wallet for BP Verify Hub, BP Number Rentals, BP eSIM Store, and BP Proxy Store, then use subscriptions for BP Messenger Pro, BP Secure Tunnel, and advanced recurring plans.',
-    primaryCta: { label: 'Get Your Number', href: '/auth/signup' },
+    primaryCta: { label: 'Get Your Number', href: '/sign-up' },
     secondaryCta: { label: 'Contact Support', href: '/support' },
     highlights: ['Wallet top-up for usage-based products', 'Subscriptions for recurring access', 'Paystack, Paddle, and NOWPayments'],
     cards: [
-      { icon: 'credit', title: 'Wallet Top-Up', meta: 'Usage-based', text: 'Use wallet funds for BP Verify Hub, BP Number Rentals, BP eSIM Store, and BP Proxy Store.', href: '/dashboard/credits', cta: 'Fund Wallet' },
-      { icon: 'calendar', title: 'Renewable Rentals', meta: 'Recurring', text: 'Keep the same number active when continuity, recovery, and monthly access matter.', href: '/rentals', cta: 'Rent A Number' },
-      { icon: 'shield', title: 'Subscriptions', meta: 'Recurring', text: 'Use subscriptions for BP Messenger Pro, BP Secure Tunnel, and advanced recurring platform access.', href: '/dashboard/billing', cta: 'Manage Billing' },
+      { icon: 'credit', title: 'Wallet Top-Up', meta: 'Usage-based', text: 'Use wallet funds for BP Verify Hub, BP Number Rentals, BP eSIM Store, and BP Proxy Store.', href: '/sign-up', cta: 'Create Account' },
+      { icon: 'calendar', title: 'Renewable Rentals', meta: 'Recurring', text: 'Keep the same number active when continuity, recovery, and monthly access matter.', href: '/products/rentals', cta: 'Rent A Number' },
+      { icon: 'shield', title: 'Subscriptions', meta: 'Recurring', text: 'Use subscriptions for BP Messenger Pro, BP Secure Tunnel, and advanced recurring platform access.', href: '/pricing', cta: 'View Pricing' },
     ],
   },
   blog: {
@@ -216,8 +216,8 @@ export const marketingPages: Record<string, MarketingPageContent> = {
     eyebrow: 'Blog',
     title: 'Practical privacy writing for real-world telecom decisions.',
     description: 'Guides for safer registrations, better communication separation, and stronger privacy habits.',
-    primaryCta: { label: 'Start Privately', href: '/auth/signup' },
-    secondaryCta: { label: 'Open Help Center', href: '/help' },
+    primaryCta: { label: 'Start Privately', href: '/sign-up' },
+    secondaryCta: { label: 'Open Help Center', href: '/help-center' },
     cards: [
       { icon: 'file', meta: 'Privacy - 6 min read', title: 'Why You Should Never Use Your Personal Number Online', text: 'Reduce spam, data brokerage, SIM swap exposure, and unwanted account linkage.', href: '/blog#post-personal-number', anchorId: 'post-personal-number' },
       { icon: 'file', meta: 'Communication - 5 min read', title: 'How Burner Numbers Protect Your Identity', text: 'Compartmentalize marketplaces, social apps, business communication, and short-term signups.', href: '/blog#post-burner-identity', anchorId: 'post-burner-identity' },
@@ -268,7 +268,7 @@ export const marketingPages: Record<string, MarketingPageContent> = {
     eyebrow: 'Product Updates',
     title: 'Recent shipping notes from the Burner Point platform.',
     description: 'A lightweight changelog for number coverage, wallet improvements, eSIM regions, and privacy workflow updates.',
-    primaryCta: { label: 'Get Started', href: '/auth/signup' },
+    primaryCta: { label: 'Get Started', href: '/sign-up' },
     secondaryCta: { label: 'View Pricing', href: '/pricing' },
     cards: [
       { icon: 'globe', meta: 'April 2026', title: 'New Country Number Coverage Added', text: 'Expanded SIM-backed availability for additional verification routes and regional area-code selection.', href: '/updates#update-country-numbers', anchorId: 'update-country-numbers' },
@@ -313,13 +313,13 @@ marketingPages.numbers = {
   eyebrow: 'Numbers',
   title: 'Choose the number strategy that matches your privacy need.',
   description: 'Search, filter, and activate phone numbers for one-time verification, short-term rentals, renewable rentals, and US/Canada conversation workflows.',
-  primaryCta: { label: 'Get Your Number', href: '/auth/signup' },
+  primaryCta: { label: 'Get Your Number', href: '/sign-up' },
   secondaryCta: { label: 'View Pricing', href: '/pricing' },
   highlights: ['Search by country and region', 'One-time or renewable access', 'US/Canada conversation support'],
   cards: [
-    { icon: 'globe', title: 'Global Verification Numbers', text: 'Use country-specific inventory for SMS OTP and voice OTP across supported services.', href: '/verifications', cta: 'Start Verification' },
-    { icon: 'calendar', title: 'Rental Numbers', text: 'Keep a number active for a fixed short window or renew monthly for long-term continuity.', href: '/rentals', cta: 'Rent A Number' },
-    { icon: 'message', title: 'Conversation Numbers', text: 'US/Canada numbers support SMS, secure audio, photo and video sharing, calls, voicemail, contacts, and call history.', href: '/overview', cta: 'See Overview' },
+    { icon: 'globe', title: 'Global Verification Numbers', text: 'Use country-specific inventory for SMS OTP and voice OTP across supported services.', href: '/products/verify-hub', cta: 'Start Verification' },
+    { icon: 'calendar', title: 'Rental Numbers', text: 'Keep a number active for a fixed short window or renew monthly for long-term continuity.', href: '/products/rentals', cta: 'Rent A Number' },
+    { icon: 'message', title: 'Conversation Numbers', text: 'US, UK, and Canada numbers support messaging, calls, voicemail, contacts, and call history.', href: '/products/messenger', cta: 'See Messenger' },
   ],
   sections: [
     { title: 'Search and filters', text: 'The authenticated number experience should support country, area code, service type, renewal mode, availability, and price filters.' },
@@ -338,7 +338,7 @@ marketingPages.support = {
   cards: [
     { icon: 'mail', title: 'Email Support', text: 'Send billing, account, privacy, and technical questions to info.burnerpoint@gmail.com.', href: 'mailto:info.burnerpoint@gmail.com', cta: 'Send Email' },
     { icon: 'message', title: 'Telegram Channel', text: 'Message @burnerpoint for direct support or follow @burnerpointapp for app notices.', href: 'https://t.me/burnerpoint', cta: 'Open Telegram' },
-    { icon: 'help', title: 'Help Center', text: 'Use guides for setup, authentication, numbers, rentals, and payments.', href: '/help', cta: 'Read Guides' },
+    { icon: 'help', title: 'Help Center', text: 'Use guides for setup, authentication, numbers, rentals, and payments.', href: '/help-center', cta: 'Read Guides' },
   ],
 };
 marketingPages.faq = {
@@ -346,7 +346,7 @@ marketingPages.faq = {
   eyebrow: 'FAQ',
   title: 'Answers before you need a support ticket.',
   description: 'Clear answers about burner numbers, conversation inbox, verifications, rentals, eSIM, proxies, VPN protection, payments, account setup, refunds, billing, privacy, and data handling.',
-  primaryCta: { label: 'Open Help Center', href: '/help' },
+  primaryCta: { label: 'Open Help Center', href: '/help-center' },
   secondaryCta: { label: 'Contact Support', href: '/contact' },
   faqs: faqItems,
 };
@@ -359,13 +359,13 @@ marketingPages.help = {
   primaryCta: { label: 'Contact Support', href: '/contact' },
   secondaryCta: { label: 'Telegram Support', href: 'https://t.me/burnerpoint' },
   cards: [
-    { icon: 'book', meta: 'Getting Started', title: 'Create your Burner Point account', text: 'Required profile fields, linked legal pages, and first-dashboard orientation.', href: '/help#help-getting-started', anchorId: 'help-getting-started' },
-    { icon: 'book', meta: 'Verifications', title: 'Receive SMS, OTP, and voice codes', text: 'Choose country and service, activate a number, submit it to the platform, and monitor delivery.', href: '/help#help-verifications', anchorId: 'help-verifications' },
-    { icon: 'book', meta: 'Rentals', title: 'Manage temporary and renewable numbers', text: 'Understand expiration, renewal, release, conversation support, and recovery planning.', href: '/help#help-rentals', anchorId: 'help-rentals' },
-    { icon: 'book', meta: 'Payments', title: 'Credits, purchases, receipts, and references', text: 'Troubleshoot checkout status, wallet credits, subscriptions, and payment gateway references.', href: '/help#help-payments', anchorId: 'help-payments' },
-    { icon: 'book', meta: 'Security', title: 'Account security, sessions, and 2FA', text: 'Use email, phone, password reset, OAuth, active sessions, and optional multifactor authentication.', href: '/help#help-security', anchorId: 'help-security' },
-    { icon: 'book', meta: 'Travel & Connectivity', title: 'Manage eSIM, proxies, and secure access', text: 'Understand plan setup, availability, region choices, and support paths for connectivity tools.', href: '/help#help-connectivity', anchorId: 'help-connectivity' },
-    { icon: 'book', meta: 'Account & Authentication', title: 'Profile, sign out, and recovery', text: 'Manage account details, support tickets, notification preferences, and recovery paths.', href: '/help#help-account-auth', anchorId: 'help-account-auth' },
+    { icon: 'book', meta: 'Getting Started', title: 'Create your Burner Point account', text: 'Required profile fields, linked legal pages, and first-dashboard orientation.', href: '/help-center#help-getting-started', anchorId: 'help-getting-started' },
+    { icon: 'book', meta: 'Verifications', title: 'Receive SMS, OTP, and voice codes', text: 'Choose country and service, activate a number, submit it to the platform, and monitor delivery.', href: '/help-center#help-verifications', anchorId: 'help-verifications' },
+    { icon: 'book', meta: 'Rentals', title: 'Manage temporary and renewable numbers', text: 'Understand expiration, renewal, release, conversation support, and recovery planning.', href: '/help-center#help-rentals', anchorId: 'help-rentals' },
+    { icon: 'book', meta: 'Payments', title: 'Credits, purchases, receipts, and references', text: 'Troubleshoot checkout status, wallet credits, subscriptions, and payment gateway references.', href: '/help-center#help-payments', anchorId: 'help-payments' },
+    { icon: 'book', meta: 'Security', title: 'Account security, sessions, and 2FA', text: 'Use email, phone, password reset, OAuth, active sessions, and optional multifactor authentication.', href: '/help-center#help-security', anchorId: 'help-security' },
+    { icon: 'book', meta: 'Travel & Connectivity', title: 'Manage eSIM, proxies, and secure access', text: 'Understand plan setup, availability, region choices, and support paths for connectivity tools.', href: '/help-center#help-connectivity', anchorId: 'help-connectivity' },
+    { icon: 'book', meta: 'Account & Authentication', title: 'Profile, sign out, and recovery', text: 'Manage account details, support tickets, notification preferences, and recovery paths.', href: '/help-center#help-account-auth', anchorId: 'help-account-auth' },
   ],
   sections: [
     { anchorId: 'help-getting-started', meta: 'Getting Started', title: 'Getting Started', text: 'Create a Burner Point account with first name, last name, email, phone number, and password. By continuing, you agree to the Terms of Service and Privacy Policy. After sign-up, complete onboarding so telecom, billing, support, and dashboard features have the account context they need.', items: ['Use a real email and phone number for recovery', 'Complete email or phone verification when prompted', 'Start with Get Verification, Rent A Number, or Buy Credits from the dashboard'] },
@@ -383,7 +383,7 @@ marketingPages.about = {
   eyebrow: 'About Burner Point',
   title: 'Control communication without exposing identity.',
   description: 'Burner Point exists to give users practical control over communication identity. People should be able to verify accounts, receive messages, stay reachable, travel, route privately, and recover access without turning their personal number into a permanent public identifier.',
-  primaryCta: { label: 'Get Started', href: '/auth/signup' },
+  primaryCta: { label: 'Get Started', href: '/sign-up' },
   secondaryCta: { label: 'Careers', href: '/careers' },
   highlights: ['Private by Design', 'Stay Anonymous', 'Stay Connected'],
   cards: [
@@ -434,17 +434,17 @@ marketingPages.privacy = { slug: 'privacy', eyebrow: 'Legal', title: 'Privacy Po
   { title: 'No logs posture', text: 'Burner Point is presented with a no-logs policy for privacy workflows, with operational telemetry limited to security, abuse prevention, billing, and reliability.' },
   { title: 'User rights', text: 'The product experience should support access, correction, deletion, and export workflows where required by GDPR and other applicable privacy laws.' },
 ] };
-marketingPages.esim = { slug: 'esim', eyebrow: 'eSIM Purchase', title: 'Travel-ready data without swapping physical SIM cards.', description: 'Buy and activate eSIM plans for global connectivity while keeping your number strategy and privacy workflow inside Burner Point.', primaryCta: { label: 'Get Your eSIM', href: '/auth/signup' }, highlights: ['Instant eSIM activation', 'Travel-ready data plans', 'Multi-country coverage'], cards: [
+marketingPages.esim = { slug: 'esim', eyebrow: 'eSIM Purchase', title: 'Travel-ready data without swapping physical SIM cards.', description: 'Buy and activate eSIM plans for global connectivity while keeping your number strategy and privacy workflow inside Burner Point.', primaryCta: { label: 'Get Your eSIM', href: '/sign-up' }, highlights: ['Instant eSIM activation', 'Travel-ready data plans', 'Multi-country coverage'], cards: [
   { icon: 'smartphone', title: 'Instant Activation', text: 'Activate data plans quickly without waiting for a physical card.' },
   { icon: 'globe', title: 'Global Coverage', text: 'Choose destination-ready connectivity for travel, remote work, and backup access.' },
   { icon: 'wifi', title: 'No Roaming Stress', text: 'Keep data predictable when moving between countries and networks.' },
 ] };
-marketingPages.proxies = { slug: 'proxies', eyebrow: 'Proxies Purchase', title: 'Location-aware access with privacy-enhanced routing.', description: 'Use proxy access for privacy-preserving browsing, testing, localization, and controlled location switching.', primaryCta: { label: 'Get Proxies', href: '/auth/signup' }, highlights: ['Residential and mobile proxies', 'Location switching', 'High-speed routing'], cards: [
+marketingPages.proxies = { slug: 'proxies', eyebrow: 'Proxies Purchase', title: 'Location-aware access with privacy-enhanced routing.', description: 'Use proxy access for privacy-preserving browsing, testing, localization, and controlled location switching.', primaryCta: { label: 'Get Proxies', href: '/sign-up' }, highlights: ['Residential and mobile proxies', 'Location switching', 'High-speed routing'], cards: [
   { icon: 'globe', title: 'Location Control', text: 'Route workflows through regions that match your access or testing needs.' },
   { icon: 'shield', title: 'Privacy Layer', text: 'Add separation between your personal connection and the tasks you need to complete.' },
   { icon: 'wifi', title: 'Fast Routing', text: 'Designed for practical browsing, testing, and app workflows.' },
 ] };
-marketingPages.security = { slug: 'security', eyebrow: 'Secure Tunnel and Privacy', title: 'Stay Anonymous. Stay Connected. Private By Design.', description: 'Burner Point brings secure connectivity, private routing, and no-personal-number communication into one privacy-first platform experience.', primaryCta: { label: 'Learn More', href: '/overview' }, highlights: ['Secure tunnel access', 'Account protection', 'Integrated privacy tools'], cards: [
+marketingPages.security = { slug: 'security', eyebrow: 'Secure Tunnel and Privacy', title: 'Stay Anonymous. Stay Connected. Private By Design.', description: 'Burner Point brings secure connectivity, private routing, and no-personal-number communication into one privacy-first platform experience.', primaryCta: { label: 'Learn More', href: '/products/secure-tunnel' }, highlights: ['Secure tunnel access', 'Account protection', 'Integrated privacy tools'], cards: [
   { icon: 'lock', title: 'Encrypted Layer', text: 'A security-first product posture for private browsing and communication workflows.' },
   { icon: 'shield', title: 'Privacy Controls', text: 'Clear account settings and privacy policies keep the product focused on user control and minimal exposure.' },
   { icon: 'globe', title: 'Integrated Routing', text: 'Proxy and VPN-style protection paired with private numbers and eSIM connectivity.' },
@@ -453,3 +453,4 @@ marketingPages.security = { slug: 'security', eyebrow: 'Secure Tunnel and Privac
 export function getMarketingPage(slug: string) {
   return marketingPages[slug];
 }
+

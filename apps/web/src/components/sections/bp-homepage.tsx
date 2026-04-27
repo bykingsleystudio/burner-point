@@ -19,6 +19,7 @@ import {
   heroTrustItems,
   howItWorksSteps,
   pricingCards,
+  productLinks,
   productSections,
   productStripCards,
   safetyFeatures,
@@ -32,7 +33,7 @@ const trustedChips = [
   'Renewable rentals',
   'Travel eSIM',
   'Proxy plans',
-  'Secure tunnel',
+  'Secure access',
 ] as const;
 
 const accountSignals = [
@@ -71,22 +72,22 @@ function HeroSection() {
       <div className="relative mx-auto grid max-w-[92rem] gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[0.96fr_1.04fr] lg:px-8 lg:py-24">
         <div className="flex flex-col justify-center">
           <BpKicker>Private telecom platform</BpKicker>
-          <h1 className="mt-5 max-w-5xl text-5xl font-black leading-[0.9] tracking-[-0.05em] sm:text-6xl lg:text-7xl xl:text-[5.9rem]">
-            Keep your real number private.
-            <span className="block bg-[linear-gradient(105deg,#00FF9D,#E5E7EB_48%,#39FF14)] bg-clip-text text-transparent">
+          <h1 className="mt-5 max-w-5xl text-5xl font-black leading-[0.9] tracking-[-0.05em] sm:text-6xl lg:text-7xl xl:text-[5.7rem]">
+            Private by Design.
+            <span className="mt-2 block bg-[linear-gradient(105deg,#00FF9D,#E5E7EB_48%,#39FF14)] bg-clip-text text-transparent">
               Stay Anonymous. Stay Connected.
             </span>
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-white/72">
-            Use Burner Point for private numbers, messaging, verification codes, rentals, travel data, proxies, and
-            secure access from one account.
+            Don&apos;t want to give out your real phone number? No problem. Use Burner Point for private numbers,
+            messaging, verification codes, rentals, travel data, proxies, and secure access from one account.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <BpButton href="/auth/signup" size="lg">
+            <BpButton href="/sign-up" size="lg">
               Get Started
             </BpButton>
-            <BpButton href="#pricing" size="lg" variant="outline">
+            <BpButton href="/pricing" size="lg" variant="outline">
               View Pricing
             </BpButton>
           </div>
@@ -103,20 +104,16 @@ function HeroSection() {
           </div>
         </div>
 
-        <div className="relative min-h-[36rem]">
-          <div className="absolute left-0 top-0 hidden w-44 rounded-[2rem] border border-white/10 bg-white/[0.05] p-4 shadow-[0_30px_80px_rgba(0,0,0,.28)] backdrop-blur-xl md:block">
-            <PrivacyCharacter />
-            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#00FF9D]">Number protected</p>
-          </div>
-
-          <div className="absolute inset-x-0 bottom-0 mx-auto max-w-[42rem] rounded-[2.4rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.12),rgba(255,255,255,0.03))] p-3 shadow-[0_44px_120px_rgba(0,0,0,.48)] backdrop-blur-2xl">
+        <div className="relative flex min-h-[30rem] items-center lg:justify-end">
+          <div className="w-full max-w-[42rem] rounded-[2.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-4 shadow-[0_44px_120px_rgba(0,0,0,.48)] backdrop-blur-2xl">
+            <div className="mb-4 grid gap-3 sm:grid-cols-3">
+              {trustedChips.slice(0, 3).map((item) => (
+                <div key={item} className="rounded-[1.2rem] border border-white/10 bg-black/18 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.12em] text-white/70">
+                  {item}
+                </div>
+              ))}
+            </div>
             <DashboardGlass />
-          </div>
-
-          <div className="absolute right-2 top-6 w-48 rounded-[2rem] border border-[#00FF9D]/20 bg-[#00FF9D]/10 p-4 shadow-[0_24px_70px_rgba(0,255,157,.12)] backdrop-blur-xl sm:right-8 lg:right-0">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#00FF9D]">Code received</p>
-            <p className="mt-3 font-mono text-3xl font-black text-white">482901</p>
-            <p className="mt-2 text-xs leading-5 text-white/68">Ready when you need it.</p>
           </div>
         </div>
       </div>
@@ -176,8 +173,9 @@ function ProductStripSection() {
       <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {productStripCards.map((item, index) => {
           const Icon = productIcons[index];
+          const href = productLinks[index]?.href;
           return (
-            <FeatureTile key={item.title} icon={Icon} title={item.title} text={item.description} />
+            <FeatureTile key={item.title} icon={Icon} title={item.title} text={item.description} href={href} />
           );
         })}
       </div>
@@ -423,10 +421,10 @@ function FinalCtaSection() {
             </div>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-            <BpButton href="/auth/signup" size="lg">
+            <BpButton href="/sign-up" size="lg">
               Create Account
             </BpButton>
-            <BpButton href="#pricing" size="lg" variant="outline">
+            <BpButton href="/pricing" size="lg" variant="outline">
               View Pricing
             </BpButton>
           </div>
@@ -494,14 +492,16 @@ function FeatureTile({
   title,
   text,
   compact = false,
+  href,
 }: {
   icon: LucideIcon;
   title: string;
   text: string;
   compact?: boolean;
+  href?: string;
 }) {
-  return (
-    <article className={`group rounded-[1.75rem] border border-black/6 bg-white p-6 shadow-[0_18px_48px_rgba(2,20,12,0.06)] transition hover:-translate-y-1 hover:border-[#00FF9D]/28 hover:shadow-[0_28px_80px_rgba(0,255,157,0.11)] dark:border-white/10 dark:bg-[#07140f] ${compact ? 'p-5' : ''}`}>
+  const content = (
+    <article className={`group h-full rounded-[1.75rem] border border-black/6 bg-white p-6 shadow-[0_18px_48px_rgba(2,20,12,0.06)] transition hover:-translate-y-1 hover:border-[#00FF9D]/28 hover:shadow-[0_28px_80px_rgba(0,255,157,0.11)] dark:border-white/10 dark:bg-[#07140f] ${compact ? 'p-5' : ''}`}>
       <IconBadge icon={Icon} />
       <h3 className="mt-5 text-lg font-black tracking-[-0.02em] text-[#07140f] dark:text-white">{title}</h3>
       <p className="mt-3 text-sm leading-7 text-[#2f4d40] dark:text-white/76">{text}</p>
@@ -513,25 +513,12 @@ function FeatureTile({
       ) : null}
     </article>
   );
-}
 
-function PrivacyCharacter() {
+  if (!href) return content;
+
   return (
-    <svg viewBox="0 0 180 180" role="img" aria-label="Privacy character illustration" className="h-auto w-full">
-      <defs>
-        <linearGradient id="bp-character-gradient" x1="28" y1="16" x2="152" y2="158" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#00FF9D" />
-          <stop offset="1" stopColor="#39FF14" />
-        </linearGradient>
-      </defs>
-      <circle cx="90" cy="90" r="76" fill="#07140F" stroke="rgba(255,255,255,.16)" strokeWidth="2" />
-      <path d="M52 78c0-24 17-43 38-43s38 19 38 43v18c0 24-17 43-38 43s-38-19-38-43V78Z" fill="url(#bp-character-gradient)" />
-      <path d="M66 84c7 6 16 9 26 9 12 0 24-5 33-15v19c0 20-15 36-35 36S55 117 55 97V81c3 1 7 2 11 3Z" fill="#06120D" opacity=".9" />
-      <circle cx="77" cy="91" r="5" fill="#00FF9D" />
-      <circle cx="105" cy="91" r="5" fill="#00FF9D" />
-      <path d="M78 111c9 7 18 7 27 0" fill="none" stroke="#E5E7EB" strokeLinecap="round" strokeWidth="5" />
-      <path d="M43 128c12-12 27-18 47-18s35 6 47 18" fill="none" stroke="rgba(255,255,255,.4)" strokeLinecap="round" strokeWidth="8" />
-      <path d="M42 55 24 45m114 10 18-10M34 96H17m126 0h20" stroke="#00FF9D" strokeLinecap="round" strokeWidth="5" opacity=".75" />
-    </svg>
+    <Link href={href} className="block h-full" aria-label={`Open ${title}`}>
+      {content}
+    </Link>
   );
 }

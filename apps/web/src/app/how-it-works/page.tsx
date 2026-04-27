@@ -1,7 +1,8 @@
 import { MarketingPage } from '@/components/marketing';
+import type { MarketingPageContent } from '@/lib/marketing-data';
 import { buildMarketingMetadata, pageStructuredData } from '@/lib/seo';
 
-const page = {
+const page: MarketingPageContent = {
   slug: 'how-it-works',
   eyebrow: 'How It Works',
   title: 'Get started in minutes.',
@@ -15,7 +16,7 @@ const page = {
       meta: '01',
       title: 'Create your account',
       text: 'Sign up with your name, email, phone number, and password, or continue with Google, Apple, or Microsoft.',
-      items: ['Clerk handles sign-in, sessions, OAuth, and account security', 'Your account opens directly into onboarding or the dashboard'],
+      items: ['Sign in with email, phone, or a trusted sign-in provider', 'Your account opens directly into onboarding or the dashboard'],
     },
     {
       meta: '02',
@@ -27,10 +28,10 @@ const page = {
       meta: '03',
       title: 'Stay private and in control',
       text: 'Manage numbers, codes, plans, billing, and support without exposing your personal number everywhere.',
-      items: ['Protected routes require sign-in', 'Phone verification uses clean OTP flows during onboarding and security updates'],
+      items: ['Your account stays protected behind secure sign-in', 'Phone verification stays simple during onboarding and account security updates'],
     },
   ],
-} as const;
+};
 
 export const metadata = buildMarketingMetadata(page, '/how-it-works');
 

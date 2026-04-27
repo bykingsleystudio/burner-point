@@ -111,7 +111,7 @@ export default function BillingPage() {
               Manage verification credits, rental purchases, monthly plans, receipts, and payment history from one controlled billing surface.
             </p>
           </div>
-          <Link href="/dashboard/credits" className="bp-primary-action inline-flex min-h-12 items-center justify-center gap-2 px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em]">
+          <Link href="/dashboard/billing" className="bp-primary-action inline-flex min-h-12 items-center justify-center gap-2 px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em]">
             Buy Credits
             <ArrowRight className="h-4 w-4" />
           </Link>

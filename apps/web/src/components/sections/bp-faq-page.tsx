@@ -46,7 +46,7 @@ export function BurnerPointFaqPage() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <BpButton href="/auth/signup" size="lg">
+              <BpButton href="/sign-up" size="lg">
                 Create account
               </BpButton>
               <Link
@@ -182,7 +182,7 @@ export function BurnerPointFaqPage() {
             Create your Burner Point account, fund your wallet or choose a plan, then start with the product that fits your workflow.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <BpButton href="/auth/signup" size="lg">
+            <BpButton href="/sign-up" size="lg">
               Create account
             </BpButton>
             <Link

@@ -53,7 +53,7 @@ async function registerForPushNotifications() {
 
 export default function RootLayout() {
   const [loaded, setLoaded] = useState(false);
-  const [authenticated, setAuthenticated] = useState(true); // Skip biometrics if not enrolled
+  const [deviceUnlocked, setDeviceUnlocked] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -72,7 +72,7 @@ export default function RootLayout() {
           promptMessage: 'Authenticate to access Burner Point',
           fallbackLabel: 'Use passcode',
         });
-        setAuthenticated(result.success);
+        setDeviceUnlocked(result.success);
       }
 
       // Push notifications
@@ -105,10 +105,10 @@ export default function RootLayout() {
     );
   }
 
-  if (!authenticated) {
+  if (!deviceUnlocked) {
     return (
       <View style={styles.splash}>
-        <Text style={styles.splashTitle}>Authentication Required</Text>
+        <Text style={styles.splashTitle}>Unlock required</Text>
       </View>
     );
   }

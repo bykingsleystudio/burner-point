@@ -125,7 +125,7 @@ export default function SettingsPage() {
               <p className="text-sm font-semibold text-white">Wallet balance</p>
               <p className="mt-2 text-sm leading-6 text-white/50">Review funding history, invoices, and active subscriptions.</p>
             </Link>
-            <Link href="/dashboard/credits" className="rounded-[1rem] border border-white/8 bg-black/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
+            <Link href="/dashboard/billing" className="rounded-[1rem] border border-white/8 bg-black/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
               <p className="text-sm font-semibold text-white">Deposit options</p>
               <p className="mt-2 text-sm leading-6 text-white/50">Fund the wallet for usage-based products and renewals.</p>
             </Link>

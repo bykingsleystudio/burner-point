@@ -91,7 +91,7 @@ export const DEPLOYMENT_TARGETS: DeploymentTargetDefinition[] = [
     requiredEnv: ['VERCEL_ENV', 'NEXT_PUBLIC_APP_URL', 'NEXT_PUBLIC_API_URL', 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY'],
     optionalEnv: ['VERCEL_PROJECT_ID', 'VERCEL_ORG_ID', 'NEXT_PUBLIC_SENTRY_DSN', 'NEXT_PUBLIC_POSTHOG_KEY', 'GOOGLE_SITE_VERIFICATION', 'BING_SITE_VERIFICATION', 'INDEXNOW_KEY'],
     productionRequired: true,
-    releaseCheck: 'Vercel production build passes and /, /sitemap.xml, /robots.txt, /auth/login, and /dashboard resolve.',
+    releaseCheck: 'Vercel production build passes and /, /sitemap.xml, /robots.txt, /sign-in, and /dashboard resolve.',
     rollback: 'Promote the previous successful Vercel deployment or revert the release commit.',
   },
   {
@@ -239,6 +239,19 @@ export const DEPLOYMENT_TARGETS: DeploymentTargetDefinition[] = [
     optionalEnv: ['TELNYX_MESSAGING_PROFILE_ID', 'TELNYX_CONNECTION_ID', 'TELNYX_WEBHOOK_SECRET'],
     releaseCheck: 'Number inventory, routed message fallback, and country/service route tests succeed with webhook events recorded.',
     rollback: 'Remove Telnyx from route selection while keeping Twilio and Tremil active.',
+  },
+  {
+    id: 'bandwidth',
+    name: 'Bandwidth',
+    category: 'telecom',
+    stage: 'primary',
+    environmentScope: ['staging', 'production'],
+    ownerSurface: 'North America numbers, messaging callbacks, and carrier-grade voice fallback',
+    requiredEnv: ['BANDWIDTH_ACCOUNT_ID', 'BANDWIDTH_USERNAME', 'BANDWIDTH_PASSWORD'],
+    optionalEnv: ['BANDWIDTH_MESSAGING_APPLICATION_ID', 'BANDWIDTH_VOICE_APPLICATION_ID', 'BANDWIDTH_SITE_ID', 'BANDWIDTH_SIPPEER_ID', 'BANDWIDTH_WEBHOOK_SECRET'],
+    productionRequired: false,
+    releaseCheck: 'Bandwidth messaging callbacks, number search or order, and voice callback routing are smoke-tested when the provider is enabled.',
+    rollback: 'Remove Bandwidth from provider selection and keep Twilio or Telnyx active while credentials or webhooks are corrected.',
   },
   {
     id: 'tremil',

@@ -61,42 +61,42 @@ export const productLinks: ProductLink[] = [
   {
     name: 'BP Messenger',
     description: 'Private US, UK, and Canada numbers for calling, texting, and contact separation.',
-    href: '/#bp-messenger',
+    href: '/products/messenger',
   },
   {
     name: 'BP Verify Hub',
     description: 'Receive supported SMS and voice codes without using your personal number.',
-    href: '/#bp-verify-hub',
+    href: '/products/verify-hub',
   },
   {
     name: 'BP Rentals',
     description: 'Keep a temporary or renewable number active for continuity and recovery.',
-    href: '/#bp-rentals',
+    href: '/products/rentals',
   },
   {
     name: 'BP eSIM Store',
     description: 'Buy travel data plans and activate connectivity without a physical SIM.',
-    href: '/#bp-esim-store',
+    href: '/products/esim-store',
   },
   {
     name: 'BP Proxy Store',
     description: 'Access residential, datacenter, and rotating proxies for approved use cases.',
-    href: '/#bp-proxy-store',
+    href: '/products/proxy-store',
   },
   {
     name: 'BP Secure Tunnel',
     description: 'Protect your connection with secure access and dedicated IP options.',
-    href: '/#bp-secure-tunnel',
+    href: '/products/secure-tunnel',
   },
 ];
 
 export const headerLinks = [
   { label: 'Products', href: '/#products' },
-  { label: 'Pricing', href: '/#pricing' },
-  { label: 'How It Works', href: '/#how-it-works' },
+  { label: 'Pricing', href: '/pricing' },
+  { label: 'How It Works', href: '/how-it-works' },
   { label: 'FAQ', href: '/faq' },
   { label: 'Blog', href: '/blog' },
-  { label: 'Support', href: '/#support' },
+  { label: 'Support', href: '/support' },
 ] as const;
 
 export const heroTrustItems = [
@@ -184,7 +184,7 @@ export const productSections: ProductSection[] = [
     title: "Your phone's other number.",
     description:
       'BP Messenger gives you a private number for calls, texts, contacts, and work-life separation.',
-    href: '/auth/signup',
+    href: '/products/messenger',
     cta: 'Start BP Messenger',
     features: [
       'Dedicated US, UK, or Canada number',
@@ -201,7 +201,7 @@ export const productSections: ProductSection[] = [
     title: 'Receive codes without using your personal number.',
     description:
       'Choose a supported service and country, get a number, and receive SMS or voice codes where available.',
-    href: '/auth/signup',
+    href: '/products/verify-hub',
     cta: 'Get Verification',
     note: 'Use BP Verify Hub only for accounts, services, and workflows you are authorized to access.',
     features: [
@@ -217,7 +217,7 @@ export const productSections: ProductSection[] = [
     title: 'Keep a number when you need continuity.',
     description:
       'Rent temporary or renewable numbers for repeated messages, recovery, and longer access where supported.',
-    href: '/auth/signup',
+    href: '/products/rentals',
     cta: 'Rent a Number',
     features: [
       'Daily, weekly, monthly, or yearly durations',
@@ -232,7 +232,7 @@ export const productSections: ProductSection[] = [
     title: 'Stay connected when you travel.',
     description:
       'Buy eSIM data plans directly from Burner Point and activate travel data without needing a physical SIM. Ideal for travelers, founders, remote workers, and users who need global connectivity fast.',
-    href: '/auth/signup',
+    href: '/products/esim-store',
     cta: 'Explore eSIM Plans',
     features: [
       'Country and regional plans',
@@ -247,7 +247,7 @@ export const productSections: ProductSection[] = [
     title: 'Private network access for approved use cases.',
     description:
       'Choose proxy plans for business, testing, research, geo-checking, and approved routing use cases.',
-    href: '/auth/signup',
+    href: '/products/proxy-store',
     cta: 'View Proxy Plans',
     note: "Proxy access must be used lawfully and in accordance with Burner Point's Acceptable Use Policy.",
     features: [
@@ -263,7 +263,7 @@ export const productSections: ProductSection[] = [
     title: 'Secure your connection with BP Secure Tunnel.',
     description:
       'Protect your connection with secure access, location choices, and dedicated IP options where available.',
-    href: '/auth/signup',
+    href: '/products/secure-tunnel',
     cta: 'Activate Secure Tunnel',
     features: [
       'Protected connectivity',
@@ -297,7 +297,7 @@ export const pricingCards: PricingCard[] = [
     title: 'BP Verify Hub',
     price: 'Starting at $0.99+ / verification',
     description: 'Receive supported SMS or voice codes for supported services.',
-    href: '/auth/signup',
+    href: '/products/verify-hub',
     cta: 'Get Verification',
     highlights: [
       'SMS code support',
@@ -310,7 +310,7 @@ export const pricingCards: PricingCard[] = [
     title: 'Non-Renewable Rentals',
     price: 'Starting at $5.99+',
     description: 'Temporary number access when you do not need renewal.',
-    href: '/auth/signup',
+    href: '/products/rentals',
     cta: 'Rent Temporary Number',
     highlights: [
       'Short-term number access',
@@ -323,7 +323,7 @@ export const pricingCards: PricingCard[] = [
     title: 'Renewable Rentals',
     price: 'Starting at $15.99+ / month',
     description: 'Keep the same number active for continuity and recovery.',
-    href: '/auth/signup',
+    href: '/products/rentals',
     cta: 'Start Monthly Rental',
     highlights: [
       'Renewable number access',
@@ -336,7 +336,7 @@ export const pricingCards: PricingCard[] = [
     title: 'BP Messenger',
     price: 'Region-based monthly pricing',
     description: 'Dedicated number for private calling and texting.',
-    href: '/auth/signup',
+    href: '/products/messenger',
     cta: 'Start BP Messenger',
     highlights: [
       'US, UK, or Canada number',
@@ -349,7 +349,7 @@ export const pricingCards: PricingCard[] = [
     title: 'BP eSIM Store',
     price: 'Plan pricing varies by country',
     description: 'Buy travel data plans for supported countries and regions.',
-    href: '/auth/signup',
+    href: '/products/esim-store',
     cta: 'Buy eSIM',
     highlights: [
       'eSIM QR code delivery',
@@ -362,7 +362,7 @@ export const pricingCards: PricingCard[] = [
     title: 'BP Proxy Store',
     price: 'Plan pricing varies by type and location',
     description: 'Access proxy plans for approved use cases.',
-    href: '/auth/signup',
+    href: '/products/proxy-store',
     cta: 'View Proxy Plans',
     highlights: [
       'Residential proxies',
@@ -375,7 +375,7 @@ export const pricingCards: PricingCard[] = [
     title: 'BP Secure Tunnel',
     price: 'Dedicated IP plans',
     description: 'Protected connectivity with dedicated IP options.',
-    href: '/auth/signup',
+    href: '/products/secure-tunnel',
     cta: 'Secure My Connection',
     highlights: [
       'Protected connectivity',

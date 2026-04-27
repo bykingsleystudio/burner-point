@@ -35,6 +35,13 @@ export type SeoPage = {
 
 export function routeForSlug(slug: string) {
   if (slug === 'api-docs') return '/api/docs';
+  if (slug === 'overview') return '/';
+  if (slug === 'verifications') return '/products/verify-hub';
+  if (slug === 'rentals') return '/products/rentals';
+  if (slug === 'esim') return '/products/esim-store';
+  if (slug === 'proxies') return '/products/proxy-store';
+  if (slug === 'security') return '/products/secure-tunnel';
+  if (slug === 'help') return '/help-center';
   if (slug === 'terms') return '/terms-of-service';
   if (slug === 'privacy') return '/privacy-policy';
   return `/${slug}`;

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * apps/api/src/modules/seo/seo.service.ts
  *
  * Handles sitemap, robots.txt, structured data, and IndexNow pinging.
@@ -13,29 +13,25 @@ export class SeoService implements OnModuleInit {
   private readonly logger = new Logger(SeoService.name);
   private readonly publicRoutes = [
     '/',
-    '/overview',
-    '/verifications',
-    '/rentals',
-    '/numbers',
-    '/api',
-    '/api/docs',
     '/pricing',
+    '/how-it-works',
     '/blog',
-    '/updates',
     '/announcements',
-    '/careers',
     '/faq',
-    '/help',
     '/help-center',
     '/support',
     '/contact',
-    '/about',
-    '/terms',
-    '/privacy',
+    '/products/messenger',
+    '/products/verify-hub',
+    '/products/rentals',
+    '/products/esim-store',
+    '/products/proxy-store',
+    '/products/secure-tunnel',
+    '/terms-of-service',
     '/privacy-policy',
-    '/esim',
-    '/proxies',
-    '/security',
+    '/acceptable-use-policy',
+    '/refund-policy',
+    '/cookie-policy',
   ];
 
   constructor(private config: ConfigService) {}
@@ -53,8 +49,13 @@ export class SeoService implements OnModuleInit {
 
     const body = this.publicRoutes
       .map((route) => {
-        const priority = route === '/' ? '1.0' : ['/pricing', '/verifications', '/rentals'].includes(route) ? '0.9' : '0.7';
-        const changefreq = route === '/' || route === '/blog' || route === '/updates' || route === '/announcements'
+        const priority =
+          route === '/'
+            ? '1.0'
+            : ['/pricing', '/products/messenger', '/products/verify-hub', '/products/rentals'].includes(route)
+              ? '0.9'
+              : '0.7';
+        const changefreq = route === '/' || route === '/blog' || route === '/announcements'
           ? 'weekly'
           : 'monthly';
         return `  <url>
@@ -82,6 +83,10 @@ Disallow: /api/
 Disallow: /admin/
 Disallow: /_next/
 Disallow: /auth/
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /forgot-password
+Disallow: /verify-phone
 Disallow: /onboarding
 Disallow: /sso-callback
 Disallow: /test
@@ -92,12 +97,20 @@ Allow: /
 Disallow: /dashboard/
 Disallow: /api/
 Disallow: /auth/
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /forgot-password
+Disallow: /verify-phone
 
 User-agent: Bingbot
 Allow: /
 Disallow: /dashboard/
 Disallow: /api/
 Disallow: /auth/
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /forgot-password
+Disallow: /verify-phone
 
 Sitemap: ${base}/sitemap.xml`;
   }
@@ -147,7 +160,7 @@ Sitemap: ${base}/sitemap.xml`;
   }
 
   /**
-   * IndexNow — instantly pings search engines when content changes.
+   * IndexNow - instantly pings search engines when content changes.
    * Much faster than waiting for Googlebot to crawl.
    */
   async pingIndexNow(urls?: string[]): Promise<void> {
@@ -157,11 +170,13 @@ Sitemap: ${base}/sitemap.xml`;
     const defaultUrls = [
       `${base}/`,
       `${base}/pricing`,
-      `${base}/verifications`,
-      `${base}/rentals`,
+      `${base}/how-it-works`,
+      `${base}/products/messenger`,
+      `${base}/products/verify-hub`,
+      `${base}/products/rentals`,
       `${base}/blog`,
       `${base}/faq`,
-      `${base}/help`,
+      `${base}/support`,
       `${base}/contact`,
     ];
 
@@ -175,7 +190,7 @@ Sitemap: ${base}/sitemap.xml`;
     };
 
     if (!indexNowPayload.key) {
-      this.logger.debug('INDEXNOW_KEY not set — skipping IndexNow ping');
+      this.logger.debug('INDEXNOW_KEY not set - skipping IndexNow ping');
       return;
     }
 
@@ -199,3 +214,4 @@ Sitemap: ${base}/sitemap.xml`;
     }
   }
 }
+
