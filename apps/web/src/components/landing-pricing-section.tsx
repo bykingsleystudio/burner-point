@@ -83,7 +83,7 @@ export function LandingPricingSection() {
             <h2 id="pricing-title" className="mt-4 max-w-4xl text-4xl font-black uppercase leading-[0.98] text-white md:text-6xl">
               Wallet funding for usage. Subscriptions for continuity.
             </h2>
-            <p className="mt-4 max-w-3xl text-base leading-8 text-white/58">
+            <p className="mt-4 max-w-3xl text-base leading-8 text-[#E5E7EB]">
               Choose the Burner Point surface you need now, then move between wallet-funded usage and recurring privacy subscriptions without changing accounts.
             </p>
           </div>
@@ -111,19 +111,19 @@ export function LandingPricingSection() {
                   <span className="flex h-12 w-12 items-center justify-center rounded-[1rem] bg-brand-green/10">
                     <Icon className="h-6 w-6 text-brand-green" />
                   </span>
-                  <span className="rounded-full border border-white/10 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-white/48">
+                  <span className="rounded-full border border-white/10 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-[#E5E7EB]">
                     {item.eyebrow}
                   </span>
                 </div>
 
                 <h3 className="mt-6 text-xl font-semibold text-white">{item.title}</h3>
                 <p className="mt-4 font-mono text-3xl text-brand-green">{item.price}</p>
-                <p className="mt-4 text-sm leading-7 text-white/58">{item.description}</p>
+                <p className="mt-4 text-sm leading-7 text-[#E5E7EB]">{item.description}</p>
                 <div className="mt-5 flex flex-wrap gap-2">
                   {item.highlights.map((highlight) => (
                     <span
                       key={highlight}
-                      className="rounded-full border border-white/8 bg-white/[0.03] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/54"
+                      className="rounded-full border border-white/8 bg-white/[0.03] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#E5E7EB]"
                     >
                       {highlight}
                     </span>

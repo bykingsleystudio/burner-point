@@ -334,7 +334,7 @@ export function DashboardModulePage({ module }: { module: DashboardModuleContent
             <h1 className="mt-3 max-w-3xl text-3xl font-black uppercase leading-none text-white md:text-5xl">
               {module.title}
             </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-brand-muted md:text-base">
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-[#E5E7EB] md:text-base">
               {module.description}
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -348,7 +348,7 @@ export function DashboardModulePage({ module }: { module: DashboardModuleContent
               {module.secondaryAction ? (
                 <ExternalAwareLink
                   action={module.secondaryAction}
-                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-white/10 px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white/72 transition hover:border-brand-green/35 hover:text-white"
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-white/10 px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white transition hover:border-brand-green/35 hover:text-white"
                 >
                   {module.secondaryAction.label}
                 </ExternalAwareLink>
@@ -370,7 +370,7 @@ export function DashboardModulePage({ module }: { module: DashboardModuleContent
               {module.stats.map((stat) => (
                 <div key={`${stat.label}-${stat.value}`} className="rounded-[1rem] border border-white/8 bg-black/20 p-3">
                   <p className="font-mono text-base font-semibold text-brand-green">{stat.value}</p>
-                  <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-white/38">{stat.label}</p>
+                  <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-[#E5E7EB]">{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -388,13 +388,13 @@ export function DashboardModulePage({ module }: { module: DashboardModuleContent
                   <Icon className="h-5 w-5 text-brand-green" />
                 </span>
                 {card.meta ? (
-                  <span className="rounded-full border border-white/10 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-white/48">
+                  <span className="rounded-full border border-white/10 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-[#E5E7EB]">
                     {card.meta}
                   </span>
                 ) : null}
               </div>
               <h2 className="mt-4 text-sm font-semibold uppercase tracking-[0.12em] text-white">{card.title}</h2>
-              <p className="mt-3 text-sm leading-6 text-brand-muted">{card.text}</p>
+              <p className="mt-3 text-sm leading-6 text-[#E5E7EB]">{card.text}</p>
             </article>
           );
         })}
@@ -409,14 +409,14 @@ export function DashboardModulePage({ module }: { module: DashboardModuleContent
                 <span className="flex h-7 w-7 flex-none items-center justify-center rounded-[0.9rem] border border-brand-green/20 bg-brand-green/10 font-mono text-xs text-brand-green">
                   {index + 1}
                 </span>
-                <p className="text-sm leading-6 text-white/66">{step}</p>
+                <p className="text-sm leading-6 text-[#E5E7EB]">{step}</p>
               </div>
             ))}
           </div>
         </div>
         <div className="rounded-[1.5rem] border border-brand-green/16 bg-brand-green/[0.045] p-5">
           <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Need to know</p>
-          <p className="mt-4 text-sm leading-7 text-white/66">{module.note}</p>
+          <p className="mt-4 text-sm leading-7 text-[#E5E7EB]">{module.note}</p>
         </div>
       </section>
     </div>

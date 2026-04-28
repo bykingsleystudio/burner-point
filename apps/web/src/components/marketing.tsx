@@ -138,7 +138,7 @@ export function MarketingPage({ page }: { page: MarketingPageContent }) {
               <h2 className="mt-4 text-3xl font-black leading-[0.92] text-white md:text-4xl">
                 Private by design. Built for control.
               </h2>
-              <p className="mt-4 text-sm leading-7 text-white/72">
+              <p className="mt-4 text-sm leading-7 text-[#E5E7EB]">
                 A premium privacy-first experience for private numbers, messaging, verification, rentals, travel connectivity, proxies, and secure access.
               </p>
               {page.highlights?.length ? (
@@ -193,7 +193,7 @@ export function MarketingPage({ page }: { page: MarketingPageContent }) {
                   </span>
                 ) : null}
                 <h2 className="mt-4 text-2xl font-semibold first:mt-0">{section.title}</h2>
-                <p className={`mt-5 text-base leading-8 ${index % 3 === 0 ? 'text-[#456052]' : 'text-white/72'}`}>{section.text}</p>
+                <p className={`mt-5 text-base leading-8 ${index % 3 === 0 ? 'text-[#456052]' : 'text-[#E5E7EB]'}`}>{section.text}</p>
                 {section.items?.length ? (
                   <div className="mt-6">
                     <BulletList items={section.items} />
@@ -238,7 +238,7 @@ function ContactFormSection() {
         <div className="rounded-[1.8rem] bg-[linear-gradient(135deg,#07140f,#013220_62%,#0a1d14)] p-6 text-white shadow-[0_28px_90px_rgba(2,20,12,0.16)]">
           <Eyebrow>Support</Eyebrow>
           <h2 className="mt-4 text-3xl font-black leading-[0.94] text-white">Talk to Burner Point.</h2>
-          <p className="mt-4 text-base leading-8 text-white/72">
+          <p className="mt-4 text-base leading-8 text-[#E5E7EB]">
             Reach support for pricing, access, verification, rentals, travel data, proxy plans, secure tunnel, and account issues.
           </p>
           <div className="mt-6 grid gap-3">
@@ -313,7 +313,7 @@ function ContactLine({
       rel={href.startsWith('http') ? 'noreferrer' : undefined}
       className="rounded-[1rem] border border-white/10 bg-white/[0.05] px-4 py-3 transition hover:border-[#00FF9D]/24"
     >
-      <p className="text-xs uppercase tracking-[0.18em] text-white/46">{label}</p>
+      <p className="text-xs uppercase tracking-[0.18em] text-[#E5E7EB]">{label}</p>
       <p className="mt-1 text-sm font-semibold text-white">{value}</p>
     </a>
   );

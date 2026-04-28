@@ -22,8 +22,8 @@ function cx(...classes: Array<string | false | null | undefined>) {
 
 const buttonVariants: Record<ButtonVariant, string> = {
   primary: 'bp-primary-action text-black',
-  secondary: 'bp-secondary-action text-white/82',
-  ghost: 'bp-ghost-action text-white/66 hover:text-brand-green',
+  secondary: 'bp-secondary-action text-white',
+  ghost: 'bp-ghost-action text-[#E5E7EB] hover:text-brand-green',
 };
 
 const buttonSizes: Record<ButtonSize, string> = {
@@ -122,14 +122,14 @@ export function BpAccordion({
           <ChevronDown className="h-4 w-4" />
         </span>
       </summary>
-      <p className="pt-5 text-sm leading-7 text-white/58">{answer}</p>
+      <p className="pt-5 text-sm leading-7 text-[#E5E7EB]">{answer}</p>
     </details>
   );
 }
 
 export function BpTrustBadge({ label, href }: { label: string; href?: string }) {
   const content = (
-    <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/8 bg-white/[0.025] px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-white/48 transition hover:border-brand-green/30 hover:text-brand-green">
+    <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/8 bg-white/[0.025] px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-[#E5E7EB] transition hover:border-brand-green/30 hover:text-brand-green">
       <ShieldCheck className="h-3.5 w-3.5" />
       {label}
     </span>
@@ -142,7 +142,7 @@ export function BpSupportWidget() {
     <BpCard className="p-5">
       <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-brand-green">Support</p>
       <h3 className="mt-3 text-lg font-semibold uppercase text-white">Need privacy-safe help?</h3>
-      <p className="mt-3 text-sm leading-7 text-white/58">
+      <p className="mt-3 text-sm leading-7 text-[#E5E7EB]">
         Use scoped references for verification, rentals, billing, eSIM, proxies, secure tunnel, or account issues.
       </p>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -170,7 +170,7 @@ export function BpEmptyState({
     <div className="bp-state">
       <ShieldCheck className="h-8 w-8 text-brand-green" />
       <h3 className="mt-4 text-base font-semibold uppercase text-white">{title}</h3>
-      <p className="mt-2 max-w-md text-sm leading-6 text-white/56">{text}</p>
+      <p className="mt-2 max-w-md text-sm leading-6 text-[#E5E7EB]">{text}</p>
       {action ? <div className="mt-5">{action}</div> : null}
     </div>
   );
@@ -180,7 +180,7 @@ export function BpLoadingState({ label = 'Loading secure state...' }: { label?: 
   return (
     <div className="bp-state" role="status" aria-live="polite" aria-busy="true">
       <Loader2 className="bp-loading-pulse h-8 w-8 text-brand-green" />
-      <p className="mt-4 font-mono text-xs uppercase tracking-[0.18em] text-white/52">{label}</p>
+      <p className="mt-4 font-mono text-xs uppercase tracking-[0.18em] text-[#E5E7EB]">{label}</p>
     </div>
   );
 }
@@ -196,7 +196,7 @@ export function BpErrorState({
     <div className="bp-state border-red-400/20 bg-red-500/[0.035]" role="alert">
       <AlertTriangle className="h-8 w-8 text-red-300" />
       <h3 className="mt-4 text-base font-semibold uppercase text-white">{title}</h3>
-      <p className="mt-2 max-w-md text-sm leading-6 text-white/56">{text}</p>
+      <p className="mt-2 max-w-md text-sm leading-6 text-[#E5E7EB]">{text}</p>
     </div>
   );
 }
@@ -248,7 +248,7 @@ export function BpDropdownShell({
 }) {
   return (
     <details className="group relative [&_summary::-webkit-details-marker]:hidden">
-      <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-bp border border-white/10 bg-white/[0.025] px-4 py-2 text-sm font-semibold text-white/72 transition hover:border-brand-green/30 hover:text-brand-green">
+      <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-bp border border-white/10 bg-white/[0.025] px-4 py-2 text-sm font-semibold text-white transition hover:border-brand-green/30 hover:text-brand-green">
         {label}
         <ChevronDown className="h-4 w-4 transition group-open:rotate-180" />
       </summary>
@@ -276,8 +276,8 @@ export function BpPricingCard({
     <BpCard as="article" className="h-full">
       <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-green">{title}</p>
       <p className="mt-4 font-mono text-5xl font-semibold text-brand-green">{price}</p>
-      <p className="mt-4 text-sm leading-7 text-white/58">{text}</p>
-      <ul className="mt-6 space-y-3 text-sm text-white/64">
+      <p className="mt-4 text-sm leading-7 text-[#E5E7EB]">{text}</p>
+      <ul className="mt-6 space-y-3 text-sm text-[#E5E7EB]">
         {features.map((feature) => (
           <li key={feature} className="flex items-start gap-3">
             <Check className="mt-0.5 h-4 w-4 flex-none text-brand-green" />
@@ -309,10 +309,10 @@ export function BpFeatureCard({
         <span className="flex h-12 w-12 items-center justify-center rounded-bp-md border border-brand-green/20 bg-brand-green/10">
           <Icon className="h-5 w-5 text-brand-green" />
         </span>
-        {meta ? <span className="rounded-bp border border-white/8 px-2 py-1 font-mono text-[10px] uppercase text-white/44">{meta}</span> : null}
+        {meta ? <span className="rounded-bp border border-white/8 px-2 py-1 font-mono text-[10px] uppercase text-[#E5E7EB]">{meta}</span> : null}
       </div>
       <h3 className="mt-5 font-mono text-lg font-semibold uppercase text-white">{title}</h3>
-      <p className="mt-4 text-sm leading-7 text-white/58">{text}</p>
+      <p className="mt-4 text-sm leading-7 text-[#E5E7EB]">{text}</p>
     </BpCard>
   );
 }

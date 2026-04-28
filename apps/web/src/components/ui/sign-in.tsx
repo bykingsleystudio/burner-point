@@ -133,7 +133,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={166} height={26} className="h-[1.15rem] w-auto sm:h-5" />
               </span>
             </Link>
-            <Link href="/pricing" className="hidden text-sm font-medium text-white/72 transition hover:text-white sm:inline-flex">
+            <Link href="/pricing" className="hidden text-sm font-medium text-white transition hover:text-white sm:inline-flex">
               Pricing
             </Link>
           </div>
@@ -146,7 +146,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               </h1>
             ) : null}
             {description ? (
-              <p className="mt-4 text-sm leading-7 text-white/66 sm:text-base">
+              <p className="mt-4 text-sm leading-7 text-[#E5E7EB] sm:text-base">
                 {description}
               </p>
             ) : null}
@@ -156,7 +156,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
             {heroTrustItems.slice(0, 3).map((item) => (
               <span
                 key={item}
-                className="inline-flex min-h-9 items-center rounded-full border border-white/10 bg-white/[0.03] px-3 text-xs font-medium text-white/72"
+                className="inline-flex min-h-9 items-center rounded-full border border-white/10 bg-white/[0.03] px-3 text-xs font-medium text-[#E5E7EB]"
               >
                 {item}
               </span>
@@ -176,33 +176,33 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
                 <div className="relative my-5 flex items-center justify-center">
                   <span className="w-full border-t border-white/10" />
-                  <span className="absolute bg-[#04120C] px-4 font-mono text-[11px] uppercase tracking-[0.24em] text-white/70">
+                  <span className="absolute bg-[#04120C] px-4 font-mono text-[11px] uppercase tracking-[0.24em] text-[#E5E7EB]">
                     OR
                   </span>
                 </div>
 
                 <form className="space-y-5" onSubmit={onSignIn}>
                   <div>
-                    <label className="text-sm font-medium text-white/76">Email or phone</label>
+                    <label className="text-sm font-medium text-white">Email or phone</label>
                     <GlassInputWrapper>
                       <input
                         name="identifier"
                         type="text"
                         placeholder="you@example.com or +14155550182"
-                        className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
+                        className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-[#E5E7EB] focus:outline-none"
                       />
                     </GlassInputWrapper>
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium text-white/76">Password</label>
+                    <label className="text-sm font-medium text-white">Password</label>
                     <GlassInputWrapper>
                       <div className="relative">
                         <input
                           name="password"
                           type={showPassword ? 'text' : 'password'}
                           placeholder="Enter your password"
-                          className="w-full rounded-2xl bg-transparent p-4 pr-12 text-sm text-white placeholder:text-white/56 focus:outline-none"
+                          className="w-full rounded-2xl bg-transparent p-4 pr-12 text-sm text-white placeholder:text-[#E5E7EB] focus:outline-none"
                         />
                         <button
                           type="button"
@@ -210,9 +210,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                           className="absolute inset-y-0 right-3 flex items-center"
                         >
                           {showPassword ? (
-                            <EyeOff className="h-5 w-5 text-white/70 transition-colors hover:text-white" />
+                            <EyeOff className="h-5 w-5 text-[#E5E7EB] transition-colors hover:text-white" />
                           ) : (
-                            <Eye className="h-5 w-5 text-white/70 transition-colors hover:text-white" />
+                            <Eye className="h-5 w-5 text-[#E5E7EB] transition-colors hover:text-white" />
                           )}
                         </button>
                       </div>
@@ -220,7 +220,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
-                    <label className="flex items-center gap-3 text-white/76">
+                    <label className="flex items-center gap-3 text-[#E5E7EB]">
                       <input type="checkbox" name="rememberMe" className="h-4 w-4 accent-[#00FF9D]" />
                       <span>Keep me signed in</span>
                     </label>
@@ -262,7 +262,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               <ShieldCheck className="mt-0.5 h-5 w-5 flex-none text-[#00FF9D]" />
               <div>
                 <p className="text-sm font-semibold text-white">One account across all Burner Point products.</p>
-                <p className="mt-1.5 text-sm leading-6 text-white/66">
+                <p className="mt-1.5 text-sm leading-6 text-[#E5E7EB]">
                   Sign in once to access numbers, verification, rentals, eSIM orders, proxy access, billing, and support.
                 </p>
                 <Link href="/#products" className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-[#00FF9D] transition hover:gap-3">

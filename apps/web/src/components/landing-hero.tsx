@@ -100,10 +100,10 @@ export function LandingHero({
             <span className="block text-white">Use Ours.</span>
           </h1>
 
-          <p className="mt-6 max-w-3xl text-base leading-8 text-white/74 md:text-xl md:leading-9">
+          <p className="mt-6 max-w-3xl text-base leading-8 text-[#E5E7EB] md:text-xl md:leading-9">
             Stay Anonymous. Stay Connected. <span className="text-brand-green">Private By Design.</span>
           </p>
-          <p className="mt-4 max-w-2xl text-base leading-8 text-white/58 md:text-lg">
+          <p className="mt-4 max-w-2xl text-base leading-8 text-[#E5E7EB] md:text-lg">
             Generate secure, non-VoIP numbers instantly and keep messages, voice, rentals, eSIM, and protected routing inside one calmer Burner Point surface.
           </p>
 
@@ -133,7 +133,7 @@ export function LandingHero({
               <Link
                 key={item.label}
                 href={item.href}
-                className="inline-flex min-h-11 items-center rounded-full bg-white/[0.03] px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-white/66 transition hover:bg-white/[0.06] hover:text-brand-green"
+                className="inline-flex min-h-11 items-center rounded-full bg-white/[0.03] px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-white/[0.06] hover:text-brand-green"
               >
                 {item.label}
               </Link>
@@ -155,7 +155,7 @@ export function LandingHero({
                 className="rounded-[1.3rem] border border-white/8 bg-white/[0.025] px-4 py-4 backdrop-blur-sm md:px-5"
               >
                 <div className="font-mono text-2xl font-semibold text-white md:text-4xl">{value}</div>
-                <div className="mt-1 font-mono text-[10px] font-semibold uppercase text-white/46">{label}</div>
+                <div className="mt-1 font-mono text-[10px] font-semibold uppercase text-[#E5E7EB]">{label}</div>
               </motion.div>
             ))}
           </div>
@@ -173,7 +173,7 @@ export function LandingHero({
                 >
                   <Icon className="h-5 w-5 text-brand-green" />
                   <h2 className="mt-3 text-sm font-semibold text-white">{item.title}</h2>
-                  <p className="mt-2 text-sm leading-6 text-white/54">{item.text}</p>
+                  <p className="mt-2 text-sm leading-6 text-[#E5E7EB]">{item.text}</p>
                 </motion.article>
               );
             })}
@@ -222,7 +222,7 @@ export function LandingHero({
                 <div className="rounded-full border border-brand-green/18 bg-brand-green/[0.08] px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">
                   Telecom mesh active
                 </div>
-                <div className="rounded-full bg-white/[0.04] px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-white/58">
+                <div className="rounded-full bg-white/[0.04] px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-[#E5E7EB]">
                   Two-way private routing
                 </div>
               </div>
@@ -239,8 +239,8 @@ export function LandingHero({
                     >
                       <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">{item.eyebrow}</p>
                       <h2 className="mt-4 font-mono text-2xl text-white">{item.title}</h2>
-                      <p className="mt-3 text-sm leading-7 text-white/58">{item.text}</p>
-                      <div className="mt-4 flex items-center gap-2 text-xs text-white/52">
+                      <p className="mt-3 text-sm leading-7 text-[#E5E7EB]">{item.text}</p>
+                      <div className="mt-4 flex items-center gap-2 text-xs text-[#E5E7EB]">
                         <Phone className="h-4 w-4 text-brand-green" />
                         Voice, SMS, OTP, and recovery routing
                       </div>
@@ -277,7 +277,7 @@ export function LandingHero({
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">Private telecom stack</p>
-                    <p className="mt-2 max-w-xl text-sm leading-7 text-white/60">
+                    <p className="mt-2 max-w-xl text-sm leading-7 text-[#E5E7EB]">
                       Burner Point keeps messaging, verification, rentals, travel data, and secure routing in one coordinated telecom layer instead of scattering them across unrelated tools.
                     </p>
                   </div>
@@ -285,7 +285,7 @@ export function LandingHero({
                     {routingSignals.map((signal) => (
                       <div key={signal.label} className="rounded-[1.15rem] border border-white/8 bg-black/24 px-3 py-3 text-center">
                         <div className="font-mono text-sm text-brand-green">{signal.value}</div>
-                        <div className="mt-1 text-[10px] uppercase tracking-[0.14em] text-white/46">{signal.label}</div>
+                        <div className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[#E5E7EB]">{signal.label}</div>
                       </div>
                     ))}
                   </div>

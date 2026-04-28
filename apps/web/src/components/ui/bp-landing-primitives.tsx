@@ -27,7 +27,7 @@ const buttonStyles: Record<ButtonVariant, string> = {
   outline:
     'border border-white/14 bg-[linear-gradient(135deg,rgba(159,166,178,0.14),rgba(0,0,0,0.2))] text-white hover:-translate-y-0.5 hover:border-[#00FF9D]/36 hover:text-[#00FF9D]',
   ghost:
-    'border border-transparent bg-transparent text-white/72 hover:border-white/10 hover:bg-white/[0.03] hover:text-white',
+    'border border-transparent bg-transparent text-[#E5E7EB] hover:border-white/10 hover:bg-white/[0.03] hover:text-white',
 };
 
 const buttonSizes: Record<ButtonSize, string> = {
@@ -126,7 +126,7 @@ export function BpSectionHeading({
       <h2 className="mt-4 font-sans text-4xl font-black leading-[0.94] text-white sm:text-5xl lg:text-6xl">
         {title}
       </h2>
-      {body ? <p className="mt-5 text-base leading-8 text-white/58">{body}</p> : null}
+      {body ? <p className="mt-5 text-base leading-8 text-[#E5E7EB]">{body}</p> : null}
     </div>
   );
 }

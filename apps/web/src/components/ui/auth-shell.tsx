@@ -62,7 +62,7 @@ export function AuthShell({
             <h1 className="mt-5 max-w-[11ch] text-[3.6rem] font-semibold uppercase leading-[0.9] text-white xl:text-[4.4rem]">
               {asideTitle || 'Private entry that feels calm, direct, and fast.'}
             </h1>
-            <p className="mt-5 max-w-xl text-base leading-8 text-white/72">
+            <p className="mt-5 max-w-xl text-base leading-8 text-[#E5E7EB]">
               {asideDescription || 'Access your private numbers, codes, rentals, travel data, proxies, billing, and support from one clean account.'}
             </p>
 
@@ -70,7 +70,7 @@ export function AuthShell({
               <span className="inline-flex min-h-11 items-center rounded-full border border-brand-green/24 bg-brand-green/10 px-4 text-sm font-medium text-brand-green">
                 Stay Anonymous. Stay Connected.
               </span>
-              <span className="inline-flex min-h-11 items-center rounded-full border border-white/10 bg-white/[0.04] px-4 text-sm font-medium text-white/72">
+              <span className="inline-flex min-h-11 items-center rounded-full border border-white/10 bg-white/[0.04] px-4 text-sm font-medium text-[#E5E7EB]">
                 Private by Design
               </span>
             </div>
@@ -85,7 +85,7 @@ export function AuthShell({
                     <Icon className="h-5 w-5" />
                   </div>
                   <h2 className="mt-4 text-base font-semibold text-white">{item.title}</h2>
-                  <p className="mt-2 text-sm leading-6 text-white/72">{item.text}</p>
+                  <p className="mt-2 text-sm leading-6 text-[#E5E7EB]">{item.text}</p>
                 </article>
               );
             })}
@@ -101,7 +101,7 @@ export function AuthShell({
               </Link>
               <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Account access</p>
               <h2 className="mt-3 text-[2rem] font-semibold leading-none text-white sm:text-[2.35rem]">{title}</h2>
-              <p className="mt-3 max-w-lg text-sm leading-6 text-white/72">{description}</p>
+              <p className="mt-3 max-w-lg text-sm leading-6 text-[#E5E7EB]">{description}</p>
             </div>
 
             {children}
@@ -111,7 +111,7 @@ export function AuthShell({
                 <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-brand-green" />
                 <div>
                   <p className="text-sm font-semibold text-white">One account for every Burner Point product.</p>
-                  <p className="mt-1.5 text-sm leading-6 text-white/72">
+                  <p className="mt-1.5 text-sm leading-6 text-[#E5E7EB]">
                     Access numbers, codes, rentals, eSIM orders, proxy plans, billing, and support.
                   </p>
                   <Link href="/pricing" className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-brand-green transition hover:gap-3">
