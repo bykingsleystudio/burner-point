@@ -48,6 +48,7 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 112px;
+  color-scheme: light dark;
 }
 body {
   background:
@@ -294,7 +295,7 @@ select {
 }
 
 .bp-input::placeholder {
-  color: rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.42);
 }
 
 .bp-input:focus {
@@ -440,7 +441,7 @@ select {
 }
 
 .auth-input::placeholder {
-  color: rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.42);
 }
 
 .auth-input:focus {

@@ -10,8 +10,7 @@ import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { AuthProviderButton } from '@/components/auth-provider-button';
 import { GlassInputWrapper, SignInPage } from '@/components/ui/sign-in';
-
-const E164_PATTERN = /^\+[1-9]\d{6,14}$/;
+import { INTERNATIONAL_PHONE_ERROR, isValidInternationalPhone, normalizeInternationalPhone } from '@/lib/phone';
 
 const schema = z.object({
   firstName: z.string().trim().min(2, 'Enter your first name'),
@@ -20,7 +19,7 @@ const schema = z.object({
   phoneNumber: z
     .string()
     .trim()
-    .refine((value) => E164_PATTERN.test(normalizePhone(value)), 'Enter your phone number with country code'),
+    .refine((value) => isValidInternationalPhone(value), INTERNATIONAL_PHONE_ERROR),
   password: z.string().min(8, 'Use at least 8 characters'),
 });
 
@@ -113,7 +112,7 @@ export default function RegisterPage() {
         unsafeMetadata: {
           firstName: data.firstName.trim(),
           lastName: data.lastName.trim(),
-          phoneNumber: normalizePhone(data.phoneNumber),
+          phoneNumber: normalizeInternationalPhone(data.phoneNumber),
           acceptTerms: true,
           acceptPrivacy: true,
           authSource: 'web_signup',
@@ -372,10 +371,6 @@ function Field({ label, error, children }: { label: string; error?: string; chil
       {error ? <p className="mt-1.5 text-xs text-red-200">{error}</p> : null}
     </label>
   );
-}
-
-function normalizePhone(value: string) {
-  return value.trim().replace(/[\s().-]/g, '');
 }
 
 function getFriendlyAuthError(error: unknown, fallback: string) {

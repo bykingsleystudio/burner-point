@@ -188,11 +188,15 @@ export class PhoneAuthService {
   }
 
   private normalizePhone(phoneNumber: string) {
-    const normalized = phoneNumber.trim().replace(/[^\d+]/g, '');
-    if (!E164_PATTERN.test(normalized)) {
+    const compact = phoneNumber.trim().replace(/[^\d+]/g, '');
+    const normalized = compact.startsWith('00') ? `+${compact.slice(2)}` : compact;
+    const e164Phone = normalized.startsWith('+')
+      ? `+${normalized.slice(1).replace(/\+/g, '')}`
+      : normalized.replace(/\+/g, '');
+    if (!E164_PATTERN.test(e164Phone)) {
       throw new BadRequestException('Enter your phone number with country code.');
     }
-    return normalized;
+    return e164Phone;
   }
 
   private handleTwilioError(error: unknown, action: string): never {

@@ -30,7 +30,7 @@ export function LegalDocumentPage({
             <h1 className="mt-6 max-w-5xl text-4xl font-semibold uppercase leading-[0.96] text-white sm:text-5xl md:text-7xl xl:text-[5.7rem]">
               {document.title}
             </h1>
-            <div className="mt-6 flex flex-wrap gap-3 text-sm text-white/62">
+            <div className="mt-6 flex flex-wrap gap-3 text-sm text-white/80">
               <span className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2">
                 Effective Date: <span className="text-white">{document.effectiveDate}</span>
               </span>
@@ -40,7 +40,7 @@ export function LegalDocumentPage({
                 </span>
               ) : null}
             </div>
-            <p className="mt-6 max-w-4xl text-base leading-8 text-white/64 md:text-xl md:leading-9">
+            <p className="mt-6 max-w-4xl text-base leading-8 text-white/84 md:text-xl md:leading-9">
               {document.intro[0]}
             </p>
           </div>
@@ -50,7 +50,7 @@ export function LegalDocumentPage({
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-brand-green">Document map</p>
-                  <p className="mt-2 text-sm text-white/54">Navigate this policy or copy the canonical page.</p>
+                  <p className="mt-2 text-sm text-white/74">Navigate this policy or copy the canonical page.</p>
                 </div>
                 <ShieldCheck className="h-5 w-5 text-brand-green" />
               </div>
@@ -59,14 +59,14 @@ export function LegalDocumentPage({
                   <a
                     key={section.id}
                     href={`#${section.id}`}
-                    className="flex items-center justify-between gap-3 rounded-[1rem] border border-white/6 bg-white/[0.02] px-4 py-3 text-sm text-white/70 transition hover:border-brand-green/22 hover:bg-brand-green/[0.05] hover:text-white"
+                    className="flex items-center justify-between gap-3 rounded-[1rem] border border-white/6 bg-white/[0.03] px-4 py-3 text-sm text-white/82 transition hover:border-brand-green/22 hover:bg-brand-green/[0.05] hover:text-white"
                   >
                     <span>{section.label}</span>
                     <ChevronRight className="h-4 w-4 text-brand-green" />
                   </a>
                 ))}
               </nav>
-              <div className="mt-5 rounded-[1.2rem] border border-brand-green/16 bg-brand-green/[0.05] p-4 text-sm leading-6 text-white/58">
+              <div className="mt-5 rounded-[1.2rem] border border-brand-green/16 bg-brand-green/[0.05] p-4 text-sm leading-6 text-white/76">
                 Canonical path:{' '}
                 <Link href={canonicalPath} className="text-brand-green transition hover:text-[#39FF14]">
                   {canonicalPath}
@@ -83,7 +83,7 @@ export function LegalDocumentPage({
             <div className="rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(7,20,15,0.96),rgba(0,0,0,0.96))] p-5 shadow-[0_28px_90px_rgba(0,0,0,0.42)] md:p-8">
               <div className="space-y-6 border-b border-white/8 pb-8">
                 {document.intro.map((paragraph) => (
-                  <p key={paragraph} className="text-base leading-8 text-white/72">
+                  <p key={paragraph} className="text-base leading-8 text-white/84">
                     {paragraph}
                   </p>
                 ))}
@@ -99,12 +99,12 @@ export function LegalDocumentPage({
                       <div className="min-w-0 flex-1">
                         <h2 className="text-2xl font-semibold text-white md:text-3xl">{section.title}</h2>
                         {section.paragraphs?.map((paragraph) => (
-                          <p key={`${section.number}-${paragraph}`} className="mt-4 text-base leading-8 text-white/68">
+                          <p key={`${section.number}-${paragraph}`} className="mt-4 text-base leading-8 text-white/82">
                             {paragraph}
                           </p>
                         ))}
                         {section.bullets?.length ? (
-                          <ul className="mt-4 space-y-3 pl-5 text-base leading-8 text-white/72">
+                          <ul className="mt-4 space-y-3 pl-5 text-base leading-8 text-white/84">
                             {section.bullets.map((item) => (
                               <li key={`${section.number}-${item}`} className="list-disc marker:text-brand-green">
                                 {item}
@@ -116,17 +116,17 @@ export function LegalDocumentPage({
                         {section.subsections?.length ? (
                           <div className="mt-5 space-y-5">
                             {section.subsections.map((subsection) => (
-                              <div key={`${section.number}-${subsection.title}`} className="rounded-[1.25rem] border border-white/6 bg-white/[0.02] p-4 md:p-5">
+                              <div key={`${section.number}-${subsection.title}`} className="rounded-[1.25rem] border border-white/8 bg-white/[0.035] p-4 md:p-5">
                                 <h3 className="font-mono text-sm font-semibold uppercase tracking-[0.16em] text-brand-green">
                                   {subsection.title}
                                 </h3>
                                 {subsection.paragraphs?.map((paragraph) => (
-                                  <p key={`${section.number}-${subsection.title}-${paragraph}`} className="mt-3 text-base leading-8 text-white/68">
+                                  <p key={`${section.number}-${subsection.title}-${paragraph}`} className="mt-3 text-base leading-8 text-white/82">
                                     {paragraph}
                                   </p>
                                 ))}
                                 {subsection.bullets?.length ? (
-                                  <ul className="mt-3 space-y-3 pl-5 text-base leading-8 text-white/72">
+                                  <ul className="mt-3 space-y-3 pl-5 text-base leading-8 text-white/84">
                                     {subsection.bullets.map((item) => (
                                       <li key={`${section.number}-${subsection.title}-${item}`} className="list-disc marker:text-brand-green">
                                         {item}
@@ -150,19 +150,19 @@ export function LegalDocumentPage({
             <div className="rounded-[1.8rem] border border-white/8 bg-[linear-gradient(180deg,rgba(7,20,15,0.96),rgba(0,0,0,0.96))] p-5">
               <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-brand-green">Support</p>
               <h2 className="mt-3 text-xl font-semibold text-white">Questions about this document?</h2>
-              <p className="mt-3 text-sm leading-7 text-white/56">
+              <p className="mt-3 text-sm leading-7 text-white/74">
                 Reach Burner Point through the official support paths listed in the dashboard, help center, or website footer.
               </p>
               <div className="mt-5 grid gap-3">
                 <Link
                   href="/help-center"
-                  className="rounded-[1rem] border border-white/8 bg-white/[0.02] px-4 py-3 text-sm text-white/72 transition hover:border-brand-green/22 hover:text-white"
+                  className="rounded-[1rem] border border-white/8 bg-white/[0.03] px-4 py-3 text-sm text-white/82 transition hover:border-brand-green/22 hover:text-white"
                 >
                   Open Help Center
                 </Link>
                 <Link
                   href="/contact"
-                  className="rounded-[1rem] border border-white/8 bg-white/[0.02] px-4 py-3 text-sm text-white/72 transition hover:border-brand-green/22 hover:text-white"
+                  className="rounded-[1rem] border border-white/8 bg-white/[0.03] px-4 py-3 text-sm text-white/82 transition hover:border-brand-green/22 hover:text-white"
                 >
                   Contact Burner Point
                 </Link>

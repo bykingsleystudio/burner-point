@@ -8,6 +8,13 @@ import toast from 'react-hot-toast';
 import { ArrowRight, Zap } from 'lucide-react';
 import { AuthProviderButton } from '@/components/auth-provider-button';
 import { GlassInputWrapper, SignInPage } from '@/components/ui/sign-in';
+import {
+  INTERNATIONAL_PHONE_ERROR,
+  classifyAuthIdentifier,
+  isValidInternationalPhone,
+  normalizeAuthIdentifier,
+  normalizeInternationalPhone,
+} from '@/lib/phone';
 
 const oauthProviders = [
   { label: 'Google', strategy: 'oauth_google' },
@@ -109,10 +116,18 @@ export default function LoginPage() {
       return;
     }
 
+    const identifierType = classifyAuthIdentifier(identifier);
+    const normalizedIdentifier = normalizeAuthIdentifier(identifier);
+
+    if (identifierType === 'phone' && !isValidInternationalPhone(identifier)) {
+      toast.error(INTERNATIONAL_PHONE_ERROR);
+      return;
+    }
+
     setLoading(true);
     try {
       const { error } = await signIn.password({
-        identifier: identifier.trim(),
+        identifier: normalizedIdentifier,
         password,
       });
 
@@ -131,9 +146,9 @@ export default function LoginPage() {
       return;
     }
 
-    const value = phoneIdentifier.trim();
-    if (!/^\+[1-9]\d{6,14}$/.test(value)) {
-      toast.error('Enter your phone number with country code.');
+    const value = normalizeInternationalPhone(phoneIdentifier);
+    if (!isValidInternationalPhone(phoneIdentifier)) {
+      toast.error(INTERNATIONAL_PHONE_ERROR);
       return;
     }
 
@@ -184,13 +199,19 @@ export default function LoginPage() {
       return;
     }
 
-    const value = resetIdentifier.trim();
-    if (value.length < 3) {
-      toast.error('Enter your account email address or phone number.');
+    const identifierType = classifyAuthIdentifier(resetIdentifier);
+    if (!identifierType) {
+      toast.error('Enter your email address or an international phone number.');
       return;
     }
 
-    const method: ResetPasswordMethod = value.includes('@') ? 'email' : 'phone';
+    if (identifierType === 'phone' && !isValidInternationalPhone(resetIdentifier)) {
+      toast.error(INTERNATIONAL_PHONE_ERROR);
+      return;
+    }
+
+    const value = normalizeAuthIdentifier(resetIdentifier);
+    const method: ResetPasswordMethod = identifierType;
     setLoading(true);
     try {
       const { error: createError } = await signIn.create({ identifier: value });
@@ -336,7 +357,7 @@ export default function LoginPage() {
       onResetPassword={() => setAuthMode('reset-request')}
     >
       <div className="space-y-5">
-        {!secondFactorStrategy && authMode === 'sign-in' ? (
+        {!secondFactorStrategy && (authMode === 'sign-in' || authMode === 'reset-request') ? (
           <>
             <div className="grid gap-3 md:grid-cols-3">
               {oauthProviders.map((provider) => (

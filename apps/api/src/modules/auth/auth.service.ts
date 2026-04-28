@@ -347,7 +347,11 @@ export class AuthService {
   }
 
   private normalizePhoneNumber(phoneNumber: string): string {
-    return phoneNumber.trim().replace(/[^\d+]/g, '');
+    const compact = phoneNumber.trim().replace(/[^\d+]/g, '');
+    const normalized = compact.startsWith('00') ? `+${compact.slice(2)}` : compact;
+    return normalized.startsWith('+')
+      ? `+${normalized.slice(1).replace(/\+/g, '')}`
+      : normalized.replace(/\+/g, '');
   }
 
   private normalizeLoginIdentifier(identifier: string): string {

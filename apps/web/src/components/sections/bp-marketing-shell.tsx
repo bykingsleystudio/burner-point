@@ -230,16 +230,16 @@ export function MarketingFooter() {
       </div>
 
       <div className="relative mx-auto max-w-[92rem] px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid gap-10 xl:grid-cols-[1.4fr_repeat(4,1fr)]">
-          <div>
-            <Link href="/" className="inline-flex items-center gap-2.5" aria-label="Burner Point home">
+        <div className="grid items-start gap-10 xl:grid-cols-[minmax(0,1.08fr)_repeat(4,minmax(0,1fr))] 2xl:grid-cols-[minmax(0,1fr)_repeat(4,minmax(0,1fr))]">
+          <div className="min-w-0 max-w-sm xl:pr-4">
+            <Link href="/" className="inline-flex max-w-full items-center gap-2.5" aria-label="Burner Point home">
               <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} className="h-8 w-8 sm:h-9 sm:w-9" />
-              <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={166} height={26} className="h-[1.15rem] w-auto sm:h-5" />
+              <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={166} height={26} className="h-[1.15rem] max-w-full w-auto sm:h-5" />
             </Link>
             <p className="mt-5 max-w-sm text-sm leading-7 text-white/74">
               Stay Anonymous. Stay Connected. Private by Design.
             </p>
-            <p className="mt-3 max-w-md text-sm leading-7 text-white/70">
+            <p className="mt-3 max-w-md text-sm leading-7 text-white/78">
               Private numbers, codes, rentals, eSIM, proxies, and secure access from one account.
             </p>
           </div>
@@ -270,9 +270,9 @@ export function MarketingFooter() {
             ]}
           />
 
-          <div>
+          <div className="min-w-0">
             <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#00FF9D]">Support</p>
-            <div className="mt-4 space-y-3 text-sm text-white/64">
+            <div className="mt-4 space-y-3 text-sm text-white/78">
               <a href={`mailto:${supportContacts.email}`} className="block transition hover:text-white">
                 {supportContacts.email}
               </a>
@@ -294,7 +294,7 @@ export function MarketingFooter() {
                     href={item.href}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/68 transition hover:border-[#00FF9D]/24 hover:text-[#00FF9D]"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/78 transition hover:border-[#00FF9D]/24 hover:text-[#00FF9D]"
                     aria-label={item.label}
                   >
                     {Icon ? <Icon className="h-4 w-4" /> : null}
@@ -305,9 +305,9 @@ export function MarketingFooter() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-4 border-t border-white/8 pt-6 text-sm text-white/70 md:flex-row md:items-center md:justify-between">
+        <div className="mt-12 flex flex-col gap-4 border-t border-white/8 pt-6 text-sm text-white/78 md:flex-row md:items-center md:justify-between">
           <p>Private numbers &bull; Codes &bull; Rentals &bull; eSIM &bull; Proxies &bull; Secure access</p>
-          <Link href="/sign-up" className="inline-flex items-center gap-2 text-white/72 transition hover:text-white">
+          <Link href="/sign-up" className="inline-flex items-center gap-2 text-white/82 transition hover:text-white">
             Create account
             <ArrowRight className="h-4 w-4" />
           </Link>
@@ -325,11 +325,11 @@ function FooterGroup({
   links: Array<{ label: string; href: string }>;
 }) {
   return (
-    <div>
+    <div className="min-w-0">
       <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#00FF9D]">{title}</p>
       <div className="mt-4 space-y-3">
         {links.map((item) => (
-          <Link key={`${title}-${item.label}`} href={item.href} className="block text-sm text-white/70 transition hover:text-white">
+          <Link key={`${title}-${item.label}`} href={item.href} className="block text-sm text-white/78 transition hover:text-white">
             {item.label}
           </Link>
         ))}

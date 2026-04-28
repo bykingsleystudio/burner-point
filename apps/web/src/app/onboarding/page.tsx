@@ -8,8 +8,7 @@ import { CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { AuthShell } from '@/components/ui/auth-shell';
 import { authApi, setApiSession } from '@/lib/api';
-
-const E164_PATTERN = /^\+[1-9]\d{6,14}$/;
+import { INTERNATIONAL_PHONE_ERROR, isValidInternationalPhone, normalizeInternationalPhone } from '@/lib/phone';
 
 function sanitizeRedirect(value?: string | null) {
   if (value && value.startsWith('/') && !value.startsWith('//')) return value;
@@ -57,15 +56,15 @@ function OnboardingContent() {
     const firstName = form.firstName.trim();
     const lastName = form.lastName.trim();
     const email = form.email.trim().toLowerCase();
-    const normalizedPhone = form.phoneNumber.trim().replace(/[^\d+]/g, '');
+    const normalizedPhone = normalizeInternationalPhone(form.phoneNumber);
 
     if (!firstName || !lastName || !email || !normalizedPhone) {
       toast.error('Add your first name, last name, email, and phone number.');
       return;
     }
 
-    if (!E164_PATTERN.test(normalizedPhone)) {
-      toast.error('Enter your phone number with country code.');
+    if (!isValidInternationalPhone(form.phoneNumber)) {
+      toast.error(INTERNATIONAL_PHONE_ERROR);
       return;
     }
 

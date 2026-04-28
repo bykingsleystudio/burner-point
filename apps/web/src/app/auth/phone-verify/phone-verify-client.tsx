@@ -8,11 +8,10 @@ import { useAuth, useUser } from '@clerk/nextjs';
 import toast from 'react-hot-toast';
 import { ArrowRight, CheckCircle2, PhoneCall, ShieldCheck, Smartphone, TimerReset } from 'lucide-react';
 import { authApi, phoneAuthApi, setApiSession } from '@/lib/api';
+import { INTERNATIONAL_PHONE_ERROR, isValidInternationalPhone, normalizeInternationalPhone } from '@/lib/phone';
 
 type Channel = 'sms' | 'call';
 type OtpStep = 'loading-session' | 'ready' | 'sent' | 'approved';
-
-const e164Pattern = /^\+[1-9]\d{6,14}$/;
 
 export default function PhoneVerifyPage() {
   const router = useRouter();
@@ -29,8 +28,8 @@ export default function PhoneVerifyPage() {
   const [lastError, setLastError] = useState<string | null>(null);
 
   const redirectTo = useMemo(() => sanitizeRedirect(searchParams.get('redirect')), [searchParams]);
-  const normalizedPhone = useMemo(() => phoneNumber.trim().replace(/[^\d+]/g, ''), [phoneNumber]);
-  const phoneIsValid = e164Pattern.test(normalizedPhone);
+  const normalizedPhone = useMemo(() => normalizeInternationalPhone(phoneNumber), [phoneNumber]);
+  const phoneIsValid = isValidInternationalPhone(phoneNumber);
   const codeIsValid = /^\d{4,10}$/.test(code.trim());
   const unsafePhoneNumber =
     typeof user?.unsafeMetadata?.phoneNumber === 'string'
@@ -86,7 +85,7 @@ export default function PhoneVerifyPage() {
 
   const sendCode = async () => {
     if (!phoneIsValid) {
-      setLastError('Enter your phone number with country code.');
+      setLastError(INTERNATIONAL_PHONE_ERROR);
       return;
     }
 
