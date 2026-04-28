@@ -133,7 +133,7 @@ export class PaymentsController {
     return this.service.handleNowPaymentsWebhook(body, headers, req.rawBody);
   }
 
-  // ─── Nigerian Gateway Webhooks (placeholders for now) ───────────────────
+  // ─── Nigerian Gateway Webhooks ─────────────────────────────────────────
 
   @Post('webhook/flutterwave')
   @HttpCode(HttpStatus.OK)

@@ -3,7 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User, UserStatus } from '../../database/entities/user.entity';
 import { PhoneNumber } from '../../database/entities/phone-number.entity';
-import { AbuseEvent } from '../../database/entities/extended-entities';
+import { AbuseEvent, TransactionType } from '../../database/entities/extended-entities';
+import { UsersService } from '../users/users.service';
+import { BillingService } from '../billing-v2/billing.service';
 
 @Injectable()
 export class AdminService {
@@ -11,6 +13,8 @@ export class AdminService {
     @InjectRepository(User) private userRepo: Repository<User>,
     @InjectRepository(PhoneNumber) private numRepo: Repository<PhoneNumber>,
     @InjectRepository(AbuseEvent) private abuseRepo: Repository<AbuseEvent>,
+    private usersService: UsersService,
+    private billingService: BillingService,
   ) {}
 
   async getDashboardStats() {
@@ -37,7 +41,15 @@ export class AdminService {
   }
 
   async creditUserWallet(userId: string, amountKobo: number) {
-    await this.userRepo.increment({ id: userId }, 'walletBalanceKobo', amountKobo);
+    const user = await this.usersService.creditWallet(userId, amountKobo);
+    await this.billingService.recordWalletTransaction({
+      userId,
+      type: TransactionType.ADJUSTMENT,
+      amountKobo: Number(amountKobo),
+      balanceAfterKobo: Number(user.walletBalanceKobo),
+      description: 'Admin wallet adjustment',
+      metadata: { source: 'admin' },
+    });
     return { success: true };
   }
 }

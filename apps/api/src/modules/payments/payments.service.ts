@@ -17,6 +17,7 @@ import { ConfigService } from '@nestjs/config';
 import { v4 as uuidv4 } from 'uuid';
 import { createHmac, timingSafeEqual } from 'crypto';
 import axios from 'axios';
+import { QueryFailedError } from 'typeorm';
 import {
   PaymentSession,
   WalletTransaction,
@@ -32,7 +33,7 @@ import { User } from '../../database/entities/user.entity';
 import { NumberType } from '../../database/entities/phone-number.entity';
 import { UsersService } from '../users/users.service';
 import { NumbersService } from '../numbers/numbers.service';
-import { resolveApiUrl } from '../../config/runtime-env';
+import { resolveApiUrl, resolveConfiguredEnv } from '../../config/runtime-env';
 
 export enum PaymentType {
   CREDITS = 'credits',
@@ -357,7 +358,7 @@ export class PaymentsService {
       }
       case PaymentGateway.FLUTTERWAVE: {
         const hash = headers['verif-hash'] || headers['x-flutterwave-signature'];
-        const expectedHash = this.configService.get<string>('FLUTTERWAVE_WEBHOOK_HASH');
+        const expectedHash = resolveConfiguredEnv('FLUTTERWAVE_WEBHOOK_HASH', this.configService);
         if (!expectedHash || hash !== expectedHash) throw new BadRequestException('Invalid Flutterwave signature');
         const event = body as { event: string; data: { tx_ref: string; status: string; amount?: number; currency?: string; id?: number } };
         eventType = event.event;
@@ -370,6 +371,7 @@ export class PaymentsService {
         break;
       }
       case PaymentGateway.SQUAD: {
+        this.assertSquadSignature(body, headers);
         const event = body as { Event: string; Body: { transaction_ref: string; success: boolean; amount?: number } };
         eventType = event.Event;
         eventId = `${gateway}:${event.Event}:${event.Body?.transaction_ref}`;
@@ -381,6 +383,7 @@ export class PaymentsService {
         break;
       }
       case PaymentGateway.KORAPAY: {
+        this.assertKorapaySignature(body, headers);
         const event = body as { event: string; data: { reference: string; status: string; amount?: number; currency?: string } };
         eventType = event.event;
         eventId = `${gateway}:${event.event}:${event.data?.reference}`;
@@ -392,6 +395,7 @@ export class PaymentsService {
         break;
       }
       case PaymentGateway.OPAY: {
+        this.assertOpaySignature(body, headers);
         const event = body as { eventType: string; data: { reference: string; status: string; amount?: { total?: number } | number; currency?: string } };
         eventType = event.eventType;
         eventId = `${gateway}:${event.eventType}:${event.data?.reference}`;
@@ -982,7 +986,7 @@ export class PaymentsService {
 
   private async initOpay(email: string, amountKobo: number, reference: string) {
     const publicKey = this.configService.get('OPAY_PUBLIC_KEY');
-    const secretKey = this.configService.get('OPAY_SECRET_KEY');
+    const secretKey = resolveConfiguredEnv('OPAY_SECRET_KEY', this.configService);
     const merchantId = this.configService.get('OPAY_MERCHANT_ID');
     if (!publicKey || !secretKey || !merchantId) throw new BadRequestException('OPay is not configured');
 
@@ -1020,22 +1024,31 @@ export class PaymentsService {
     eventType: string,
     payload: Record<string, unknown>,
   ): Promise<boolean> {
-    const existing = await this.webhookDedupRepo.findOne({ where: { eventId } });
-    if (existing) {
-      this.logger.debug(`Duplicate webhook ignored: ${eventId}`);
-      return false;
+    try {
+      await this.webhookDedupRepo.insert(
+        this.webhookDedupRepo.create({
+          eventId,
+          source,
+          eventType,
+          payload,
+          status: 'processed',
+        }),
+      );
+      return true;
+    } catch (error) {
+      if (this.isUniqueConstraintViolation(error)) {
+        this.logger.debug(`Duplicate webhook ignored: ${eventId}`);
+        return false;
+      }
+      throw error;
     }
+  }
 
-    await this.webhookDedupRepo.save(
-      this.webhookDedupRepo.create({
-        eventId,
-        source,
-        eventType,
-        payload,
-        status: 'processed',
-      }),
-    );
-    return true;
+  private isUniqueConstraintViolation(error: unknown): boolean {
+    if (!(error instanceof QueryFailedError)) return false;
+    const driverError = error.driverError as { code?: string; constraint?: string } | undefined;
+    // Postgres unique violation code.
+    return driverError?.code === '23505' || driverError?.constraint === 'webhook_dedup_event_id_key';
   }
 
   private verifyPaddleSignature(signature: string | undefined, rawBody: Buffer): boolean {
@@ -1094,6 +1107,51 @@ export class PaymentsService {
     if (!this.safeCompare(hash, expectedHash, 'hex')) {
       throw new BadRequestException('Invalid Paystack signature');
     }
+  }
+
+  private assertSquadSignature(body: Record<string, unknown>, headers: Record<string, string>) {
+    const secret = this.configService.get('SQUAD_WEBHOOK_SECRET');
+    const received = headers['x-squad-signature'] || headers['x-webhook-signature'] || headers['signature'];
+    if (!secret || !received) throw new BadRequestException('Invalid Squad signature');
+
+    const payload = JSON.stringify(body);
+    const expectedHex = createHmac('sha512', secret).update(payload).digest('hex');
+    const expectedBase64 = createHmac('sha512', secret).update(payload).digest('base64');
+    const verified =
+      this.safeCompare(received, expectedHex, 'hex')
+      || this.safeCompare(received, expectedBase64, 'base64');
+
+    if (!verified) throw new BadRequestException('Invalid Squad signature');
+  }
+
+  private assertKorapaySignature(body: Record<string, unknown>, headers: Record<string, string>) {
+    const secret = this.configService.get('KORAPAY_WEBHOOK_SECRET');
+    const received = headers['x-korapay-signature'] || headers['x-signature'] || headers['signature'];
+    if (!secret || !received) throw new BadRequestException('Invalid Korapay signature');
+
+    const payload = JSON.stringify(body);
+    const expectedHex = createHmac('sha256', secret).update(payload).digest('hex');
+    const expectedBase64 = createHmac('sha256', secret).update(payload).digest('base64');
+    const verified =
+      this.safeCompare(received, expectedHex, 'hex')
+      || this.safeCompare(received, expectedBase64, 'base64');
+
+    if (!verified) throw new BadRequestException('Invalid Korapay signature');
+  }
+
+  private assertOpaySignature(body: Record<string, unknown>, headers: Record<string, string>) {
+    const secret = this.configService.get('OPAY_WEBHOOK_SECRET');
+    const received = headers['x-opay-signature'] || headers['x-signature'] || headers['signature'];
+    if (!secret || !received) throw new BadRequestException('Invalid OPay signature');
+
+    const payload = JSON.stringify(body);
+    const expectedHex = createHmac('sha512', secret).update(payload).digest('hex');
+    const expectedBase64 = createHmac('sha512', secret).update(payload).digest('base64');
+    const verified =
+      this.safeCompare(received, expectedHex, 'hex')
+      || this.safeCompare(received, expectedBase64, 'base64');
+
+    if (!verified) throw new BadRequestException('Invalid OPay signature');
   }
 
   private isReconciled(session: PaymentSession, reconciliation: ReconciliationCheck): boolean {
@@ -1194,7 +1252,20 @@ export class PaymentsService {
   }
 
   private getWebUrl(): string {
-    return (this.configService.get<string>('WEB_URL') || this.configService.get<string>('NEXT_PUBLIC_APP_URL') || 'http://localhost:3000').replace(/\/+$/, '');
+    const configured =
+      this.configService.get<string>('APP_URL') ||
+      this.configService.get<string>('WEB_URL') ||
+      this.configService.get<string>('NEXT_PUBLIC_APP_URL');
+
+    if (configured) {
+      return configured.replace(/\/+$/, '');
+    }
+
+    if (this.configService.get<string>('NODE_ENV') === 'production') {
+      throw new BadRequestException('APP_URL must be configured before starting payment flows');
+    }
+
+    return 'http://localhost:3000';
   }
 
   private getApiUrl(): string {

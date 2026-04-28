@@ -22,6 +22,7 @@ type ActiveNumber = {
 
 const COUNTRIES = getCountryDataList()
   .map((item) => ({ code: item.iso2, flag: getEmojiFlag(item.iso2), name: item.name }))
+  .filter((item) => ['US', 'CA'].includes(item.code))
   .sort((left, right) => left.name.localeCompare(right.name));
 
 const NUMBER_TYPES = [
@@ -81,7 +82,7 @@ export default function RentalsPage() {
   const searchInventory = async () => {
     setSearching(true);
     try {
-      const response = await numbersApi.search(country);
+      const response = await numbersApi.search(country, undefined, numberType);
       setAvailableNumbers(Array.isArray(response.data) ? response.data.slice(0, 10) : []);
       if (!response.data?.length) toast('No inventory was returned for the selected market.');
     } catch {

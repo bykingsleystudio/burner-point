@@ -20,6 +20,7 @@ import {
   Wifi,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { SUPPORT_EMAIL_HREF } from '@/lib/support';
 
 type IconKey =
   | 'bell'
@@ -229,7 +230,7 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
       'Support must understand privacy workflows: verification delivery, rental continuity, number status, payment updates, eSIM activation, proxies, and account security.',
     status: 'Support operations',
     primaryAction: { label: 'Open Tickets', href: '/dashboard/support/tickets' },
-    secondaryAction: { label: 'Email Support', href: 'mailto:info.burnerpoint@gmail.com' },
+    secondaryAction: { label: 'Email Support', href: SUPPORT_EMAIL_HREF },
     stats: [
       { label: 'Email', value: 'Active' },
       { label: 'Telegram', value: 'Active' },
@@ -250,7 +251,7 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
       'Support tickets give users a controlled way to report failed OTP delivery, number expiry, payment references, eSIM activation, proxy durability, and account access issues without leaking unnecessary personal data.',
     status: 'Ticket framework',
     primaryAction: { label: 'Open Support', href: '/dashboard/support' },
-    secondaryAction: { label: 'Email Support', href: 'mailto:info.burnerpoint@gmail.com' },
+    secondaryAction: { label: 'Email Support', href: SUPPORT_EMAIL_HREF },
     stats: [
       { label: 'Categories', value: '7' },
       { label: 'Privacy', value: 'Scoped' },

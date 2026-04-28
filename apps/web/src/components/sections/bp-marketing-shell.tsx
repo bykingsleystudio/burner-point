@@ -8,6 +8,7 @@ import { FaFacebook, FaInstagram, FaLinkedin, FaTelegram, FaTiktok, FaYoutube } 
 import { FaXTwitter } from 'react-icons/fa6';
 import { BpButton } from '@/components/ui/bp-landing-primitives';
 import { headerLinks, productLinks, socialProfiles, supportContacts } from '@/lib/homepage-content';
+import { TELEGRAM_COMMUNITY_HANDLE, TELEGRAM_SUPPORT_HANDLE } from '@/lib/support';
 import { cn } from '@/lib/utils';
 
 const socialIconMap = {
@@ -277,10 +278,10 @@ export function MarketingFooter() {
                 {supportContacts.email}
               </a>
               <a href={supportContacts.telegramPrimary} target="_blank" rel="noreferrer" className="block transition hover:text-white">
-                Telegram: @burnerpoint
+                Telegram: {TELEGRAM_SUPPORT_HANDLE}
               </a>
               <a href={supportContacts.telegramApp} target="_blank" rel="noreferrer" className="block transition hover:text-white">
-                Telegram: @burnerpointapp
+                Telegram: {TELEGRAM_COMMUNITY_HANDLE}
               </a>
             </div>
 

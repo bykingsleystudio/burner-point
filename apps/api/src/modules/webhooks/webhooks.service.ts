@@ -256,11 +256,12 @@ export class WebhooksService {
   ) {
     const secretEnv = this.getProviderWebhookSecretEnv(source);
     const secret = this.configuredSecret(secretEnv);
-    const verified = secret ? this.verifyGenericSignature(source, headers, rawBody, secret) : false;
-
+    const isProduction = process.env.NODE_ENV === 'production';
     if (!secret) {
-      this.logger.warn(`${source} webhook accepted without signature verification because ${secretEnv} is not configured`);
+      this.logger.warn(`${source} webhook rejected because ${secretEnv} is not configured`);
+      if (isProduction) throw new BadRequestException('Webhook verification not configured');
     }
+    const verified = secret ? this.verifyGenericSignature(source, headers, rawBody, secret) : false;
 
     const eventType = this.getProviderEventType(payload);
     const providerEventId = this.getProviderEventId(payload, headers) || `${Date.now()}`;
@@ -290,6 +291,7 @@ export class WebhooksService {
     const secret = resolveClerkWebhookSigningSecret(this.configService);
     let verified = false;
     let verifiedPayload = payload;
+    const isProduction = process.env.NODE_ENV === 'production';
 
     if (secret) {
       if (!rawBody) throw new BadRequestException('Missing raw body for Clerk webhook verification');
@@ -314,7 +316,8 @@ export class WebhooksService {
         throw new BadRequestException('Invalid Clerk webhook signature');
       }
     } else {
-      this.logger.warn('Clerk webhook accepted without signature verification because CLERK_WEBHOOK_SIGNING_SECRET is not configured');
+      this.logger.warn('Clerk webhook rejected because CLERK_WEBHOOK_SIGNING_SECRET is not configured');
+      if (isProduction) throw new BadRequestException('Webhook verification not configured');
     }
 
     const eventType = this.asString(verifiedPayload.type ?? verifiedPayload.event) || 'clerk.webhook';

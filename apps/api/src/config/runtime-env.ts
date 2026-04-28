@@ -5,6 +5,16 @@ export type RuntimeEnvSource =
 const ENV_ALIASES: Record<string, string[]> = {
   CLERK_WEBHOOK_SECRET: ['CLERK_WEBHOOK_SIGNING_SECRET', 'CLERK_WEBHOOK_SECRET'],
   CLERK_WEBHOOK_SIGNING_SECRET: ['CLERK_WEBHOOK_SIGNING_SECRET', 'CLERK_WEBHOOK_SECRET'],
+  JWT_ACCESS_SECRET: ['JWT_ACCESS_SECRET', 'JWT_SECRET'],
+  JWT_REFRESH_SECRET: ['JWT_REFRESH_SECRET', 'JWT_SECRET'],
+  FLUTTERWAVE_WEBHOOK_HASH: ['FLUTTERWAVE_WEBHOOK_SECRET', 'FLUTTERWAVE_WEBHOOK_HASH'],
+  OPAY_SECRET_KEY: ['OPAY_PRIVATE_KEY', 'OPAY_SECRET_KEY'],
+  AIRALO_CLIENT_ID: ['AIRALO_API_KEY', 'AIRALO_CLIENT_ID'],
+  AIRALO_CLIENT_SECRET: ['AIRALO_API_SECRET', 'AIRALO_CLIENT_SECRET'],
+  S3_BUCKET: ['AWS_BUCKET', 'S3_BUCKET', 'R2_BUCKET'],
+  S3_ACCESS_KEY_ID: ['AWS_ACCESS_KEY_ID', 'S3_ACCESS_KEY_ID', 'R2_ACCESS_KEY_ID'],
+  S3_SECRET_ACCESS_KEY: ['AWS_SECRET_ACCESS_KEY', 'S3_SECRET_ACCESS_KEY', 'R2_SECRET_ACCESS_KEY'],
+  POSTHOG_API_KEY: ['POSTHOG_KEY', 'POSTHOG_API_KEY'],
 };
 
 function readEnv(source: RuntimeEnvSource, name: string): string | undefined {
@@ -48,12 +58,25 @@ export function hasConfiguredEnv(name: string, source: RuntimeEnvSource): boolea
   return candidates.some((candidate) => isConfiguredValue(readEnv(source, candidate)));
 }
 
-export function resolveClerkWebhookSigningSecret(source: RuntimeEnvSource): string | undefined {
-  for (const candidate of ENV_ALIASES.CLERK_WEBHOOK_SIGNING_SECRET) {
+export function resolveConfiguredEnv(name: string, source: RuntimeEnvSource): string | undefined {
+  const candidates = ENV_ALIASES[name] ?? [name];
+  for (const candidate of candidates) {
     const value = readEnv(source, candidate);
     if (isConfiguredValue(value)) return value;
   }
   return undefined;
+}
+
+export function resolveClerkWebhookSigningSecret(source: RuntimeEnvSource): string | undefined {
+  return resolveConfiguredEnv('CLERK_WEBHOOK_SIGNING_SECRET', source);
+}
+
+export function resolveJwtAccessSecret(source: RuntimeEnvSource): string | undefined {
+  return resolveConfiguredEnv('JWT_ACCESS_SECRET', source);
+}
+
+export function resolveJwtRefreshSecret(source: RuntimeEnvSource): string | undefined {
+  return resolveConfiguredEnv('JWT_REFRESH_SECRET', source);
 }
 
 export function resolveApiOrigin(source: RuntimeEnvSource): string {

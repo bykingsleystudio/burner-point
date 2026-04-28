@@ -28,8 +28,8 @@ export class UsersService {
     if (!user) throw new NotFoundException('User not found');
     const wallet = buildWalletPresentation(Number(user.walletBalanceKobo), this.configService);
     return {
-      balanceKobo: wallet.walletBalanceKobo,
-      balanceNgn: wallet.walletBalanceNgn,
+      balanceKobo: wallet.walletBalanceKobo, // legacy (display)
+      balanceNgn: wallet.walletBalanceNgn, // display
       balanceUsdCents: wallet.walletBalanceUsdCents,
       balanceUsd: wallet.walletBalanceUsd,
       displayCurrency: wallet.walletDisplayCurrency,
@@ -46,21 +46,46 @@ export class UsersService {
     return this.userRepo.findOne({ where: { id } });
   }
 
+  // Wallet is stored in USD cents (legacy column name "kobo").
+  // This operation is transactional and row-locked to prevent race conditions.
   async creditWallet(userId: string, amountKobo: number): Promise<User> {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
-    if (!user) throw new NotFoundException('User not found');
-    user.walletBalanceKobo = Number(user.walletBalanceKobo) + amountKobo;
-    user.lifetimeSpendKobo = Number(user.lifetimeSpendKobo) + amountKobo;
-    return this.userRepo.save(user);
+    const deltaUsdCents = Number(amountKobo);
+    if (!Number.isFinite(deltaUsdCents) || deltaUsdCents <= 0) {
+      throw new BadRequestException('Invalid wallet credit amount');
+    }
+
+    return this.userRepo.manager.transaction(async (manager) => {
+      const user = await manager.findOne(User, {
+        where: { id: userId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!user) throw new NotFoundException('User not found');
+
+      user.walletBalanceKobo = Number(user.walletBalanceKobo) + deltaUsdCents;
+      // lifetimeSpend tracks debits only (spend), not credits.
+      return manager.save(user);
+    });
   }
 
   async debitWallet(userId: string, amountKobo: number): Promise<User> {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
-    if (!user) throw new NotFoundException('User not found');
-    if (Number(user.walletBalanceKobo) < amountKobo) {
-      throw new BadRequestException('Insufficient wallet balance');
+    const deltaUsdCents = Number(amountKobo);
+    if (!Number.isFinite(deltaUsdCents) || deltaUsdCents <= 0) {
+      throw new BadRequestException('Invalid wallet debit amount');
     }
-    user.walletBalanceKobo = Number(user.walletBalanceKobo) - amountKobo;
-    return this.userRepo.save(user);
+
+    return this.userRepo.manager.transaction(async (manager) => {
+      const user = await manager.findOne(User, {
+        where: { id: userId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!user) throw new NotFoundException('User not found');
+      if (Number(user.walletBalanceKobo) < deltaUsdCents) {
+        throw new BadRequestException('Insufficient wallet balance');
+      }
+
+      user.walletBalanceKobo = Number(user.walletBalanceKobo) - deltaUsdCents;
+      user.lifetimeSpendKobo = Number(user.lifetimeSpendKobo) + deltaUsdCents;
+      return manager.save(user);
+    });
   }
 }

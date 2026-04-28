@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, HttpCode, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Post, Req, HttpCode, HttpStatus, NotFoundException } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
@@ -13,6 +13,10 @@ export class AuthController {
   @Post('register')
   @ApiOperation({ summary: 'Register a new account' })
   async register(@Body() dto: RegisterDto, @Req() req: Request) {
+    if (process.env.NODE_ENV === 'production') {
+      // Burner Point uses Clerk for production sign-up/sign-in flows.
+      throw new NotFoundException();
+    }
     return this.authService.register(dto, req.ip);
   }
 
@@ -20,6 +24,9 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login with email or phone number and password' })
   async login(@Body() dto: LoginDto, @Req() req: Request) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new NotFoundException();
+    }
     return this.authService.login(dto, req.ip);
   }
 
@@ -27,6 +34,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh access token' })
   async refresh(@Body('refreshToken') refreshToken: string) {
+    // Keep API session refresh enabled in production.
     return this.authService.refreshTokens(refreshToken);
   }
 
@@ -34,6 +42,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Logout and revoke refresh token' })
   async logout(@Body('refreshToken') refreshToken: string) {
+    // Keep API session logout enabled in production.
     return this.authService.logout(refreshToken);
   }
 

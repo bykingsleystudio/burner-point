@@ -15,9 +15,11 @@ import { AppModule } from './app.module';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import { DataSource } from 'typeorm';
 import helmet from 'helmet';
 import * as express from 'express';
 import { hasConfiguredEnv } from './config/runtime-env';
+import { RedisService } from './modules/global/redis.service';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -54,7 +56,7 @@ async function bootstrap() {
   // ── HTTPS redirect in production ──────────────────────────────────────────
   if (isProduction) {
     app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
-      if (req.path === '/health') {
+      if (req.path === '/health' || req.path.startsWith('/health/')) {
         return next();
       }
       if (req.headers['x-forwarded-proto'] !== 'https') {
@@ -65,7 +67,7 @@ async function bootstrap() {
   }
 
   // ── CORS ──────────────────────────────────────────────────────────────────
-  const allowedOrigins = (process.env.CORS_ORIGINS ?? '')
+  const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS ?? process.env.CORS_ORIGINS ?? '')
     .split(',')
     .map((o) => o.trim())
     .filter((origin) => Boolean(origin) && origin !== '*');
@@ -80,7 +82,9 @@ async function bootstrap() {
   const allowVercelPreviews = process.env.CORS_ALLOW_VERCEL_PREVIEWS === 'true';
 
   if (isProduction && !corsOrigins.length) {
-    logger.warn('CORS_ORIGINS is empty in production. Browser clients will be rejected until an explicit origin is configured.');
+    logger.warn(
+      'CORS_ALLOWED_ORIGINS is empty in production. Browser clients will be rejected until an explicit origin is configured.',
+    );
   }
   if (isProduction && !hasConfiguredEnv('CLERK_WEBHOOK_SIGNING_SECRET', process.env)) {
     logger.warn('CLERK_WEBHOOK_SIGNING_SECRET is missing in production. Clerk webhook verification is disabled.');
@@ -137,10 +141,55 @@ async function bootstrap() {
     logger.log(`📚 Swagger: http://localhost:${process.env.PORT ?? process.env.APP_PORT ?? 3001}/api/docs`);
   }
 
+  const dataSource = app.get(DataSource);
+  const redisService = app.get(RedisService);
+
   // Railway healthcheck (railway.toml healthcheckPath = "/health")
   const httpAdapter = app.getHttpAdapter();
   httpAdapter.get('/health', (_req: unknown, res: { status: (code: number) => { json: (body: object) => void } }) => {
-    res.status(200).json({ status: 'ok', ts: new Date().toISOString() });
+    res.status(200).json({
+      status: 'ok',
+      service: 'api',
+      environment: process.env.NODE_ENV ?? 'development',
+      ts: new Date().toISOString(),
+    });
+  });
+
+  httpAdapter.get('/health/db', async (_req: unknown, res: { status: (code: number) => { json: (body: object) => void } }) => {
+    try {
+      await dataSource.query('SELECT 1');
+      res.status(200).json({ status: 'ok', dependency: 'database', ts: new Date().toISOString() });
+    } catch {
+      res.status(503).json({ status: 'error', dependency: 'database', ts: new Date().toISOString() });
+    }
+  });
+
+  httpAdapter.get('/health/queue', async (_req: unknown, res: { status: (code: number) => { json: (body: object) => void } }) => {
+    try {
+      const probeKey = `health:queue:${Date.now()}`;
+      await redisService.set(probeKey, '1', 30);
+      const roundTrip = await redisService.get(probeKey);
+      res.status(roundTrip === '1' ? 200 : 503).json({
+        status: roundTrip === '1' ? 'ok' : 'error',
+        dependency: 'queue',
+        ts: new Date().toISOString(),
+      });
+    } catch {
+      res.status(503).json({ status: 'error', dependency: 'queue', ts: new Date().toISOString() });
+    }
+  });
+
+  httpAdapter.get('/health/storage', (_req: unknown, res: { status: (code: number) => { json: (body: object) => void } }) => {
+    const storageConfigured = Boolean(
+      (process.env.AWS_BUCKET && process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY)
+      || (process.env.R2_BUCKET && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY),
+    );
+
+    res.status(storageConfigured ? 200 : 503).json({
+      status: storageConfigured ? 'ok' : 'error',
+      dependency: 'storage',
+      ts: new Date().toISOString(),
+    });
   });
 
   const port = parseInt(process.env.PORT ?? process.env.APP_PORT ?? '3001', 10);

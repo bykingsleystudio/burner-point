@@ -13,6 +13,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import { BpTabs } from '@/components/design-system';
+import { SUPPORT_EMAIL_HREF, TELEGRAM_SUPPORT_URL } from '@/lib/support';
 
 export default function SettingsPage() {
   const pathname = usePathname();
@@ -142,7 +143,7 @@ export default function SettingsPage() {
               <p className="text-sm font-semibold text-white">Create ticket</p>
               <p className="mt-2 text-sm leading-6 text-white/50">Open a scoped support request with account, billing, or product context.</p>
             </Link>
-            <a href="https://t.me/burnerpoint" target="_blank" rel="noreferrer" className="rounded-[1rem] border border-white/8 bg-black/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
+            <a href={TELEGRAM_SUPPORT_URL} target="_blank" rel="noreferrer" className="rounded-[1rem] border border-white/8 bg-black/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
               <p className="text-sm font-semibold text-white">Telegram support</p>
               <p className="mt-2 text-sm leading-6 text-white/50">Reach the support channel without leaving the Burner Point support surface.</p>
             </a>
@@ -182,13 +183,12 @@ export default function SettingsPage() {
             >
               Sign Out
             </button>
-            <button
-              type="button"
-              disabled
-              className="rounded-[0.95rem] border border-red-300/30 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-red-200/70"
+            <Link
+              href={SUPPORT_EMAIL_HREF}
+              className="rounded-[0.95rem] border border-red-300/30 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-red-200/80 transition hover:border-red-200/45 hover:text-red-100"
             >
-              Delete Account
-            </button>
+              Account Closure Request
+            </Link>
           </div>
         </article>
       </section>

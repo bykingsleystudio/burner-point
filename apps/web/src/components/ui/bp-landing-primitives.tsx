@@ -19,6 +19,7 @@ type BpButtonProps = {
   external?: boolean;
   onClick?: () => void;
   type?: 'button' | 'submit' | 'reset';
+  disabled?: boolean;
 };
 
 const buttonStyles: Record<ButtonVariant, string> = {
@@ -68,9 +69,11 @@ export function BpButton({
   external = false,
   onClick,
   type = 'button',
+  disabled = false,
 }: BpButtonProps) {
   const classes = cn(
     'inline-flex items-center justify-center gap-2 rounded-full font-semibold uppercase transition duration-200 ease-out active:scale-[0.98]',
+    disabled && 'pointer-events-none opacity-55',
     buttonStyles[variant],
     buttonSizes[size],
     className,
@@ -93,7 +96,7 @@ export function BpButton({
   }
 
   return (
-    <button type={type} onClick={onClick} className={classes}>
+    <button type={type} onClick={onClick} className={classes} disabled={disabled}>
       {children}
     </button>
   );

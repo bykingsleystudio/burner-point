@@ -13,6 +13,7 @@ import { RedisService } from '../global/redis.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { withWalletPresentation } from '../../config/money';
+import { resolveJwtRefreshSecret } from '../../config/runtime-env';
 
 const BCRYPT_ROUNDS = 12;
 const MAX_FAILED_ATTEMPTS = 5;
@@ -97,7 +98,7 @@ export class AuthService {
     if (user.status === UserStatus.BANNED) throw new ForbiddenException('Account banned');
     if (user.status === UserStatus.SUSPENDED) throw new ForbiddenException('Account suspended');
     if (!user.passwordHash) {
-      throw new UnauthorizedException('Use Clerk sign-in for this account.');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     const passwordValid = await bcrypt.compare(dto.password, user.passwordHash);
@@ -106,9 +107,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (user.twoFactorEnabled) {
-      throw new ForbiddenException('This account requires Clerk multifactor authentication. Sign in with Clerk to continue.');
-    }
+    if (user.twoFactorEnabled) throw new ForbiddenException('Additional verification required');
 
     // Reset failed attempts on success
     await this.userRepo.update(user.id, {
@@ -118,14 +117,13 @@ export class AuthService {
       lastLoginIp: ip,
     });
 
-    // TODO: 2FA check if enabled
     return this.generateTokens(user);
   }
 
   async refreshTokens(refreshToken: string) {
     try {
       const payload = this.jwtService.verify(refreshToken, {
-        secret: this.configService.get('JWT_REFRESH_SECRET'),
+        secret: resolveJwtRefreshSecret(this.configService),
       });
 
       // Check if refresh token is revoked
@@ -150,7 +148,7 @@ export class AuthService {
   async logout(refreshToken: string) {
     try {
       const payload = this.jwtService.verify(refreshToken, {
-        secret: this.configService.get('JWT_REFRESH_SECRET'),
+        secret: resolveJwtRefreshSecret(this.configService),
       });
       const ttl = payload.exp - Math.floor(Date.now() / 1000);
       if (ttl > 0) {
@@ -175,7 +173,7 @@ export class AuthService {
   ) {
     const secretKey = this.configService.get<string>('CLERK_SECRET_KEY');
     if (!secretKey) {
-      throw new BadRequestException('Clerk is not configured. Set CLERK_SECRET_KEY on the API service.');
+      throw new BadRequestException('Authentication is temporarily unavailable.');
     }
 
     const claims = await verifyToken(clerkToken, { secretKey });
@@ -321,7 +319,7 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload);
     const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_REFRESH_SECRET'),
+      secret: resolveJwtRefreshSecret(this.configService),
       expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_IN', '30d'),
     });
 

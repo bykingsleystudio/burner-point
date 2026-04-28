@@ -231,7 +231,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       toast(
         <div>
           <p className="text-sm font-semibold text-white">New message from {data.from}</p>
-          {data.otp ? <p className="font-mono text-lg text-brand-green">{data.otp}</p> : null}
           <p className="mt-1 text-xs text-white/60">{data.body}</p>
         </div>,
         { duration: 5000 },

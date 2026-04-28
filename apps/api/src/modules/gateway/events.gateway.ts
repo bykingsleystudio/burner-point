@@ -3,8 +3,40 @@ import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { resolveJwtAccessSecret } from '../../config/runtime-env';
 
-@WebSocketGateway({ cors: { origin: '*' }, namespace: '/events' })
+function buildGatewayCors() {
+  const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS ?? process.env.CORS_ORIGINS ?? '')
+    .split(',')
+    .map((value) => value.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
+  const allowVercelPreviews = process.env.CORS_ALLOW_VERCEL_PREVIEWS === 'true';
+
+  return {
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      const normalizedOrigin = origin.replace(/\/+$/, '');
+      const isExplicitlyAllowed = allowedOrigins.includes(normalizedOrigin);
+      const isVercelPreview =
+        allowVercelPreviews &&
+        /^https:\/\/[a-z0-9-]+-vercel\.app$/i.test(new URL(normalizedOrigin).hostname);
+
+      if (isExplicitlyAllowed || isVercelPreview) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error('Socket origin not allowed'));
+    },
+    credentials: true,
+  };
+}
+
+@WebSocketGateway({ cors: buildGatewayCors(), namespace: '/events' })
 export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
   private readonly logger = new Logger(EventsGateway.name);
@@ -19,7 +51,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleConnection(client: Socket) {
     try {
       const token = client.handshake.auth?.token || client.handshake.headers?.authorization?.split(' ')[1];
-      const payload = this.jwtService.verify(token, { secret: this.configService.get('JWT_ACCESS_SECRET') });
+      const payload = this.jwtService.verify(token, { secret: resolveJwtAccessSecret(this.configService) });
       const userId = payload.sub;
 
       client.data.userId = userId;

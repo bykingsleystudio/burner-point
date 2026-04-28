@@ -2,6 +2,10 @@ import { BadRequestException, Injectable, Logger, NotFoundException } from '@nes
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { createHash, randomBytes } from 'crypto';
+import { UsersService } from '../users/users.service';
+import { BillingService } from '../billing-v2/billing.service';
+import { TransactionType } from '../../database/entities/extended-entities';
+import { resolveConfiguredEnv } from '../../config/runtime-env';
 import {
   BACKEND_INTEGRATION_CONTRACTS,
   BackendIntegrationContract,
@@ -61,14 +65,14 @@ const PROVIDER_OPERATIONS: Record<ProviderOperation, {
     integrationId: 'airalo',
     baseUrlEnv: 'AIRALO_BASE_URL',
     pathEnv: 'AIRALO_PLANS_PATH',
-    authHeaders: ['AIRALO_CLIENT_ID', 'AIRALO_CLIENT_SECRET'],
+    authHeaders: ['AIRALO_API_KEY', 'AIRALO_API_SECRET'],
     authKind: 'basic',
   },
   'airalo.order': {
     integrationId: 'airalo',
     baseUrlEnv: 'AIRALO_BASE_URL',
     pathEnv: 'AIRALO_ORDER_PATH',
-    authHeaders: ['AIRALO_CLIENT_ID', 'AIRALO_CLIENT_SECRET'],
+    authHeaders: ['AIRALO_API_KEY', 'AIRALO_API_SECRET'],
     authKind: 'basic',
   },
   'oxylabs.proxyOrder': {
@@ -106,7 +110,11 @@ const ALLOWED_UPLOAD_CONTENT_TYPES: Record<UploadIntentInput['purpose'], string[
 export class IntegrationsService {
   private readonly logger = new Logger(IntegrationsService.name);
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly usersService: UsersService,
+    private readonly billingService: BillingService,
+  ) {}
 
   getCatalog() {
     return BACKEND_INTEGRATION_CONTRACTS.map((contract) => this.toSafeContract(contract));
@@ -136,7 +144,7 @@ export class IntegrationsService {
   async captureAnalyticsEvent(userId: string, input: CaptureAnalyticsEventInput) {
     if (!input.event?.trim()) throw new BadRequestException('event is required');
 
-    const apiKey = this.config.get<string>('POSTHOG_API_KEY');
+    const apiKey = resolveConfiguredEnv('POSTHOG_API_KEY', this.config);
     const host = (this.config.get<string>('POSTHOG_HOST') || 'https://us.i.posthog.com').replace(/\/+$/, '');
     const payload = {
       api_key: apiKey,
@@ -150,11 +158,11 @@ export class IntegrationsService {
     };
 
     if (!apiKey) {
-      this.logger.warn(`PostHog event skipped because POSTHOG_API_KEY is missing: ${input.event}`);
+      this.logger.warn(`PostHog event skipped because POSTHOG_KEY is missing: ${input.event}`);
       return {
         queued: false,
         status: 'not_configured',
-        missingEnv: ['POSTHOG_API_KEY'],
+        missingEnv: ['POSTHOG_KEY'],
       };
     }
 
@@ -185,7 +193,7 @@ export class IntegrationsService {
       `${Date.now()}-${randomBytes(8).toString('hex')}-${this.safeFileName(input.fileName)}`,
     ].join('/');
 
-    const configured = ['S3_BUCKET', 'S3_ACCESS_KEY_ID', 'S3_SECRET_ACCESS_KEY'].every((env) => this.hasEnv(env));
+    const configured = this.hasStorageConfigured();
     return {
       status: configured ? 'ready' : 'not_configured',
       objectKey,
@@ -196,7 +204,7 @@ export class IntegrationsService {
       requiresServerSideScan: ['support_attachment', 'document'].includes(input.purpose),
       maxBytes,
       expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-      missingEnv: configured ? [] : ['S3_BUCKET', 'S3_ACCESS_KEY_ID', 'S3_SECRET_ACCESS_KEY'].filter((env) => !this.hasEnv(env)),
+      missingEnv: configured ? [] : this.getMissingStorageEnv(),
       note: 'The API owns object-storage credentials. Clients must not call object storage directly.',
     };
   }
@@ -205,13 +213,29 @@ export class IntegrationsService {
     return this.callConfiguredProvider('airalo.plans', userId, input);
   }
 
-  createEsimOrder(userId: string, input: EsimOrderInput) {
-    return this.callConfiguredProvider('airalo.order', userId, input);
+  async createEsimOrder(userId: string, input: EsimOrderInput) {
+    return this.purchaseIntegrationProduct(
+      userId,
+      'airalo.order',
+      input,
+      this.resolveConfiguredUsdCents('ESIM_ORDER_PRICE_USD_CENTS', 'eSIM order'),
+      TransactionType.ESIM_PURCHASE,
+      'BP eSIM order',
+      {
+        countryCode: input.countryCode,
+        planId: input.planId,
+      },
+    );
   }
 
   async createProxyOrder(userId: string, input: ProxyOrderInput) {
+    const unitPriceUsdCents = this.resolveConfiguredUsdCents('PROXY_ORDER_DAILY_PRICE_USD_CENTS', 'proxy order');
+    const durationDays = input.durationDays ?? 30;
+    const totalPriceUsdCents = unitPriceUsdCents * durationDays;
     const preferredOperations: ProviderOperation[] = ['oxylabs.proxyOrder', 'smartproxy.proxyOrder'];
     const missingByProvider: Array<{ integrationId: BackendIntegrationId; missingEnv: string[] }> = [];
+
+    await this.ensureWalletCoverage(userId, totalPriceUsdCents);
 
     for (const operation of preferredOperations) {
       const missingEnv = this.getMissingProviderEnv(operation);
@@ -224,7 +248,19 @@ export class IntegrationsService {
       }
 
       try {
-        return await this.callConfiguredProvider(operation, userId, input);
+        return await this.purchaseIntegrationProduct(
+          userId,
+          operation,
+          { ...input, durationDays },
+          totalPriceUsdCents,
+          TransactionType.PROXY_PURCHASE,
+          `BP proxy order (${input.type})`,
+          {
+            region: input.region,
+            type: input.type,
+            durationDays,
+          },
+        );
       } catch (error) {
         this.logger.warn(`${operation} failed; falling back if another proxy provider is configured: ${error instanceof Error ? error.message : String(error)}`);
       }
@@ -240,8 +276,58 @@ export class IntegrationsService {
     };
   }
 
-  createVpnSession(userId: string, input: VpnSessionInput) {
-    return this.callConfiguredProvider('wireguard.session', userId, input);
+  async createVpnSession(userId: string, input: VpnSessionInput) {
+    return this.purchaseIntegrationProduct(
+      userId,
+      'wireguard.session',
+      input,
+      this.resolveConfiguredUsdCents('VPN_SESSION_PRICE_USD_CENTS', 'secure tunnel session'),
+      TransactionType.VPN_PURCHASE,
+      'BP Secure Tunnel session',
+      {
+        deviceName: input.deviceName,
+        region: input.region ?? null,
+      },
+    );
+  }
+
+  private async purchaseIntegrationProduct(
+    userId: string,
+    operation: ProviderOperation,
+    payload: object,
+    amountUsdCents: number,
+    transactionType: TransactionType,
+    description: string,
+    metadata: Record<string, unknown>,
+  ) {
+    await this.ensureWalletCoverage(userId, amountUsdCents);
+
+    const providerResult = await this.callConfiguredProvider(operation, userId, payload);
+    if (providerResult?.status !== 'submitted') {
+      return providerResult;
+    }
+
+    const updatedUser = await this.usersService.debitWallet(userId, amountUsdCents);
+    await this.billingService.recordWalletTransaction({
+      userId,
+      type: transactionType,
+      amountKobo: -amountUsdCents,
+      balanceAfterKobo: Number(updatedUser.walletBalanceKobo),
+      description,
+      referenceId: this.extractProviderReference(providerResult.data),
+      metadata: {
+        ...metadata,
+        integrationId: providerResult.integrationId,
+        operation: providerResult.operation,
+        providerStatus: providerResult.providerStatus,
+      },
+    });
+
+    return {
+      ...providerResult,
+      walletDebitedUsdCents: amountUsdCents,
+      walletChargeRecorded: true,
+    };
   }
 
   private async callConfiguredProvider(operation: ProviderOperation, userId: string, payload: object) {
@@ -258,9 +344,9 @@ export class IntegrationsService {
       };
     }
 
-    const baseUrl = this.config.get<string>(cfg.baseUrlEnv).replace(/\/+$/, '');
-    const path = this.config.get<string>(cfg.pathEnv).replace(/^\/?/, '/');
-    const authValues = cfg.authHeaders.map((name) => this.config.get<string>(name) || '');
+    const baseUrl = this.readEnv(cfg.baseUrlEnv).replace(/\/+$/, '');
+    const path = this.readEnv(cfg.pathEnv).replace(/^\/?/, '/');
+    const authValues = cfg.authHeaders.map((name) => this.readEnv(name));
     const response = await axios.post(
       `${baseUrl}${path}`,
       {
@@ -324,11 +410,35 @@ export class IntegrationsService {
     return redact(data);
   }
 
+  private async ensureWalletCoverage(userId: string, amountUsdCents: number) {
+    const wallet = await this.usersService.getWalletBalance(userId);
+    if (wallet.balanceUsdCents < amountUsdCents) {
+      throw new BadRequestException('Insufficient wallet balance');
+    }
+  }
+
+  private resolveConfiguredUsdCents(envName: string, label: string) {
+    const rawValue = this.config.get<string>(envName);
+    const parsed = Number(rawValue);
+    if (!rawValue || !Number.isFinite(parsed) || parsed <= 0) {
+      throw new BadRequestException(`${label} is unavailable because ${envName} is not configured`);
+    }
+    return Math.round(parsed);
+  }
+
+  private extractProviderReference(data: unknown): string | undefined {
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return undefined;
+    const record = data as Record<string, unknown>;
+    for (const key of ['id', 'orderId', 'order_id', 'sessionId', 'session_id', 'reference']) {
+      const value = record[key];
+      if (typeof value === 'string' && value.trim()) return value.trim();
+      if (typeof value === 'number') return String(value);
+    }
+    return undefined;
+  }
+
   private hasEnv(name: string): boolean {
-    const value = this.config.get<string>(name);
-    if (!value) return false;
-    const normalized = value.trim().toLowerCase();
-    return normalized !== 'replace_me' && !normalized.includes('replace_me');
+    return Boolean(this.readOptionalEnv(name));
   }
 
   private getMissingProviderEnv(operation: ProviderOperation): string[] {
@@ -381,5 +491,30 @@ export class IntegrationsService {
       default:
         return 50 * 1024 * 1024;
     }
+  }
+
+  private readOptionalEnv(name: string): string | undefined {
+    return resolveConfiguredEnv(name, this.config);
+  }
+
+  private readEnv(name: string): string {
+    const value = this.readOptionalEnv(name);
+    if (!value) {
+      throw new BadRequestException(`${name} is not configured`);
+    }
+    return value;
+  }
+
+  private hasStorageConfigured(): boolean {
+    return (
+      ['AWS_BUCKET', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY'].every((env) => this.hasEnv(env)) ||
+      ['R2_BUCKET', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY'].every((env) => this.hasEnv(env))
+    );
+  }
+
+  private getMissingStorageEnv(): string[] {
+    const awsMissing = ['AWS_BUCKET', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY'].filter((env) => !this.hasEnv(env));
+    const r2Missing = ['R2_BUCKET', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY'].filter((env) => !this.hasEnv(env));
+    return awsMissing.length === 3 ? r2Missing : awsMissing;
   }
 }

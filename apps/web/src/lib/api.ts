@@ -1,6 +1,10 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://burner-point-api-production.up.railway.app/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!API_URL) {
+  throw new Error('NEXT_PUBLIC_API_URL is required for Burner Point web runtime.');
+}
 
 const api: AxiosInstance = axios.create({
   baseURL: API_URL,
@@ -115,9 +119,31 @@ export const authApi = {
     api.post<AuthExchangeResponse>('/auth/clerk/exchange', { clerkToken, profile }),
 };
 
+export const supportApi = {
+  contact: (data: {
+    name: string;
+    email: string;
+    message: string;
+    product?: string;
+    reference?: string;
+    source?: string;
+  }) => api.post<{ accepted: boolean }>('/messaging/support/contact', data),
+  tickets: (status?: 'open' | 'in_progress' | 'resolved' | 'closed') =>
+    api.get('/support/tickets', { params: status ? { status } : {} }),
+  ticket: (id: string) => api.get(`/support/tickets/${id}`),
+  createTicket: (data: {
+    category: 'account' | 'billing' | 'verification' | 'rental' | 'messenger' | 'esim' | 'proxy' | 'vpn' | 'security' | 'other';
+    product?: string;
+    subject: string;
+    message: string;
+    priority?: 'normal' | 'high' | 'urgent';
+    reference?: string;
+  }) => api.post('/support/tickets', data),
+};
+
 export const numbersApi = {
-  search: (country: string, areaCode?: string) =>
-    api.get('/numbers/search', { params: { country, areaCode } }),
+  search: (country: string, areaCode?: string, type?: 'burner' | 'rental' | 'verification' | 'enterprise') =>
+    api.get('/numbers/search', { params: { country, areaCode, type } }),
   provision: (data: { phoneNumber: string; type: string; countryCode: string }) =>
     api.post('/numbers/provision', data),
   list: () => api.get('/numbers'),
@@ -268,4 +294,16 @@ export const developerApi = {
   createWebhook: (data: { name: string; url: string; events: string[] }) =>
     api.post('/developer/webhooks', data),
   deleteWebhook: (id: string) => api.delete(`/developer/webhooks/${id}`),
+};
+
+export const integrationsApi = {
+  catalog: () => api.get('/integrations/catalog'),
+  esimPlans: (data: { countryCode: string; region?: string }) =>
+    api.post('/integrations/esim/plans', data),
+  esimOrder: (data: { planId: string; countryCode: string; iccid?: string }) =>
+    api.post('/integrations/esim/orders', data),
+  proxyOrder: (data: { region: string; type: 'residential' | 'mobile'; durationDays?: number }) =>
+    api.post('/integrations/proxies/orders', data),
+  vpnSession: (data: { deviceName: string; region?: string }) =>
+    api.post('/integrations/vpn/sessions', data),
 };

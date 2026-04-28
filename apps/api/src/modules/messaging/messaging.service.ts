@@ -21,20 +21,28 @@ export interface SMSOptions {
   preferredProvider?: ProviderName;
 }
 
+export interface SupportIntakeOptions {
+  name: string;
+  email: string;
+  message: string;
+  product?: string;
+  reference?: string;
+  source?: string;
+}
+
 @Injectable()
 export class MessagingService {
   private readonly logger = new Logger(MessagingService.name);
-  private emailTransporter: nodemailer.Transporter;
+  private readonly emailTransporter: nodemailer.Transporter;
 
   constructor(
     private configService: ConfigService,
     private providerService: ProviderService,
   ) {
-    // SMTP fallback is kept for resilience; Resend API is preferred when configured.
     this.emailTransporter = nodemailer.createTransport({
       host: this.configService.get('SMTP_HOST'),
-      port: parseInt(this.configService.get('SMTP_PORT', '465')),
-      secure: true, // true for 465, false for other ports
+      port: parseInt(this.configService.get('SMTP_PORT', '465'), 10),
+      secure: true,
       auth: {
         user: this.configService.get('SMTP_USER'),
         pass: this.configService.get('SMTP_PASS'),
@@ -42,16 +50,16 @@ export class MessagingService {
     });
   }
 
-  // ─── Email Services ───────────────────────────────────────────────────────
-
   async sendEmail(options: EmailOptions): Promise<{ messageId: string }> {
     try {
       const resendApiKey = this.configService.get<string>('RESEND_API_KEY');
       if (resendApiKey) {
         const from = options.from ||
+          this.configService.get<string>('RESEND_FROM_EMAIL') ||
           this.configService.get<string>('EMAIL_FROM') ||
           this.configService.get<string>('SMTP_FROM') ||
           'Burner Point <noreply@burnerpoint.app>';
+
         const result = await axios.post(
           'https://api.resend.com/emails',
           {
@@ -75,15 +83,13 @@ export class MessagingService {
         return { messageId };
       }
 
-      const mailOptions = {
+      const result = await this.emailTransporter.sendMail({
         from: options.from || this.configService.get('SMTP_FROM'),
         to: options.to,
         subject: options.subject,
         html: options.html,
         text: options.text,
-      };
-
-      const result = await this.emailTransporter.sendMail(mailOptions);
+      });
 
       this.logger.log(`Email sent successfully: ${result.messageId} to ${options.to}`);
       return { messageId: result.messageId };
@@ -94,73 +100,117 @@ export class MessagingService {
   }
 
   async sendWelcomeEmail(email: string, firstName: string): Promise<void> {
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1>Welcome to Burner Point, ${firstName}!</h1>
-        <p>Thank you for joining Burner Point. Your account has been successfully created.</p>
-        <p>You can now:</p>
-        <ul>
+    const html = this.wrapBrandedEmail(
+      `Welcome to Burner Point, ${this.escapeHtml(firstName)}.`,
+      [
+        'Your account is ready. From here you can fund your wallet, verify a phone number, rent private numbers, and manage connectivity products from one account.',
+        'You can now:',
+      ],
+      `
+        <ul style="margin: 16px 0 0; color: #E5E7EB; line-height: 1.8;">
           <li>Purchase verification credits</li>
-          <li>Rent burner phone numbers</li>
-          <li>Subscribe to premium services</li>
+          <li>Rent private phone numbers</li>
+          <li>Activate subscriptions and connectivity products</li>
         </ul>
-        <p>Get started by logging into your dashboard.</p>
-        <a href="${this.configService.get('WEB_URL')}/dashboard"
-           style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-          Go to Dashboard
+        <a href="${this.getWebUrl()}/dashboard"
+           style="display: inline-block; margin-top: 20px; background-color: #00FF9D; color: #000000; padding: 12px 20px; text-decoration: none; border-radius: 12px; font-weight: 700;">
+          Open Dashboard
         </a>
-      </div>
-    `;
+      `,
+    );
 
     await this.sendEmail({
       to: email,
-      subject: 'Welcome to Burner Point!',
+      subject: 'Welcome to Burner Point',
       html,
     });
   }
 
   async sendPaymentConfirmation(email: string, amount: number, reference: string): Promise<void> {
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1>Payment Confirmed</h1>
-        <p>Your payment of ₦${amount / 100} has been successfully processed.</p>
-        <p><strong>Reference:</strong> ${reference}</p>
-        <p>Your credits have been added to your wallet.</p>
-        <a href="${this.configService.get('WEB_URL')}/dashboard/billing"
-           style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+    const html = this.wrapBrandedEmail(
+      'Payment confirmed.',
+      [
+        `Your payment of $${(amount / 100).toFixed(2)} has been processed successfully.`,
+        `Reference: ${this.escapeHtml(reference)}`,
+        'Wallet credits or product access will appear in your account as soon as fulfillment completes.',
+      ],
+      `
+        <a href="${this.getWebUrl()}/dashboard/billing"
+           style="display: inline-block; margin-top: 20px; background-color: #00FF9D; color: #000000; padding: 12px 20px; text-decoration: none; border-radius: 12px; font-weight: 700;">
           Open Billing
         </a>
-      </div>
-    `;
+      `,
+    );
 
     await this.sendEmail({
       to: email,
-      subject: 'Payment Confirmation - Burner Point',
+      subject: 'Burner Point payment confirmation',
       html,
     });
   }
 
   async sendOTPEmail(email: string, otp: string): Promise<void> {
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1>Your Verification Code</h1>
-        <p>Use the following code to verify your email address:</p>
-        <div style="font-size: 24px; font-weight: bold; background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: 5px; margin: 20px 0;">
-          ${otp}
+    const html = this.wrapBrandedEmail(
+      'Your verification code.',
+      [
+        'Use the following code to verify your email address.',
+      ],
+      `
+        <div style="font-size: 28px; font-weight: 700; background-color: #013220; color: #00FF9D; padding: 20px; text-align: center; border-radius: 12px; margin: 20px 0;">
+          ${this.escapeHtml(otp)}
         </div>
-        <p>This code will expire in 10 minutes.</p>
-        <p>If you didn't request this code, please ignore this email.</p>
-      </div>
-    `;
+        <p style="margin: 0; color: #E5E7EB;">This code will expire in 10 minutes.</p>
+        <p style="margin: 16px 0 0; color: #E5E7EB;">If you did not request this code, you can ignore this email.</p>
+      `,
+    );
 
     await this.sendEmail({
       to: email,
-      subject: 'Your Verification Code - Burner Point',
+      subject: 'Your Burner Point verification code',
       html,
     });
   }
 
-  // ─── SMS Services (via Twilio) ───────────────────────────────────────────
+  async sendSupportIntake(input: SupportIntakeOptions): Promise<void> {
+    const recipient =
+      this.configService.get<string>('SUPPORT_EMAIL') ||
+      this.configService.get<string>('RESEND_FROM_EMAIL') ||
+      'support@burnerpoint.app';
+
+    const html = this.wrapBrandedEmail(
+      'New support request.',
+      [
+        `Name: ${this.escapeHtml(input.name)}`,
+        `Email: ${this.escapeHtml(input.email)}`,
+        `Product: ${this.escapeHtml(input.product || 'General')}`,
+        `Reference: ${this.escapeHtml(input.reference || 'Not provided')}`,
+        `Source: ${this.escapeHtml(input.source || 'web_contact_form')}`,
+      ],
+      `
+        <div style="margin-top: 24px; padding: 20px; border-radius: 16px; background: #07140f; border: 1px solid rgba(0,255,157,0.16); color: #E5E7EB; line-height: 1.8;">
+          ${this.escapeHtml(input.message).replace(/\n/g, '<br />')}
+        </div>
+      `,
+    );
+
+    const text = [
+      'Burner Point Support Intake',
+      `Name: ${input.name}`,
+      `Email: ${input.email}`,
+      `Product: ${input.product || 'General'}`,
+      `Reference: ${input.reference || 'Not provided'}`,
+      `Source: ${input.source || 'web_contact_form'}`,
+      '',
+      input.message,
+    ].join('\n');
+
+    await this.sendEmail({
+      to: recipient,
+      subject: `Burner Point support request: ${input.product || 'general'}`,
+      html,
+      text,
+    });
+  }
 
   async sendSMS(options: SMSOptions) {
     const from =
@@ -184,8 +234,6 @@ export class MessagingService {
     return result;
   }
 
-  // ─── Bulk Operations ─────────────────────────────────────────────────────
-
   async sendBulkEmail(emails: EmailOptions[]): Promise<{ success: number; failed: number }> {
     let success = 0;
     let failed = 0;
@@ -193,13 +241,52 @@ export class MessagingService {
     for (const email of emails) {
       try {
         await this.sendEmail(email);
-        success++;
+        success += 1;
       } catch (error) {
         this.logger.error(`Failed to send bulk email to ${email.to}`, error);
-        failed++;
+        failed += 1;
       }
     }
 
     return { success, failed };
+  }
+
+  private wrapBrandedEmail(title: string, paragraphs: string[], extraHtml = '') {
+    const content = paragraphs
+      .map((paragraph) => `<p style="margin: 16px 0 0; color: #E5E7EB; line-height: 1.8;">${paragraph}</p>`)
+      .join('');
+
+    return `
+      <div style="font-family: Inter, Arial, sans-serif; max-width: 680px; margin: 0 auto; background: #000000; color: #FFFFFF; border-radius: 24px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
+        <div style="padding: 32px;">
+          <p style="margin: 0; color: #00FF9D; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase;">Burner Point</p>
+          <h1 style="margin: 16px 0 0; font-size: 32px; line-height: 1.1;">${title}</h1>
+          ${content}
+          ${extraHtml}
+        </div>
+      </div>
+    `;
+  }
+
+  private getWebUrl(): string {
+    const configured =
+      this.configService.get<string>('APP_URL') ||
+      this.configService.get<string>('WEB_URL') ||
+      this.configService.get<string>('NEXT_PUBLIC_APP_URL');
+
+    if (configured) {
+      return configured.replace(/\/+$/, '');
+    }
+
+    return 'http://localhost:3000';
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 }

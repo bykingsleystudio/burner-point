@@ -1,3 +1,11 @@
+import {
+  SUPPORT_CONTACTS,
+  SUPPORT_EMAIL,
+  TELEGRAM_COMMUNITY_HANDLE,
+  TELEGRAM_COMMUNITY_URL,
+  TELEGRAM_SUPPORT_HANDLE,
+} from './support';
+
 export type ProductLink = {
   name: string;
   description: string;
@@ -41,11 +49,7 @@ export type FaqCategory = {
   items: FaqItem[];
 };
 
-export const supportContacts = {
-  email: 'info.burnerpoint@gmail.com',
-  telegramPrimary: 'https://t.me/burnerpoint',
-  telegramApp: 'https://t.me/burnerpointapp',
-};
+export const supportContacts = SUPPORT_CONTACTS;
 
 export const socialProfiles = [
   { label: 'Instagram', handle: '@burnerpoint.app', href: 'https://www.instagram.com/burnerpoint.app' },
@@ -53,7 +57,7 @@ export const socialProfiles = [
   { label: 'LinkedIn', handle: '@burnerpointapp', href: 'https://www.linkedin.com/company/burnerpointapp' },
   { label: 'TikTok', handle: '@burnerpointapp', href: 'https://www.tiktok.com/@burnerpointapp' },
   { label: 'Twitter/X', handle: '@burnerpointapp', href: 'https://x.com/burnerpointapp' },
-  { label: 'Telegram', handle: '@burnerpointapp', href: 'https://t.me/burnerpointapp' },
+  { label: 'Telegram', handle: TELEGRAM_COMMUNITY_HANDLE, href: TELEGRAM_COMMUNITY_URL },
   { label: 'YouTube', handle: '@burnerpointapp', href: 'https://www.youtube.com/@burnerpointapp' },
 ] as const;
 
@@ -433,79 +437,6 @@ export const safetyFeatures = [
   'Support review for flagged activity',
 ] as const;
 
-export const testimonialPlaceholders = [
-  {
-    name: 'Remote Worker',
-    location: 'Lagos, Nigeria',
-    quote:
-      'Burner Point gives me one place to manage numbers, messages, and verifications without exposing my personal phone number.',
-  },
-  {
-    name: 'Online Seller',
-    location: 'Accra, Ghana',
-    quote:
-      'I like that I can separate business contacts from my personal line. It makes online selling feel safer.',
-  },
-  {
-    name: 'Founder',
-    location: 'London, UK',
-    quote:
-      'The wallet makes it easy. I fund once and use it across verifications, rentals, and other tools.',
-  },
-  {
-    name: 'Freelancer',
-    location: 'Toronto, Canada',
-    quote:
-      'Having a dedicated private number for messaging helps me stay organized without carrying another SIM.',
-  },
-  {
-    name: 'Digital Operator',
-    location: 'Dubai, UAE',
-    quote:
-      'BP Rentals helps when I need continuity instead of losing access after one code.',
-  },
-  {
-    name: 'Traveler',
-    location: 'Nairobi, Kenya',
-    quote:
-      'The eSIM store makes travel easier. I can buy data and keep communication tools in the same account.',
-  },
-  {
-    name: 'Business User',
-    location: 'New York, USA',
-    quote:
-      'I use different tools for privacy, proxies, and connectivity. Burner Point brings them together in one account.',
-  },
-  {
-    name: 'Consultant',
-    location: 'Manchester, UK',
-    quote: 'BP Messenger feels like a private second line for my work life.',
-  },
-  {
-    name: 'Student Founder',
-    location: 'Abuja, Nigeria',
-    quote:
-      'The account view is simple. Balance, numbers, rentals, and activity are easy to understand.',
-  },
-  {
-    name: 'Creator',
-    location: 'Cape Town, South Africa',
-    quote:
-      'Seeing prices in USD with local currency display helps me understand what I am spending.',
-  },
-  {
-    name: 'Product Tester',
-    location: 'Berlin, Germany',
-    quote:
-      'SMS and voice code support is useful when a service only offers one verification option.',
-  },
-  {
-    name: 'QA Analyst',
-    location: 'Austin, USA',
-    quote: 'Secure access and proxy tools make the platform feel bigger than a normal second-number app.',
-  },
-];
-
 export const faqCategories: FaqCategory[] = [
   {
     id: 'general',
@@ -779,7 +710,7 @@ export const faqCategories: FaqCategory[] = [
       {
         question: 'How do I reach support?',
         answer:
-          'Email info.burnerpoint@gmail.com or message Telegram support at @burnerpoint or @burnerpointapp for account, verification, rental, billing, eSIM, proxy, or Secure Tunnel help.',
+          `Email ${SUPPORT_EMAIL} or message Telegram support at ${TELEGRAM_SUPPORT_HANDLE} or ${TELEGRAM_COMMUNITY_HANDLE} for account, verification, rental, billing, eSIM, proxy, or Secure Tunnel help.`,
       },
       {
         question: 'Does privacy-first mean no rules?',

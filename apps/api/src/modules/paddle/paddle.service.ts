@@ -20,6 +20,7 @@ import axios, { AxiosInstance } from 'axios';
 import { User } from '../../database/entities/user.entity';
 import { PhoneNumber } from '../../database/entities/phone-number.entity';
 import { WalletTransaction } from '../../database/entities/extended-entities';
+import { UsersService } from '../users/users.service';
 
 // ─── Paddle payment types ──────────────────────────────────────────────────
 export enum PaddlePaymentType {
@@ -30,9 +31,10 @@ export enum PaddlePaymentType {
 
 // Credits awarded per payment type
 const CREDITS_MAP: Record<PaddlePaymentType, number> = {
-  [PaddlePaymentType.VERIFICATION]: 160,     // NGN 160 in kobo = 1 verification
-  [PaddlePaymentType.RENTAL]:       95840,   // Approximate NGN value for $5.99 at launch assumptions
-  [PaddlePaymentType.SUBSCRIPTION]: 256000,  // NGN 2,560/month = unlimited
+  // Wallet is stored in USD cents (legacy column name "kobo").
+  [PaddlePaymentType.VERIFICATION]: 99,
+  [PaddlePaymentType.RENTAL]: 599,
+  [PaddlePaymentType.SUBSCRIPTION]: 0,
 };
 
 @Injectable()
@@ -49,6 +51,7 @@ export class PaddleService {
     @InjectRepository(WalletTransaction)
     private txRepo: Repository<WalletTransaction>,
     private config: ConfigService,
+    private usersService: UsersService,
   ) {
     this.isSandbox = this.config.get<string>('PADDLE_SANDBOX') === 'true';
     const baseURL = this.isSandbox
@@ -239,11 +242,7 @@ export class PaddleService {
       case PaddlePaymentType.VERIFICATION:
       case PaddlePaymentType.RENTAL:
         // Credit the user's wallet
-        await this.userRepo.increment(
-          { id: userId },
-          'walletBalanceKobo',
-          creditAmount,
-        );
+        await this.usersService.creditWallet(userId, creditAmount);
         await this.recordTransaction(
           userId,
           creditAmount,
@@ -252,7 +251,7 @@ export class PaddleService {
           reference ?? transactionId,
         );
         this.logger.log(
-          `✅ Paddle ${paymentType}: credited ₦${creditAmount / 100} to user ${userId}`,
+          `Paddle ${paymentType}: credited $${(creditAmount / 100).toFixed(2)} to user ${userId}`,
         );
         break;
 
@@ -404,6 +403,19 @@ export class PaddleService {
   }
 
   private getWebUrl(): string {
-    return (this.config.get<string>('WEB_URL') || 'http://localhost:3000').replace(/\/+$/, '');
+    const configured =
+      this.config.get<string>('APP_URL') ||
+      this.config.get<string>('WEB_URL') ||
+      this.config.get<string>('NEXT_PUBLIC_APP_URL');
+
+    if (configured) {
+      return configured.replace(/\/+$/, '');
+    }
+
+    if (this.config.get<string>('NODE_ENV') === 'production') {
+      throw new BadRequestException('APP_URL must be configured before creating Paddle checkouts');
+    }
+
+    return 'http://localhost:3000';
   }
 }

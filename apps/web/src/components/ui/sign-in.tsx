@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { TELEGRAM_COMMUNITY_HANDLE, TELEGRAM_SUPPORT_HANDLE } from '@/lib/support';
 import { cn } from '@/lib/utils';
 import { heroTrustItems, productLinks, supportContacts } from '@/lib/homepage-content';
 
@@ -321,10 +322,10 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                   {supportContacts.email}
                 </a>
                 <a href={supportContacts.telegramPrimary} target="_blank" rel="noreferrer" className="block transition hover:text-[#07140f]">
-                  Telegram: @burnerpoint
+                  Telegram: {TELEGRAM_SUPPORT_HANDLE}
                 </a>
                 <a href={supportContacts.telegramApp} target="_blank" rel="noreferrer" className="block transition hover:text-[#07140f]">
-                  Telegram: @burnerpointapp
+                  Telegram: {TELEGRAM_COMMUNITY_HANDLE}
                 </a>
               </div>
             </div>

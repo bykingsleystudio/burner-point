@@ -1,5 +1,5 @@
-import { DashboardModulePage, dashboardModules } from '@/components/dashboard-module';
+import { SupportCenter } from '@/components/dashboard/support-center';
 
 export default function SupportPage() {
-  return <DashboardModulePage module={dashboardModules.support} />;
+  return <SupportCenter />;
 }

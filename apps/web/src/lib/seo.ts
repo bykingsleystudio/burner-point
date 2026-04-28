@@ -1,5 +1,6 @@
 import type { Metadata, MetadataRoute } from 'next';
 import { marketingPages, socialLinks, type MarketingPageContent } from './marketing-data';
+import { SUPPORT_EMAIL } from './support';
 
 export const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://burnerpoint.app').replace(/\/+$/, '');
 export const siteName = 'Burner Point';
@@ -207,7 +208,7 @@ export function baseStructuredData() {
       contactPoint: [
         {
           '@type': 'ContactPoint',
-          email: 'info.burnerpoint@gmail.com',
+          email: SUPPORT_EMAIL,
           contactType: 'customer support',
           url: supportUrl,
         },

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { billingApi, numbersApi } from '@/lib/api';
 import { formatLegacyAmountPrimary, formatLegacyAmountSecondary, formatWalletPrimary, formatWalletSecondary } from '@/lib/money';
+import { SUPPORT_EMAIL, SUPPORT_EMAIL_HREF } from '@/lib/support';
 import { useAuthStore } from '@/store';
 
 type NumberRecord = {
@@ -241,7 +242,7 @@ export default function DashboardPage() {
             <h3 className="mt-3 text-2xl font-semibold text-white">Move across every Burner Point module from one shell.</h3>
           </div>
           <div className="text-sm text-white/48">
-            Email support: <a href="mailto:info.burnerpoint@gmail.com" className="text-brand-green transition hover:text-[#39FF14]">info.burnerpoint@gmail.com</a>
+            Email support: <a href={SUPPORT_EMAIL_HREF} className="text-brand-green transition hover:text-[#39FF14]">{SUPPORT_EMAIL}</a>
           </div>
         </div>
 

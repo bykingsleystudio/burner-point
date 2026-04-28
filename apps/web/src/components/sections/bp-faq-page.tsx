@@ -6,6 +6,7 @@ import { ArrowRight, LifeBuoy, MessageSquareText, ShieldCheck } from 'lucide-rea
 import { MarketingFooter, MarketingHeader } from '@/components/sections/bp-marketing-shell';
 import { BpButton, BpKicker } from '@/components/ui/bp-landing-primitives';
 import { allFaqItems, faqCategories, supportContacts } from '@/lib/homepage-content';
+import { TELEGRAM_COMMUNITY_HANDLE, TELEGRAM_SUPPORT_HANDLE } from '@/lib/support';
 import { cn } from '@/lib/utils';
 
 const allTab = {
@@ -125,11 +126,11 @@ export function BurnerPointFaqPage() {
                 <p className="mt-2 text-sm leading-7 text-white/78">
                   Telegram:{' '}
                   <a href={supportContacts.telegramPrimary} target="_blank" rel="noreferrer" className="text-[#00FF9D]">
-                    @burnerpoint
+                    {TELEGRAM_SUPPORT_HANDLE}
                   </a>{' '}
                   and{' '}
                   <a href={supportContacts.telegramApp} target="_blank" rel="noreferrer" className="text-[#00FF9D]">
-                    @burnerpointapp
+                    {TELEGRAM_COMMUNITY_HANDLE}
                   </a>
                 </p>
               </div>

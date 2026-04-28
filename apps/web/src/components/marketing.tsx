@@ -1,16 +1,26 @@
 'use client';
 
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import { type FormEvent, type ReactNode, useState } from 'react';
 import { ArrowRight, Check, CreditCard, Globe2, HelpCircle, Lock, Mail, MessageSquare, Phone, ShieldCheck, Smartphone, Wifi } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { MarketingFooter, MarketingHeader } from '@/components/sections/bp-marketing-shell';
 import { BpButton } from '@/components/ui/bp-landing-primitives';
+import { supportApi } from '@/lib/api';
 import {
   type IconKey,
   type MarketingCard,
   type MarketingPageContent,
 } from '@/lib/marketing-data';
+import {
+  SUPPORT_EMAIL,
+  SUPPORT_EMAIL_HREF,
+  TELEGRAM_COMMUNITY_HANDLE,
+  TELEGRAM_COMMUNITY_URL,
+  TELEGRAM_SUPPORT_HANDLE,
+  TELEGRAM_SUPPORT_URL,
+} from '@/lib/support';
 
 const icons: Record<IconKey, LucideIcon> = {
   bell: ShieldCheck,
@@ -232,6 +242,33 @@ export function MarketingPage({ page }: { page: MarketingPageContent }) {
 }
 
 function ContactFormSection() {
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    message: '',
+  });
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSubmitting(true);
+
+    try {
+      await supportApi.contact({
+        ...form,
+        product: 'General support',
+        source: 'public_contact_page',
+      });
+      setForm({ name: '', email: '', message: '' });
+      toast.success('Your message has been sent to Burner Point support.');
+    } catch (error: unknown) {
+      const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(message || 'Unable to send your message right now.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <section className="pb-20 md:pb-28">
       <div className="mx-auto grid max-w-[92rem] gap-6 px-4 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:px-8">
@@ -242,19 +279,21 @@ function ContactFormSection() {
             Reach support for pricing, access, verification, rentals, travel data, proxy plans, secure tunnel, and account issues.
           </p>
           <div className="mt-6 grid gap-3">
-            <ContactLine label="Email" value="info.burnerpoint@gmail.com" href="mailto:info.burnerpoint@gmail.com" />
-            <ContactLine label="Telegram" value="@burnerpoint" href="https://t.me/burnerpoint" />
-            <ContactLine label="Community" value="@burnerpointapp" href="https://t.me/burnerpointapp" />
+            <ContactLine label="Email" value={SUPPORT_EMAIL} href={SUPPORT_EMAIL_HREF} />
+            <ContactLine label="Telegram" value={TELEGRAM_SUPPORT_HANDLE} href={TELEGRAM_SUPPORT_URL} />
+            <ContactLine label="Community" value={TELEGRAM_COMMUNITY_HANDLE} href={TELEGRAM_COMMUNITY_URL} />
           </div>
         </div>
 
-        <form action="mailto:info.burnerpoint@gmail.com" method="post" encType="text/plain" className="rounded-[1.8rem] border border-black/6 bg-white p-6 shadow-[0_18px_48px_rgba(2,20,12,0.06)]">
+        <form onSubmit={submit} className="rounded-[1.8rem] border border-black/6 bg-white p-6 shadow-[0_18px_48px_rgba(2,20,12,0.06)]">
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Name">
               <input
                 name="name"
                 required
                 autoComplete="name"
+                value={form.name}
+                onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
                 className="mt-2 w-full rounded-[1rem] border border-black/8 bg-[#f7fbf8] px-4 py-3 text-sm text-[#07140f] outline-none transition focus:border-[#00FF9D]/30"
                 placeholder="Your name"
               />
@@ -265,6 +304,8 @@ function ContactFormSection() {
                 type="email"
                 required
                 autoComplete="email"
+                value={form.email}
+                onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
                 className="mt-2 w-full rounded-[1rem] border border-black/8 bg-[#f7fbf8] px-4 py-3 text-sm text-[#07140f] outline-none transition focus:border-[#00FF9D]/30"
                 placeholder="you@example.com"
               />
@@ -275,12 +316,14 @@ function ContactFormSection() {
               name="message"
               required
               rows={6}
+              value={form.message}
+              onChange={(event) => setForm((current) => ({ ...current, message: event.target.value }))}
               className="mt-2 w-full rounded-[1rem] border border-black/8 bg-[#f7fbf8] px-4 py-3 text-sm text-[#07140f] outline-none transition focus:border-[#00FF9D]/30"
               placeholder="Tell us what you need help with..."
             />
           </Field>
-          <BpButton type="submit" className="mt-5 w-full md:w-auto">
-            Send Support Email
+          <BpButton type="submit" className="mt-5 w-full md:w-auto" disabled={submitting}>
+            {submitting ? 'Sending...' : 'Send Support Request'}
           </BpButton>
         </form>
       </div>

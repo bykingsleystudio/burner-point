@@ -3,12 +3,44 @@ import {
   OnGatewayConnection, OnGatewayDisconnect, ConnectedSocket, MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger, UseGuards } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { resolveJwtAccessSecret } from '../../config/runtime-env';
+
+function buildGatewayCors() {
+  const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS ?? process.env.CORS_ORIGINS ?? '')
+    .split(',')
+    .map((value) => value.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
+  const allowVercelPreviews = process.env.CORS_ALLOW_VERCEL_PREVIEWS === 'true';
+
+  return {
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      const normalizedOrigin = origin.replace(/\/+$/, '');
+      const isExplicitlyAllowed = allowedOrigins.includes(normalizedOrigin);
+      const isVercelPreview =
+        allowVercelPreviews &&
+        /^https:\/\/[a-z0-9-]+-vercel\.app$/i.test(new URL(normalizedOrigin).hostname);
+
+      if (isExplicitlyAllowed || isVercelPreview) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error('Socket origin not allowed'));
+    },
+    credentials: true,
+  };
+}
 
 @WebSocketGateway({
-  cors: { origin: '*', credentials: true },
+  cors: buildGatewayCors(),
   namespace: '/realtime',
 })
 export class BurnerGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -27,7 +59,7 @@ export class BurnerGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const token = client.handshake.auth?.token || client.handshake.headers?.authorization?.replace('Bearer ', '');
       if (!token) { client.disconnect(); return; }
 
-      const payload = this.jwtService.verify(token, { secret: this.configService.get('JWT_ACCESS_SECRET') });
+      const payload = this.jwtService.verify(token, { secret: resolveJwtAccessSecret(this.configService) });
       client.data.userId = payload.sub;
 
       if (!this.userSockets.has(payload.sub)) this.userSockets.set(payload.sub, new Set());
@@ -58,9 +90,11 @@ export class BurnerGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('subscribe_number')
-  handleSubscribeNumber(@ConnectedSocket() client: Socket, @MessageBody() data: { numberId: string }) {
-    client.join(`number:${data.numberId}`);
-    return { subscribed: true };
+  handleSubscribeNumber(@ConnectedSocket() _client: Socket, @MessageBody() _data: { numberId: string }) {
+    return {
+      subscribed: false,
+      message: 'Number-room subscriptions are disabled on this gateway surface.',
+    };
   }
 
   @SubscribeMessage('ping')

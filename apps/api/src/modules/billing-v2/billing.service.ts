@@ -1,7 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { WalletTransaction, SubscriptionPlan, UserSubscription } from '../../database/entities/extended-entities';
+import {
+  WalletTransaction,
+  SubscriptionPlan,
+  UserSubscription,
+  TransactionStatus,
+  TransactionType,
+  PaymentGateway,
+} from '../../database/entities/extended-entities';
 import { User } from '../../database/entities/user.entity';
 
 @Injectable()
@@ -32,5 +39,37 @@ export class BillingService {
       where: { userId, status: 'active' },
       relations: ['plan'],
     } as any);
+  }
+
+  async recordWalletTransaction(input: {
+    userId: string;
+    type: TransactionType;
+    amountKobo: number;
+    balanceAfterKobo: number;
+    description: string;
+    referenceId?: string;
+    externalReference?: string;
+    gateway?: PaymentGateway;
+    metadata?: Record<string, unknown>;
+  }) {
+    const amount = Number(input.amountKobo);
+    const balanceAfter = Number(input.balanceAfterKobo);
+    const balanceBefore = balanceAfter - amount;
+
+    return this.txRepo.save(
+      this.txRepo.create({
+        userId: input.userId,
+        type: input.type,
+        status: TransactionStatus.COMPLETED,
+        amountKobo: amount,
+        balanceBeforeKobo: balanceBefore,
+        balanceAfterKobo: balanceAfter,
+        description: input.description,
+        referenceId: input.referenceId,
+        externalReference: input.externalReference,
+        gateway: input.gateway,
+        metadata: input.metadata || {},
+      }),
+    );
   }
 }

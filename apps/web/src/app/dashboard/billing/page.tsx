@@ -256,7 +256,7 @@ export default function BillingPage() {
         {[
           ['Credits', 'Wallet balance funds verifications, rentals, eSIM, proxies, and renewals across your account.'],
           ['Rentals', 'Rental purchases stay visible with billing history, due dates, and support references.'],
-          ['Subscriptions', 'Monthly plans keep renewal timing, receipts, and cancellation visibility in one place.'],
+          ['Connectivity', 'eSIM, proxy, and secure-tunnel purchases are recorded with billing history and provider references once access is assigned.'],
         ].map(([title, text]) => (
           <article key={title} className="rounded-bp-lg border border-brand-border bg-brand-card p-5">
             <CalendarDays className="h-5 w-5 text-brand-green" />

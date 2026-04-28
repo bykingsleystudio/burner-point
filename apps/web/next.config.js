@@ -14,12 +14,62 @@ const nextConfig = {
       },
     ],
   },
-  env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://burner-point-api-production.up.railway.app/api',
-    NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL || 'https://burner-point-api-production.up.railway.app',
-  },
   async headers() {
+    const csp = [
+      "default-src 'self'",
+      "base-uri 'self'",
+      "object-src 'none'",
+      "frame-ancestors 'none'",
+      "img-src 'self' data: blob: https:",
+      "font-src 'self' data: https:",
+      "style-src 'self' 'unsafe-inline'",
+      [
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+        'https://*.clerk.com',
+        'https://*.clerk.dev',
+        'https://*.sentry.io',
+        'https://js.sentry-cdn.com',
+        'https://app.posthog.com',
+        'https://*.posthog.com',
+        'https://prod.spline.design',
+        'https://cdn.paddle.com',
+      ].join(' '),
+      [
+        "connect-src 'self' https: wss:",
+        'https://*.clerk.com',
+        'https://*.clerk.dev',
+        'https://*.sentry.io',
+        'https://app.posthog.com',
+        'https://*.posthog.com',
+        'https://prod.spline.design',
+      ].join(' '),
+      [
+        "frame-src 'self'",
+        'https://*.clerk.com',
+        'https://*.clerk.dev',
+        'https://checkout.paddle.com',
+        'https://*.paddle.com',
+      ].join(' '),
+      "form-action 'self' https://*.clerk.com https://*.clerk.dev",
+      'upgrade-insecure-requests',
+    ].join('; ');
+
+    const securityHeaders = [
+      { key: 'X-Frame-Options', value: 'DENY' },
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+      { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()' },
+      { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+      { key: 'Cross-Origin-Resource-Policy', value: 'same-site' },
+      { key: 'Content-Security-Policy', value: csp },
+      { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
+    ];
+
     return [
+      {
+        source: '/(.*)',
+        headers: securityHeaders,
+      },
       {
         source: '/dashboard/:path*',
         headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' }],
@@ -50,10 +100,6 @@ const nextConfig = {
       },
       {
         source: '/sso-callback',
-        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' }],
-      },
-      {
-        source: '/test',
         headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' }],
       },
     ];

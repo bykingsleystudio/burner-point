@@ -12,6 +12,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { SUPPORT_EMAIL_HREF, TELEGRAM_SUPPORT_URL } from '@/lib/support';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -146,10 +147,10 @@ export function BpSupportWidget() {
         Use scoped references for verification, rentals, billing, eSIM, proxies, secure tunnel, or account issues.
       </p>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        <BpButton href="mailto:info.burnerpoint@gmail.com" variant="secondary" size="sm" icon={<Mail className="h-4 w-4" />}>
+        <BpButton href={SUPPORT_EMAIL_HREF} variant="secondary" size="sm" icon={<Mail className="h-4 w-4" />}>
           Email Support
         </BpButton>
-        <BpButton href="https://t.me/burnerpoint" variant="ghost" size="sm">
+        <BpButton href={TELEGRAM_SUPPORT_URL} variant="ghost" size="sm">
           Telegram
         </BpButton>
       </div>

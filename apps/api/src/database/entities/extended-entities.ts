@@ -16,6 +16,8 @@ export enum TransactionType {
   CALL_CHARGE = 'call_charge', REFERRAL_BONUS = 'referral_bonus',
   REFUND = 'refund', ADJUSTMENT = 'adjustment',
   SUBSCRIPTION_PURCHASE = 'subscription_purchase',
+  ESIM_PURCHASE = 'esim_purchase', PROXY_PURCHASE = 'proxy_purchase',
+  VPN_PURCHASE = 'vpn_purchase',
 }
 export enum TransactionStatus { PENDING = 'pending', COMPLETED = 'completed', FAILED = 'failed', REVERSED = 'reversed' }
 export enum PaymentGateway { FLUTTERWAVE = 'flutterwave', PAYSTACK = 'paystack', SQUAD = 'squad', KORAPAY = 'korapay', OPAY = 'opay', PADDLE = 'paddle', NOWPAYMENTS = 'nowpayments' }
@@ -454,6 +456,77 @@ export class AuditLog {
 }
 
 // ─── API PLATFORM ───────────────────────────────────────────────────────────
+
+export enum SupportTicketStatus {
+  OPEN = 'open',
+  IN_PROGRESS = 'in_progress',
+  RESOLVED = 'resolved',
+  CLOSED = 'closed',
+}
+
+export enum SupportTicketPriority {
+  NORMAL = 'normal',
+  HIGH = 'high',
+  URGENT = 'urgent',
+}
+
+@Entity('support_tickets')
+export class SupportTicket {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ name: 'user_id' })
+  @Index()
+  userId: string;
+
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
+  user: User;
+
+  @Column({ name: 'ticket_number', unique: true })
+  @Index()
+  ticketNumber: string;
+
+  @Column()
+  category: string;
+
+  @Column({ nullable: true })
+  product: string;
+
+  @Column()
+  subject: string;
+
+  @Column({ type: 'text' })
+  message: string;
+
+  @Column({ type: 'enum', enum: SupportTicketStatus, default: SupportTicketStatus.OPEN })
+  @Index()
+  status: SupportTicketStatus;
+
+  @Column({ type: 'enum', enum: SupportTicketPriority, default: SupportTicketPriority.NORMAL })
+  priority: SupportTicketPriority;
+
+  @Column({ nullable: true })
+  reference: string;
+
+  @Column({ name: 'resolution_summary', type: 'text', nullable: true })
+  resolutionSummary: string;
+
+  @Column({ name: 'last_reply_at', type: 'timestamp', nullable: true })
+  lastReplyAt: Date;
+
+  @Column({ name: 'closed_at', type: 'timestamp', nullable: true })
+  closedAt: Date;
+
+  @Column({ type: 'jsonb', default: {} })
+  metadata: Record<string, unknown>;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+}
 
 @Entity('api_keys')
 export class ApiKey {

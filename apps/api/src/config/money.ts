@@ -36,6 +36,7 @@ export function resolveUsdToNgnRate(source: RuntimeEnvSource): number {
 
 export function ngnKoboToUsdCents(ngnKobo: number, source: RuntimeEnvSource): number {
   const rate = resolveUsdToNgnRate(source);
+  // ngnKobo = NGN minor units (kobo). Convert to USD cents at current display rate.
   return Math.max(0, Math.round((asMinorNumber(ngnKobo) / 100 / rate) * 100));
 }
 
@@ -45,17 +46,20 @@ export function usdCentsToNgnKobo(usdCents: number, source: RuntimeEnvSource): n
 }
 
 export function buildWalletPresentation(balanceKobo: number, source: RuntimeEnvSource) {
-  const walletBalanceKobo = asMinorNumber(balanceKobo);
-  const walletBalanceUsdCents = ngnKoboToUsdCents(walletBalanceKobo, source);
+  // NOTE: Burner Point stores wallet balance in USD cents.
+  // Historical column names still reference "kobo" for backwards compatibility.
+  const walletBalanceUsdCents = asMinorNumber(balanceKobo);
   const walletFxRateNgnPerUsd = resolveUsdToNgnRate(source);
+  const walletBalanceNgnKobo = usdCentsToNgnKobo(walletBalanceUsdCents, source);
 
   return {
-    walletBalanceKobo,
-    walletBalanceNgn: walletBalanceKobo / 100,
     walletBalanceUsdCents,
     walletBalanceUsd: walletBalanceUsdCents / 100,
     walletDisplayCurrency: 'USD' as const,
     walletFxRateNgnPerUsd,
+    // Legacy fields kept for client compatibility (represent local display only).
+    walletBalanceKobo: walletBalanceNgnKobo,
+    walletBalanceNgn: walletBalanceNgnKobo / 100,
   };
 }
 
@@ -64,8 +68,9 @@ export function withWalletPresentation<T extends { walletBalanceKobo?: number; l
   source: RuntimeEnvSource,
 ) {
   const wallet = buildWalletPresentation(asMinorNumber(value.walletBalanceKobo), source);
-  const lifetimeSpendKobo = asMinorNumber(value.lifetimeSpendKobo);
-  const lifetimeSpendUsdCents = ngnKoboToUsdCents(lifetimeSpendKobo, source);
+  // Lifetime spend is stored in USD cents (legacy column name "kobo").
+  const lifetimeSpendUsdCents = asMinorNumber(value.lifetimeSpendKobo);
+  const lifetimeSpendKobo = usdCentsToNgnKobo(lifetimeSpendUsdCents, source);
 
   return {
     ...value,

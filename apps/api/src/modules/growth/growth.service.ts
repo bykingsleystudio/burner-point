@@ -1,17 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Referral } from '../../database/entities/extended-entities';
+import { Referral, TransactionType } from '../../database/entities/extended-entities';
 import { User } from '../../database/entities/user.entity';
+import { UsersService } from '../users/users.service';
+import { BillingService } from '../billing-v2/billing.service';
 
-const REFERRER_BONUS_KOBO = 50000;  // ₦500
-const REFEREE_BONUS_KOBO  = 25000;  // ₦250
+// Wallet is stored in USD cents (legacy column name "kobo").
+// Referral bonuses are small USD incentives.
+const REFERRER_BONUS_USD_CENTS = 50; // $0.50
+const REFEREE_BONUS_USD_CENTS = 25; // $0.25
 
 @Injectable()
 export class GrowthService {
   constructor(
     @InjectRepository(Referral) private referralRepo: Repository<Referral>,
     @InjectRepository(User) private userRepo: Repository<User>,
+    private usersService: UsersService,
+    private billingService: BillingService,
   ) {}
 
   async processReferral(referrerId: string, refereeId: string) {
@@ -20,15 +26,35 @@ export class GrowthService {
 
     const referral = this.referralRepo.create({
       referrerId, refereeId,
-      referrerBonusKobo: REFERRER_BONUS_KOBO,
-      refereeBonusKobo: REFEREE_BONUS_KOBO,
+      referrerBonusKobo: REFERRER_BONUS_USD_CENTS,
+      refereeBonusKobo: REFEREE_BONUS_USD_CENTS,
     });
     await this.referralRepo.save(referral);
 
     // Credit both parties
-    await this.userRepo.increment({ id: referrerId }, 'walletBalanceKobo', REFERRER_BONUS_KOBO);
+    const referrer = await this.usersService.creditWallet(referrerId, REFERRER_BONUS_USD_CENTS);
     await this.userRepo.increment({ id: referrerId }, 'referralCount', 1);
-    await this.userRepo.increment({ id: refereeId }, 'walletBalanceKobo', REFEREE_BONUS_KOBO);
+    const referee = await this.usersService.creditWallet(refereeId, REFEREE_BONUS_USD_CENTS);
+
+    await this.billingService.recordWalletTransaction({
+      userId: referrerId,
+      type: TransactionType.REFERRAL_BONUS,
+      amountKobo: REFERRER_BONUS_USD_CENTS,
+      balanceAfterKobo: Number(referrer.walletBalanceKobo),
+      description: 'Referral reward credited',
+      referenceId: referral.id,
+      metadata: { role: 'referrer', refereeId },
+    });
+
+    await this.billingService.recordWalletTransaction({
+      userId: refereeId,
+      type: TransactionType.REFERRAL_BONUS,
+      amountKobo: REFEREE_BONUS_USD_CENTS,
+      balanceAfterKobo: Number(referee.walletBalanceKobo),
+      description: 'Referral welcome credit',
+      referenceId: referral.id,
+      metadata: { role: 'referee', referrerId },
+    });
 
     await this.referralRepo.update(referral.id, { status: 'completed', bonusPaid: true });
     return referral;

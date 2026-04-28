@@ -9,6 +9,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { User } from '../../database/entities/user.entity';
 import { RedisService } from '../global/redis.service';
+import { resolveJwtAccessSecret } from '../../config/runtime-env';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { RedisService } from '../global/redis.service';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (cfg: ConfigService) => ({
-        secret: cfg.get('JWT_ACCESS_SECRET'),
+        secret: resolveJwtAccessSecret(cfg),
         signOptions: { expiresIn: cfg.get('JWT_ACCESS_EXPIRES_IN', '15m') },
       }),
     }),

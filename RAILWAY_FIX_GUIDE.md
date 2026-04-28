@@ -117,8 +117,8 @@ Notes:
 ```env
 NODE_ENV=production
 APP_PORT=3001
-JWT_ACCESS_SECRET=<your 128-char hex>
-JWT_REFRESH_SECRET=<your different 128-char hex>
+JWT_SECRET=<your 128-char hex>
+JWT_SECRET=<your 128-char hex>
 ENCRYPTION_KEY=<your 32-char hex>
 ADMIN_SECRET_KEY=<your strong string>
 CLERK_SECRET_KEY=<your rotated Clerk secret key>
@@ -276,7 +276,7 @@ Confirm:
 - `/health` returns HTTP 200.
 - `DATABASE_URL` is set to the Neon connection string.
 - `REDIS_URL` is set.
-- `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `ENCRYPTION_KEY`, and `ADMIN_SECRET_KEY` are set.
+- `JWT_SECRET`, `ENCRYPTION_KEY`, and `ADMIN_SECRET_KEY` are set.
 - Neon allows SSL connections and the URL includes `?sslmode=require`.
 
 ### DATABASE_URL not set

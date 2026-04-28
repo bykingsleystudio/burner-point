@@ -63,6 +63,11 @@ export default function PhoneVerifyPage() {
         const apiPhone = data.user?.phoneNumber || pendingPhone || primaryPhone || '';
         setPhoneNumber(apiPhone);
 
+        if (data.needsOnboarding) {
+          router.replace(`/onboarding?redirect=${encodeURIComponent(redirectTo)}`);
+          return;
+        }
+
         if (!data.needsPhoneVerification || data.user?.phoneVerified) {
           toast.success('Phone number already verified.');
           router.replace(redirectTo);

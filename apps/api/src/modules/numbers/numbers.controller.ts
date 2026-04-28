@@ -11,6 +11,19 @@ class ProvisionDto {
   @IsString() countryCode: string;
 }
 
+class SearchDto {
+  @IsString()
+  country: string;
+
+  @IsOptional()
+  @IsString()
+  areaCode?: string;
+
+  @IsOptional()
+  @IsEnum(NumberType)
+  type?: NumberType;
+}
+
 @ApiTags('numbers')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -22,8 +35,9 @@ export class NumbersController {
   @ApiOperation({ summary: 'Search available numbers' })
   @ApiQuery({ name: 'country', required: true })
   @ApiQuery({ name: 'areaCode', required: false })
-  search(@Query('country') country: string, @Query('areaCode') areaCode?: string) {
-    return this.service.searchAvailable(country, areaCode);
+  @ApiQuery({ name: 'type', required: false, enum: NumberType })
+  search(@Query() query: SearchDto) {
+    return this.service.searchAvailable(query.country, query.areaCode, query.type);
   }
 
   @Post('provision')

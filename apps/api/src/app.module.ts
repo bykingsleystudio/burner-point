@@ -19,7 +19,6 @@ import { NumbersModule } from './modules/numbers/numbers.module';
 import { LifecycleModule } from './modules/lifecycle/lifecycle.module';
 import { WebhooksModule } from './modules/webhooks/webhooks.module';
 import { PaymentsModule } from './modules/payments/payments.module';
-import { PaddleModule } from './modules/paddle/paddle.module';
 import { BillingV2Module } from './modules/billing-v2/billing-v2.module';
 import { AbuseModule } from './modules/abuse/abuse.module';
 import { AiModule } from './modules/ai/ai.module';
@@ -34,6 +33,7 @@ import { MessagingModule } from './modules/messaging/messaging.module';
 import { PlatformModule } from './modules/platform/platform.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { SecurityModule } from './modules/security/security.module';
+import { SupportModule } from './modules/support/support.module';
 
 // ── Security middleware ───────────────────────────────────────────────────────
 import { SecurityMiddleware } from './middleware/security.middleware';
@@ -114,7 +114,6 @@ import { SecurityMiddleware } from './middleware/security.middleware';
     LifecycleModule,       // TTL expiry cron jobs
     WebhooksModule,        // Twilio SMS/call event receiver
     PaymentsModule,        // Paystack, Paddle, NOWPayments core; secondary gateways gated
-    PaddleModule,          // Paddle: credits, rentals, subscriptions
     BillingV2Module,       // Wallet ledger + subscription plans
     AbuseModule,           // Velocity limits + risk engine
     AiModule,              // OpenAI GPT-4o-mini (with kill switch)
@@ -125,6 +124,7 @@ import { SecurityMiddleware } from './middleware/security.middleware';
     GrowthModule,          // Referrals + rewards
     SeoModule,             // SEO: sitemap, robots.txt, structured data
     MessagingModule,       // Email: Resend API with SMTP fallback (welcome, payment, OTP)
+    SupportModule,         // Authenticated support ticket intake and history
   ],
 })
 export class AppModule implements NestModule {

@@ -1,4 +1,14 @@
-﻿export type IconKey =
+import {
+  SUPPORT_EMAIL,
+  SUPPORT_EMAIL_HREF,
+  TELEGRAM_COMMUNITY_HANDLE,
+  TELEGRAM_COMMUNITY_URL,
+  TELEGRAM_SUPPORT_HANDLE,
+  TELEGRAM_SUPPORT_URL,
+  buildSupportMailto,
+} from './support';
+
+export type IconKey =
   | 'bell'
   | 'book'
   | 'briefcase'
@@ -93,7 +103,7 @@ export const socialLinks = [
   { label: 'LinkedIn', short: 'in', handle: '@burnerpointapp', href: 'https://www.linkedin.com/company/burnerpointapp' },
   { label: 'TikTok', short: 'tt', handle: '@burnerpointapp', href: 'https://www.tiktok.com/@burnerpointapp' },
   { label: 'Twitter/X', short: 'x', handle: '@burnerpointapp', href: 'https://x.com/burnerpointapp' },
-  { label: 'Telegram', short: 'tg', handle: '@burnerpointapp', href: 'https://t.me/burnerpointapp' },
+  { label: 'Telegram', short: 'tg', handle: TELEGRAM_COMMUNITY_HANDLE, href: TELEGRAM_COMMUNITY_URL },
   { label: 'YouTube', short: 'yt', handle: '@burnerpointapp', href: 'https://www.youtube.com/@burnerpointapp' },
 ];
 
@@ -119,7 +129,7 @@ const faqItems = [
   ['How do refunds and billing work?', 'Refund eligibility depends on the product, provider delivery, whether a verification or rental was consumed, payment status, and number lifecycle. Billing surfaces should show references, status, credits, receipts, and support paths.'],
   ['What is required to create an account?', 'Account creation requires first name, last name, email, phone number, and password. By continuing, users agree to the Terms of Service and Privacy Policy. Burner Point supports email, phone, OAuth, password reset, and optional 2FA through a managed authentication layer.'],
   ['How does Burner Point handle privacy and data?', 'Burner Point is designed around data minimization, private access control, account protection, support visibility, and clear privacy policies.'],
-  ['How do I reach support?', 'Email info.burnerpoint@gmail.com or message Telegram support at @burnerpoint and @burnerpointapp for account, verification, rental, billing, eSIM, proxy, or VPN help.'],
+  ['How do I reach support?', `Email ${SUPPORT_EMAIL} or message Telegram support at ${TELEGRAM_SUPPORT_HANDLE} and ${TELEGRAM_COMMUNITY_HANDLE} for account, verification, rental, billing, eSIM, proxy, or VPN help.`],
 ].map(([question, answer]) => ({ question, answer }));
 
 export const marketingPages: Record<string, MarketingPageContent> = {
@@ -290,7 +300,7 @@ export const marketingPages: Record<string, MarketingPageContent> = {
     eyebrow: 'Careers',
     title: 'Build the future of private communication.',
     description: 'Join a remote-friendly team building secure, privacy-first digital infrastructure for global users.',
-    primaryCta: { label: 'Contact Careers', href: 'mailto:info.burnerpoint@gmail.com?subject=Burner%20Point%20Careers' },
+    primaryCta: { label: 'Contact Careers', href: buildSupportMailto('Burner Point Careers') },
     secondaryCta: { label: 'Read About Us', href: '/about' },
     highlights: ['Remote-friendly opportunities', 'Privacy-first mission', 'Telecom, security, product, and support craftsmanship'],
     cards: [
@@ -332,12 +342,12 @@ marketingPages.support = {
   eyebrow: 'Support',
   title: 'Fast help from people who understand privacy workflows.',
   description: 'Reach Burner Point support by email, Telegram, or the help center for account access, verification delivery, rental continuity, and billing questions.',
-  primaryCta: { label: 'Email Support', href: 'mailto:info.burnerpoint@gmail.com' },
-  secondaryCta: { label: 'Telegram Support', href: 'https://t.me/burnerpoint' },
-  highlights: ['Email: info.burnerpoint@gmail.com', 'Telegram: @burnerpoint', 'Telegram app channel: @burnerpointapp'],
+  primaryCta: { label: 'Email Support', href: SUPPORT_EMAIL_HREF },
+  secondaryCta: { label: 'Telegram Support', href: TELEGRAM_SUPPORT_URL },
+  highlights: [`Email: ${SUPPORT_EMAIL}`, `Telegram: ${TELEGRAM_SUPPORT_HANDLE}`, `Telegram app channel: ${TELEGRAM_COMMUNITY_HANDLE}`],
   cards: [
-    { icon: 'mail', title: 'Email Support', text: 'Send billing, account, privacy, and technical questions to info.burnerpoint@gmail.com.', href: 'mailto:info.burnerpoint@gmail.com', cta: 'Send Email' },
-    { icon: 'message', title: 'Telegram Channel', text: 'Message @burnerpoint for direct support or follow @burnerpointapp for app notices.', href: 'https://t.me/burnerpoint', cta: 'Open Telegram' },
+    { icon: 'mail', title: 'Email Support', text: `Send billing, account, privacy, and technical questions to ${SUPPORT_EMAIL}.`, href: SUPPORT_EMAIL_HREF, cta: 'Send Email' },
+    { icon: 'message', title: 'Telegram Channel', text: `Message ${TELEGRAM_SUPPORT_HANDLE} for direct support or follow ${TELEGRAM_COMMUNITY_HANDLE} for app notices.`, href: TELEGRAM_SUPPORT_URL, cta: 'Open Telegram' },
     { icon: 'help', title: 'Help Center', text: 'Use guides for setup, authentication, numbers, rentals, and payments.', href: '/help-center', cta: 'Read Guides' },
   ],
 };
@@ -357,7 +367,7 @@ marketingPages.help = {
   title: 'Guides for account setup, authentication, and service usage.',
   description: 'Structured help for getting started, verifications, rentals, payments, security, account access, and authentication.',
   primaryCta: { label: 'Contact Support', href: '/contact' },
-  secondaryCta: { label: 'Telegram Support', href: 'https://t.me/burnerpoint' },
+  secondaryCta: { label: 'Telegram Support', href: TELEGRAM_SUPPORT_URL },
   cards: [
     { icon: 'book', meta: 'Getting Started', title: 'Create your Burner Point account', text: 'Required profile fields, linked legal pages, and first-dashboard orientation.', href: '/help-center#help-getting-started', anchorId: 'help-getting-started' },
     { icon: 'book', meta: 'Verifications', title: 'Receive SMS, OTP, and voice codes', text: 'Choose country and service, activate a number, submit it to the platform, and monitor delivery.', href: '/help-center#help-verifications', anchorId: 'help-verifications' },
@@ -377,7 +387,7 @@ marketingPages.help = {
     { anchorId: 'help-account-auth', meta: 'Account & Authentication', title: 'Account & Authentication', text: 'Account settings cover profile details, sign out, support tickets, notifications, security controls, and recovery. A complete profile helps support resolve verification, rental, payment, eSIM, proxy, and VPN issues without asking for unnecessary personal data.', items: ['Keep profile email and phone current', 'Use sign out on shared devices', 'Open tickets with scoped context rather than sensitive unrelated information'] },
   ],
 };
-marketingPages.contact = { slug: 'contact', eyebrow: 'Contact', title: 'Talk to Burner Point.', description: 'Use the contact form, email support, or Telegram for verification, rental, eSIM, proxy, VPN, billing, and partnership questions.', primaryCta: { label: 'Email Support', href: 'mailto:info.burnerpoint@gmail.com' }, secondaryCta: { label: 'Telegram Support', href: 'https://t.me/burnerpoint' }, highlights: ['info.burnerpoint@gmail.com', 'https://t.me/burnerpoint', 'https://t.me/burnerpointapp'] };
+marketingPages.contact = { slug: 'contact', eyebrow: 'Contact', title: 'Talk to Burner Point.', description: 'Use the contact form, email support, or Telegram for verification, rental, eSIM, proxy, VPN, billing, and partnership questions.', primaryCta: { label: 'Email Support', href: SUPPORT_EMAIL_HREF }, secondaryCta: { label: 'Telegram Support', href: TELEGRAM_SUPPORT_URL }, highlights: [SUPPORT_EMAIL, TELEGRAM_SUPPORT_URL, TELEGRAM_COMMUNITY_URL] };
 marketingPages.about = {
   slug: 'about',
   eyebrow: 'About Burner Point',

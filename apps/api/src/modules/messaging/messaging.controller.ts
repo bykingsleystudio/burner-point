@@ -1,16 +1,16 @@
 import {
-  Controller,
-  Post,
   Body,
-  UseGuards,
+  Controller,
   HttpCode,
   HttpStatus,
+  Post,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { IsEmail, IsEnum, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { MessagingService } from './messaging.service';
 import { ProviderName, RouteProduct } from '../global/provider.service';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { MessagingService } from './messaging.service';
 
 class SendEmailDto {
   to: string;
@@ -44,12 +44,41 @@ class SendSmsDto {
   preferredProvider?: ProviderName;
 }
 
+class SupportContactDto {
+  @IsString()
+  @MinLength(2)
+  @MaxLength(120)
+  name: string;
+
+  @IsEmail()
+  @MaxLength(254)
+  email: string;
+
+  @IsString()
+  @MinLength(10)
+  @MaxLength(4000)
+  message: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  product?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(160)
+  reference?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  source?: string;
+}
+
 @ApiTags('messaging')
 @Controller('messaging')
 export class MessagingController {
   constructor(private readonly messagingService: MessagingService) {}
-
-  // ─── Email Endpoints ─────────────────────────────────────────────────────
 
   @Post('email/send')
   @ApiBearerAuth()
@@ -86,13 +115,19 @@ export class MessagingController {
     return { sent: true };
   }
 
-  // ─── SMS Endpoints (redirect to phone-auth) ─────────────────────────────
+  @Post('support/contact')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOperation({ summary: 'Send a support request to Burner Point support' })
+  async contactSupport(@Body() dto: SupportContactDto) {
+    await this.messagingService.sendSupportIntake(dto);
+    return { accepted: true };
+  }
 
   @Post('sms/send')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.ACCEPTED)
-  @ApiOperation({ summary: 'Send SMS through provider routing (Twilio primary, Telnyx fallback, Tremil economy route)' })
+  @ApiOperation({ summary: 'Send SMS through provider routing' })
   async sendSMS(@Body() dto: SendSmsDto) {
     return this.messagingService.sendSMS(dto);
   }

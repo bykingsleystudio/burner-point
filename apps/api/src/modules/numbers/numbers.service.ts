@@ -1,17 +1,21 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 import { PhoneNumber, NumberStatus, NumberType, NumberProvider } from '../../database/entities/phone-number.entity';
 import { WalletTransaction, TransactionType, TransactionStatus } from '../../database/entities/extended-entities';
 import { User } from '../../database/entities/user.entity';
 import { ProviderName, ProviderService } from '../global/provider.service';
 import { UsersService } from '../users/users.service';
+import { usdCentsToNgnKobo, ngnKoboToUsdCents } from '../../config/money';
 
-const NUMBER_PRICING_KOBO: Record<string, Record<string, number>> = {
+// Wallet is stored in USD cents. These base prices were originally NGN kobo and are now
+// derived to USD cents using the display FX rate for consistency.
+const NUMBER_PRICING_NGN_KOBO: Record<string, Record<string, number>> = {
   US: { burner: 160000, rental: 480000, verification: 40000 },
   GB: { burner: 200000, rental: 600000, verification: 48000 },
   CA: { burner: 160000, rental: 480000, verification: 40000 },
-  NG: { burner: 80000,  rental: 240000, verification: 20000 },
+  NG: { burner: 80000, rental: 240000, verification: 20000 },
   default: { burner: 160000, rental: 480000, verification: 40000 },
 };
 
@@ -29,11 +33,12 @@ export class NumbersService {
     @InjectRepository(User) private userRepo: Repository<User>,
     private providerService: ProviderService,
     private usersService: UsersService,
+    private configService: ConfigService,
   ) {}
 
-  async searchAvailable(countryCode: string, areaCode?: string) {
+  async searchAvailable(countryCode: string, areaCode?: string, type?: NumberType) {
     const country = countryCode.toUpperCase();
-    if (!['US', 'CA'].includes(country)) {
+    if (type !== NumberType.VERIFICATION && !['US', 'CA'].includes(country)) {
       throw new BadRequestException('Conversation numbers are available for US and Canada only');
     }
     return this.providerService.searchNumbers(country, areaCode);
@@ -45,11 +50,12 @@ export class NumbersService {
       throw new BadRequestException('Conversation rentals are available for US and Canada only');
     }
 
-    const pricing = NUMBER_PRICING_KOBO[country] || NUMBER_PRICING_KOBO.default;
-    const priceKobo = pricing[type] || pricing.burner;
+    const pricing = NUMBER_PRICING_NGN_KOBO[country] || NUMBER_PRICING_NGN_KOBO.default;
+    const priceNgnKobo = pricing[type] || pricing.burner;
+    const priceUsdCents = ngnKoboToUsdCents(priceNgnKobo, this.configService);
 
     // Debit wallet
-    await this.usersService.debitWallet(userId, priceKobo);
+    await this.usersService.debitWallet(userId, priceUsdCents);
 
     // Purchase from provider
     const { sid, number, provider } = await this.providerService.purchaseNumber(phoneNumber, country);
@@ -68,8 +74,8 @@ export class NumbersService {
       providerNumberSid: sid,
       countryCode: country,
       userId,
-      priceKobo,
-      renewalPriceKobo: priceKobo,
+      priceKobo: priceUsdCents,
+      renewalPriceKobo: priceUsdCents,
       expiresAt,
       capabilities: ['sms', 'mms', 'voice'],
     });
@@ -82,11 +88,15 @@ export class NumbersService {
       userId,
       type: TransactionType.NUMBER_PURCHASE,
       status: TransactionStatus.COMPLETED,
-      amountKobo: -priceKobo,
-      balanceBeforeKobo: Number(user.walletBalanceKobo) + priceKobo,
+      amountKobo: -priceUsdCents,
+      balanceBeforeKobo: Number(user.walletBalanceKobo) + priceUsdCents,
       balanceAfterKobo: Number(user.walletBalanceKobo),
       description: `Provisioned ${type} number ${number}`,
       referenceId: saved.id,
+      metadata: {
+        chargeUsdCents: priceUsdCents,
+        displayNgnKobo: usdCentsToNgnKobo(priceUsdCents, this.configService),
+      },
     }));
 
     return saved;

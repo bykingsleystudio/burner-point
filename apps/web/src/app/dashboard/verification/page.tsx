@@ -147,7 +147,7 @@ export default function VerificationPage() {
   const searchNumbers = async () => {
     setSearching(true);
     try {
-      const response = await numbersApi.search(country);
+      const response = await numbersApi.search(country, undefined, 'verification');
       setAvailableNumbers(Array.isArray(response.data) ? response.data.slice(0, 8) : []);
       if (!response.data?.length) {
         toast('No numbers were returned for this country on the current route.');
