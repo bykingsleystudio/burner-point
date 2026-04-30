@@ -1,7 +1,7 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Check, Lock, MessageSquare, Phone, ShieldCheck, Smartphone } from 'lucide-react-native';
+import { Check, MessageSquare, Phone, ShieldCheck, Smartphone } from 'lucide-react-native';
 
 import { BRAND } from '../lib/brand';
 import { triggerHaptic } from '../lib/native-ux';
@@ -39,45 +39,28 @@ export default function OnboardingScreen() {
 
   return (
     <SafeAreaView style={s.screen}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.content}>
-        <View style={s.logoMark}>
-          <ShieldCheck size={30} color={BRAND.colors.black} />
-        </View>
-
-        <Text style={s.kicker}>Burner Point</Text>
-        <Text accessibilityRole="header" style={s.title}>Stay Anonymous. Stay Connected. Private By Design.</Text>
-        <Text style={s.subtitle}>
-          A native privacy telecom control surface for numbers, verification, conversation, connectivity, billing, support, and account security.
-        </Text>
-
-        <View style={s.trustRow}>
-          {['Safe area aware', 'Push alerts', 'Dark mode'].map((item) => (
-            <View key={item} style={s.trustPill}>
-              <Check size={12} color={BRAND.colors.cyberGreen} />
-              <Text style={s.trustText}>{item}</Text>
-            </View>
-          ))}
-        </View>
-
-        <View style={s.stackCard}>
-          <View style={s.stackTop}>
-            <Lock size={18} color={BRAND.colors.cyberGreen} />
-            <Text style={s.stackLabel}>Native app structure</Text>
+      <View style={s.content}>
+        <View style={s.header}>
+          <View style={s.logoMark}>
+            <ShieldCheck size={24} color={BRAND.colors.black} />
           </View>
-          <Text style={s.stackTitle}>Dashboard, Inbox, Verify, Numbers, Profile.</Text>
-          <Text style={s.stackText}>
-            Core flows are one tap away from the bottom tab bar. Secondary modules stay reachable inside the app without crowding the primary navigation.
-          </Text>
+          <Text style={s.kicker}>Burner Point</Text>
+          <Text style={s.tagline}>Private by design. Connected by choice.</Text>
         </View>
+
+        <Text accessibilityRole="header" style={s.title}>Get started</Text>
+        <Text style={s.subtitle}>Choose your path into private numbers, verification, rentals, eSIM, proxy access, billing, and support.</Text>
 
         <View style={s.pillars}>
           {pillars.map(({ icon: Icon, title, text }) => (
             <View key={title} style={s.pillarCard}>
               <View style={s.pillarIcon}>
-                <Icon size={20} color={BRAND.colors.cyberGreen} />
+                <Icon size={18} color={BRAND.colors.cyberGreen} />
               </View>
-              <Text style={s.pillarTitle}>{title}</Text>
-              <Text style={s.pillarText}>{text}</Text>
+              <View style={s.pillarCopy}>
+                <Text style={s.pillarTitle}>{title}</Text>
+                <Text style={s.pillarText}>{text}</Text>
+              </View>
             </View>
           ))}
         </View>
@@ -90,31 +73,51 @@ export default function OnboardingScreen() {
           accessibilityLabel="Create Account"
           hitSlop={HIT_SLOP}
         >
-          <Text style={s.primaryText}>Create Account</Text>
+          <Text style={s.primaryText}>Get Started</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={s.secondaryButton}
-          activeOpacity={0.78}
-          onPress={goToLogin}
-          accessibilityRole="button"
-          accessibilityLabel="Sign In"
-          hitSlop={HIT_SLOP}
-        >
-          <Text style={s.secondaryText}>Sign In</Text>
-        </TouchableOpacity>
+        <View style={s.actionRow}>
+          <TouchableOpacity
+            style={s.secondaryButton}
+            activeOpacity={0.78}
+            onPress={goToSignup}
+            accessibilityRole="button"
+            accessibilityLabel="Create Account"
+            hitSlop={HIT_SLOP}
+          >
+            <Text style={s.secondaryText}>Create Account</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={s.secondaryButton}
+            activeOpacity={0.78}
+            onPress={goToLogin}
+            accessibilityRole="button"
+            accessibilityLabel="Sign In"
+            hitSlop={HIT_SLOP}
+          >
+            <Text style={s.secondaryText}>Sign In</Text>
+          </TouchableOpacity>
+        </View>
 
-        <Text style={s.footer}>Private numbers, verification tools, travel data, proxies, and secure tunnel access from one privacy-first account.</Text>
-      </ScrollView>
+        <View style={s.trustRow}>
+          {['Secure', 'Private', 'Fast'].map((item) => (
+            <View key={item} style={s.trustPill}>
+              <Check size={12} color={BRAND.colors.cyberGreen} />
+              <Text style={s.trustText}>{item}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: BRAND.colors.black },
-  content: { paddingHorizontal: 22, paddingBottom: 42, paddingTop: 18 },
+  content: { flex: 1, justifyContent: 'center', paddingHorizontal: 18, paddingVertical: 10 },
+  header: { alignItems: 'center', marginBottom: 18 },
   logoMark: {
-    width: 66,
-    height: 66,
+    width: 48,
+    height: 48,
     borderRadius: BRAND.radii.lg,
     backgroundColor: BRAND.colors.cyberGreen,
     alignItems: 'center',
@@ -124,12 +127,14 @@ const s = StyleSheet.create({
     shadowRadius: 24,
     shadowOffset: { width: 0, height: 0 },
   },
-  kicker: { color: BRAND.colors.cyberGreen, fontSize: 11, fontWeight: '900', textTransform: 'uppercase', marginTop: 24 },
-  title: { color: BRAND.colors.white, fontSize: 38, lineHeight: 39, fontWeight: '900', textTransform: 'uppercase', marginTop: 10 },
-  subtitle: { color: BRAND.colors.metalStart, fontSize: 15, lineHeight: 24, marginTop: 14 },
-  trustRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 22 },
+  kicker: { color: BRAND.colors.white, fontSize: 18, fontWeight: '900', textTransform: 'uppercase', marginTop: 10 },
+  tagline: { color: BRAND.colors.cyberGreen, fontSize: 12, fontWeight: '700', marginTop: 3, textAlign: 'center' },
+  title: { color: BRAND.colors.white, fontSize: 30, lineHeight: 32, fontWeight: '900', textAlign: 'center' },
+  subtitle: { color: BRAND.colors.metalStart, fontSize: 13, lineHeight: 19, marginTop: 8, textAlign: 'center' },
+  trustRow: { flexDirection: 'row', gap: 8, marginTop: 14 },
   trustPill: {
-    minHeight: 36,
+    minHeight: 32,
+    flex: 1,
     borderRadius: BRAND.radii.sm,
     borderWidth: 1,
     borderColor: `${BRAND.colors.cyberGreen}26`,
@@ -140,54 +145,46 @@ const s = StyleSheet.create({
     paddingHorizontal: 10,
   },
   trustText: { color: BRAND.colors.cyberGreen, fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
-  stackCard: {
-    marginTop: 26,
-    borderRadius: BRAND.radii.lg,
-    borderWidth: 1,
-    borderColor: BRAND.colors.border,
-    backgroundColor: BRAND.colors.surface,
-    padding: 18,
-  },
-  stackTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  stackLabel: { color: BRAND.colors.cyberGreen, fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
-  stackTitle: { color: BRAND.colors.white, fontSize: 21, lineHeight: 25, fontWeight: '900', textTransform: 'uppercase', marginTop: 18 },
-  stackText: { color: BRAND.colors.metalStart, fontSize: 13, lineHeight: 21, marginTop: 8 },
-  pillars: { gap: 10, marginTop: 14 },
+  pillars: { gap: 8, marginTop: 16 },
   pillarCard: {
-    borderRadius: BRAND.radii.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: BRAND.radii.md,
     borderWidth: 1,
     borderColor: BRAND.colors.border,
     backgroundColor: BRAND.colors.dark,
-    padding: 16,
+    padding: 12,
   },
   pillarIcon: {
-    width: 42,
-    height: 42,
+    width: 38,
+    height: 38,
     borderRadius: BRAND.radii.md,
     backgroundColor: `${BRAND.colors.cyberGreen}12`,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pillarTitle: { color: BRAND.colors.white, fontSize: 15, fontWeight: '900', marginTop: 14 },
-  pillarText: { color: BRAND.colors.metalStart, fontSize: 12, lineHeight: 19, marginTop: 5 },
+  pillarCopy: { flex: 1 },
+  pillarTitle: { color: BRAND.colors.white, fontSize: 14, fontWeight: '900' },
+  pillarText: { color: BRAND.colors.metalStart, fontSize: 11, lineHeight: 16, marginTop: 3 },
   primaryButton: {
-    minHeight: 54,
+    minHeight: 48,
     borderRadius: BRAND.radii.sm,
     backgroundColor: BRAND.colors.cyberGreen,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 24,
+    marginTop: 18,
   },
   primaryText: { color: BRAND.colors.black, fontSize: 14, fontWeight: '900', textTransform: 'uppercase' },
+  actionRow: { flexDirection: 'row', gap: 10, marginTop: 10 },
   secondaryButton: {
-    minHeight: 52,
+    flex: 1,
+    minHeight: 44,
     borderRadius: BRAND.radii.sm,
     borderWidth: 1,
     borderColor: BRAND.colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 10,
   },
-  secondaryText: { color: BRAND.colors.white, fontSize: 13, fontWeight: '900', textTransform: 'uppercase' },
-  footer: { color: BRAND.colors.muted, fontSize: 11, lineHeight: 18, textAlign: 'center', marginTop: 22 },
+  secondaryText: { color: BRAND.colors.white, fontSize: 12, fontWeight: '900', textTransform: 'uppercase' },
 });

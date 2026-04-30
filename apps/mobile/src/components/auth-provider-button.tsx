@@ -69,25 +69,25 @@ function ProviderLogo({ provider }: { provider: ProviderName }) {
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: 60,
-    flexBasis: '48%',
+    minHeight: 44,
+    flexBasis: '31%',
     flexGrow: 1,
-    borderRadius: 16,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: BRAND.colors.border,
     backgroundColor: BRAND.colors.dark,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 7,
+    gap: 5,
   },
   buttonDisabled: {
     opacity: 0.55,
   },
   providerLabel: {
     color: BRAND.colors.metalEnd,
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '800',
     textAlign: 'center',
   },

@@ -228,19 +228,16 @@ export default function RegisterScreen() {
                 {providers.map(([label, strategy]) => (
                   <AuthProviderButton key={label} provider={label} onPress={() => oauth(strategy)} disabled={loading || !isLoaded} />
                 ))}
-                <AuthProviderButton provider="Phone" onPress={() => phoneInputRef.current?.focus()} disabled={loading || !isLoaded} />
               </View>
 
-              <Text style={s.or}>or create your Burner Point account</Text>
+              <Text style={s.or}>or continue with email and phone number</Text>
 
               <View style={s.row}>
-                <Input label="First name" value={form.firstName} onChangeText={setField('firstName')} autoComplete="given-name" placeholder="Kingsley" />
-                <Input label="Last name" value={form.lastName} onChangeText={setField('lastName')} autoComplete="family-name" placeholder="Doe" />
+                <Input label="First name" value={form.firstName} onChangeText={setField('firstName')} autoComplete="given-name" placeholder="First name" />
+                <Input label="Last name" value={form.lastName} onChangeText={setField('lastName')} autoComplete="family-name" placeholder="Last name" />
               </View>
-              <View style={s.row}>
-                <Input label="Email" value={form.email} onChangeText={setField('email')} keyboardType="email-address" autoCapitalize="none" autoComplete="email" placeholder="you@example.com" />
-                <Input inputRef={phoneInputRef} label="Phone" value={form.phoneNumber} onChangeText={setField('phoneNumber')} keyboardType="phone-pad" autoComplete="tel" placeholder="+1 415..." />
-              </View>
+              <Input label="Email" value={form.email} onChangeText={setField('email')} keyboardType="email-address" autoCapitalize="none" autoComplete="email" placeholder="you@example.com" />
+              <Input inputRef={phoneInputRef} label="Phone number" value={form.phoneNumber} onChangeText={setField('phoneNumber')} keyboardType="phone-pad" autoComplete="tel" placeholder="+1 415 555 0182" />
               <Input label="Password" value={form.password} onChangeText={setField('password')} secureTextEntry autoCapitalize="none" autoComplete="new-password" placeholder="8+ chars, mixed case + number" />
 
               <TouchableOpacity style={[s.btn, loading && s.disabled]} onPress={createAccount} disabled={loading || !isLoaded} activeOpacity={0.85}>
@@ -277,33 +274,33 @@ function Input(props: ComponentProps<typeof TextInput> & { label: string; inputR
 
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: BRAND.colors.black },
-  flex: { flex: 1, justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 12 },
-  logoRow: { alignItems: 'center', marginBottom: 14 },
-  logoIcon: { width: 48, height: 48, borderRadius: BRAND.radii.md, backgroundColor: BRAND.colors.cyberGreen, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  logo: { fontSize: 22, fontWeight: '900', color: BRAND.colors.white },
+  flex: { flex: 1, justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 8 },
+  logoRow: { alignItems: 'center', marginBottom: 8 },
+  logoIcon: { width: 38, height: 38, borderRadius: BRAND.radii.md, backgroundColor: BRAND.colors.cyberGreen, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
+  logo: { fontSize: 18, fontWeight: '900', color: BRAND.colors.white },
   green: { color: BRAND.colors.cyberGreen },
   card: {
     backgroundColor: BRAND.colors.surface,
     borderWidth: 1,
     borderColor: BRAND.colors.border,
-    borderRadius: 22,
-    padding: 18,
-    gap: 10,
+    borderRadius: 18,
+    padding: 12,
+    gap: 7,
     ...BRAND.shadows.card,
   },
   kicker: { color: BRAND.colors.cyberGreen, fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.4 },
   row: { flexDirection: 'row', gap: 8 },
   inputWrap: { flex: 1 },
-  label: { color: BRAND.colors.metalStart, fontSize: 11, marginBottom: 6, fontWeight: '700' },
-  input: { minHeight: 46, backgroundColor: BRAND.colors.black, borderWidth: 1, borderColor: BRAND.colors.border, borderRadius: BRAND.radii.md, paddingHorizontal: 12, color: BRAND.colors.white, fontSize: 14 },
-  btn: { minHeight: 50, backgroundColor: BRAND.colors.cyberGreen, borderRadius: BRAND.radii.sm, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  label: { color: BRAND.colors.metalStart, fontSize: 10, marginBottom: 4, fontWeight: '700' },
+  input: { minHeight: 42, backgroundColor: BRAND.colors.black, borderWidth: 1, borderColor: BRAND.colors.border, borderRadius: BRAND.radii.md, paddingHorizontal: 10, color: BRAND.colors.white, fontSize: 13 },
+  btn: { minHeight: 44, backgroundColor: BRAND.colors.cyberGreen, borderRadius: BRAND.radii.sm, alignItems: 'center', justifyContent: 'center', marginTop: 3 },
   disabled: { opacity: 0.55 },
-  btnText: { color: BRAND.colors.dark, fontWeight: '900', fontSize: 14, textTransform: 'uppercase' },
-  or: { color: BRAND.colors.muted, fontSize: 10, textAlign: 'center', marginTop: 2, textTransform: 'uppercase' },
-  providerGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  linkRow: { alignItems: 'center', paddingTop: 4 },
-  linkText: { color: BRAND.colors.metalStart, fontSize: 13 },
+  btnText: { color: BRAND.colors.dark, fontWeight: '900', fontSize: 13, textTransform: 'uppercase' },
+  or: { color: BRAND.colors.muted, fontSize: 9, textAlign: 'center', marginTop: 1, textTransform: 'uppercase' },
+  providerGrid: { flexDirection: 'row', gap: 7 },
+  linkRow: { alignItems: 'center', paddingTop: 2 },
+  linkText: { color: BRAND.colors.metalStart, fontSize: 12 },
   linkStrong: { color: BRAND.colors.cyberGreen, fontWeight: '800' },
-  legalText: { color: BRAND.colors.muted, fontSize: 11, lineHeight: 16, textAlign: 'center' },
+  legalText: { color: BRAND.colors.muted, fontSize: 10, lineHeight: 14, textAlign: 'center' },
   legalLink: { color: BRAND.colors.cyberGreen, fontWeight: '800' },
 });

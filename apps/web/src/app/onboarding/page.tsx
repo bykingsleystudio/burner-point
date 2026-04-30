@@ -126,20 +126,20 @@ function OnboardingContent() {
       asideTitle="Private access starts with a complete account."
       asideDescription="Finish your profile once, then manage messaging, verification, rentals, travel data, proxy plans, billing, and support from one place."
     >
-      <div className="space-y-4">
-        <div className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
+      <div className="space-y-2.5 sm:space-y-4">
+        <div className="rounded-[1.15rem] border border-white/8 bg-white/[0.03] p-3 sm:rounded-[1.35rem] sm:p-4">
           <div className="flex items-start gap-3">
             <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-brand-green" />
             <div>
-              <p className="text-sm font-semibold text-white">Almost done</p>
-              <p className="mt-1.5 text-sm leading-6 text-white/72">
+              <p className="text-xs font-semibold text-white sm:text-sm">Almost done</p>
+              <p className="mt-1 text-xs leading-5 text-white/72 sm:mt-1.5 sm:text-sm sm:leading-6">
                 Add your contact details so you can recover your account and receive important updates.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-2 sm:gap-4">
           <Field label="First name">
             <input
               value={form.firstName}
@@ -186,7 +186,7 @@ function OnboardingContent() {
           </Field>
         </div>
 
-        <div className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4 text-sm leading-6 text-white/70">
+        <div className="rounded-[1.15rem] border border-white/8 bg-white/[0.03] p-3 text-[11px] leading-5 text-white/70 sm:rounded-[1.35rem] sm:p-4 sm:text-sm sm:leading-6">
           By continuing, you agree to the{' '}
           <Link href="/terms-of-service" className="text-brand-green hover:underline">
             Terms of Service
@@ -202,7 +202,7 @@ function OnboardingContent() {
           type="button"
           disabled={loading}
           onClick={completeOnboarding}
-          className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
+          className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-[1rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
         >
           {loading ? 'Saving...' : 'Continue'}
         </button>
@@ -227,9 +227,9 @@ export default function OnboardingPage() {
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <label className="block text-xs font-medium text-white/76">
+    <label className="block text-[11px] font-medium text-white/76 sm:text-xs">
       {label}
-      <div className="mt-2">{children}</div>
+      <div className="mt-1 sm:mt-2">{children}</div>
     </label>
   );
 }

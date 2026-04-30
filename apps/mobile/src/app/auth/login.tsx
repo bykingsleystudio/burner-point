@@ -312,10 +312,9 @@ export default function LoginScreen() {
                 {providers.map(([label, strategy]) => (
                   <AuthProviderButton key={label} provider={label} onPress={() => oauth(strategy)} disabled={loading || !isLoaded} />
                 ))}
-                <AuthProviderButton provider="Phone" onPress={() => identifierInputRef.current?.focus()} disabled={loading || !isLoaded} />
               </View>
 
-              <Text style={s.or}>or use your Burner Point account</Text>
+              <Text style={s.or}>or continue with email and phone number</Text>
 
               <Text style={s.label}>Email or phone number</Text>
               <TextInput
@@ -382,62 +381,62 @@ export default function LoginScreen() {
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: BRAND.colors.black },
-  inner: { flex: 1, justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 12 },
-  logo: { alignItems: 'center', marginBottom: 14 },
+  inner: { flex: 1, justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 8 },
+  logo: { alignItems: 'center', marginBottom: 8 },
   logoIcon: {
-    width: 52,
-    height: 52,
+    width: 38,
+    height: 38,
     borderRadius: BRAND.radii.md,
     backgroundColor: BRAND.colors.cyberGreen,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: 6,
   },
-  logoText: { color: BRAND.colors.white, fontSize: 24, fontWeight: '900' },
+  logoText: { color: BRAND.colors.white, fontSize: 18, fontWeight: '900' },
   green: { color: BRAND.colors.cyberGreen },
   form: {
     backgroundColor: BRAND.colors.surface,
     borderWidth: 1,
     borderColor: BRAND.colors.border,
-    borderRadius: 22,
-    padding: 18,
-    gap: 10,
+    borderRadius: 18,
+    padding: 12,
+    gap: 7,
     ...BRAND.shadows.card,
   },
   kicker: { color: BRAND.colors.cyberGreen, fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.4 },
-  label: { color: BRAND.colors.metalStart, fontSize: 11, fontWeight: '700', marginTop: 2 },
+  label: { color: BRAND.colors.metalStart, fontSize: 10, fontWeight: '700', marginTop: 1 },
   input: {
-    minHeight: 48,
+    minHeight: 42,
     backgroundColor: BRAND.colors.black,
     borderWidth: 1,
     borderColor: BRAND.colors.border,
     borderRadius: BRAND.radii.md,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     color: BRAND.colors.white,
-    fontSize: 14,
+    fontSize: 13,
   },
   passwordWrap: { position: 'relative' },
   passwordInput: { paddingRight: 44 },
-  eye: { position: 'absolute', right: 6, top: 4, width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  eye: { position: 'absolute', right: 4, top: 1, width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   btn: {
-    minHeight: 50,
+    minHeight: 44,
     backgroundColor: BRAND.colors.cyberGreen,
     borderRadius: BRAND.radii.sm,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
     gap: 8,
-    marginTop: 4,
+    marginTop: 3,
   },
   btnDisabled: { opacity: 0.55 },
-  btnText: { color: BRAND.colors.dark, fontWeight: '900', fontSize: 14, textTransform: 'uppercase' },
-  textLink: { alignItems: 'center', paddingTop: 4 },
+  btnText: { color: BRAND.colors.dark, fontWeight: '900', fontSize: 13, textTransform: 'uppercase' },
+  textLink: { alignItems: 'center', paddingTop: 2 },
   textLinkLabel: { color: BRAND.colors.cyberGreen, fontSize: 12, fontWeight: '800' },
-  or: { color: BRAND.colors.muted, fontSize: 10, textAlign: 'center', marginTop: 2, textTransform: 'uppercase' },
-  providerGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  registerText: { color: BRAND.colors.metalStart, fontSize: 13 },
+  or: { color: BRAND.colors.muted, fontSize: 9, textAlign: 'center', marginTop: 1, textTransform: 'uppercase' },
+  providerGrid: { flexDirection: 'row', gap: 7 },
+  registerText: { color: BRAND.colors.metalStart, fontSize: 12 },
   registerHighlight: { color: BRAND.colors.cyberGreen, fontWeight: '800' },
   resetActions: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, paddingTop: 4 },
-  legalText: { color: BRAND.colors.muted, fontSize: 11, lineHeight: 16, textAlign: 'center' },
+  legalText: { color: BRAND.colors.muted, fontSize: 10, lineHeight: 14, textAlign: 'center' },
   legalLink: { color: BRAND.colors.cyberGreen, fontWeight: '800' },
 });

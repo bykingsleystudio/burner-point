@@ -356,10 +356,10 @@ export default function LoginPage() {
       testimonials={[]}
       onResetPassword={() => setAuthMode('reset-request')}
     >
-      <div className="space-y-5">
+      <div className="space-y-2.5 sm:space-y-4 lg:space-y-5">
         {!secondFactorStrategy && (authMode === 'sign-in' || authMode === 'reset-request') ? (
           <>
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3">
               {oauthProviders.map((provider) => (
                 <AuthProviderButton
                   key={provider.label}
@@ -367,22 +367,23 @@ export default function LoginPage() {
                   label={`Continue with ${provider.label}`}
                   onClick={() => startOAuth(provider.strategy)}
                   disabled={isSubmitting}
+                  className="min-h-10 justify-center rounded-[0.9rem] px-2 py-2 text-center sm:min-h-12 [&>span]:gap-2 [&_span:last-child]:text-[11px] [&_span:last-child]:sm:text-sm"
                 />
               ))}
             </div>
 
             <div className="relative flex items-center justify-center">
               <span className="w-full border-t border-white/10" />
-              <span className="absolute bg-[#04120C] px-4 font-mono text-[11px] uppercase tracking-[0.22em] text-white/70">
-                OR
+              <span className="absolute bg-[#04120C] px-3 text-center font-mono text-[9px] uppercase tracking-[0.14em] text-white/70 sm:px-4 sm:text-[11px] sm:tracking-[0.22em]">
+                or continue with email and phone number
               </span>
             </div>
           </>
         ) : null}
 
         {authMode === 'phone-request' ? (
-          <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
-            <label className="block text-sm font-medium text-white/70">
+          <div className="space-y-3 rounded-[1.15rem] border border-white/8 bg-white/[0.03] p-3 sm:space-y-4 sm:rounded-[1.35rem] sm:p-4">
+            <label className="block text-xs font-medium text-white/70 sm:text-sm">
               Phone number
               <GlassInputWrapper>
                 <input
@@ -392,7 +393,7 @@ export default function LoginPage() {
                   inputMode="tel"
                   autoComplete="tel"
                   placeholder="+14155550182"
-                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
+                  className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
                 />
               </GlassInputWrapper>
             </label>
@@ -400,14 +401,14 @@ export default function LoginPage() {
               type="button"
               disabled={isSubmitting}
               onClick={startPhoneSignIn}
-              className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
+              className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-[1rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
             >
               {isSubmitting ? 'Sending code...' : 'Send code'}
             </button>
           </div>
         ) : authMode === 'phone-code' ? (
-          <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
-            <label className="block text-sm font-medium text-white/70">
+          <div className="space-y-3 rounded-[1.15rem] border border-white/8 bg-white/[0.03] p-3 sm:space-y-4 sm:rounded-[1.35rem] sm:p-4">
+            <label className="block text-xs font-medium text-white/70 sm:text-sm">
               Verification code
               <GlassInputWrapper>
                 <input
@@ -417,7 +418,7 @@ export default function LoginPage() {
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   placeholder="Enter code"
-                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
+                  className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
                 />
               </GlassInputWrapper>
             </label>
@@ -425,14 +426,14 @@ export default function LoginPage() {
               type="button"
               disabled={isSubmitting}
               onClick={verifyPhoneSignIn}
-              className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
+              className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-[1rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
             >
               {isSubmitting ? 'Verifying...' : 'Continue with phone'}
             </button>
           </div>
         ) : authMode === 'reset-request' ? (
-          <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
-            <label className="block text-sm font-medium text-white/70">
+          <div className="space-y-3 rounded-[1.15rem] border border-white/8 bg-white/[0.03] p-3 sm:space-y-4 sm:rounded-[1.35rem] sm:p-4">
+            <label className="block text-xs font-medium text-white/70 sm:text-sm">
               Email or phone number
               <GlassInputWrapper>
                 <input
@@ -441,7 +442,7 @@ export default function LoginPage() {
                   type="text"
                   autoComplete="username"
                   placeholder="you@example.com or +14155550182"
-                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
+                  className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
                 />
               </GlassInputWrapper>
             </label>
@@ -449,14 +450,14 @@ export default function LoginPage() {
               type="button"
               disabled={isSubmitting}
               onClick={startPasswordReset}
-              className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
+              className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-[1rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
             >
               {isSubmitting ? 'Sending code...' : 'Send reset code'}
             </button>
           </div>
         ) : authMode === 'reset-code' ? (
-          <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
-            <label className="block text-sm font-medium text-white/70">
+          <div className="space-y-3 rounded-[1.15rem] border border-white/8 bg-white/[0.03] p-3 sm:space-y-4 sm:rounded-[1.35rem] sm:p-4">
+            <label className="block text-xs font-medium text-white/70 sm:text-sm">
               Reset code
               <GlassInputWrapper>
                 <input
@@ -466,7 +467,7 @@ export default function LoginPage() {
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   placeholder="Enter reset code"
-                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
+                  className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
                 />
               </GlassInputWrapper>
             </label>
@@ -474,14 +475,14 @@ export default function LoginPage() {
               type="button"
               disabled={isSubmitting}
               onClick={verifyPasswordResetCode}
-              className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
+              className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-[1rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
             >
               {isSubmitting ? 'Verifying...' : 'Verify reset code'}
             </button>
           </div>
         ) : authMode === 'reset-password' ? (
-          <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
-            <label className="block text-sm font-medium text-white/70">
+          <div className="space-y-3 rounded-[1.15rem] border border-white/8 bg-white/[0.03] p-3 sm:space-y-4 sm:rounded-[1.35rem] sm:p-4">
+            <label className="block text-xs font-medium text-white/70 sm:text-sm">
               New password
               <GlassInputWrapper>
                 <input
@@ -490,7 +491,7 @@ export default function LoginPage() {
                   type="password"
                   autoComplete="new-password"
                   placeholder="Enter a new password"
-                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
+                  className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
                 />
               </GlassInputWrapper>
             </label>
@@ -498,14 +499,14 @@ export default function LoginPage() {
               type="button"
               disabled={isSubmitting}
               onClick={submitNewPassword}
-              className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
+              className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-[1rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
             >
               {isSubmitting ? 'Saving password...' : 'Reset password'}
             </button>
           </div>
         ) : secondFactorStrategy ? (
-          <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
-            <label className="block text-sm font-medium text-white/70">
+          <div className="space-y-3 rounded-[1.15rem] border border-white/8 bg-white/[0.03] p-3 sm:space-y-4 sm:rounded-[1.35rem] sm:p-4">
+            <label className="block text-xs font-medium text-white/70 sm:text-sm">
               Security code
               <GlassInputWrapper>
                 <input
@@ -515,7 +516,7 @@ export default function LoginPage() {
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   placeholder="Enter verification code"
-                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
+                  className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
                 />
               </GlassInputWrapper>
             </label>
@@ -523,14 +524,14 @@ export default function LoginPage() {
               type="button"
               disabled={isSubmitting}
               onClick={verifySecondFactor}
-              className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
+              className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-[1rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
             >
               {isSubmitting ? 'Verifying...' : 'Verify 2FA'}
             </button>
           </div>
         ) : (
-          <form onSubmit={onSubmit} className="space-y-4">
-            <label className="block text-sm font-medium text-white/70">
+          <form onSubmit={onSubmit} className="space-y-2.5 sm:space-y-4">
+            <label className="block text-xs font-medium text-white/70 sm:text-sm">
               Email address or phone number
               <GlassInputWrapper>
                 <input
@@ -540,12 +541,12 @@ export default function LoginPage() {
                   type="text"
                   autoComplete="username"
                   placeholder="you@example.com or +14155550182"
-                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
+                  className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
                 />
               </GlassInputWrapper>
             </label>
 
-            <label className="block text-sm font-medium text-white/70">
+            <label className="block text-xs font-medium text-white/70 sm:text-sm">
               Password
               <GlassInputWrapper>
                 <input
@@ -554,7 +555,7 @@ export default function LoginPage() {
                   type="password"
                   autoComplete="current-password"
                   placeholder="Enter your password"
-                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
+                  className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
                 />
               </GlassInputWrapper>
             </label>
@@ -577,7 +578,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting || !canSubmit}
-              className="bp-button-glow flex min-h-12 w-full items-center justify-center gap-2 rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
+              className="bp-button-glow flex min-h-11 w-full items-center justify-center gap-2 rounded-[1rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
             >
               {isSubmitting ? (
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
@@ -590,7 +591,7 @@ export default function LoginPage() {
         )}
 
         {authMode !== 'sign-in' || secondFactorStrategy ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/8 pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/8 pt-2 sm:pt-4">
             <button type="button" onClick={returnToSignIn} className="inline-flex items-center gap-2 text-sm text-white/72 transition hover:text-white">
               <ArrowRight className="h-4 w-4 rotate-180" />
               Back
@@ -601,7 +602,7 @@ export default function LoginPage() {
           </div>
         ) : null}
 
-        <p className="text-xs leading-6 text-white/70">
+        <p className="text-[11px] leading-5 text-white/70 sm:text-xs sm:leading-6">
           Need an account?{' '}
           <Link href="/sign-up" className="text-brand-green transition hover:text-[#39FF14]">
             Create one

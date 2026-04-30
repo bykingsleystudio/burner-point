@@ -118,20 +118,20 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   const renderCustomContent = children || formContent;
 
   return (
-    <div className="relative min-h-[100dvh] overflow-hidden bg-[linear-gradient(180deg,#f8fbf9,#edf5f0)] text-white">
+    <div className="relative h-[100dvh] min-h-[100dvh] overflow-hidden bg-[linear-gradient(180deg,#f8fbf9,#edf5f0)] text-white">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(0,255,157,0.12),transparent_24%),radial-gradient(circle_at_88%_14%,rgba(1,50,32,0.12),transparent_20%)]" />
         <div className="absolute -left-12 top-10 h-72 w-72 rounded-full bg-[#00FF9D]/12 blur-3xl" />
         <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-[#9FA6B2]/20 blur-3xl" />
       </div>
 
-      <div className="relative z-10 mx-auto grid min-h-[100dvh] max-w-[96rem] gap-6 px-4 py-4 sm:px-6 lg:grid-cols-[minmax(0,34rem)_minmax(0,1fr)] lg:px-8 lg:py-6">
-        <section className="rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(7,20,15,0.9),rgba(0,0,0,0.98))] p-5 shadow-[0_40px_110px_rgba(0,0,0,0.28)] sm:p-6 lg:p-7">
+      <div className="relative z-10 mx-auto grid h-[100dvh] max-w-[96rem] gap-6 px-2 py-2 sm:px-6 sm:py-4 lg:grid-cols-[minmax(0,34rem)_minmax(0,1fr)] lg:px-8 lg:py-6">
+        <section className="mx-auto flex h-full w-full max-w-[34rem] flex-col overflow-hidden rounded-[1.45rem] border border-white/8 bg-[linear-gradient(180deg,rgba(7,20,15,0.9),rgba(0,0,0,0.98))] p-3 shadow-[0_40px_110px_rgba(0,0,0,0.28)] sm:p-5 lg:max-w-none lg:rounded-[2rem] lg:p-7">
           <div className="flex items-center justify-between gap-4">
             <Link href="/" className="inline-flex items-center gap-2.5" aria-label="Burner Point home">
-              <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} className="h-8 w-8 sm:h-9 sm:w-9" />
-              <span className="rounded-full bg-white/[0.04] px-3 py-2">
-                <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={166} height={26} className="h-[1.15rem] w-auto sm:h-5" />
+              <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} className="h-7 w-7 sm:h-8 sm:w-8 lg:h-9 lg:w-9" />
+              <span className="rounded-full bg-white/[0.04] px-2.5 py-1.5 sm:px-3 sm:py-2">
+                <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={166} height={26} className="h-3.5 w-auto sm:h-[1.15rem] lg:h-5" />
               </span>
             </Link>
             <Link href="/pricing" className="hidden text-sm font-medium text-white transition hover:text-white sm:inline-flex">
@@ -139,21 +139,21 @@ export const SignInPage: React.FC<SignInPageProps> = ({
             </Link>
           </div>
 
-          <div className="mt-8">
-            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[#00FF9D]">Account access</p>
+          <div className="bp-auth-copy mt-3 sm:mt-5 lg:mt-8">
+            <p className="bp-auth-kicker font-mono text-[9px] uppercase tracking-[0.18em] text-[#00FF9D] sm:text-[10px] sm:tracking-[0.24em]">Account access</p>
             {title ? (
-              <h1 className="mt-4 text-4xl font-black leading-[0.94] text-white sm:text-[2.8rem]">
+              <h1 className="bp-auth-title mt-1.5 text-xl font-black leading-none text-white sm:mt-3 sm:text-3xl lg:mt-4 lg:text-[2.8rem]">
                 {title}
               </h1>
             ) : null}
             {description ? (
-              <p className="mt-4 text-sm leading-7 text-[#E5E7EB] sm:text-base">
+              <p className="bp-auth-desc mt-1.5 line-clamp-2 text-xs leading-5 text-[#E5E7EB] sm:mt-3 sm:text-sm sm:leading-6 lg:mt-4 lg:text-base lg:leading-7">
                 {description}
               </p>
             ) : null}
           </div>
 
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-4 hidden flex-wrap gap-3 sm:flex lg:mt-6">
             {heroTrustItems.slice(0, 3).map((item) => (
               <span
                 key={item}
@@ -164,7 +164,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
             ))}
           </div>
 
-          <div className="mt-8">
+          <div className="mt-3 min-h-0 flex-1 sm:mt-5 lg:mt-8">
             {renderCustomContent ? (
               <div>{renderCustomContent}</div>
             ) : (
@@ -258,7 +258,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
             {footerContent ? <div className="pt-3">{footerContent}</div> : null}
           </div>
 
-          <div className="mt-8 rounded-[1.4rem] border border-[#00FF9D]/16 bg-[#00FF9D]/[0.06] p-4">
+          <div className="mt-8 hidden rounded-[1.4rem] border border-[#00FF9D]/16 bg-[#00FF9D]/[0.06] p-4 lg:block">
             <div className="flex items-start gap-3">
               <ShieldCheck className="mt-0.5 h-5 w-5 flex-none text-[#00FF9D]" />
               <div>

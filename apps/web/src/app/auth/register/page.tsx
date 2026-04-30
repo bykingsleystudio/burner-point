@@ -197,10 +197,10 @@ export default function RegisterPage() {
       description="Add your first name, last name, email, phone number, and password to get started."
       testimonials={[]}
     >
-      <div className="space-y-5">
+      <div className="space-y-2.5 sm:space-y-4 lg:space-y-5">
         {!awaitingEmailCode ? (
           <>
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3">
               {oauthProviders.map((provider) => (
                 <AuthProviderButton
                   key={provider.label}
@@ -208,14 +208,15 @@ export default function RegisterPage() {
                   label={`Continue with ${provider.label}`}
                   onClick={() => startOAuth(provider.strategy)}
                   disabled={isSubmitting}
+                  className="min-h-10 justify-center rounded-[0.9rem] px-2 py-2 text-center sm:min-h-12 [&>span]:gap-2 [&_span:last-child]:text-[11px] [&_span:last-child]:sm:text-sm"
                 />
               ))}
             </div>
 
             <div className="relative flex items-center justify-center">
               <span className="w-full border-t border-white/10" />
-              <span className="absolute bg-[#04120C] px-4 font-mono text-[11px] uppercase tracking-[0.22em] text-white/70">
-                OR
+              <span className="absolute bg-[#04120C] px-3 text-center font-mono text-[9px] uppercase tracking-[0.14em] text-white/70 sm:px-4 sm:text-[11px] sm:tracking-[0.22em]">
+                or continue with email and phone number
               </span>
             </div>
           </>
@@ -223,7 +224,7 @@ export default function RegisterPage() {
 
         {awaitingEmailCode ? (
           <div className="space-y-4 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
-            <p className="text-sm leading-6 text-white/72">
+            <p className="text-xs leading-5 text-white/72 sm:text-sm sm:leading-6">
               We sent a sign-up code to <span className="text-white">{getValues('email')}</span>.
             </p>
             <Field label="Email code">
@@ -235,7 +236,7 @@ export default function RegisterPage() {
                   autoComplete="one-time-code"
                   enterKeyHint="done"
                   placeholder="Enter code"
-                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
+                  className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
                 />
               </GlassInputWrapper>
             </Field>
@@ -244,7 +245,7 @@ export default function RegisterPage() {
                 type="button"
                 disabled={isSubmitting}
                 onClick={verifyEmailCode}
-                className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
+                className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-[1rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
               >
                 {isSubmitting ? 'Checking...' : 'Continue'}
               </button>
@@ -252,15 +253,15 @@ export default function RegisterPage() {
                 type="button"
                 disabled={isSubmitting}
                 onClick={resendEmailCode}
-                className="flex min-h-12 w-full items-center justify-center rounded-[1.15rem] border border-white/10 px-5 text-sm font-semibold uppercase tracking-[0.18em] text-white/76 transition hover:border-brand-green/28 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex min-h-11 w-full items-center justify-center rounded-[1rem] border border-white/10 px-4 text-xs font-semibold uppercase tracking-[0.14em] text-white/76 transition hover:border-brand-green/28 hover:text-white disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
               >
                 Send another code
               </button>
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-2.5 sm:space-y-4">
+            <div className="grid grid-cols-2 gap-2 sm:gap-4">
               <Field label="First name" error={errors.firstName?.message}>
                 <GlassInputWrapper>
                   <input
@@ -269,7 +270,7 @@ export default function RegisterPage() {
                     autoCapitalize="words"
                     enterKeyHint="next"
                     placeholder="First name"
-                    className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
+                    className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
                   />
                 </GlassInputWrapper>
               </Field>
@@ -282,7 +283,7 @@ export default function RegisterPage() {
                     autoCapitalize="words"
                     enterKeyHint="next"
                     placeholder="Last name"
-                    className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
+                    className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
                   />
                 </GlassInputWrapper>
               </Field>
@@ -298,7 +299,7 @@ export default function RegisterPage() {
                   inputMode="email"
                   enterKeyHint="next"
                   placeholder="you@example.com"
-                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
+                  className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
                 />
               </GlassInputWrapper>
             </Field>
@@ -312,7 +313,7 @@ export default function RegisterPage() {
                   inputMode="tel"
                   enterKeyHint="next"
                   placeholder="+14155550182"
-                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
+                  className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
                 />
               </GlassInputWrapper>
             </Field>
@@ -325,7 +326,7 @@ export default function RegisterPage() {
                   autoComplete="new-password"
                   enterKeyHint="done"
                   placeholder="Use at least 8 characters"
-                  className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-white/56 focus:outline-none"
+                  className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
                 />
               </GlassInputWrapper>
             </Field>
@@ -333,14 +334,14 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="bp-button-glow flex min-h-12 w-full items-center justify-center rounded-[1.15rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60"
+              className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-[1rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
             >
               {isSubmitting ? 'Creating account...' : 'Get Started'}
             </button>
           </form>
         )}
 
-        <div className="border-t border-white/8 pt-4 text-xs leading-6 text-white/70">
+        <div className="border-t border-white/8 pt-2 text-[11px] leading-5 text-white/70 sm:pt-4 sm:text-xs sm:leading-6">
           <p>
             Already have an account?{' '}
             <Link href="/sign-in" className="text-brand-green transition hover:text-[#39FF14]">
@@ -365,10 +366,10 @@ export default function RegisterPage() {
 
 function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
   return (
-    <label className="block text-xs font-medium text-white/76">
+    <label className="block text-[11px] font-medium text-white/76 sm:text-xs">
       {label}
-      <div className="mt-2">{children}</div>
-      {error ? <p className="mt-1.5 text-xs text-red-200">{error}</p> : null}
+      <div className="mt-1 sm:mt-2">{children}</div>
+      {error ? <p className="mt-1 text-[10px] text-red-200 sm:mt-1.5 sm:text-xs">{error}</p> : null}
     </label>
   );
 }
