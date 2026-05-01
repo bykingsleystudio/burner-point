@@ -32,21 +32,6 @@ export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [secondFactorStrategy, setSecondFactorStrategy] = useState<SecondFactorStrategy | null>(null);
-  const [secondFactorCode, setSecondFactorCode] = useState('');
-  const [authMode, setAuthMode] = useState<AuthMode>('sign-in');
-  const [phoneIdentifier, setPhoneIdentifier] = useState('');
-  const [phoneCode, setPhoneCode] = useState('');
-  const [resetIdentifier, setResetIdentifier] = useState('');
-  const [resetCode, setResetCode] = useState('');
-  const [resetPassword, setResetPassword] = useState('');
-  const [resetMethod, setResetMethod] = useState<ResetPasswordMethod>('email');
-
-  useEffect(() => {
-    if (searchParams.get('mode') === 'reset-request') {
-      setAuthMode('reset-request');
-    }
-  }, [searchParams]);
 
   const authReady = Boolean(signIn);
   const isSubmitting = loading || fetchStatus === 'fetching' || !authReady;
@@ -62,33 +47,11 @@ export default function LoginPage() {
     if (error) throw error;
   };
 
-  const prepareSecondFactor = async () => {
-    if (!signIn) throw new Error('Auth not ready');
-    const factor = signIn.supportedSecondFactors?.[0] as { strategy?: SecondFactorStrategy } | undefined;
-    const strategy = factor?.strategy ?? 'totp';
-
-    if (strategy === 'email_code') {
-      const { error } = await signIn.mfa.sendEmailCode();
-      if (error) throw error;
-    }
-    if (strategy === 'phone_code') {
-      const { error } = await signIn.mfa.sendPhoneCode();
-      if (error) throw error;
-    }
-
-    setSecondFactorStrategy(strategy);
-    toast.success('Enter your security code to continue.');
-  };
-
   const completeOrContinueSignIn = async () => {
     if (!signIn) return;
     if (signIn.status === 'complete') {
       await finishSignIn();
       toast.success('Welcome back.');
-      return;
-    }
-    if (signIn.status === 'needs_second_factor' || signIn.status === 'needs_client_trust') {
-      await prepareSecondFactor();
       return;
     }
     toast.error('Something went wrong. Please sign in again.');
@@ -145,16 +108,7 @@ export default function LoginPage() {
     }
   };
 
-  const returnToSignIn = () => {
-    setAuthMode('sign-in');
-    setSecondFactorStrategy(null);
-    setSecondFactorCode('');
-    setPhoneIdentifier('');
-    setPhoneCode('');
-    setResetIdentifier('');
-    setResetCode('');
-    setResetPassword('');
-  };
+
 
   return (
     <SignInPage
@@ -185,54 +139,53 @@ export default function LoginPage() {
 
         {/* Login Form */}
         <form onSubmit={onSubmit} className="space-y-3">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-gray-400">
-              Email or phone
-            </label>
-            <GlassInputWrapper>
-              <input
-                value={identifier}
-                onChange={(event) => setIdentifier(event.target.value)}
-                type="text"
-                autoComplete="username"
-                placeholder="you@example.com or +14155550182"
-                className="w-full rounded-lg bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none"
-              />
-            </GlassInputWrapper>
-          </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+            Email or phone
+          </label>
+          <GlassInputWrapper>
+            <input
+              value={identifier}
+              onChange={(event) => setIdentifier(event.target.value)}
+              type="text"
+              autoComplete="username"
+              placeholder="you@example.com or +14155550182"
+              className="w-full rounded-lg bg-white/50 dark:bg-transparent px-3 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-600 focus:outline-none"
+            />
+          </GlassInputWrapper>
+        </div>
 
-          <div>
-            <label className="mb-1 block text-xs font-medium text-gray-400">
-              Password
-            </label>
-            <GlassInputWrapper>
-              <input
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                type="password"
-                autoComplete="current-password"
-                placeholder="Enter your password"
-                className="w-full rounded-lg bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none"
-              />
-            </GlassInputWrapper>
-          </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+            Password
+          </label>
+          <GlassInputWrapper>
+            <input
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              type="password"
+              autoComplete="current-password"
+              placeholder="Enter your password"
+              className="w-full rounded-lg bg-white/50 dark:bg-transparent px-3 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-600 focus:outline-none"
+            />
+          </GlassInputWrapper>
+        </div>
 
-          <div className="flex items-center justify-between text-xs">
-            <label className="flex items-center gap-2 text-gray-400">
-              <input
-                type="checkbox"
-                className="h-3.5 w-3.5 accent-[#00FF9D]"
-              />
-              Keep me signed in
-            </label>
-            <button
-              type="button"
-              onClick={() => setAuthMode('reset-request')}
-              className="text-[#00FF9D] hover:underline"
-            >
-              Forgot password?
-            </button>
-          </div>
+        <div className="flex items-center justify-between text-xs">
+          <label className="flex items-center gap-2 text-gray-400">
+            <input
+              type="checkbox"
+              className="h-3.5 w-3.5 accent-[#00FF9D]"
+            />
+            Keep me signed in
+          </label>
+          <Link
+            href="/forgot-password"
+            className="text-[#00FF9D] hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
 
           <button
             type="submit"

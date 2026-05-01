@@ -75,7 +75,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   footerContent,
 }) => {
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-[#013220] via-[#000000] to-[#013220] px-4 py-12">
+    <div className="relative flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-[#013220] via-[#000000] to-[#013220] dark:from-[#013220] dark:via-[#000000] dark:to-[#013220] px-4 py-12">
       {/* Subtle background effects */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -left-1/4 top-1/4 h-96 w-96 rounded-full bg-[#00FF9D]/5 blur-3xl" />
@@ -84,7 +84,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
       {/* Main auth card */}
       <div className="relative z-10 w-full max-w-md">
-        <div className="rounded-2xl border border-white/10 bg-black/40 p-8 backdrop-blur-xl shadow-2xl">
+        <div className="rounded-2xl border border-white/10 bg-white/40 dark:bg-black/40 p-8 backdrop-blur-xl shadow-2xl">
           {/* Logo */}
           <div className="mb-6 flex flex-col items-center">
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#00FF9D] to-[#39FF14] p-2.5">
@@ -96,9 +96,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 className="h-full w-full"
               />
             </div>
-            <h1 className="text-2xl font-bold text-white">{title}</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
             {description && (
-              <p className="mt-2 text-center text-sm text-gray-400">{description}</p>
+              <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">{description}</p>
             )}
           </div>
 
@@ -108,11 +108,11 @@ export const SignInPage: React.FC<SignInPageProps> = ({
           </div>
 
           {/* Footer */}
-          {footerContent && <div className="mt-6 border-t border-white/10 pt-4">{footerContent}</div>}
+          {footerContent && <div className="mt-6 border-t border-gray-200 dark:border-white/10 pt-4">{footerContent}</div>}
         </div>
 
         {/* Terms */}
-        <p className="mt-6 text-center text-xs text-gray-500">
+        <p className="mt-6 text-center text-xs text-gray-600 dark:text-gray-500">
           By continuing, you agree to our{' '}
           <Link href="/terms-of-service" className="text-[#00FF9D] hover:underline">
             Terms of Service
