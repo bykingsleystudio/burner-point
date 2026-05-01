@@ -17,56 +17,11 @@ interface SignInPageProps {
   footerContent?: React.ReactNode;
 }
 
-const GoogleIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 48 48">
-    <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-2.641-.21-5.236-.611-7.917z" />
-    <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z" />
-    <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z" />
-    <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19 5.238C42.022 35.026 44 30.038 44 24c0-2.641-.21-5.236-.611-7.917z" />
-  </svg>
-);
-
-const AppleIcon = () => (
-  <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current">
-    <path d="M16.365 12.79c.024 2.506 2.202 3.34 2.226 3.35-.018.06-.347 1.19-1.142 2.357-.686 1.01-1.398 2.014-2.52 2.035-1.102.02-1.456-.654-2.719-.654-1.262 0-1.656.633-2.698.674-1.083.041-1.909-1.086-2.6-2.092-1.41-2.04-2.486-5.764-1.04-8.275.718-1.247 2.002-2.036 3.395-2.056 1.062-.02 2.066.715 2.719.715.653 0 1.879-.885 3.165-.755.539.022 2.055.218 3.028 1.643-.078.048-1.81 1.054-1.794 3.058Zm-2.013-8.607c.574-.696.963-1.666.857-2.63-.827.034-1.827.55-2.42 1.246-.532.613-1 1.594-.874 2.533.922.072 1.863-.468 2.437-1.149Z" />
-  </svg>
-);
-
-const MicrosoftIcon = () => (
-  <svg viewBox="0 0 24 24" className="h-5 w-5">
-    <path fill="#F25022" d="M3 3h8.5v8.5H3z" />
-    <path fill="#7FBA00" d="M12.5 3H21v8.5h-8.5z" />
-    <path fill="#00A4EF" d="M3 12.5h8.5V21H3z" />
-    <path fill="#FFB900" d="M12.5 12.5H21V21h-8.5z" />
-  </svg>
-);
-
 const GlassInputWrapper = ({ children }: { children: React.ReactNode }) => (
-  <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm transition-colors focus-within:border-[#00FF9D]/40 focus-within:bg-white/[0.08]">
+  <div className="group relative rounded-lg border border-white/10 bg-gradient-to-b from-white/[0.08] to-white/[0.02] backdrop-blur-xl transition-all duration-300 hover:border-[#00FF9D]/30 focus-within:border-[#00FF9D]/50 focus-within:shadow-[0_0_20px_rgba(0,255,157,0.15)]">
     {children}
   </div>
 );
-
-function SocialButton({
-  icon,
-  label,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex h-11 w-full items-center justify-center gap-2.5 rounded-lg border border-white/10 bg-white/5 px-4 text-sm font-medium text-white transition-all hover:bg-white/10 hover:shadow-lg"
-    >
-      {icon}
-      <span>{label}</span>
-    </button>
-  );
-}
 
 export const SignInPage: React.FC<SignInPageProps> = ({
   title = 'Sign in to Burner Point',
@@ -75,50 +30,59 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   footerContent,
 }) => {
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-[#013220] via-[#000000] to-[#013220] dark:from-[#013220] dark:via-[#000000] dark:to-[#013220] px-4 py-12">
-      {/* Subtle background effects */}
+    <div className="relative flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-[#013220] via-[#000000] to-[#03110B] px-4 py-12">
+      {/* Animated background glow */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -left-1/4 top-1/4 h-96 w-96 rounded-full bg-[#00FF9D]/5 blur-3xl" />
-        <div className="absolute -right-1/4 bottom-1/4 h-96 w-96 rounded-full bg-[#39FF14]/5 blur-3xl" />
+        <div className="absolute -left-1/4 top-1/4 h-[500px] w-[500px] animate-pulse rounded-full bg-[#00FF9D]/10 blur-3xl" />
+        <div className="absolute -right-1/4 bottom-1/4 h-[500px] w-[500px] animate-pulse rounded-full bg-[#39FF14]/10 blur-3xl" style={{ animationDelay: '1s' }} />
       </div>
 
       {/* Main auth card */}
       <div className="relative z-10 w-full max-w-md">
-        <div className="rounded-2xl border border-white/10 bg-white/40 dark:bg-black/40 p-8 backdrop-blur-xl shadow-2xl">
-          {/* Logo */}
-          <div className="mb-6 flex flex-col items-center">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#00FF9D] to-[#39FF14] p-2.5">
-              <Image
-                src="/assets/logo-mark.svg"
-                alt="Burner Point"
-                width={24}
-                height={24}
-                className="h-full w-full"
-              />
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-[#07140F]/95 to-[#013220]/95 p-8 shadow-[0_40px_120px_rgba(0,0,0,0.6)] backdrop-blur-2xl">
+          {/* Subtle inner glow */}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#00FF9D]/[0.03] to-transparent" />
+          
+          {/* Logo Section */}
+          <div className="relative mb-6 flex flex-col items-center">
+            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-[#00FF9D] to-[#39FF14] p-[2px] shadow-[0_0_30px_rgba(0,255,157,0.3)]">
+              <div className="flex h-full w-full items-center justify-center rounded-xl bg-gradient-to-br from-[#013220] to-black p-2.5">
+                <Image
+                  src="/assets/logo-mark.svg"
+                  alt="Burner Point"
+                  width={28}
+                  height={28}
+                  className="h-7 w-7"
+                />
+              </div>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-white">{title}</h1>
             {description && (
-              <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">{description}</p>
+              <p className="mt-2.5 text-center text-sm text-[#9FA6B2]">{description}</p>
             )}
           </div>
 
           {/* Content */}
-          <div className="space-y-4">
+          <div className="relative space-y-4">
             {children}
           </div>
 
           {/* Footer */}
-          {footerContent && <div className="mt-6 border-t border-gray-200 dark:border-white/10 pt-4">{footerContent}</div>}
+          {footerContent && (
+            <div className="relative mt-6 border-t border-white/10 pt-4">
+              {footerContent}
+            </div>
+          )}
         </div>
 
         {/* Terms */}
-        <p className="mt-6 text-center text-xs text-gray-600 dark:text-gray-500">
+        <p className="mt-6 text-center text-xs text-[#9FA6B2]">
           By continuing, you agree to our{' '}
-          <Link href="/terms-of-service" className="text-[#00FF9D] hover:underline">
+          <Link href="/terms-of-service" className="text-[#00FF9D] transition-colors hover:text-[#39FF14] hover:underline">
             Terms of Service
           </Link>{' '}
           and{' '}
-          <Link href="/privacy-policy" className="text-[#00FF9D] hover:underline">
+          <Link href="/privacy-policy" className="text-[#00FF9D] transition-colors hover:text-[#39FF14] hover:underline">
             Privacy Policy
           </Link>
           .

@@ -4,7 +4,8 @@ import { type ComponentType, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAuth, useClerk, useUser } from '@clerk/nextjs';
+import { createClient } from '@/lib/supabase/server';
+import { User } from '@supabase/supabase-js';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Bell,
@@ -132,18 +133,43 @@ const MOBILE_NAV_ITEMS = ['/dashboard', '/dashboard/messenger', '/dashboard/veri
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isLoaded, isSignedIn, getToken } = useAuth();
-  const { signOut } = useClerk();
-  const { user: clerkUser } = useUser();
-  const { user, setAuth, clearAuth } = useAuthStore();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const { sidebarOpen, toggleSidebar, setSidebarOpen } = useUIStore();
-  const [sessionReady, setSessionReady] = useState(false);
-  const [fatalSessionError, setFatalSessionError] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const unsafePhoneNumber =
-    typeof clerkUser?.unsafeMetadata?.phoneNumber === 'string'
-      ? clerkUser.unsafeMetadata.phoneNumber
-      : undefined;
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        router.replace('/auth/login');
+        return;
+      }
+      
+      setUser(session.user);
+      setLoading(false);
+    };
+    
+    checkAuth();
+  }, [router]);
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.replace('/auth/login');
+  };
+
+  if (loading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-brand-black px-4 text-white">
+        <div className="w-full max-w-md">
+          <BpLoadingState label="Opening your Burner Point workspace..." />
+        </div>
+      </main>
+    );
+  }
 
   useEffect(() => {
     if (!isLoaded) return;

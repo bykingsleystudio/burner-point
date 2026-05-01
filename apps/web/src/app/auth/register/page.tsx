@@ -2,364 +2,344 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { type ReactNode, useState } from 'react';
-import { useSignUp } from '@clerk/nextjs';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import { useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
-import { AuthProviderButton } from '@/components/auth-provider-button';
-import { GlassInputWrapper, SignInPage } from '@/components/ui/sign-in';
-import { INTERNATIONAL_PHONE_ERROR, isValidInternationalPhone, normalizeInternationalPhone } from '@/lib/phone';
-
-const schema = z.object({
-  firstName: z.string().trim().min(2, 'Enter your first name'),
-  lastName: z.string().trim().min(2, 'Enter your last name'),
-  email: z.string().trim().email('Enter a valid email address'),
-  phoneNumber: z
-    .string()
-    .trim()
-    .refine((value) => isValidInternationalPhone(value), INTERNATIONAL_PHONE_ERROR),
-  password: z.string().min(8, 'Use at least 8 characters'),
-});
-
-type FormData = z.infer<typeof schema>;
-
-const oauthProviders = [
-  { label: 'Google', strategy: 'oauth_google' },
-  { label: 'Apple', strategy: 'oauth_apple' },
-  { label: 'Microsoft', strategy: 'oauth_microsoft' },
-] as const;
+import { Zap, Mail, Lock, User, Phone, Eye, EyeOff } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { signUp, fetchStatus } = useSignUp();
-  const [loading, setLoading] = useState(false);
-  const [emailCode, setEmailCode] = useState('');
-  const [awaitingEmailCode, setAwaitingEmailCode] = useState(false);
-  const authReady = Boolean(signUp);
-  const isSubmitting = loading || fetchStatus === 'fetching' || !authReady;
-
-  const {
-    register,
-    handleSubmit,
-    getValues,
-    formState: { errors },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      phoneNumber: '',
-      password: '',
-    },
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    acceptTerms: false,
+    acceptPrivacy: false,
   });
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const finishSignUp = async () => {
-    if (!signUp) throw new Error('Auth not ready');
-    const { error } = await signUp.finalize({
-      navigate: ({ decorateUrl }) => {
-        router.push(decorateUrl('/onboarding?redirect=/dashboard'));
-      },
-    });
-    if (error) throw error;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
   };
 
-  const sendEmailCode = async () => {
-    if (!signUp) throw new Error('Auth not ready');
-    const result = await signUp.verifications.sendEmailCode();
-    if ('error' in result && result.error) throw result.error;
-    setAwaitingEmailCode(true);
-    toast.success('Check your email for the code.');
-  };
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const continueAfterCreate = async () => {
-    if (!signUp) throw new Error('Auth not ready');
-    if (signUp.status === 'complete') {
-      await finishSignUp();
-      toast.success('Account created.');
+    // Validation
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      toast.error('Please enter your first and last name');
       return;
     }
-    if (signUp.unverifiedFields.includes('email_address')) {
-      await sendEmailCode();
+    if (!formData.email.trim()) {
+      toast.error('Please enter your email');
       return;
     }
-    toast.error('Something went wrong. Please try again.');
-  };
-
-  const onSubmit = async (data: FormData) => {
-    if (!signUp) {
-      toast.error('Something went wrong. Please try again.');
+    if (!formData.phone.trim()) {
+      toast.error('Please enter your phone number');
+      return;
+    }
+    if (formData.password.length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+    if (!formData.acceptTerms || !formData.acceptPrivacy) {
+      toast.error('You must accept the Terms and Privacy Policy');
       return;
     }
 
     setLoading(true);
+
     try {
-      const result = await signUp.create({
-        emailAddress: data.email.trim().toLowerCase(),
-        password: data.password,
-        firstName: data.firstName.trim(),
-        lastName: data.lastName.trim(),
-        legalAccepted: true,
-        unsafeMetadata: {
-          firstName: data.firstName.trim(),
-          lastName: data.lastName.trim(),
-          phoneNumber: normalizeInternationalPhone(data.phoneNumber),
-          acceptTerms: true,
-          acceptPrivacy: true,
-          authSource: 'web_signup',
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+        options: {
+          data: {
+            first_name: formData.firstName.trim(),
+            last_name: formData.lastName.trim(),
+            phone_number: formData.phone.trim(),
+          },
         },
       });
 
-      if ('error' in result && result.error) throw result.error;
-      await continueAfterCreate();
-    } catch (error) {
-      toast.error(getFriendlyAuthError(error, 'Something went wrong. Please try again.'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const verifyEmailCode = async () => {
-    if (!signUp) {
-      toast.error('Something went wrong. Please try again.');
-      return;
-    }
-
-    const code = emailCode.trim();
-    if (!code) {
-      toast.error('Enter the code you received.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const result = await signUp.verifications.verifyEmailCode({ code });
-      if ('error' in result && result.error) throw result.error;
-      await continueAfterCreate();
-    } catch (error) {
-      toast.error(getFriendlyAuthError(error, 'Verification failed. Try again.'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const resendEmailCode = async () => {
-    if (!signUp) {
-      toast.error('Something went wrong. Please try again.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await sendEmailCode();
-    } catch (error) {
-      toast.error(getFriendlyAuthError(error, 'Could not resend the code. Try again.'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const startOAuth = async (strategy: (typeof oauthProviders)[number]['strategy']) => {
-    if (!signUp) {
-      toast.error('Something went wrong. Please try again.');
-      return;
-    }
-
-    try {
-      const { error } = await signUp.sso({
-        strategy,
-        redirectUrl: '/onboarding?redirect=/dashboard',
-        redirectCallbackUrl: '/sso-callback',
-        unsafeMetadata: {
-          acceptTerms: true,
-          acceptPrivacy: true,
-          authSource: 'web_signup_oauth',
-        },
-      });
       if (error) throw error;
-    } catch (error) {
-      toast.error(getFriendlyAuthError(error, 'Something went wrong. Please try again.'));
+
+      toast.success('Account created! Please check your email to verify your account.');
+      router.push('/auth/verify');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create account');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOAuthRegister = async (provider: 'google' | 'apple' | 'microsoft') => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
+      toast.error(error.message || 'OAuth registration failed');
     }
   };
 
   return (
-    <SignInPage
-      title="Create your account"
-      description="Join Burner Point today"
-    >
-      <div className="space-y-4">
-        {!awaitingEmailCode ? (
-          <>
-            {/* Social Login Buttons */}
-            <div className="grid grid-cols-1 gap-3">
-              {oauthProviders.map((provider) => (
-                <AuthProviderButton
-                  key={provider.label}
-                  provider={provider.label}
-                  label={provider.label}
-                  onClick={() => startOAuth(provider.strategy)}
-                  disabled={isSubmitting}
-                  className="h-11 justify-center"
-                />
-              ))}
-            </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black p-4">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Create your account
+          </h1>
+          <p className="text-gray-400">
+            Join Burner Point today
+          </p>
+        </div>
 
-            {/* Divider */}
-            <div className="relative flex items-center py-2">
-              <div className="flex-1 border-t border-white/10" />
-              <span className="mx-3 text-xs text-gray-500">OR</span>
-              <div className="flex-1 border-t border-white/10" />
-            </div>
+        <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-8">
+          {/* OAuth Buttons */}
+          <div className="grid grid-cols-1 gap-3 mb-6">
+            <button
+              onClick={() => handleOAuthRegister('google')}
+              className="flex items-center justify-center gap-2 h-11 rounded-lg bg-white text-gray-900 font-medium hover:bg-gray-100 transition-colors"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.15 3.45v2.77h3.57c2.08-1.92 3.22-4.75 3.22-8.23z" />
+                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.94-6.16-4.53H2.18v2.84C3.99 20.53 7.82 23 12 23z" />
+                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.82 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.59 3.3-4.53 6.16-4.53z" />
+              </svg>
+              Continue with Google
+            </button>
 
-            {/* Registration Form */}
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="First name" error={errors.firstName?.message}>
-                  <GlassInputWrapper>
-                    <input
-                      {...register('firstName')}
-                      autoComplete="given-name"
-                      placeholder="First name"
-                      className="w-full rounded-lg bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none"
-                    />
-                  </GlassInputWrapper>
-                </Field>
+            <button
+              onClick={() => handleOAuthRegister('apple')}
+              className="flex items-center justify-center gap-2 h-11 rounded-lg bg-gray-800 text-white font-medium hover:bg-gray-700 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 16.06 3.21 10.5 6.5 10.5c1.54 0 2.5.74 3.35.74.82 0 2.34-.93 3.93-.4.67.23 1.25.56 1.72 1.01-.03.02-1.02.6-1.02 1.78 0 1.41 1.23 2.81 1.82 2.81-.03.08-2.09.72-2.09 3.84 0 3.09 2.7 4.11 2.75 4.11-.03.08-.42 1.44-1.96 2.89zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.16 2.29-2.04 4.16-3.74 4.25z" />
+              </svg>
+              Continue with Apple
+            </button>
 
-                <Field label="Last name" error={errors.lastName?.message}>
-                  <GlassInputWrapper>
-                    <input
-                      {...register('lastName')}
-                      autoComplete="family-name"
-                      placeholder="Last name"
-                      className="w-full rounded-lg bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none"
-                    />
-                  </GlassInputWrapper>
-                </Field>
+            <button
+              onClick={() => handleOAuthRegister('microsoft')}
+              className="flex items-center justify-center gap-2 h-11 rounded-lg bg-[#00A4EF] text-white font-medium hover:bg-[#008ED8] transition-colors"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M11.1 2.3v10.6h10.6V2.3H11.1zm10.6 11.8H11.1v10.6h10.6V14.1zM.3 2.3v10.6h10.6V2.3H.3zm10.6 11.8H.3v10.6h10.6V14.1z" />
+              </svg>
+              Continue with Microsoft
+            </button>
+          </div>
+
+          {/* Divider */}
+          <div className="relative flex items-center py-4 mb-6">
+            <div className="flex-1 border-t border-white/10" />
+            <span className="mx-4 text-xs text-gray-500">OR</span>
+            <div className="flex-1 border-t border-white/10" />
+          </div>
+
+          {/* Registration Form */}
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1">
+                  First Name
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    placeholder="John"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#00FF9D] focus:ring-1 focus:ring-[#00FF9D]"
+                    autoComplete="given-name"
+                  />
+                </div>
               </div>
 
-              <Field label="Email" error={errors.email?.message}>
-                <GlassInputWrapper>
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1">
+                  Last Name
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                   <input
-                    {...register('email')}
-                    type="email"
-                    autoComplete="email"
-                    placeholder="you@example.com"
-                    className="w-full rounded-lg bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none"
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    placeholder="Doe"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#00FF9D] focus:ring-1 focus:ring-[#00FF9D]"
+                    autoComplete="family-name"
                   />
-                </GlassInputWrapper>
-              </Field>
-
-              <Field label="Phone" error={errors.phoneNumber?.message}>
-                <GlassInputWrapper>
-                  <input
-                    {...register('phoneNumber')}
-                    type="tel"
-                    autoComplete="tel"
-                    placeholder="+14155550182"
-                    className="w-full rounded-lg bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none"
-                  />
-                </GlassInputWrapper>
-              </Field>
-
-              <Field label="Password" error={errors.password?.message}>
-                <GlassInputWrapper>
-                  <input
-                    {...register('password')}
-                    type="password"
-                    autoComplete="new-password"
-                    placeholder="Use at least 8 characters"
-                    className="w-full rounded-lg bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none"
-                  />
-                </GlassInputWrapper>
-              </Field>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex h-11 w-full items-center justify-center rounded-lg bg-gradient-to-r from-[#00FF9D] to-[#39FF14] font-semibold text-black transition-all hover:shadow-[0_0_20px_rgba(0,255,157,0.4)] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isSubmitting ? 'Creating account...' : 'Create Account'}
-              </button>
-            </form>
-          </>
-        ) : (
-          /* Email Verification */
-          <div className="space-y-4 rounded-lg border border-white/10 bg-white/5 p-4">
-            <p className="text-sm text-gray-400">
-              We sent a code to <span className="text-white">{getValues('email')}</span>
-            </p>
-            <Field label="Verification code">
-              <GlassInputWrapper>
-                <input
-                  value={emailCode}
-                  onChange={(event) => setEmailCode(event.target.value)}
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  placeholder="Enter code"
-                  className="w-full rounded-lg bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none"
-                />
-              </GlassInputWrapper>
-            </Field>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                disabled={isSubmitting}
-                onClick={verifyEmailCode}
-                className="flex h-11 items-center justify-center rounded-lg bg-gradient-to-r from-[#00FF9D] to-[#39FF14] font-semibold text-black transition-all hover:shadow-[0_0_20px_rgba(0,255,157,0.4)] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isSubmitting ? 'Checking...' : 'Continue'}
-              </button>
-              <button
-                type="button"
-                disabled={isSubmitting}
-                onClick={resendEmailCode}
-                className="flex h-11 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-sm text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Resend Code
-              </button>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
 
-        {/* Footer Link */}
-        <p className="text-center text-xs text-gray-500">
-          Already have an account?{' '}
-          <Link href="/sign-in" className="text-[#00FF9D] hover:underline">
-            Sign in
-          </Link>
-        </p>
+            <div>
+              <label className="block text-xs font-medium text-gray-300 mb-1">
+                Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="you@example.com"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#00FF9D] focus:ring-1 focus:ring-[#00FF9D]"
+                  autoComplete="email"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-300 mb-1">
+                Phone Number
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="+1234567890"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#00FF9D] focus:ring-1 focus:ring-[#00FF9D]"
+                  autoComplete="tel"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-300 mb-1">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="At least 8 characters"
+                  className="w-full pl-10 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#00FF9D] focus:ring-1 focus:ring-[#00FF9D]"
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-300 mb-1">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Confirm your password"
+                  className="w-full pl-10 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-[#00FF9D] focus:ring-1 focus:ring-[#00FF9D]"
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="flex items-start gap-2 text-xs text-gray-400 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="acceptTerms"
+                  checked={formData.acceptTerms}
+                  onChange={handleChange}
+                  className="w-3.5 h-3.5 mt-0.5 accent-[#00FF9D]"
+                />
+                I accept the{' '}
+                <Link href="/terms" className="text-[#00FF9D] hover:underline">
+                  Terms of Service
+                </Link>
+              </label>
+
+              <label className="flex items-start gap-2 text-xs text-gray-400 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="acceptPrivacy"
+                  checked={formData.acceptPrivacy}
+                  onChange={handleChange}
+                  className="w-3.5 h-3.5 accent-[#00FF9D]"
+                />
+                I accept the{' '}
+                <Link href="/privacy" className="text-[#00FF9D] hover:underline">
+                  Privacy Policy
+                </Link>
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#00FF9D] to-[#39FF14] font-semibold text-black transition-all hover:shadow-[0_0_20px_rgba(0,255,157,0.4)] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+              ) : (
+                <Zap size={16} />
+              )}
+              {loading ? 'Creating account...' : 'Create Account'}
+            </button>
+          </form>
+
+          {/* Footer */}
+          <p className="text-center text-xs text-gray-500 mt-6">
+            Already have an account?{' '}
+            <Link
+              href="/auth/login"
+              className="text-[#00FF9D] hover:underline"
+            >
+              Sign in
+            </Link>
+          </p>
+        </div>
       </div>
-    </SignInPage>
-  );
-}
-
-function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
-  return (
-    <div>
-      <label className="mb-1 block text-xs font-medium text-gray-400">{label}</label>
-      <div className="mt-1">{children}</div>
-      {error ? <p className="mt-1 text-[10px] text-red-400">{error}</p> : null}
     </div>
   );
-}
-
-function getFriendlyAuthError(error: unknown, fallback: string) {
-  const clerkError = error as {
-    longMessage?: string;
-    message?: string;
-    errors?: Array<{ longMessage?: string; message?: string }>;
-  };
-  const raw =
-    clerkError.errors?.[0]?.longMessage ||
-    clerkError.errors?.[0]?.message ||
-    clerkError.longMessage ||
-    clerkError.message ||
-    '';
-
-  if (/captcha|challenge|browser|verification/i.test(raw)) return 'Verification failed. Try again or switch browser.';
-  if (/password/i.test(raw)) return 'Choose a stronger password and try again.';
-  if (/email/i.test(raw)) return 'That email address is already in use.';
-  return fallback;
 }

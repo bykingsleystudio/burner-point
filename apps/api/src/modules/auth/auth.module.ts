@@ -4,7 +4,7 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
+import { SupabaseAuthService } from './supabase-auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { User } from '../../database/entities/user.entity';
@@ -25,7 +25,7 @@ import { resolveJwtAccessSecret } from '../../config/runtime-env';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, LocalStrategy, RedisService],
-  exports: [AuthService, JwtModule],
+  providers: [SupabaseAuthService, JwtStrategy, LocalStrategy, RedisService],
+  exports: [SupabaseAuthService, JwtModule],
 })
 export class AuthModule {}
