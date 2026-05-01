@@ -134,31 +134,31 @@ export default function PhoneVerifyPage() {
   };
 
   return (
-    <main className="relative min-h-screen min-h-[100dvh] overflow-x-hidden bg-brand-black px-3 py-3 text-white sm:px-4 md:py-4">
+    <main className="relative min-h-screen bg-brand-black px-3 py-4 text-white sm:px-4 sm:py-6 md:py-8">
       <div className="bp-grid-bg pointer-events-none fixed inset-0 opacity-60" />
-      <section className="relative z-10 mx-auto flex min-h-[calc(100vh-1.5rem)] max-w-2xl items-center">
-        <div className="bp-card w-full rounded-bp-lg p-3.5 sm:p-4 md:p-5 [&_input.auth-input]:min-h-11 [&_input.auth-input]:px-3.5 [&_input.auth-input]:py-3">
+      <section className="relative z-10 mx-auto flex min-h-[calc(100dvh-2rem)] max-w-xl items-center">
+        <div className="bp-card w-full rounded-bp-lg p-3 sm:p-4 md:p-5 [&_input.auth-input]:min-h-11 [&_input.auth-input]:px-3.5 [&_input.auth-input]:py-3">
           <div className="rounded-bp-lg border border-white/8 bg-black/24 p-4 sm:p-4 md:p-5">
-            <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
-              <span className="flex h-10 w-10 items-center justify-center rounded-bp-md border border-brand-green/25 bg-brand-green/10">
-                <Image src="/assets/logo-mark.svg" alt="" width={24} height={24} />
+            <Link href="/" className="inline-flex items-center gap-2.5" aria-label="Burner Point home">
+              <span className="flex h-9 w-9 items-center justify-center rounded-bp-md border border-brand-green/25 bg-brand-green/10">
+                <Image src="/assets/logo-mark.svg" alt="" width={22} height={22} />
               </span>
-              <span className="font-mono text-sm font-semibold uppercase tracking-[0.2em]">
+              <span className="font-mono text-xs font-semibold uppercase tracking-[0.18em] sm:text-sm sm:tracking-[0.2em]">
                 Burner <span className="text-brand-green">Point</span>
               </span>
             </Link>
 
-            <div className="mt-5 flex h-12 w-12 items-center justify-center rounded-bp-md border border-brand-green/25 bg-brand-green/10">
-              <ShieldCheck className="h-6 w-6 text-brand-green" />
+            <div className="mt-4 flex h-11 w-11 items-center justify-center rounded-bp-md border border-brand-green/25 bg-brand-green/10 sm:mt-5 sm:h-12 sm:w-12">
+              <ShieldCheck className="h-5 w-5 text-brand-green sm:h-6 sm:w-6" />
             </div>
-            <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.22em] text-brand-green">Phone verification</p>
-            <h1 className="mt-3 text-[1.8rem] font-semibold uppercase leading-none sm:text-[2rem]">Verify your phone number</h1>
-            <p className="mt-2 text-sm leading-5 text-white/72">
+            <p className="mt-3 font-mono text-[9px] uppercase tracking-[0.18em] text-brand-green sm:mt-4 sm:text-[10px] sm:tracking-[0.22em]">Phone verification</p>
+            <h1 className="mt-2 text-lg font-semibold uppercase leading-none text-white sm:mt-3 sm:text-xl md:text-[1.8rem]">Verify your phone number</h1>
+            <p className="mt-2 text-xs leading-5 text-white/72 sm:text-sm sm:leading-6">
               Choose SMS or voice, enter your phone number, and confirm the code to finish account security.
             </p>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_0.55fr]">
-              <label className="block text-sm font-medium text-white/70">
+            <div className="mt-4 grid gap-3 sm:mt-5 sm:grid-cols-[1fr_0.6fr]">
+              <label className="block text-xs font-medium text-white/70 sm:text-sm">
                 Account phone number
                 <input
                   value={phoneNumber}
@@ -171,10 +171,10 @@ export default function PhoneVerifyPage() {
                   className="auth-input mt-1.5"
                   disabled={step === 'approved'}
                 />
-                <span className="mt-1.5 block text-xs text-white/68">Include country code, for example +14155550182.</span>
+                <span className="mt-1.5 block text-[10px] text-white/68 sm:text-xs">Include country code, for example +14155550182.</span>
               </label>
 
-              <fieldset className="block text-sm font-medium text-white/70">
+              <fieldset className="block text-xs font-medium text-white/70 sm:text-sm">
                 <legend>Delivery</legend>
                 <div className="mt-1.5 grid grid-cols-2 gap-2">
                   {[
@@ -188,13 +188,13 @@ export default function PhoneVerifyPage() {
                         key={item.id}
                         type="button"
                         onClick={() => setChannel(item.id)}
-                        className={`min-h-11 rounded-bp border px-3 text-xs font-semibold uppercase tracking-[0.12em] transition ${
+                        className={`min-h-10 rounded-bp border px-2.5 text-[10px] font-semibold uppercase tracking-[0.1em] transition sm:min-h-11 sm:px-3 sm:text-xs sm:tracking-[0.12em] ${
                           active
                             ? 'border-brand-green bg-brand-green/10 text-brand-green'
                             : 'border-brand-border bg-black/20 text-brand-muted hover:border-brand-green/35 hover:text-white'
                         }`}
                       >
-                        <Icon className="mx-auto mb-1 h-4 w-4" />
+                        <Icon className="mx-auto mb-0.5 h-3.5 w-3.5 sm:mb-1 sm:h-4 sm:w-4" />
                         {item.label}
                       </button>
                     );
@@ -207,28 +207,28 @@ export default function PhoneVerifyPage() {
               type="button"
               onClick={sendCode}
               disabled={loading || step === 'loading-session' || step === 'approved' || !phoneIsValid}
-              className="bp-button-glow mt-4 flex min-h-11 w-full items-center justify-center rounded-bp bg-brand-green px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+              className="bp-button-glow mt-4 flex min-h-10 w-full items-center justify-center rounded-bp bg-brand-green px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:mt-5 sm:min-h-11 sm:w-auto sm:px-5 sm:py-3 sm:text-sm sm:tracking-[0.18em]"
             >
               {loading ? 'Sending...' : step === 'sent' ? 'Send another code' : 'Send code'}
-              <ArrowRight className="ml-3 h-4 w-4" />
+              <ArrowRight className="ml-2 h-3.5 w-3.5 sm:ml-3 sm:h-4 sm:w-4" />
             </button>
 
             {step === 'sent' || step === 'approved' ? (
-              <div className="mt-4 rounded-bp-lg border border-brand-green/18 bg-brand-green/[0.05] p-3.5 md:p-4">
-                <div className="flex flex-wrap items-center gap-3 text-sm text-brand-green">
-                  <TimerReset className="h-4 w-4" />
+              <div className="mt-4 rounded-bp-lg border border-brand-green/18 bg-brand-green/[0.05] p-3.5 sm:mt-5 sm:p-4">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-brand-green sm:gap-3 sm:text-sm">
+                  <TimerReset className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   {expiresAt ? `Code expires ${new Date(expiresAt).toLocaleTimeString()}` : 'Code sent'}
                   {attemptsRemaining !== null ? <span className="text-white/72">Attempts left: {attemptsRemaining}</span> : null}
                 </div>
 
                 {step === 'approved' ? (
-                  <div className="mt-4 flex items-center gap-2 text-brand-green">
-                    <CheckCircle2 className="h-5 w-5" />
-                    <span className="font-semibold">Approved. Redirecting...</span>
+                  <div className="mt-3.5 flex items-center gap-2 text-brand-green">
+                    <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="text-sm font-semibold sm:text-base">Approved. Redirecting...</span>
                   </div>
                 ) : (
                   <>
-                    <label className="mt-4 block text-sm font-medium text-white/70">
+                    <label className="mt-3.5 block text-xs font-medium text-white/70 sm:mt-4 sm:text-sm">
                       Verification code
                       <input
                         value={code}
@@ -238,14 +238,14 @@ export default function PhoneVerifyPage() {
                         autoComplete="one-time-code"
                         enterKeyHint="done"
                         placeholder="Enter verification code"
-                        className="auth-input mt-1.5 max-w-sm font-mono text-lg"
+                        className="auth-input mt-1.5 max-w-[12rem] font-mono text-base sm:max-w-sm sm:text-lg"
                       />
                     </label>
                     <button
                       type="button"
                       onClick={verifyCode}
                       disabled={loading || !codeIsValid}
-                      className="mt-3 flex min-h-11 w-full items-center justify-center rounded-bp bg-brand-green px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                      className="mt-3 flex min-h-10 w-full items-center justify-center rounded-bp bg-brand-green px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-50 sm:mt-3.5 sm:min-h-11 sm:w-auto sm:px-5 sm:py-3 sm:text-sm sm:tracking-[0.18em]"
                     >
                       {loading ? 'Verifying...' : 'Verify and continue'}
                     </button>
@@ -255,12 +255,12 @@ export default function PhoneVerifyPage() {
             ) : null}
 
             {lastError ? (
-              <div className="mt-5 rounded-bp border border-red-400/20 bg-red-500/[0.06] p-4 text-sm leading-6 text-red-200" role="alert">
+              <div className="mt-4 rounded-bp border border-red-400/20 bg-red-500/[0.06] p-3.5 text-xs leading-6 text-red-200 sm:mt-5 sm:p-4 sm:text-sm sm:leading-6" role="alert">
                 {lastError}
               </div>
             ) : null}
 
-            <div className="mt-4 rounded-bp-lg border border-white/8 bg-white/[0.02] p-3.5 text-xs leading-5 text-white/72">
+            <div className="mt-3.5 rounded-bp-lg border border-white/8 bg-white/[0.02] p-3 text-[10px] leading-5 text-white/72 sm:mt-4 sm:p-3.5 sm:text-xs sm:leading-5">
               Codes expire after 10 minutes. If one does not arrive, send another code or switch delivery method.
             </div>
           </div>

@@ -64,11 +64,10 @@ const GlassInputWrapper = ({ children }: { children: React.ReactNode }) => (
 const TestimonialCard = ({ testimonial, delay }: { testimonial: Testimonial; delay: string }) => (
   <div
     className={cn(
-      'flex w-72 items-start gap-3 rounded-[1.4rem] border border-black/6 bg-white p-4 shadow-[0_14px_40px_rgba(2,20,12,0.08)]',
+      'flex w-full max-w-[18rem] items-start gap-3 rounded-[1.4rem] border border-black/6 bg-white p-4 shadow-[0_14px_40px_rgba(2,20,12,0.08)]',
       delay,
     )}
   >
-    {/* eslint-disable-next-line @next/next/no-img-element */}
     <img src={testimonial.avatarSrc} className="h-10 w-10 rounded-2xl object-cover" alt={testimonial.name} />
     <div className="text-sm leading-snug">
       <p className="font-medium text-[#07140f]">{testimonial.name}</p>
@@ -91,10 +90,10 @@ function SocialButton({
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-[54px] w-full items-center justify-center gap-3 rounded-[1.15rem] border border-white/10 bg-white/[0.03] px-4 py-4 text-sm font-medium text-white transition-colors hover:border-[#00FF9D]/30 hover:bg-[#00FF9D]/[0.05]"
+      className="flex min-h-[52px] w-full items-center justify-center gap-2.5 rounded-[1.15rem] border border-white/10 bg-white/[0.03] px-3 py-3.5 text-xs font-medium text-white transition-colors hover:border-[#00FF9D]/30 hover:bg-[#00FF9D]/[0.05] sm:min-h-[54px] sm:px-4 sm:py-4 sm:text-sm"
     >
       {icon}
-      {label}
+      <span className="text-center">{label}</span>
     </button>
   );
 }
@@ -118,71 +117,76 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   const renderCustomContent = children || formContent;
 
   return (
-    <div className="relative h-[100dvh] min-h-[100dvh] overflow-hidden bg-[linear-gradient(180deg,#f8fbf9,#edf5f0)] text-white">
-      <div className="pointer-events-none absolute inset-0">
+    <div className="relative min-h-screen bg-[linear-gradient(180deg,#f8fbf9,#edf5f0)] py-4 text-white sm:py-6 lg:py-8">
+      <div className="pointer-events-none fixed inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(0,255,157,0.12),transparent_24%),radial-gradient(circle_at_88%_14%,rgba(1,50,32,0.12),transparent_20%)]" />
         <div className="absolute -left-12 top-10 h-72 w-72 rounded-full bg-[#00FF9D]/12 blur-3xl" />
         <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-[#9FA6B2]/20 blur-3xl" />
       </div>
 
-      <div className="relative z-10 mx-auto grid h-[100dvh] max-w-[96rem] gap-6 px-2 py-2 sm:px-6 sm:py-4 lg:grid-cols-[minmax(0,34rem)_minmax(0,1fr)] lg:px-8 lg:py-6">
-        <section className="mx-auto flex h-full w-full max-w-[34rem] flex-col overflow-hidden rounded-[1.45rem] border border-white/8 bg-[linear-gradient(180deg,rgba(7,20,15,0.9),rgba(0,0,0,0.98))] p-3 shadow-[0_40px_110px_rgba(0,0,0,0.28)] sm:p-5 lg:max-w-none lg:rounded-[2rem] lg:p-7">
-          <div className="flex items-center justify-between gap-4">
-            <Link href="/" className="inline-flex items-center gap-2.5" aria-label="Burner Point home">
-              <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} className="h-7 w-7 sm:h-8 sm:w-8 lg:h-9 lg:w-9" />
-              <span className="rounded-full bg-white/[0.04] px-2.5 py-1.5 sm:px-3 sm:py-2">
-                <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={166} height={26} className="h-3.5 w-auto sm:h-[1.15rem] lg:h-5" />
+      <div className="relative z-10 mx-auto flex w-full max-w-[88rem] flex-col items-center justify-center gap-6 px-4 sm:px-6 lg:flex-row lg:items-stretch lg:px-8">
+        {/* Left Auth Card */}
+        <section className="flex w-full max-w-[28rem] flex-col overflow-hidden rounded-[1.45rem] border border-white/8 bg-[linear-gradient(180deg,rgba(7,20,15,0.9),rgba(0,0,0,0.98))] p-4 shadow-[0_40px_110px_rgba(0,0,0,0.28)] sm:max-w-[30rem] sm:p-5 lg:max-w-[34rem] lg:rounded-[2rem] lg:p-6 xl:p-7">
+          {/* Header */}
+          <div className="flex items-center justify-between gap-3 sm:gap-4">
+            <Link href="/" className="inline-flex max-w-full items-center gap-2 sm:gap-2.5" aria-label="Burner Point home">
+              <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} className="h-7 w-7 flex-none sm:h-8 sm:w-8" />
+              <span className="min-w-0 rounded-full bg-white/[0.04] px-2 py-1 sm:px-2.5 sm:py-1.5">
+                <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={166} height={26} className="h-3 w-auto max-w-[6rem] sm:h-3.5 sm:max-w-[8rem] lg:h-4 lg:max-w-[10rem]" />
               </span>
             </Link>
-            <Link href="/pricing" className="hidden text-sm font-medium text-white transition hover:text-white sm:inline-flex">
+            <Link href="/pricing" className="hidden text-xs font-medium text-white transition hover:text-white sm:inline-flex sm:text-sm">
               Pricing
             </Link>
           </div>
 
-          <div className="bp-auth-copy mt-3 sm:mt-5 lg:mt-8">
+          {/* Title Section */}
+          <div className="bp-auth-copy mt-3 sm:mt-4">
             <p className="bp-auth-kicker font-mono text-[9px] uppercase tracking-[0.18em] text-[#00FF9D] sm:text-[10px] sm:tracking-[0.24em]">Account access</p>
             {title ? (
-              <h1 className="bp-auth-title mt-1.5 text-xl font-black leading-none text-white sm:mt-3 sm:text-3xl lg:mt-4 lg:text-[2.8rem]">
+              <h1 className="bp-auth-title mt-1.5 text-lg font-black leading-none text-white sm:mt-2 sm:text-xl lg:mt-2.5 lg:text-2xl xl:text-[2.4rem]">
                 {title}
               </h1>
             ) : null}
             {description ? (
-              <p className="bp-auth-desc mt-1.5 line-clamp-2 text-xs leading-5 text-[#E5E7EB] sm:mt-3 sm:text-sm sm:leading-6 lg:mt-4 lg:text-base lg:leading-7">
+              <p className="bp-auth-desc mt-1.5 line-clamp-2 text-xs leading-5 text-[#E5E7EB] sm:mt-2 sm:text-sm sm:leading-6 lg:mt-2 lg:text-base lg:leading-6">
                 {description}
               </p>
             ) : null}
           </div>
 
-          <div className="mt-4 hidden flex-wrap gap-3 sm:flex lg:mt-6">
+          {/* Trust Badges - Desktop Only */}
+          <div className="mt-3 hidden flex-wrap gap-2 sm:flex lg:mt-3">
             {heroTrustItems.slice(0, 3).map((item) => (
               <span
                 key={item}
-                className="inline-flex min-h-9 items-center rounded-full border border-white/10 bg-white/[0.03] px-3 text-xs font-medium text-[#E5E7EB]"
+                className="inline-flex min-h-7 items-center rounded-full border border-white/10 bg-white/[0.03] px-2.5 text-[9px] font-medium text-[#E5E7EB] sm:min-h-8 sm:px-3 sm:text-xs"
               >
                 {item}
               </span>
             ))}
           </div>
 
-          <div className="mt-3 min-h-0 flex-1 sm:mt-5 lg:mt-8">
+          {/* Form Content */}
+          <div className="mt-3 flex-1 sm:mt-4 lg:mt-4">
             {renderCustomContent ? (
               <div>{renderCustomContent}</div>
             ) : (
               <>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
                   <SocialButton icon={<GoogleIcon />} label="Continue with Google" onClick={onGoogleSignIn} />
                   <SocialButton icon={<AppleIcon />} label="Continue with Apple" onClick={onAppleSignIn} />
                   <SocialButton icon={<MicrosoftIcon />} label="Continue with Microsoft" onClick={onMicrosoftSignIn} />
                 </div>
 
-                <div className="relative my-5 flex items-center justify-center">
+                <div className="relative my-3.5 flex items-center justify-center sm:my-4">
                   <span className="w-full border-t border-white/10" />
-                  <span className="absolute bg-[#04120C] px-4 font-mono text-[11px] uppercase tracking-[0.24em] text-[#E5E7EB]">
+                  <span className="absolute bg-[#04120C] px-3 font-mono text-[9px] uppercase tracking-[0.18em] text-[#E5E7EB] sm:px-4 sm:text-[11px] sm:tracking-[0.22em]">
                     OR
                   </span>
                 </div>
 
-                <form className="space-y-5" onSubmit={onSignIn}>
+                <form className="space-y-3.5 sm:space-y-4" onSubmit={onSignIn}>
                   <div>
                     <label className="text-sm font-medium text-white">Email or phone</label>
                     <GlassInputWrapper>
@@ -190,7 +194,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                         name="identifier"
                         type="text"
                         placeholder="you@example.com or +14155550182"
-                        className="w-full rounded-2xl bg-transparent p-4 text-sm text-white placeholder:text-[#E5E7EB] focus:outline-none"
+                        className="w-full rounded-2xl bg-transparent p-3.5 text-sm text-white placeholder:text-[#E5E7EB] focus:outline-none sm:p-4"
                       />
                     </GlassInputWrapper>
                   </div>
@@ -203,7 +207,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                           name="password"
                           type={showPassword ? 'text' : 'password'}
                           placeholder="Enter your password"
-                          className="w-full rounded-2xl bg-transparent p-4 pr-12 text-sm text-white placeholder:text-[#E5E7EB] focus:outline-none"
+                          className="w-full rounded-2xl bg-transparent p-3.5 pr-12 text-sm text-white placeholder:text-[#E5E7EB] focus:outline-none sm:p-4"
                         />
                         <button
                           type="button"
@@ -220,8 +224,8 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                     </GlassInputWrapper>
                   </div>
 
-                  <div className="flex items-center justify-between text-sm">
-                    <label className="flex items-center gap-3 text-[#E5E7EB]">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm">
+                    <label className="flex items-center gap-2 text-[#E5E7EB]">
                       <input type="checkbox" name="rememberMe" className="h-4 w-4 accent-[#00FF9D]" />
                       <span>Keep me signed in</span>
                     </label>
@@ -236,13 +240,13 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
                   <button
                     type="submit"
-                    className="w-full rounded-[1.15rem] bg-[#00FF9D] py-4 text-sm font-semibold uppercase tracking-[0.18em] text-black transition-colors hover:bg-[#39FF14]"
+                    className="w-full rounded-[1.15rem] bg-[#00FF9D] py-3.5 text-xs font-semibold uppercase tracking-[0.18em] text-black transition-colors hover:bg-[#39FF14] sm:py-4 sm:text-sm"
                   >
                     Continue
                   </button>
                 </form>
 
-                <p className="mt-5 text-center text-sm text-white/72">
+                <p className="mt-3.5 text-center text-xs text-white/72 sm:mt-4 sm:text-sm">
                   New to Burner Point?{' '}
                   <button
                     type="button"
@@ -258,7 +262,8 @@ export const SignInPage: React.FC<SignInPageProps> = ({
             {footerContent ? <div className="pt-3">{footerContent}</div> : null}
           </div>
 
-          <div className="mt-8 hidden rounded-[1.4rem] border border-[#00FF9D]/16 bg-[#00FF9D]/[0.06] p-4 lg:block">
+          {/* Helper Card - Only show on XL screens where there's room */}
+          <div className="mt-4 hidden rounded-[1.4rem] border border-[#00FF9D]/16 bg-[#00FF9D]/[0.06] p-3.5 xl:block">
             <div className="flex items-start gap-3">
               <ShieldCheck className="mt-0.5 h-5 w-5 flex-none text-[#00FF9D]" />
               <div>
@@ -266,7 +271,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 <p className="mt-1.5 text-sm leading-6 text-[#E5E7EB]">
                   Sign in once to access numbers, verification, rentals, eSIM orders, proxy access, billing, and support.
                 </p>
-                <Link href="/#products" className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-[#00FF9D] transition hover:gap-3">
+                <Link href="/#products" className="mt-2.5 inline-flex items-center gap-2 text-sm font-medium text-[#00FF9D] transition hover:gap-3">
                   Explore products
                   <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -275,7 +280,8 @@ export const SignInPage: React.FC<SignInPageProps> = ({
           </div>
         </section>
 
-        <section className="relative hidden overflow-hidden rounded-[2rem] border border-black/6 bg-white p-7 shadow-[0_36px_100px_rgba(2,20,12,0.12)] lg:flex lg:flex-col lg:justify-between">
+        {/* Right Marketing Panel - Only on large screens (1100px+) */}
+        <section className="relative hidden w-full max-w-[32rem] overflow-hidden rounded-[2rem] border border-black/6 bg-white p-5 shadow-[0_36px_100px_rgba(2,20,12,0.12)] lg:flex lg:max-w-[36rem] xl:block xl:w-auto xl:flex-1 2xl:max-w-[42rem]">
           {heroImageSrc ? (
             <div
               className="absolute inset-4 rounded-[2rem] bg-cover bg-center opacity-10"
@@ -283,59 +289,61 @@ export const SignInPage: React.FC<SignInPageProps> = ({
             />
           ) : null}
 
-          <div className="relative z-10">
-            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[#00A76A]">Stay Anonymous. Stay Connected.</p>
-            <h2 className="mt-4 max-w-xl text-[3rem] font-black leading-[0.92] text-[#07140f] xl:text-[3.7rem]">
-              Private access, without the noise.
-            </h2>
-            <p className="mt-4 max-w-2xl text-base leading-8 text-[#2f4d40]">
-              Sign in quickly, manage your privacy tools, and keep support close when you need help.
-            </p>
-          </div>
-
-          <div className="relative z-10 mt-8 grid gap-4 xl:grid-cols-2">
-            {productLinks.slice(0, 4).map((item, index) => (
-              <article
-                key={item.name}
-                className={cn(
-                  'rounded-[1.35rem] border p-5',
-                  index === 0
-                    ? 'border-transparent bg-[linear-gradient(135deg,#07140f,#013220)] text-white shadow-[0_20px_48px_rgba(2,20,12,0.14)]'
-                    : 'border-black/6 bg-[#f7fbf8] text-[#07140f]',
-                )}
-              >
-                <p className={cn('font-mono text-[10px] uppercase tracking-[0.22em]', index === 0 ? 'text-[#00FF9D]' : 'text-[#00A76A]')}>
-                  {item.name}
-                </p>
-                <p className={cn('mt-3 text-sm leading-7', index === 0 ? 'text-white/78' : 'text-[#2f4d40]')}>
-                  {item.description}
-                </p>
-              </article>
-            ))}
-          </div>
-
-          <div className="relative z-10 mt-8 grid gap-4 xl:grid-cols-[1fr_auto] xl:items-end">
-            <div className="rounded-[1.45rem] border border-black/6 bg-[#f7fbf8] p-5">
-              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#00A76A]">Support contacts</p>
-              <div className="mt-3 space-y-2 text-sm text-[#2f4d40]">
-                <a href={`mailto:${supportContacts.email}`} className="block transition hover:text-[#07140f]">
-                  {supportContacts.email}
-                </a>
-                <a href={supportContacts.telegramPrimary} target="_blank" rel="noreferrer" className="block transition hover:text-[#07140f]">
-                  Telegram: {TELEGRAM_SUPPORT_HANDLE}
-                </a>
-                <a href={supportContacts.telegramApp} target="_blank" rel="noreferrer" className="block transition hover:text-[#07140f]">
-                  Telegram: {TELEGRAM_COMMUNITY_HANDLE}
-                </a>
-              </div>
+          <div className="relative z-10 flex h-full flex-col justify-between">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[#00A76A]">Stay Anonymous. Stay Connected.</p>
+              <h2 className="mt-2.5 max-w-xl text-xl font-black leading-[0.92] text-[#07140f] sm:text-2xl lg:mt-3 lg:text-[2.2rem] xl:text-[2.6rem] 2xl:text-[3rem]">
+                Private access, without the noise.
+              </h2>
+              <p className="mt-2.5 max-w-lg text-sm leading-6 text-[#2f4d40] sm:text-base lg:mt-2.5 lg:leading-7">
+                Sign in quickly, manage your privacy tools, and keep support close when you need help.
+              </p>
             </div>
 
-            {testimonials.length > 0 ? (
-              <div className="hidden xl:flex xl:flex-col xl:gap-3">
-                <TestimonialCard testimonial={testimonials[0]} delay="" />
-                {testimonials[1] ? <TestimonialCard testimonial={testimonials[1]} delay="" /> : null}
+            <div className="mt-5 grid gap-2.5 sm:grid-cols-2 lg:mt-6">
+              {productLinks.slice(0, 4).map((item, index) => (
+                <article
+                  key={item.name}
+                  className={cn(
+                    'rounded-[1.2rem] border p-3.5',
+                    index === 0
+                      ? 'border-transparent bg-[linear-gradient(135deg,#07140f,#013220)] text-white shadow-[0_20px_48px_rgba(2,20,12,0.14)]'
+                      : 'border-black/6 bg-[#f7fbf8] text-[#07140f]',
+                  )}
+                >
+                  <p className={cn('font-mono text-[9px] uppercase tracking-[0.2em]', index === 0 ? 'text-[#00FF9D]' : 'text-[#00A76A]')}>
+                    {item.name}
+                  </p>
+                  <p className={cn('mt-1.5 text-xs leading-5', index === 0 ? 'text-white/78' : 'text-[#2f4d40]')}>
+                    {item.description}
+                  </p>
+                </article>
+              ))}
+            </div>
+
+            <div className="mt-5 grid gap-3.5 xl:mt-6 xl:grid-cols-[1fr_auto] xl:items-end">
+              <div className="rounded-[1.35rem] border border-black/6 bg-[#f7fbf8] p-3.5">
+                <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#00A76A]">Support contacts</p>
+                <div className="mt-2 space-y-1.5 text-xs text-[#2f4d40] sm:text-sm">
+                  <a href={`mailto:${supportContacts.email}`} className="block transition hover:text-[#07140f]">
+                    {supportContacts.email}
+                  </a>
+                  <a href={supportContacts.telegramPrimary} target="_blank" rel="noreferrer" className="block transition hover:text-[#07140f]">
+                    Telegram: {TELEGRAM_SUPPORT_HANDLE}
+                  </a>
+                  <a href={supportContacts.telegramApp} target="_blank" rel="noreferrer" className="block transition hover:text-[#07140f]">
+                    Telegram: {TELEGRAM_COMMUNITY_HANDLE}
+                  </a>
+                </div>
               </div>
-            ) : null}
+
+              {testimonials.length > 0 ? (
+                <div className="flex flex-col gap-2">
+                  <TestimonialCard testimonial={testimonials[0]} delay="" />
+                  {testimonials[1] ? <TestimonialCard testimonial={testimonials[1]} delay="" /> : null}
+                </div>
+              ) : null}
+            </div>
           </div>
         </section>
       </div>

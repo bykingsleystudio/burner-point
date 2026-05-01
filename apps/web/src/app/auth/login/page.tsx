@@ -356,10 +356,10 @@ export default function LoginPage() {
       testimonials={[]}
       onResetPassword={() => setAuthMode('reset-request')}
     >
-      <div className="space-y-2.5 sm:space-y-4 lg:space-y-5">
+      <div className="space-y-3 sm:space-y-4">
         {!secondFactorStrategy && (authMode === 'sign-in' || authMode === 'reset-request') ? (
           <>
-            <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
               {oauthProviders.map((provider) => (
                 <AuthProviderButton
                   key={provider.label}
@@ -367,14 +367,14 @@ export default function LoginPage() {
                   label={`Continue with ${provider.label}`}
                   onClick={() => startOAuth(provider.strategy)}
                   disabled={isSubmitting}
-                  className="min-h-10 justify-center rounded-[0.9rem] px-2 py-2 text-center sm:min-h-12 [&>span]:gap-2 [&_span:last-child]:text-[11px] [&_span:last-child]:sm:text-sm"
+                  className="min-h-11 justify-center rounded-[1rem] px-3 py-3 text-center sm:min-h-12 [&>span]:gap-2 [&_span:last-child]:text-xs [&_span:last-child]:sm:text-sm"
                 />
               ))}
             </div>
 
-            <div className="relative flex items-center justify-center">
+            <div className="relative my-3.5 flex items-center justify-center sm:my-4">
               <span className="w-full border-t border-white/10" />
-              <span className="absolute bg-[#04120C] px-3 text-center font-mono text-[9px] uppercase tracking-[0.14em] text-white/70 sm:px-4 sm:text-[11px] sm:tracking-[0.22em]">
+              <span className="absolute bg-[#04120C] px-3 text-center font-mono text-[9px] uppercase tracking-[0.18em] text-white/70 sm:px-4 sm:text-[11px] sm:tracking-[0.22em]">
                 or continue with email and phone number
               </span>
             </div>
@@ -591,18 +591,18 @@ export default function LoginPage() {
         )}
 
         {authMode !== 'sign-in' || secondFactorStrategy ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/8 pt-2 sm:pt-4">
-            <button type="button" onClick={returnToSignIn} className="inline-flex items-center gap-2 text-sm text-white/72 transition hover:text-white">
-              <ArrowRight className="h-4 w-4 rotate-180" />
+          <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-white/8 pt-2.5 sm:gap-3 sm:pt-3">
+            <button type="button" onClick={returnToSignIn} className="inline-flex items-center gap-2 text-xs text-white/72 transition hover:text-white sm:text-sm">
+              <ArrowRight className="h-3.5 w-3.5 rotate-180 sm:h-4 sm:w-4" />
               Back
             </button>
-            <Link href="/dashboard/settings" className="text-sm text-brand-green transition hover:text-[#39FF14]">
+            <Link href="/dashboard/settings" className="text-xs text-brand-green transition hover:text-[#39FF14] sm:text-sm">
               Security settings after sign-in
             </Link>
           </div>
         ) : null}
 
-        <p className="text-[11px] leading-5 text-white/70 sm:text-xs sm:leading-6">
+        <p className="mt-2.5 text-[11px] leading-5 text-white/70 sm:mt-3 sm:text-xs sm:leading-6">
           Need an account?{' '}
           <Link href="/sign-up" className="text-brand-green transition hover:text-[#39FF14]">
             Create one
