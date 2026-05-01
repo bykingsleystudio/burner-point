@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { type FormEvent, useEffect, useRef, useState } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import { useSignIn } from '@clerk/nextjs';
 import toast from 'react-hot-toast';
-import { ArrowRight, Zap } from 'lucide-react';
+import { Zap } from 'lucide-react';
 import { AuthProviderButton } from '@/components/auth-provider-button';
-import { GlassInputWrapper, SignInPage } from '@/components/ui/sign-in';
+import { AppleIcon, GlassInputWrapper, GoogleIcon, MicrosoftIcon, SignInPage } from '@/components/ui/sign-in';
 import {
   INTERNATIONAL_PHONE_ERROR,
   classifyAuthIdentifier,
@@ -29,11 +29,9 @@ type ResetPasswordMethod = 'email' | 'phone';
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const identifierRef = useRef<HTMLInputElement>(null);
   const { signIn, fetchStatus } = useSignIn();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [keepSignedIn, setKeepSignedIn] = useState(true);
   const [loading, setLoading] = useState(false);
   const [secondFactorStrategy, setSecondFactorStrategy] = useState<SecondFactorStrategy | null>(null);
   const [secondFactorCode, setSecondFactorCode] = useState('');
@@ -57,19 +55,16 @@ export default function LoginPage() {
 
   const finishSignIn = async () => {
     if (!signIn) throw new Error('Auth not ready');
-
     const { error } = await signIn.finalize({
       navigate: ({ decorateUrl }) => {
         router.push(decorateUrl('/dashboard'));
       },
     });
-
     if (error) throw error;
   };
 
   const prepareSecondFactor = async () => {
     if (!signIn) throw new Error('Auth not ready');
-
     const factor = signIn.supportedSecondFactors?.[0] as { strategy?: SecondFactorStrategy } | undefined;
     const strategy = factor?.strategy ?? 'totp';
 
@@ -77,7 +72,6 @@ export default function LoginPage() {
       const { error } = await signIn.mfa.sendEmailCode();
       if (error) throw error;
     }
-
     if (strategy === 'phone_code') {
       const { error } = await signIn.mfa.sendPhoneCode();
       if (error) throw error;
@@ -89,18 +83,15 @@ export default function LoginPage() {
 
   const completeOrContinueSignIn = async () => {
     if (!signIn) return;
-
     if (signIn.status === 'complete') {
       await finishSignIn();
       toast.success('Welcome back.');
       return;
     }
-
     if (signIn.status === 'needs_second_factor' || signIn.status === 'needs_client_trust') {
       await prepareSecondFactor();
       return;
     }
-
     toast.error('Something went wrong. Please sign in again.');
   };
 
@@ -110,7 +101,6 @@ export default function LoginPage() {
       toast.error('Something went wrong. Please sign in again.');
       return;
     }
-
     if (!canSubmit) {
       toast.error('Enter your email or phone and password.');
       return;
@@ -130,191 +120,10 @@ export default function LoginPage() {
         identifier: normalizedIdentifier,
         password,
       });
-
       if (error) throw error;
       await completeOrContinueSignIn();
     } catch (err) {
       toast.error(getClerkErrorMessage(err, 'Something went wrong. Please sign in again.'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const startPhoneSignIn = async () => {
-    if (!signIn) {
-      toast.error('Something went wrong. Please sign in again.');
-      return;
-    }
-
-    const value = normalizeInternationalPhone(phoneIdentifier);
-    if (!isValidInternationalPhone(phoneIdentifier)) {
-      toast.error(INTERNATIONAL_PHONE_ERROR);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { error } = await signIn.create({ identifier: value });
-      if (error) throw error;
-
-      const { error: sendError } = await signIn.phoneCode.sendCode({ phoneNumber: value });
-      if (sendError) throw sendError;
-
-      setAuthMode('phone-code');
-      toast.success('Verification code sent to your phone.');
-    } catch (err) {
-      toast.error(getClerkErrorMessage(err, 'Could not send the code. Try again.'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const verifyPhoneSignIn = async () => {
-    if (!signIn) {
-      toast.error('Something went wrong. Please sign in again.');
-      return;
-    }
-
-    const code = phoneCode.trim();
-    if (!/^\d{4,10}$/.test(code)) {
-      toast.error('Enter the code sent to your phone.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { error } = await signIn.phoneCode.verifyCode({ code });
-      if (error) throw error;
-      await completeOrContinueSignIn();
-    } catch (err) {
-      toast.error(getClerkErrorMessage(err, 'Verification failed. Try again.'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const startPasswordReset = async () => {
-    if (!signIn) {
-      toast.error('Something went wrong. Please sign in again.');
-      return;
-    }
-
-    const identifierType = classifyAuthIdentifier(resetIdentifier);
-    if (!identifierType) {
-      toast.error('Enter your email address or an international phone number.');
-      return;
-    }
-
-    if (identifierType === 'phone' && !isValidInternationalPhone(resetIdentifier)) {
-      toast.error(INTERNATIONAL_PHONE_ERROR);
-      return;
-    }
-
-    const value = normalizeAuthIdentifier(resetIdentifier);
-    const method: ResetPasswordMethod = identifierType;
-    setLoading(true);
-    try {
-      const { error: createError } = await signIn.create({ identifier: value });
-      if (createError) throw createError;
-
-      const { error: sendError } =
-        method === 'email'
-          ? await signIn.resetPasswordEmailCode.sendCode()
-          : await signIn.resetPasswordPhoneCode.sendCode();
-
-      if (sendError) throw sendError;
-
-      setResetMethod(method);
-      setAuthMode('reset-code');
-      toast.success(`Check your ${method === 'email' ? 'email' : 'phone'} for the reset code.`);
-    } catch (err) {
-      toast.error(getClerkErrorMessage(err, 'Could not send the reset code. Try again.'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const verifyPasswordResetCode = async () => {
-    if (!signIn) {
-      toast.error('Something went wrong. Please sign in again.');
-      return;
-    }
-
-    const code = resetCode.trim();
-    if (!code) {
-      toast.error('Enter the reset code you received.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { error } =
-        resetMethod === 'email'
-          ? await signIn.resetPasswordEmailCode.verifyCode({ code })
-          : await signIn.resetPasswordPhoneCode.verifyCode({ code });
-
-      if (error) throw error;
-
-      setAuthMode('reset-password');
-      toast.success('Code verified. Set your new password.');
-    } catch (err) {
-      toast.error(getClerkErrorMessage(err, 'Verification failed. Try again.'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const submitNewPassword = async () => {
-    if (!signIn) {
-      toast.error('Something went wrong. Please sign in again.');
-      return;
-    }
-
-    if (resetPassword.length < 8) {
-      toast.error('New password must be at least 8 characters.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { error } =
-        resetMethod === 'email'
-          ? await signIn.resetPasswordEmailCode.submitPassword({ password: resetPassword, signOutOfOtherSessions: true })
-          : await signIn.resetPasswordPhoneCode.submitPassword({ password: resetPassword, signOutOfOtherSessions: true });
-
-      if (error) throw error;
-
-      await finishSignIn();
-      toast.success('Password reset. Welcome back.');
-    } catch (err) {
-      toast.error(getClerkErrorMessage(err, 'Could not save the new password. Try again.'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const verifySecondFactor = async () => {
-    if (!signIn || !secondFactorStrategy || !secondFactorCode.trim()) {
-      toast.error('Enter your verification code to continue.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const code = secondFactorCode.trim();
-      const { error } =
-        secondFactorStrategy === 'email_code'
-          ? await signIn.mfa.verifyEmailCode({ code })
-          : secondFactorStrategy === 'phone_code'
-            ? await signIn.mfa.verifyPhoneCode({ code })
-            : secondFactorStrategy === 'backup_code'
-              ? await signIn.mfa.verifyBackupCode({ code })
-              : await signIn.mfa.verifyTOTP({ code });
-
-      if (error) throw error;
-      await completeOrContinueSignIn();
-    } catch (err) {
-      toast.error(getClerkErrorMessage(err, 'Verification failed. Try again.'));
     } finally {
       setLoading(false);
     }
@@ -325,7 +134,6 @@ export default function LoginPage() {
       toast.error('Something went wrong. Please sign in again.');
       return;
     }
-
     try {
       const { error } = await signIn.sso({
         strategy,
@@ -351,272 +159,102 @@ export default function LoginPage() {
 
   return (
     <SignInPage
-      title="Sign in to Burner Point."
-      description="Access private numbers, codes, rentals, travel data, proxies, billing, and support."
-      testimonials={[]}
-      onResetPassword={() => setAuthMode('reset-request')}
+      title="Sign in to Burner Point"
+      description="Access your private dashboard"
     >
-      <div className="space-y-3 sm:space-y-4">
-        {!secondFactorStrategy && (authMode === 'sign-in' || authMode === 'reset-request') ? (
-          <>
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
-              {oauthProviders.map((provider) => (
-                <AuthProviderButton
-                  key={provider.label}
-                  provider={provider.label}
-                  label={`Continue with ${provider.label}`}
-                  onClick={() => startOAuth(provider.strategy)}
-                  disabled={isSubmitting}
-                  className="min-h-11 justify-center rounded-[1rem] px-3 py-3 text-center sm:min-h-12 [&>span]:gap-2 [&_span:last-child]:text-xs [&_span:last-child]:sm:text-sm"
-                />
-              ))}
-            </div>
+      <div className="space-y-4">
+        {/* Social Login Buttons */}
+        <div className="grid grid-cols-1 gap-3">
+          {oauthProviders.map((provider) => (
+            <AuthProviderButton
+              key={provider.label}
+              provider={provider.label}
+              label={provider.label}
+              onClick={() => startOAuth(provider.strategy)}
+              disabled={isSubmitting}
+              className="h-11 justify-center"
+            />
+          ))}
+        </div>
 
-            <div className="relative my-3.5 flex items-center justify-center sm:my-4">
-              <span className="w-full border-t border-white/10" />
-              <span className="absolute bg-[#04120C] px-3 text-center font-mono text-[9px] uppercase tracking-[0.18em] text-white/70 sm:px-4 sm:text-[11px] sm:tracking-[0.22em]">
-                or continue with email and phone number
-              </span>
-            </div>
-          </>
-        ) : null}
+        {/* Divider */}
+        <div className="relative flex items-center py-2">
+          <div className="flex-1 border-t border-white/10" />
+          <span className="mx-3 text-xs text-gray-500">OR</span>
+          <div className="flex-1 border-t border-white/10" />
+        </div>
 
-        {authMode === 'phone-request' ? (
-          <div className="space-y-3 rounded-[1.15rem] border border-white/8 bg-white/[0.03] p-3 sm:space-y-4 sm:rounded-[1.35rem] sm:p-4">
-            <label className="block text-xs font-medium text-white/70 sm:text-sm">
-              Phone number
-              <GlassInputWrapper>
-                <input
-                  value={phoneIdentifier}
-                  onChange={(event) => setPhoneIdentifier(event.target.value)}
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  placeholder="+14155550182"
-                  className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
-                />
-              </GlassInputWrapper>
+        {/* Login Form */}
+        <form onSubmit={onSubmit} className="space-y-3">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-400">
+              Email or phone
             </label>
-            <button
-              type="button"
-              disabled={isSubmitting}
-              onClick={startPhoneSignIn}
-              className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-[1rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
-            >
-              {isSubmitting ? 'Sending code...' : 'Send code'}
-            </button>
+            <GlassInputWrapper>
+              <input
+                value={identifier}
+                onChange={(event) => setIdentifier(event.target.value)}
+                type="text"
+                autoComplete="username"
+                placeholder="you@example.com or +14155550182"
+                className="w-full rounded-lg bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none"
+              />
+            </GlassInputWrapper>
           </div>
-        ) : authMode === 'phone-code' ? (
-          <div className="space-y-3 rounded-[1.15rem] border border-white/8 bg-white/[0.03] p-3 sm:space-y-4 sm:rounded-[1.35rem] sm:p-4">
-            <label className="block text-xs font-medium text-white/70 sm:text-sm">
-              Verification code
-              <GlassInputWrapper>
-                <input
-                  value={phoneCode}
-                  onChange={(event) => setPhoneCode(event.target.value)}
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  placeholder="Enter code"
-                  className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
-                />
-              </GlassInputWrapper>
-            </label>
-            <button
-              type="button"
-              disabled={isSubmitting}
-              onClick={verifyPhoneSignIn}
-              className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-[1rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
-            >
-              {isSubmitting ? 'Verifying...' : 'Continue with phone'}
-            </button>
-          </div>
-        ) : authMode === 'reset-request' ? (
-          <div className="space-y-3 rounded-[1.15rem] border border-white/8 bg-white/[0.03] p-3 sm:space-y-4 sm:rounded-[1.35rem] sm:p-4">
-            <label className="block text-xs font-medium text-white/70 sm:text-sm">
-              Email or phone number
-              <GlassInputWrapper>
-                <input
-                  value={resetIdentifier}
-                  onChange={(event) => setResetIdentifier(event.target.value)}
-                  type="text"
-                  autoComplete="username"
-                  placeholder="you@example.com or +14155550182"
-                  className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
-                />
-              </GlassInputWrapper>
-            </label>
-            <button
-              type="button"
-              disabled={isSubmitting}
-              onClick={startPasswordReset}
-              className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-[1rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
-            >
-              {isSubmitting ? 'Sending code...' : 'Send reset code'}
-            </button>
-          </div>
-        ) : authMode === 'reset-code' ? (
-          <div className="space-y-3 rounded-[1.15rem] border border-white/8 bg-white/[0.03] p-3 sm:space-y-4 sm:rounded-[1.35rem] sm:p-4">
-            <label className="block text-xs font-medium text-white/70 sm:text-sm">
-              Reset code
-              <GlassInputWrapper>
-                <input
-                  value={resetCode}
-                  onChange={(event) => setResetCode(event.target.value)}
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  placeholder="Enter reset code"
-                  className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
-                />
-              </GlassInputWrapper>
-            </label>
-            <button
-              type="button"
-              disabled={isSubmitting}
-              onClick={verifyPasswordResetCode}
-              className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-[1rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
-            >
-              {isSubmitting ? 'Verifying...' : 'Verify reset code'}
-            </button>
-          </div>
-        ) : authMode === 'reset-password' ? (
-          <div className="space-y-3 rounded-[1.15rem] border border-white/8 bg-white/[0.03] p-3 sm:space-y-4 sm:rounded-[1.35rem] sm:p-4">
-            <label className="block text-xs font-medium text-white/70 sm:text-sm">
-              New password
-              <GlassInputWrapper>
-                <input
-                  value={resetPassword}
-                  onChange={(event) => setResetPassword(event.target.value)}
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="Enter a new password"
-                  className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
-                />
-              </GlassInputWrapper>
-            </label>
-            <button
-              type="button"
-              disabled={isSubmitting}
-              onClick={submitNewPassword}
-              className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-[1rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
-            >
-              {isSubmitting ? 'Saving password...' : 'Reset password'}
-            </button>
-          </div>
-        ) : secondFactorStrategy ? (
-          <div className="space-y-3 rounded-[1.15rem] border border-white/8 bg-white/[0.03] p-3 sm:space-y-4 sm:rounded-[1.35rem] sm:p-4">
-            <label className="block text-xs font-medium text-white/70 sm:text-sm">
-              Security code
-              <GlassInputWrapper>
-                <input
-                  value={secondFactorCode}
-                  onChange={(event) => setSecondFactorCode(event.target.value)}
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  placeholder="Enter verification code"
-                  className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
-                />
-              </GlassInputWrapper>
-            </label>
-            <button
-              type="button"
-              disabled={isSubmitting}
-              onClick={verifySecondFactor}
-              className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-[1rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
-            >
-              {isSubmitting ? 'Verifying...' : 'Verify 2FA'}
-            </button>
-          </div>
-        ) : (
-          <form onSubmit={onSubmit} className="space-y-2.5 sm:space-y-4">
-            <label className="block text-xs font-medium text-white/70 sm:text-sm">
-              Email address or phone number
-              <GlassInputWrapper>
-                <input
-                  ref={identifierRef}
-                  value={identifier}
-                  onChange={(event) => setIdentifier(event.target.value)}
-                  type="text"
-                  autoComplete="username"
-                  placeholder="you@example.com or +14155550182"
-                  className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
-                />
-              </GlassInputWrapper>
-            </label>
 
-            <label className="block text-xs font-medium text-white/70 sm:text-sm">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-400">
               Password
-              <GlassInputWrapper>
-                <input
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  type="password"
-                  autoComplete="current-password"
-                  placeholder="Enter your password"
-                  className="w-full rounded-2xl bg-transparent px-3 py-2.5 text-base text-white placeholder:text-white/56 focus:outline-none sm:p-4 sm:text-sm"
-                />
-              </GlassInputWrapper>
             </label>
-
-            <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
-              <label className="flex items-center gap-3 text-white/68">
-                <input
-                  checked={keepSignedIn}
-                  onChange={(event) => setKeepSignedIn(event.target.checked)}
-                  type="checkbox"
-                  className="h-4 w-4 accent-[#00FF9D]"
-                />
-                <span>Keep me signed in</span>
-              </label>
-              <button type="button" onClick={() => setAuthMode('reset-request')} className="font-medium text-brand-green transition hover:text-[#1cffac]">
-                Forgot password?
-              </button>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isSubmitting || !canSubmit}
-              className="bp-button-glow flex min-h-11 w-full items-center justify-center gap-2 rounded-[1rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
-            >
-              {isSubmitting ? (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
-              ) : (
-                <Zap size={16} />
-              )}
-              {isSubmitting ? 'Signing in...' : 'Sign In'}
-            </button>
-          </form>
-        )}
-
-        {authMode !== 'sign-in' || secondFactorStrategy ? (
-          <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-white/8 pt-2.5 sm:gap-3 sm:pt-3">
-            <button type="button" onClick={returnToSignIn} className="inline-flex items-center gap-2 text-xs text-white/72 transition hover:text-white sm:text-sm">
-              <ArrowRight className="h-3.5 w-3.5 rotate-180 sm:h-4 sm:w-4" />
-              Back
-            </button>
-            <Link href="/dashboard/settings" className="text-xs text-brand-green transition hover:text-[#39FF14] sm:text-sm">
-              Security settings after sign-in
-            </Link>
+            <GlassInputWrapper>
+              <input
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                type="password"
+                autoComplete="current-password"
+                placeholder="Enter your password"
+                className="w-full rounded-lg bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none"
+              />
+            </GlassInputWrapper>
           </div>
-        ) : null}
 
-        <p className="mt-2.5 text-[11px] leading-5 text-white/70 sm:mt-3 sm:text-xs sm:leading-6">
-          Need an account?{' '}
-          <Link href="/sign-up" className="text-brand-green transition hover:text-[#39FF14]">
-            Create one
+          <div className="flex items-center justify-between text-xs">
+            <label className="flex items-center gap-2 text-gray-400">
+              <input
+                type="checkbox"
+                className="h-3.5 w-3.5 accent-[#00FF9D]"
+              />
+              Keep me signed in
+            </label>
+            <button
+              type="button"
+              onClick={() => setAuthMode('reset-request')}
+              className="text-[#00FF9D] hover:underline"
+            >
+              Forgot password?
+            </button>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting || !canSubmit}
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#00FF9D] to-[#39FF14] font-semibold text-black transition-all hover:shadow-[0_0_20px_rgba(0,255,157,0.4)] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isSubmitting ? (
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+            ) : (
+              <Zap size={16} />
+            )}
+            {isSubmitting ? 'Signing in...' : 'Sign In'}
+          </button>
+        </form>
+
+        {/* Footer Links */}
+        <p className="text-center text-xs text-gray-500">
+          Don't have an account?{' '}
+          <Link href="/sign-up" className="text-[#00FF9D] hover:underline">
+            Sign up
           </Link>
-          <span className="mx-2 text-white/70">&bull;</span>
-          By continuing you agree to the{' '}
-          <Link href="/terms-of-service" className="text-brand-green transition hover:text-[#39FF14]">
-            Terms of Service
-          </Link>{' '}
-          and{' '}
-          <Link href="/privacy-policy" className="text-brand-green transition hover:text-[#39FF14]">
-            Privacy Policy
-          </Link>
-          .
         </p>
       </div>
     </SignInPage>
@@ -630,7 +268,3 @@ function getClerkErrorMessage(error: unknown, fallback: string) {
   if (/password|identifier|not found|invalid|incorrect/i.test(raw)) return 'Email/phone or password is incorrect.';
   return fallback;
 }
-
-
-
-

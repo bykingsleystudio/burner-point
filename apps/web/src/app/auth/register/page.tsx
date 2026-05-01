@@ -9,7 +9,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { AuthProviderButton } from '@/components/auth-provider-button';
-import { GlassInputWrapper, SignInPage } from '@/components/ui/sign-in';
+import { AppleIcon, GlassInputWrapper, GoogleIcon, MicrosoftIcon, SignInPage } from '@/components/ui/sign-in';
 import { INTERNATIONAL_PHONE_ERROR, isValidInternationalPhone, normalizeInternationalPhone } from '@/lib/phone';
 
 const schema = z.object({
@@ -58,40 +58,33 @@ export default function RegisterPage() {
 
   const finishSignUp = async () => {
     if (!signUp) throw new Error('Auth not ready');
-
     const { error } = await signUp.finalize({
       navigate: ({ decorateUrl }) => {
         router.push(decorateUrl('/onboarding?redirect=/dashboard'));
       },
     });
-
     if (error) throw error;
   };
 
   const sendEmailCode = async () => {
     if (!signUp) throw new Error('Auth not ready');
-
     const result = await signUp.verifications.sendEmailCode();
     if ('error' in result && result.error) throw result.error;
-
     setAwaitingEmailCode(true);
     toast.success('Check your email for the code.');
   };
 
   const continueAfterCreate = async () => {
     if (!signUp) throw new Error('Auth not ready');
-
     if (signUp.status === 'complete') {
       await finishSignUp();
       toast.success('Account created.');
       return;
     }
-
     if (signUp.unverifiedFields.includes('email_address')) {
       await sendEmailCode();
       return;
     }
-
     toast.error('Something went wrong. Please try again.');
   };
 
@@ -193,59 +186,128 @@ export default function RegisterPage() {
 
   return (
     <SignInPage
-      title="Create your Burner Point account."
-      description="Add your first name, last name, email, phone number, and password to get started."
-      testimonials={[]}
+      title="Create your account"
+      description="Join Burner Point today"
     >
-      <div className="space-y-3 sm:space-y-4">
+      <div className="space-y-4">
         {!awaitingEmailCode ? (
           <>
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
+            {/* Social Login Buttons */}
+            <div className="grid grid-cols-1 gap-3">
               {oauthProviders.map((provider) => (
                 <AuthProviderButton
                   key={provider.label}
                   provider={provider.label}
-                  label={`Continue with ${provider.label}`}
+                  label={provider.label}
                   onClick={() => startOAuth(provider.strategy)}
                   disabled={isSubmitting}
-                  className="min-h-11 justify-center rounded-[1rem] px-3 py-3 text-center sm:min-h-12 [&>span]:gap-2 [&_span:last-child]:text-xs [&_span:last-child]:sm:text-sm"
+                  className="h-11 justify-center"
                 />
               ))}
             </div>
 
-            <div className="relative my-3.5 flex items-center justify-center sm:my-4">
-              <span className="w-full border-t border-white/10" />
-              <span className="absolute bg-[#04120C] px-3 text-center font-mono text-[9px] uppercase tracking-[0.18em] text-white/70 sm:px-4 sm:text-[11px] sm:tracking-[0.22em]">
-                or continue with email and phone number
-              </span>
+            {/* Divider */}
+            <div className="relative flex items-center py-2">
+              <div className="flex-1 border-t border-white/10" />
+              <span className="mx-3 text-xs text-gray-500">OR</span>
+              <div className="flex-1 border-t border-white/10" />
             </div>
-          </>
-        ) : null}
 
-        {awaitingEmailCode ? (
-          <div className="space-y-3.5 rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4 sm:p-5">
-            <p className="text-xs leading-6 text-white/72 sm:text-sm sm:leading-6">
-              We sent a sign-up code to <span className="text-white">{getValues('email')}</span>.
+            {/* Registration Form */}
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="First name" error={errors.firstName?.message}>
+                  <GlassInputWrapper>
+                    <input
+                      {...register('firstName')}
+                      autoComplete="given-name"
+                      placeholder="First name"
+                      className="w-full rounded-lg bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none"
+                    />
+                  </GlassInputWrapper>
+                </Field>
+
+                <Field label="Last name" error={errors.lastName?.message}>
+                  <GlassInputWrapper>
+                    <input
+                      {...register('lastName')}
+                      autoComplete="family-name"
+                      placeholder="Last name"
+                      className="w-full rounded-lg bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none"
+                    />
+                  </GlassInputWrapper>
+                </Field>
+              </div>
+
+              <Field label="Email" error={errors.email?.message}>
+                <GlassInputWrapper>
+                  <input
+                    {...register('email')}
+                    type="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    className="w-full rounded-lg bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none"
+                  />
+                </GlassInputWrapper>
+              </Field>
+
+              <Field label="Phone" error={errors.phoneNumber?.message}>
+                <GlassInputWrapper>
+                  <input
+                    {...register('phoneNumber')}
+                    type="tel"
+                    autoComplete="tel"
+                    placeholder="+14155550182"
+                    className="w-full rounded-lg bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none"
+                  />
+                </GlassInputWrapper>
+              </Field>
+
+              <Field label="Password" error={errors.password?.message}>
+                <GlassInputWrapper>
+                  <input
+                    {...register('password')}
+                    type="password"
+                    autoComplete="new-password"
+                    placeholder="Use at least 8 characters"
+                    className="w-full rounded-lg bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none"
+                  />
+                </GlassInputWrapper>
+              </Field>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex h-11 w-full items-center justify-center rounded-lg bg-gradient-to-r from-[#00FF9D] to-[#39FF14] font-semibold text-black transition-all hover:shadow-[0_0_20px_rgba(0,255,157,0.4)] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isSubmitting ? 'Creating account...' : 'Create Account'}
+              </button>
+            </form>
+          </>
+        ) : (
+          /* Email Verification */
+          <div className="space-y-4 rounded-lg border border-white/10 bg-white/5 p-4">
+            <p className="text-sm text-gray-400">
+              We sent a code to <span className="text-white">{getValues('email')}</span>
             </p>
-            <Field label="Email code">
+            <Field label="Verification code">
               <GlassInputWrapper>
                 <input
                   value={emailCode}
                   onChange={(event) => setEmailCode(event.target.value)}
                   inputMode="numeric"
                   autoComplete="one-time-code"
-                  enterKeyHint="done"
                   placeholder="Enter code"
-                  className="w-full rounded-2xl bg-transparent px-3 py-3 text-base text-white placeholder:text-white/56 focus:outline-none sm:py-3.5 sm:text-sm"
+                  className="w-full rounded-lg bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none"
                 />
               </GlassInputWrapper>
             </Field>
-            <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 disabled={isSubmitting}
                 onClick={verifyEmailCode}
-                className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-[1rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
+                className="flex h-11 items-center justify-center rounded-lg bg-gradient-to-r from-[#00FF9D] to-[#39FF14] font-semibold text-black transition-all hover:shadow-[0_0_20px_rgba(0,255,157,0.4)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSubmitting ? 'Checking...' : 'Continue'}
               </button>
@@ -253,112 +315,21 @@ export default function RegisterPage() {
                 type="button"
                 disabled={isSubmitting}
                 onClick={resendEmailCode}
-                className="flex min-h-11 w-full items-center justify-center rounded-[1rem] border border-white/10 px-4 text-xs font-semibold uppercase tracking-[0.14em] text-white/76 transition hover:border-brand-green/28 hover:text-white disabled:cursor-not-allowed disabled:opacity-60 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
+                className="flex h-11 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-sm text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Send another code
+                Resend Code
               </button>
             </div>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-              <Field label="First name" error={errors.firstName?.message}>
-                <GlassInputWrapper>
-                  <input
-                    {...register('firstName')}
-                    autoComplete="given-name"
-                    autoCapitalize="words"
-                    enterKeyHint="next"
-                    placeholder="First name"
-                    className="w-full rounded-2xl bg-transparent px-3 py-3 text-base text-white placeholder:text-white/56 focus:outline-none sm:py-3.5 sm:text-sm"
-                  />
-                </GlassInputWrapper>
-              </Field>
-
-              <Field label="Last name" error={errors.lastName?.message}>
-                <GlassInputWrapper>
-                  <input
-                    {...register('lastName')}
-                    autoComplete="family-name"
-                    autoCapitalize="words"
-                    enterKeyHint="next"
-                    placeholder="Last name"
-                    className="w-full rounded-2xl bg-transparent px-3 py-3 text-base text-white placeholder:text-white/56 focus:outline-none sm:py-3.5 sm:text-sm"
-                  />
-                </GlassInputWrapper>
-              </Field>
-            </div>
-
-            <Field label="Email address" error={errors.email?.message}>
-              <GlassInputWrapper>
-                <input
-                  {...register('email')}
-                  type="email"
-                  autoComplete="email"
-                  autoCapitalize="none"
-                  inputMode="email"
-                  enterKeyHint="next"
-                  placeholder="you@example.com"
-                  className="w-full rounded-2xl bg-transparent px-3 py-3 text-base text-white placeholder:text-white/56 focus:outline-none sm:py-3.5 sm:text-sm"
-                />
-              </GlassInputWrapper>
-            </Field>
-
-            <Field label="Phone number" error={errors.phoneNumber?.message}>
-              <GlassInputWrapper>
-                <input
-                  {...register('phoneNumber')}
-                  type="tel"
-                  autoComplete="tel"
-                  inputMode="tel"
-                  enterKeyHint="next"
-                  placeholder="+14155550182"
-                  className="w-full rounded-2xl bg-transparent px-3 py-3 text-base text-white placeholder:text-white/56 focus:outline-none sm:py-3.5 sm:text-sm"
-                />
-              </GlassInputWrapper>
-            </Field>
-
-            <Field label="Password" error={errors.password?.message}>
-              <GlassInputWrapper>
-                <input
-                  {...register('password')}
-                  type="password"
-                  autoComplete="new-password"
-                  enterKeyHint="done"
-                  placeholder="Use at least 8 characters"
-                  className="w-full rounded-2xl bg-transparent px-3 py-3 text-base text-white placeholder:text-white/56 focus:outline-none sm:py-3.5 sm:text-sm"
-                />
-              </GlassInputWrapper>
-            </Field>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-[1rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
-            >
-              {isSubmitting ? 'Creating account...' : 'Get Started'}
-            </button>
-          </form>
         )}
 
-        <div className="border-t border-white/8 pt-2.5 text-[11px] leading-5 text-white/70 sm:pt-3 sm:text-xs sm:leading-6">
-          <p>
-            Already have an account?{' '}
-            <Link href="/sign-in" className="text-brand-green transition hover:text-[#39FF14]">
-              Sign in
-            </Link>
-            <span className="mx-2 text-white/70">&bull;</span>
-            By continuing you agree to the{' '}
-            <Link href="/terms-of-service" className="text-brand-green transition hover:text-[#39FF14]">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link href="/privacy-policy" className="text-brand-green transition hover:text-[#39FF14]">
-              Privacy Policy
-            </Link>
-            .
-          </p>
-        </div>
+        {/* Footer Link */}
+        <p className="text-center text-xs text-gray-500">
+          Already have an account?{' '}
+          <Link href="/sign-in" className="text-[#00FF9D] hover:underline">
+            Sign in
+          </Link>
+        </p>
       </div>
     </SignInPage>
   );
@@ -366,11 +337,11 @@ export default function RegisterPage() {
 
 function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
   return (
-    <label className="block text-[11px] font-medium text-white/76 sm:text-xs">
-      {label}
-      <div className="mt-1 sm:mt-2">{children}</div>
-      {error ? <p className="mt-1 text-[10px] text-red-200 sm:mt-1.5 sm:text-xs">{error}</p> : null}
-    </label>
+    <div>
+      <label className="mb-1 block text-xs font-medium text-gray-400">{label}</label>
+      <div className="mt-1">{children}</div>
+      {error ? <p className="mt-1 text-[10px] text-red-400">{error}</p> : null}
+    </div>
   );
 }
 
@@ -392,4 +363,3 @@ function getFriendlyAuthError(error: unknown, fallback: string) {
   if (/email/i.test(raw)) return 'That email address is already in use.';
   return fallback;
 }
-
