@@ -1,10 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Eye, EyeOff } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 export interface Testimonial {
   avatarSrc: string;
@@ -131,4 +128,4 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   );
 };
 
-export { AppleIcon, GoogleIcon, MicrosoftIcon, GlassInputWrapper };
+export { GlassInputWrapper };

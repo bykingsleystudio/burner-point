@@ -9,7 +9,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { AuthProviderButton } from '@/components/auth-provider-button';
-import { AppleIcon, GlassInputWrapper, GoogleIcon, MicrosoftIcon, SignInPage } from '@/components/ui/sign-in';
+import { GlassInputWrapper, SignInPage } from '@/components/ui/sign-in';
 import { INTERNATIONAL_PHONE_ERROR, isValidInternationalPhone, normalizeInternationalPhone } from '@/lib/phone';
 
 const schema = z.object({

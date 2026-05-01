@@ -7,13 +7,12 @@ import { useSignIn } from '@clerk/nextjs';
 import toast from 'react-hot-toast';
 import { Zap } from 'lucide-react';
 import { AuthProviderButton } from '@/components/auth-provider-button';
-import { AppleIcon, GlassInputWrapper, GoogleIcon, MicrosoftIcon, SignInPage } from '@/components/ui/sign-in';
+import { GlassInputWrapper, SignInPage } from '@/components/ui/sign-in';
 import {
   INTERNATIONAL_PHONE_ERROR,
   classifyAuthIdentifier,
   isValidInternationalPhone,
   normalizeAuthIdentifier,
-  normalizeInternationalPhone,
 } from '@/lib/phone';
 
 const oauthProviders = [
@@ -251,7 +250,7 @@ export default function LoginPage() {
 
         {/* Footer Links */}
         <p className="text-center text-xs text-gray-500">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link href="/sign-up" className="text-[#00FF9D] hover:underline">
             Sign up
           </Link>
