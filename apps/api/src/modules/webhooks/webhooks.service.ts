@@ -1,9 +1,11 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { createHmac, timingSafeEqual } from 'crypto';
+import { createHmac, createPublicKey, timingSafeEqual, verify as verifySignature } from 'crypto';
 import { Repository } from 'typeorm';
 import { verifyWebhook } from '@clerk/backend/webhooks';
+import twilio from 'twilio';
+import { Request } from 'express';
 import { Message, MessageDirection, MessageStatus, MessageType } from '../../database/entities/message.entity';
 import { Call, CallDirection, CallStatus, WebhookDedup } from '../../database/entities/extended-entities';
 import { PhoneNumber } from '../../database/entities/phone-number.entity';
@@ -29,6 +31,23 @@ export class WebhooksService {
 
   private get apiWebhookBaseUrl(): string {
     return resolveWebhookBaseUrl(this.configService);
+  }
+
+  assertTwilioRequest(req: Request) {
+    const authToken = this.configService.get<string>('TWILIO_AUTH_TOKEN');
+    const signature = this.headerValue(req.headers as Record<string, string>, 'x-twilio-signature');
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    if (!authToken || !signature) {
+      this.logger.warn('Twilio webhook rejected because signature verification is not configured');
+      if (isProduction) throw new BadRequestException('Invalid Twilio signature');
+      return;
+    }
+
+    const body = req.body as Record<string, string>;
+    const urlCandidates = this.twilioRequestUrlCandidates(req);
+    const valid = urlCandidates.some((url) => twilio.validateRequest(authToken, signature, url, body));
+    if (!valid) throw new BadRequestException('Invalid Twilio signature');
   }
 
   async handleInboundSms(payload: Record<string, string>) {
@@ -173,7 +192,10 @@ export class WebhooksService {
   async handleTelnyxWebhook(
     payload: Record<string, unknown>,
     headers: Record<string, string>,
+    rawBody?: Buffer,
   ) {
+    this.assertTelnyxSignature(headers, rawBody);
+
     const eventId =
       (headers['telnyx-event-id'] as string | undefined) ||
       ((payload.data as Record<string, unknown> | undefined)?.id as string | undefined) ||
@@ -201,39 +223,52 @@ export class WebhooksService {
   }
 
   async handleBandwidthWebhook(
-    payload: Record<string, unknown>,
+    payload: Record<string, unknown> | Array<Record<string, unknown>>,
     headers: Record<string, string>,
     rawBody?: Buffer,
   ) {
-    const result = await this.handleProviderWebhook('bandwidth', payload, headers, rawBody);
-    const eventType = this.getProviderEventType(payload).toLowerCase();
-    const from = this.asString(payload.from) || this.asString((payload.message as Record<string, unknown> | undefined)?.from);
-    const to = this.asString(payload.to) || this.asString(payload.owner) || this.asString((payload.message as Record<string, unknown> | undefined)?.to);
-    const body = this.asString(payload.text) || this.asString(payload.body) || this.asString((payload.message as Record<string, unknown> | undefined)?.text);
+    this.assertBandwidthWebhookAuth(headers, rawBody);
 
-    if (eventType.includes('message') && from && to) {
-      await this.persistInboundProviderSms({
-        provider: 'bandwidth',
-        eventId:
-          this.asString(payload.messageId) ||
-          this.asString((payload.message as Record<string, unknown> | undefined)?.id) ||
-          `${Date.now()}`,
-        from,
-        to,
-        body,
-        payload,
-      }).catch((error) => {
-        this.logger.warn(`Bandwidth inbound message persistence failed: ${error instanceof Error ? error.message : String(error)}`);
-      });
+    const events = Array.isArray(payload) ? payload : [payload];
+    for (const event of events) {
+      const eventId = this.getProviderEventId(event, headers) || `bandwidth:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+      const eventType = this.getProviderEventType(event);
+      const duplicate = await this.storeWebhookEvent(`bandwidth:${eventId}`, 'bandwidth', eventType, event);
+      if (duplicate) continue;
+
+      const message = event.message as Record<string, unknown> | undefined;
+      const messageTo = message?.to;
+      const firstRecipient = Array.isArray(messageTo) ? messageTo[0] : messageTo;
+      const from = this.asString(event.from) || this.asString(message?.from);
+      const to = this.asString(event.to) || this.asString(event.owner) || this.asString(firstRecipient) || this.asString(message?.owner);
+      const body = this.asString(event.text) || this.asString(event.body) || this.asString(message?.text);
+
+      if (eventType.toLowerCase().includes('message') && from && to) {
+        await this.persistInboundProviderSms({
+          provider: 'bandwidth',
+          eventId:
+            this.asString(event.messageId) ||
+            this.asString(message?.id) ||
+            eventId,
+          from,
+          to,
+          body,
+          payload: event,
+        }).catch((error) => {
+          this.logger.warn(`Bandwidth inbound message persistence failed: ${error instanceof Error ? error.message : String(error)}`);
+        });
+      }
     }
 
-    return result;
+    return { success: true };
   }
 
   async handleBandwidthVoiceWebhook(
     payload: Record<string, unknown>,
     headers: Record<string, string>,
+    rawBody?: Buffer,
   ) {
+    this.assertBandwidthWebhookAuth(headers, rawBody);
     await this.storeWebhookEvent(
       `bandwidth-voice:${this.getProviderEventId(payload, headers) || Date.now()}`,
       'bandwidth',
@@ -343,6 +378,62 @@ export class WebhooksService {
     };
   }
 
+  private twilioRequestUrlCandidates(req: Request): string[] {
+    const forwardedProto = this.headerValue(req.headers as Record<string, string>, 'x-forwarded-proto');
+    const proto = forwardedProto || req.protocol || 'https';
+    const host = req.get('host') || this.headerValue(req.headers as Record<string, string>, 'host');
+    const originalUrl = req.originalUrl || req.url;
+    const directUrl = host ? `${proto}://${host}${originalUrl}` : '';
+    const configuredApiUrl = (this.configService.get<string>('API_URL') || '').replace(/\/+$/, '');
+    const configuredWebhookBase = this.apiWebhookBaseUrl.replace(/\/+$/, '');
+    const routeSuffix = originalUrl.replace(/^\/api\/webhooks\/?/, '').replace(/^\/webhooks\/?/, '');
+
+    return Array.from(new Set([
+      directUrl,
+      configuredApiUrl ? `${configuredApiUrl}/webhooks/${routeSuffix}` : '',
+      `${configuredWebhookBase}/${routeSuffix}`,
+    ].filter(Boolean)));
+  }
+
+  private assertTelnyxSignature(headers: Record<string, string>, rawBody?: Buffer) {
+    const publicKey = this.configService.get<string>('TELNYX_PUBLIC_KEY');
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    if (!publicKey) {
+      this.logger.warn('Telnyx webhook rejected because TELNYX_PUBLIC_KEY is not configured');
+      if (isProduction) throw new BadRequestException('Telnyx webhook verification not configured');
+      return;
+    }
+
+    if (!rawBody) throw new BadRequestException('Missing raw body for Telnyx webhook verification');
+
+    const signature = this.headerValue(headers, 'telnyx-signature-ed25519');
+    const timestamp = this.headerValue(headers, 'telnyx-timestamp');
+    if (!signature || !timestamp) throw new BadRequestException('Missing Telnyx signature headers');
+
+    const timestampMs = Number(timestamp) * 1000;
+    if (!Number.isFinite(timestampMs) || Math.abs(Date.now() - timestampMs) > 5 * 60 * 1000) {
+      throw new BadRequestException('Stale Telnyx webhook timestamp');
+    }
+
+    const signedPayload = Buffer.from(`${timestamp}|${rawBody.toString('utf8')}`);
+    const signatureBytes = Buffer.from(signature, 'base64');
+    const keyObject = publicKey.includes('BEGIN PUBLIC KEY')
+      ? createPublicKey(publicKey)
+      : createPublicKey({
+          key: Buffer.concat([
+            Buffer.from('302a300506032b6570032100', 'hex'),
+            Buffer.from(publicKey, 'base64'),
+          ]),
+          format: 'der',
+          type: 'spki',
+        });
+
+    if (!verifySignature(null, signedPayload, keyObject, signatureBytes)) {
+      throw new BadRequestException('Invalid Telnyx signature');
+    }
+  }
+
   private async persistInboundProviderSms(params: {
     provider: string;
     eventId: string;
@@ -427,6 +518,36 @@ export class WebhooksService {
     const normalized = value.trim().toLowerCase();
     if (normalized === 'replace_me' || normalized.includes('replace_me')) return undefined;
     return value;
+  }
+
+  private assertBandwidthWebhookAuth(headers: Record<string, string>, rawBody?: Buffer) {
+    const username = this.configService.get<string>('BANDWIDTH_WEBHOOK_USERNAME');
+    const password = this.configService.get<string>('BANDWIDTH_WEBHOOK_PASSWORD');
+    if (username && password) {
+      const authorization = this.headerValue(headers, 'authorization');
+      if (!authorization.toLowerCase().startsWith('basic ')) {
+        throw new BadRequestException('Missing Bandwidth webhook basic authorization');
+      }
+      const decoded = Buffer.from(authorization.slice(6), 'base64').toString('utf8');
+      const separator = decoded.indexOf(':');
+      const receivedUsername = separator >= 0 ? decoded.slice(0, separator) : '';
+      const receivedPassword = separator >= 0 ? decoded.slice(separator + 1) : '';
+      if (!this.safeCompare(username, receivedUsername) || !this.safeCompare(password, receivedPassword)) {
+        throw new BadRequestException('Invalid Bandwidth webhook authorization');
+      }
+      return;
+    }
+
+    const fallbackSecret = this.configuredSecret('BANDWIDTH_WEBHOOK_SECRET');
+    if (fallbackSecret) {
+      this.verifyGenericSignature('bandwidth', headers, rawBody, fallbackSecret);
+      return;
+    }
+
+    if (process.env.NODE_ENV === 'production') {
+      throw new BadRequestException('Bandwidth webhook authentication is not configured');
+    }
+    this.logger.warn('Bandwidth webhook authentication is not configured; accepting request outside production');
   }
 
   private verifyGenericSignature(

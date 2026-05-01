@@ -32,7 +32,7 @@ Storage:
 Rules:
 - Never commit real env files.
 - Use local ports from `.env.example`.
-- Use fake or sandbox payment and telecom flows where possible.
+- Keep provider credentials isolated from production credentials.
 - Do not use production user data.
 
 ### Staging

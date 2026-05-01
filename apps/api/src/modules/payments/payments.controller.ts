@@ -141,8 +141,9 @@ export class PaymentsController {
   webhookFlutterwave(
     @Body() body: Record<string, unknown>,
     @Headers() headers: Record<string, string>,
+    @Req() req: RawBodyRequest<Request>,
   ) {
-    return this.service.handleWebhook(PaymentGateway.FLUTTERWAVE, body, headers);
+    return this.service.handleWebhook(PaymentGateway.FLUTTERWAVE, body, headers, req.rawBody);
   }
 
   @Post('webhook/paystack')
@@ -151,8 +152,9 @@ export class PaymentsController {
   webhookPaystack(
     @Body() body: Record<string, unknown>,
     @Headers() headers: Record<string, string>,
+    @Req() req: RawBodyRequest<Request>,
   ) {
-    return this.service.handleWebhook(PaymentGateway.PAYSTACK, body, headers);
+    return this.service.handleWebhook(PaymentGateway.PAYSTACK, body, headers, req.rawBody);
   }
 
   @Post('webhook/squad')
@@ -161,8 +163,9 @@ export class PaymentsController {
   webhookSquad(
     @Body() body: Record<string, unknown>,
     @Headers() headers: Record<string, string>,
+    @Req() req: RawBodyRequest<Request>,
   ) {
-    return this.service.handleWebhook(PaymentGateway.SQUAD, body, headers);
+    return this.service.handleWebhook(PaymentGateway.SQUAD, body, headers, req.rawBody);
   }
 
   @Post('webhook/korapay')
@@ -171,8 +174,9 @@ export class PaymentsController {
   webhookKorapay(
     @Body() body: Record<string, unknown>,
     @Headers() headers: Record<string, string>,
+    @Req() req: RawBodyRequest<Request>,
   ) {
-    return this.service.handleWebhook(PaymentGateway.KORAPAY, body, headers);
+    return this.service.handleWebhook(PaymentGateway.KORAPAY, body, headers, req.rawBody);
   }
 
   @Post('webhook/opay')
@@ -181,7 +185,8 @@ export class PaymentsController {
   webhookOpay(
     @Body() body: Record<string, unknown>,
     @Headers() headers: Record<string, string>,
+    @Req() req: RawBodyRequest<Request>,
   ) {
-    return this.service.handleWebhook(PaymentGateway.OPAY, body, headers);
+    return this.service.handleWebhook(PaymentGateway.OPAY, body, headers, req.rawBody);
   }
 }

@@ -98,7 +98,7 @@ Burner Point uses Neon Postgres as the system-of-record database. Railway should
 Use real values from the Neon dashboard. Do not commit real Neon credentials.
 
 ```env
-DATABASE_URL=postgresql://neon_user:neon_password@ep-example-123456.us-east-2.aws.neon.tech/neondb?sslmode=require
+DATABASE_URL=
 DB_SSL=true
 DB_SSL_REJECT_UNAUTHORIZED=false
 DB_SYNCHRONIZE=false
@@ -117,11 +117,10 @@ Notes:
 ```env
 NODE_ENV=production
 APP_PORT=3001
-JWT_SECRET=<your 128-char hex>
-JWT_SECRET=<your 128-char hex>
-ENCRYPTION_KEY=<your 32-char hex>
-ADMIN_SECRET_KEY=<your strong string>
-CLERK_SECRET_KEY=<your rotated Clerk secret key>
+JWT_SECRET=
+ENCRYPTION_KEY=
+ADMIN_SECRET_KEY=
+CLERK_SECRET_KEY=
 ```
 
 Do not commit the Clerk secret key. If it was shared in chat or screenshots during setup, rotate it in Clerk before production and update Railway/Vercel/EAS with the rotated value.
@@ -130,9 +129,9 @@ Do not commit the Clerk secret key. If it was shared in chat or screenshots duri
 
 ```env
 TWILIO_ACCOUNT_SID=ACxxxxxxxx
-TWILIO_AUTH_TOKEN=xxxxxxxx
-TWILIO_VERIFY_SERVICE_SID=VAxxxxxxxx
-TWILIO_DEFAULT_FROM=+15551234567
+TWILIO_AUTH_TOKEN=
+TWILIO_VERIFY_SERVICE_SID=
+TWILIO_DEFAULT_FROM=
 ```
 
 ### Telnyx and Tremil Routing
@@ -143,31 +142,31 @@ Set these when enabling the global verification fallback routes, Telnyx number i
 
 ```env
 SMS_DEFAULT_FROM=BurnerPoint
-TELNYX_API_KEY=KEY_xxx
-TELNYX_MESSAGING_PROFILE_ID=profile_xxx
-TELNYX_CONNECTION_ID=conn_xxx
-TELNYX_DEFAULT_FROM=+15551234567
-TREMIL_API_KEY=tm_xxx
-TREMIL_SECRET=xxx
-TREMIL_BASE_URL=https://api.tremil.example.com
+TELNYX_API_KEY=
+TELNYX_MESSAGING_PROFILE_ID=
+TELNYX_CONNECTION_ID=
+TELNYX_DEFAULT_FROM=
+TREMIL_API_KEY=
+TREMIL_SECRET=
+TREMIL_BASE_URL=
 ```
 
 ### Payments
 
-Use sandbox keys first, then rotate to production keys after payment testing.
+Use live production keys for the production Railway service. Use a separate staging service for sandbox or test credentials.
 
 ```env
-PAYSTACK_SECRET_KEY=sk_test_xxx
-PAYSTACK_PUBLIC_KEY=pk_test_xxx
-PAYSTACK_WEBHOOK_SECRET=xxx
+PAYSTACK_SECRET_KEY=
+PAYSTACK_PUBLIC_KEY=
+PAYSTACK_WEBHOOK_SECRET=
 
-PADDLE_API_KEY=xxx
-PADDLE_CLIENT_TOKEN=xxx
-PADDLE_WEBHOOK_SECRET=whsec_xxx
-PADDLE_SANDBOX=true
-PADDLE_PRICE_VERIFICATION=pri_xxx
-PADDLE_PRICE_RENTAL=pri_xxx
-PADDLE_PRICE_SUB_MONTHLY=pri_xxx
+PADDLE_API_KEY=
+PADDLE_CLIENT_TOKEN=
+PADDLE_WEBHOOK_SECRET=
+PADDLE_SANDBOX=
+PADDLE_PRICE_VERIFICATION=
+PADDLE_PRICE_RENTAL=
+PADDLE_PRICE_SUB_MONTHLY=
 
 NOWPAYMENTS_API_KEY=xxx
 NOWPAYMENTS_IPN_SECRET=xxx

@@ -278,6 +278,10 @@ export class MessagingService {
       return configured.replace(/\/+$/, '');
     }
 
+    if (this.configService.get<string>('NODE_ENV') === 'production') {
+      throw new Error('APP_URL must be configured before sending customer emails');
+    }
+
     return 'http://localhost:3000';
   }
 

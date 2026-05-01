@@ -9,6 +9,9 @@
  */
 
 const isProduction = process.env.NODE_ENV === 'production';
+if (isProduction && !process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error('NEXT_PUBLIC_API_URL must be configured for production SEO builds');
+}
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
 /** @type {import('next').NextConfig} */
@@ -115,7 +118,7 @@ const nextConfig = {
 
   // ── Image allowlist ───────────────────────────────────────────────────────
   images: {
-    domains: ['burnerpoint.app', 'localhost'],
+    domains: isProduction ? ['burnerpoint.app', 'burnerpoint.vercel.app'] : ['burnerpoint.app', 'burnerpoint.vercel.app', 'localhost'],
     formats: ['image/avif', 'image/webp'],
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",

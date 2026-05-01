@@ -19,10 +19,12 @@ import { DataSource } from 'typeorm';
 import helmet from 'helmet';
 import * as express from 'express';
 import { hasConfiguredEnv } from './config/runtime-env';
+import { validateProductionEnv } from './config/production-env';
 import { RedisService } from './modules/global/redis.service';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
+  validateProductionEnv(process.env);
 
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'log'],

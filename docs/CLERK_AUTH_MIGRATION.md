@@ -37,8 +37,8 @@ This gives Clerk control of user identity while preserving current authorization
 Web, Vercel:
 
 ```env
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_or_pk_live_REPLACE_ME
-CLERK_SECRET_KEY=sk_test_or_sk_live_REPLACE_ME
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
 NEXT_PUBLIC_CLERK_SIGN_IN_URL=/auth/login
 NEXT_PUBLIC_CLERK_SIGN_UP_URL=/auth/signup
 NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/dashboard
@@ -52,7 +52,7 @@ The Next.js App Router integration uses `clerkMiddleware()` from `@clerk/nextjs/
 Mobile, Expo/EAS:
 
 ```env
-EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_or_pk_live_REPLACE_ME
+EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=
 ```
 
 The mobile app currently uses `@clerk/clerk-expo` because this repo is on Expo SDK 51. Clerk's newer `@clerk/expo` package requires a newer Expo SDK, so switch to it only after upgrading Expo and enabling Native API in the Clerk dashboard.
@@ -60,7 +60,7 @@ The mobile app currently uses `@clerk/clerk-expo` because this repo is on Expo S
 API, Railway:
 
 ```env
-CLERK_SECRET_KEY=sk_test_or_sk_live_REPLACE_ME
+CLERK_SECRET_KEY=
 ```
 
 `CLERK_SECRET_KEY` is required on the Railway API because `/auth/clerk/exchange` verifies the active Clerk session before issuing Burner Point API tokens.
@@ -68,7 +68,7 @@ CLERK_SECRET_KEY=sk_test_or_sk_live_REPLACE_ME
 Clerk webhooks are not required for basic sign-up or sign-in. Add them only when Burner Point needs server-to-server syncing for Clerk events such as `user.created`, `user.updated`, or `user.deleted` without relying on the current `/auth/clerk/exchange` flow. If this is added later, create a Clerk webhook endpoint in the API and configure:
 
 ```env
-CLERK_WEBHOOK_SIGNING_SECRET=whsec_REPLACE_ME
+CLERK_WEBHOOK_SIGNING_SECRET=
 ```
 
 ## Clerk Dashboard Setup

@@ -468,11 +468,11 @@ export const DEPLOYMENT_ENVIRONMENTS: DeploymentEnvironmentDefinition[] = [
   },
   {
     id: 'staging',
-    purpose: 'Production-like verification with isolated data and provider sandbox/test keys where available.',
+    purpose: 'Production-like verification with isolated data and provider credentials that are separated from production.',
     branchPolicy: 'Preview branch or release candidate branch after CI passes.',
     secretStores: ['Vercel Preview env', 'Railway staging env', 'EAS preview env', 'Clerk test instance', 'Sentry staging projects'],
     publicEnv: ['NEXT_PUBLIC_* preview values', 'EXPO_PUBLIC_* preview values'],
-    serverEnv: ['DATABASE_URL staging branch', 'REDIS_URL staging', 'provider sandbox/test keys', 'webhook signing secrets'],
+    serverEnv: ['DATABASE_URL staging branch', 'REDIS_URL staging', 'provider credentials isolated from production', 'webhook signing secrets'],
     deployTargets: ['Vercel preview', 'Railway staging service', 'EAS preview/internal builds'],
     releaseRule: 'All release gates must pass before promoting the same commit to production.',
   },

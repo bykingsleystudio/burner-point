@@ -63,6 +63,15 @@ interface PricingResolution {
 interface ReconciliationCheck {
   amountMinor?: number;
   currency?: string;
+  reference?: string;
+  providerStatus?: string;
+}
+
+interface ProviderVerificationResult {
+  verified: boolean;
+  reconciliation?: ReconciliationCheck;
+  providerResponse?: Record<string, unknown>;
+  reason?: string;
 }
 
 const USD_CENTS = {
@@ -175,83 +184,101 @@ export class PaymentsService {
 
     const pricing = await this.resolvePricing(paymentType, gateway, packageId, options.planId);
     const reference = `BP-${paymentType.toUpperCase()}-${Date.now()}-${uuidv4().slice(0, 8).toUpperCase()}`;
+    const expiresAt = new Date(Date.now() + PAYMENT_SESSION_TTL_MINUTES * 60 * 1000);
+    const session = await this.sessionRepo.save(
+      this.sessionRepo.create({
+        reference,
+        userId,
+        gateway,
+        amountKobo: pricing.amountMinor,
+        currency: pricing.currency,
+        status: 'pending',
+        expiresAt,
+        metadata: {
+          paymentType,
+          packageId: packageId || null,
+          planId: options.planId || null,
+          rentalDays: rentalDays || null,
+          clientPlatform,
+          productLabel: pricing.productLabel,
+          walletCreditKobo: pricing.walletCreditKobo,
+          walletEquivalentKobo: pricing.walletEquivalentKobo,
+          phoneNumber: options.phoneNumber || null,
+          countryCode: options.countryCode || null,
+          numberType: options.numberType || null,
+          fulfillmentStatus: 'checkout_initializing',
+          ...pricing.metadata,
+        },
+      }),
+    );
 
     let checkoutUrl: string;
     let gatewayReference: string;
 
-    switch (gateway) {
-      case PaymentGateway.PADDLE:
-        ({ checkoutUrl, gatewayReference } = await this.initPaddlePayment(
-          user,
-          paymentType,
-          reference,
-          rentalDays,
-          pricing,
-          options,
-        ));
-        break;
-      case PaymentGateway.NOWPAYMENTS:
-        ({ checkoutUrl, gatewayReference } = await this.initNowPayments(
-          paymentType,
-          reference,
-          rentalDays,
-          pricing,
-        ));
-        break;
-      case PaymentGateway.PAYSTACK:
-        ({ checkoutUrl, gatewayReference } = await this.initPaystack(
-          user.email,
-          pricing,
-          reference,
-          paymentType,
-          options,
-        ));
-        break;
-      case PaymentGateway.FLUTTERWAVE:
-        ({ checkoutUrl, gatewayReference } = await this.initFlutterwave(user, pricing.amountMinor, reference));
-        break;
-      case PaymentGateway.SQUAD:
-        ({ checkoutUrl, gatewayReference } = await this.initSquad(user.email, pricing.amountMinor, reference));
-        break;
-      case PaymentGateway.KORAPAY:
-        ({ checkoutUrl, gatewayReference } = await this.initKorapay(user.email, pricing.amountMinor, reference));
-        break;
-      case PaymentGateway.OPAY:
-        ({ checkoutUrl, gatewayReference } = await this.initOpay(user.email, pricing.amountMinor, reference));
-        break;
-      default:
-        throw new BadRequestException(`Gateway ${gateway} is not implemented`);
+    try {
+      switch (gateway) {
+        case PaymentGateway.PADDLE:
+          ({ checkoutUrl, gatewayReference } = await this.initPaddlePayment(
+            user,
+            paymentType,
+            reference,
+            rentalDays,
+            pricing,
+            options,
+          ));
+          break;
+        case PaymentGateway.NOWPAYMENTS:
+          ({ checkoutUrl, gatewayReference } = await this.initNowPayments(
+            paymentType,
+            reference,
+            rentalDays,
+            pricing,
+          ));
+          break;
+        case PaymentGateway.PAYSTACK:
+          ({ checkoutUrl, gatewayReference } = await this.initPaystack(
+            user.email,
+            pricing,
+            reference,
+            paymentType,
+            options,
+          ));
+          break;
+        case PaymentGateway.FLUTTERWAVE:
+          ({ checkoutUrl, gatewayReference } = await this.initFlutterwave(user, pricing.amountMinor, reference));
+          break;
+        case PaymentGateway.SQUAD:
+          ({ checkoutUrl, gatewayReference } = await this.initSquad(user.email, pricing.amountMinor, reference));
+          break;
+        case PaymentGateway.KORAPAY:
+          ({ checkoutUrl, gatewayReference } = await this.initKorapay(user.email, pricing.amountMinor, reference));
+          break;
+        case PaymentGateway.OPAY:
+          ({ checkoutUrl, gatewayReference } = await this.initOpay(user.email, pricing.amountMinor, reference));
+          break;
+        default:
+          throw new BadRequestException(`Gateway ${gateway} is not implemented`);
+      }
+    } catch (error) {
+      await this.sessionRepo.update(session.id, {
+        status: 'initialization_failed',
+        gatewayResponse: { error: this.safeErrorData(error) },
+        metadata: {
+          ...(session.metadata || {}),
+          fulfillmentStatus: 'checkout_initialization_failed',
+        },
+      });
+      throw error;
     }
 
-    const expiresAt = new Date(Date.now() + PAYMENT_SESSION_TTL_MINUTES * 60 * 1000);
-    const session = this.sessionRepo.create({
-      reference,
-      userId,
-      gateway,
-      amountKobo: pricing.amountMinor,
-      currency: pricing.currency,
-      status: 'pending',
+    await this.sessionRepo.update(session.id, {
       gatewayReference,
       checkoutUrl,
-      expiresAt,
       metadata: {
-        paymentType,
-        packageId: packageId || null,
-        planId: options.planId || null,
-        rentalDays: rentalDays || null,
-        clientPlatform,
-        productLabel: pricing.productLabel,
-        walletCreditKobo: pricing.walletCreditKobo,
-        walletEquivalentKobo: pricing.walletEquivalentKobo,
-        phoneNumber: options.phoneNumber || null,
-        countryCode: options.countryCode || null,
-        numberType: options.numberType || null,
+        ...(session.metadata || {}),
         fulfillmentStatus: 'awaiting_webhook',
-        ...pricing.metadata,
       },
     });
-
-    await this.sessionRepo.save(session);
 
     return {
       checkoutUrl,
@@ -325,87 +352,120 @@ export class PaymentsService {
     );
     if (!isFresh) return { received: true, duplicate: true };
 
-    if (['finished', 'confirmed'].includes(status) && reference) {
+    if (status === 'finished' && reference) {
       await this.fulfillPayment(reference, String(payload.payment_id ?? ''), payload, {
         amountMinor: this.decimalToMinor(payload.price_amount),
         currency: String(payload.price_currency ?? 'usd').toUpperCase(),
       });
+    } else if (reference) {
+      await this.markPaymentStatusFromWebhook(
+        reference,
+        this.mapProviderPaymentStatus(status),
+        String(payload.payment_id ?? ''),
+        payload,
+        { providerStatus: status },
+      );
     }
 
     return { received: true };
   }
 
-  async handleWebhook(gateway: PaymentGateway, body: any, headers: Record<string, string>) {
+  async handleWebhook(
+    gateway: PaymentGateway,
+    body: any,
+    headers: Record<string, string>,
+    rawBody?: Buffer,
+  ) {
     let reference = '';
     let gatewayReference = '';
     let isSuccess = false;
     let eventType = 'unknown';
     let eventId = '';
     let reconciliation: ReconciliationCheck = {};
+    let providerStatus = '';
 
     switch (gateway) {
       case PaymentGateway.PAYSTACK: {
-        this.assertPaystackSignature(body, headers);
+        this.assertPaystackSignature(body, headers, rawBody);
         const event = body as { event: string; data: { reference: string; status: string; amount?: number; currency?: string; id?: number } };
         eventType = event.event;
         eventId = `${gateway}:${event.event}:${event.data?.reference}`;
-        if (event.event !== 'charge.success') return { received: true };
         reference = event.data.reference;
         gatewayReference = String(event.data.id ?? event.data.reference);
-        isSuccess = event.data.status === 'success';
+        providerStatus = event.data.status;
+        isSuccess = event.event === 'charge.success' && event.data.status === 'success';
         reconciliation = { amountMinor: Number(event.data.amount), currency: event.data.currency };
         break;
       }
       case PaymentGateway.FLUTTERWAVE: {
-        const hash = headers['verif-hash'] || headers['x-flutterwave-signature'];
-        const expectedHash = resolveConfiguredEnv('FLUTTERWAVE_WEBHOOK_HASH', this.configService);
-        if (!expectedHash || hash !== expectedHash) throw new BadRequestException('Invalid Flutterwave signature');
+        this.assertFlutterwaveSignature(headers, rawBody);
         const event = body as { event: string; data: { tx_ref: string; status: string; amount?: number; currency?: string; id?: number } };
         eventType = event.event;
         eventId = `${gateway}:${event.event}:${event.data?.tx_ref}`;
-        if (event.event !== 'charge.completed') return { received: true };
         reference = event.data.tx_ref;
         gatewayReference = String(event.data.id ?? reference);
-        isSuccess = event.data.status === 'successful';
+        providerStatus = event.data.status;
+        isSuccess = event.event === 'charge.completed' && event.data.status === 'successful';
         reconciliation = { amountMinor: this.decimalToMinor(event.data.amount), currency: event.data.currency };
         break;
       }
       case PaymentGateway.SQUAD: {
-        this.assertSquadSignature(body, headers);
-        const event = body as { Event: string; Body: { transaction_ref: string; success: boolean; amount?: number } };
+        this.assertSquadSignature(body, headers, rawBody);
+        const event = body as { Event: string; Body: { transaction_ref: string; transaction_status?: string; amount?: number; currency?: string } };
         eventType = event.Event;
         eventId = `${gateway}:${event.Event}:${event.Body?.transaction_ref}`;
-        if (event.Event !== 'charge_successful') return { received: true };
         reference = event.Body.transaction_ref;
         gatewayReference = reference;
-        isSuccess = event.Body.success;
-        reconciliation = { amountMinor: Number(event.Body.amount), currency: 'NGN' };
+        providerStatus = event.Body.transaction_status ?? event.Event;
+        isSuccess = event.Event === 'charge_successful' && String(event.Body.transaction_status ?? '').toLowerCase() === 'success';
+        reconciliation = { amountMinor: Number(event.Body.amount), currency: event.Body.currency ?? 'NGN' };
         break;
       }
       case PaymentGateway.KORAPAY: {
-        this.assertKorapaySignature(body, headers);
+        this.assertKorapaySignature(body, headers, rawBody);
         const event = body as { event: string; data: { reference: string; status: string; amount?: number; currency?: string } };
         eventType = event.event;
         eventId = `${gateway}:${event.event}:${event.data?.reference}`;
-        if (event.event !== 'charge.success') return { received: true };
         reference = event.data.reference;
         gatewayReference = reference;
-        isSuccess = event.data.status === 'success';
+        providerStatus = event.data.status;
+        isSuccess = event.event === 'charge.success' && event.data.status === 'success';
         reconciliation = { amountMinor: this.decimalToMinor(event.data.amount), currency: event.data.currency };
         break;
       }
       case PaymentGateway.OPAY: {
-        this.assertOpaySignature(body, headers);
-        const event = body as { eventType: string; data: { reference: string; status: string; amount?: { total?: number } | number; currency?: string } };
-        eventType = event.eventType;
-        eventId = `${gateway}:${event.eventType}:${event.data?.reference}`;
-        if (event.eventType !== 'charge.success') return { received: true };
-        reference = event.data.reference;
-        gatewayReference = reference;
-        isSuccess = event.data.status === 'successful';
+        this.assertOpaySignature(body, headers, rawBody);
+        const event = body as {
+          eventType?: string;
+          type?: string;
+          status?: string;
+          sha512?: string;
+          outOrderNo?: string;
+          orderNo?: string;
+          payload?: {
+            reference?: string;
+            transactionId?: string;
+            token?: string;
+            status?: string;
+            amount?: number | string;
+            currency?: string;
+          };
+          data?: { reference?: string; status?: string; amount?: { total?: number } | number; currency?: string; orderNo?: string };
+        };
+        const payload = event.payload;
+        eventType = event.type ?? event.eventType ?? event.status ?? 'opay.webhook';
+        reference = payload?.reference ?? event.data?.reference ?? event.outOrderNo ?? event.orderNo ?? '';
+        gatewayReference = payload?.transactionId ?? payload?.token ?? event.data?.orderNo ?? event.orderNo ?? reference;
+        eventId = `${gateway}:${eventType}:${gatewayReference || reference}`;
+        providerStatus = payload?.status ?? event.data?.status ?? event.status ?? '';
+        isSuccess = ['successful', 'success'].includes(providerStatus.toLowerCase());
         reconciliation = {
-          amountMinor: typeof event.data.amount === 'object' ? Number(event.data.amount?.total) : Number(event.data.amount),
-          currency: event.data.currency,
+          amountMinor: payload?.amount !== undefined
+            ? Number(payload.amount)
+            : typeof event.data?.amount === 'object'
+              ? Number(event.data.amount?.total)
+              : Number(event.data?.amount),
+          currency: payload?.currency ?? event.data?.currency,
         };
         break;
       }
@@ -418,6 +478,14 @@ export class PaymentsService {
 
     if (reference && isSuccess) {
       await this.fulfillPayment(reference, gatewayReference, body, reconciliation);
+    } else if (reference) {
+      await this.markPaymentStatusFromWebhook(
+        reference,
+        this.mapProviderPaymentStatus(providerStatus || eventType),
+        gatewayReference,
+        body,
+        { providerStatus, eventType },
+      );
     }
 
     return { received: true };
@@ -440,15 +508,48 @@ export class PaymentsService {
       return;
     }
 
-    if (!this.isReconciled(session, reconciliation)) {
+    const providerVerification = await this.verifyGatewayPayment(
+      session,
+      gatewayReference,
+      gatewayResponse,
+      reconciliation,
+    );
+
+    if (!providerVerification.verified) {
+      await this.sessionRepo.update(session.id, {
+        status: 'verification_failed',
+        gatewayReference: gatewayReference ?? session.gatewayReference,
+        gatewayResponse: {
+          ...gatewayResponse,
+          serverVerification: providerVerification.providerResponse ?? null,
+        },
+        metadata: {
+          ...(session.metadata || {}),
+          fulfillmentStatus: 'provider_verification_failed',
+          verificationReason: providerVerification.reason,
+        },
+      });
+      this.logger.error(`Payment ${reference} failed provider verification: ${providerVerification.reason}`);
+      return;
+    }
+
+    const verifiedReconciliation = {
+      ...reconciliation,
+      ...providerVerification.reconciliation,
+    };
+
+    if (!this.isReconciled(session, verifiedReconciliation)) {
       await this.sessionRepo.update(session.id, {
         status: 'reconciliation_failed',
         gatewayReference: gatewayReference ?? session.gatewayReference,
-        gatewayResponse,
+        gatewayResponse: {
+          ...gatewayResponse,
+          serverVerification: providerVerification.providerResponse ?? null,
+        },
         metadata: {
           ...(session.metadata || {}),
           fulfillmentStatus: 'reconciliation_failed',
-          reconciliation,
+          reconciliation: verifiedReconciliation,
         },
       });
       this.logger.error(`Payment ${reference} failed reconciliation`);
@@ -990,31 +1091,276 @@ export class PaymentsService {
     const merchantId = this.configService.get('OPAY_MERCHANT_ID');
     if (!publicKey || !secretKey || !merchantId) throw new BadRequestException('OPay is not configured');
 
+    const returnUrl = `${this.getWebUrl()}/dashboard/payments/success?ref=${reference}`;
     const res = await axios.post(
-      'https://api.opaycheckout.com/api/v1/international/cashier/create',
+      `${this.getOpayBaseUrl()}/api/v1/international/cashier/create`,
       {
+        country: 'NG',
         reference,
-        amount: amountKobo.toString(),
-        currency: 'NGN',
-        returnUrl: `${this.getWebUrl()}/dashboard/payments/success?ref=${reference}`,
+        amount: {
+          total: amountKobo,
+          currency: 'NGN',
+        },
+        returnUrl,
+        cancelUrl: `${this.getWebUrl()}/dashboard/payments/cancel?ref=${reference}`,
+        callbackUrl: `${this.getApiUrl()}/payments/webhook/opay`,
+        customerVisitSource: 'BROWSER',
+        expireAt: PAYMENT_SESSION_TTL_MINUTES,
         userInfo: { userEmail: email },
         product: {
           name: 'Burner Point',
           description: 'Burner Point privacy telecom purchase',
         },
-        callbackUrl: `${this.getApiUrl()}/payments/webhook/opay`,
       },
       {
         headers: {
-          Authorization: `Bearer ${publicKey}:${secretKey}`,
+          Authorization: `Bearer ${publicKey}`,
           MerchantId: merchantId,
+          'Content-Type': 'application/json',
         },
       },
     );
 
+    const data = res.data?.data ?? {};
+    const checkoutUrl = data.cashierUrl ?? data.webUrl ?? data.url;
+    if (!checkoutUrl) {
+      throw new BadRequestException('OPay did not return a checkout URL');
+    }
+
     return {
-      checkoutUrl: res.data.data.cashierUrl as string,
-      gatewayReference: res.data.data.reference as string,
+      checkoutUrl: checkoutUrl as string,
+      gatewayReference: (data.reference ?? data.orderNo ?? reference) as string,
+    };
+  }
+
+  private async markPaymentStatusFromWebhook(
+    reference: string,
+    status: string | undefined,
+    gatewayReference: string | undefined,
+    gatewayResponse: Record<string, unknown>,
+    metadata: Record<string, unknown> = {},
+  ) {
+    if (!status) return;
+    const session = await this.sessionRepo.findOne({ where: { reference } });
+    if (!session || session.status === 'completed') return;
+
+    const nextStatus = status === 'failed'
+      ? 'failed'
+      : session.status === 'pending'
+        ? 'pending'
+        : session.status;
+
+    await this.sessionRepo.update(session.id, {
+      status: nextStatus,
+      gatewayReference: gatewayReference || session.gatewayReference,
+      gatewayResponse,
+      metadata: {
+        ...(session.metadata || {}),
+        ...metadata,
+        fulfillmentStatus: nextStatus === 'failed' ? 'failed' : 'awaiting_provider_finality',
+        lastWebhookAt: new Date().toISOString(),
+      },
+    });
+  }
+
+  private mapProviderPaymentStatus(status: string | undefined): string | undefined {
+    const normalized = String(status || '').toLowerCase();
+    if (!normalized) return undefined;
+    if (/(fail|failed|expired|cancel|declin|revers|abandon)/.test(normalized)) return 'failed';
+    if (/(pending|waiting|confirming|confirmed|processing|ongoing|initiated)/.test(normalized)) return 'pending';
+    return undefined;
+  }
+
+  private async verifyGatewayPayment(
+    session: PaymentSession,
+    gatewayReference?: string,
+    gatewayResponse: Record<string, unknown> = {},
+    reconciliation: ReconciliationCheck = {},
+  ): Promise<ProviderVerificationResult> {
+    try {
+      switch (session.gateway) {
+        case PaymentGateway.PAYSTACK:
+          return await this.verifyPaystackPayment(session.reference);
+        case PaymentGateway.FLUTTERWAVE:
+          return await this.verifyFlutterwavePayment(session.reference);
+        case PaymentGateway.PADDLE:
+          return await this.verifyPaddlePayment(gatewayReference || session.gatewayReference);
+        case PaymentGateway.NOWPAYMENTS:
+          return await this.verifyNowPaymentsPayment(gatewayReference || this.asString(gatewayResponse.payment_id));
+        case PaymentGateway.SQUAD:
+          return await this.verifySquadPayment(session.reference);
+        case PaymentGateway.KORAPAY:
+          return await this.verifyKorapayPayment(session.reference);
+        case PaymentGateway.OPAY:
+          return await this.verifyOpayPayment(session.reference);
+        default:
+          return { verified: false, reason: `Unsupported payment gateway ${session.gateway}` };
+      }
+    } catch (error) {
+      return {
+        verified: false,
+        reason: error instanceof Error ? error.message : String(error),
+        providerResponse: { error: this.safeErrorData(error) },
+        reconciliation,
+      };
+    }
+  }
+
+  private async verifyPaystackPayment(reference: string): Promise<ProviderVerificationResult> {
+    const secretKey = this.configService.get<string>('PAYSTACK_SECRET_KEY');
+    if (!secretKey) return { verified: false, reason: 'PAYSTACK_SECRET_KEY is not configured' };
+
+    const response = await axios.get(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
+      headers: { Authorization: `Bearer ${secretKey}` },
+    });
+    const data = response.data?.data ?? {};
+    return {
+      verified: data.status === 'success',
+      reason: data.status === 'success' ? undefined : `Paystack status ${data.status ?? 'unknown'}`,
+      providerResponse: response.data,
+      reconciliation: {
+        amountMinor: Number(data.amount),
+        currency: data.currency,
+      },
+    };
+  }
+
+  private async verifyFlutterwavePayment(reference: string): Promise<ProviderVerificationResult> {
+    const secretKey = this.configService.get<string>('FLUTTERWAVE_SECRET_KEY');
+    if (!secretKey) return { verified: false, reason: 'FLUTTERWAVE_SECRET_KEY is not configured' };
+
+    const response = await axios.get('https://api.flutterwave.com/v3/transactions/verify_by_reference', {
+      headers: { Authorization: `Bearer ${secretKey}` },
+      params: { tx_ref: reference },
+    });
+    const data = response.data?.data ?? {};
+    return {
+      verified: data.status === 'successful',
+      reason: data.status === 'successful' ? undefined : `Flutterwave status ${data.status ?? 'unknown'}`,
+      providerResponse: response.data,
+      reconciliation: {
+        amountMinor: this.decimalToMinor(data.amount),
+        currency: data.currency,
+      },
+    };
+  }
+
+  private async verifyPaddlePayment(transactionId: string | undefined): Promise<ProviderVerificationResult> {
+    const apiKey = this.configService.get<string>('PADDLE_API_KEY');
+    if (!apiKey) return { verified: false, reason: 'PADDLE_API_KEY is not configured' };
+    if (!transactionId) return { verified: false, reason: 'Paddle transaction id is missing' };
+
+    const isSandbox = this.configService.get('PADDLE_SANDBOX') === 'true';
+    const baseUrl = isSandbox ? PADDLE_CONFIG.SANDBOX_API_URL : PADDLE_CONFIG.API_URL;
+    const response = await axios.get(`${baseUrl}/transactions/${encodeURIComponent(transactionId)}`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+    const data = response.data?.data ?? {};
+    return {
+      verified: data.status === 'completed',
+      reason: data.status === 'completed' ? undefined : `Paddle status ${data.status ?? 'unknown'}`,
+      providerResponse: response.data,
+      reconciliation: {
+        amountMinor: this.extractPaddleAmountMinor(data),
+        currency: data.currency_code ?? data.details?.currency_code,
+      },
+    };
+  }
+
+  private async verifyNowPaymentsPayment(paymentId: string | undefined): Promise<ProviderVerificationResult> {
+    const apiKey = this.configService.get<string>('NOWPAYMENTS_API_KEY');
+    if (!apiKey) return { verified: false, reason: 'NOWPAYMENTS_API_KEY is not configured' };
+    if (!paymentId) return { verified: false, reason: 'NOWPayments payment id is missing' };
+
+    const response = await axios.get(`https://api.nowpayments.io/v1/payment/${encodeURIComponent(paymentId)}`, {
+      headers: { 'x-api-key': apiKey },
+    });
+    const status = String(response.data?.payment_status ?? '').toLowerCase();
+    return {
+      verified: status === 'finished',
+      reason: status === 'finished' ? undefined : `NOWPayments status ${status || 'unknown'}`,
+      providerResponse: response.data,
+      reconciliation: {
+        amountMinor: this.decimalToMinor(response.data?.price_amount),
+        currency: String(response.data?.price_currency ?? '').toUpperCase(),
+      },
+    };
+  }
+
+  private async verifySquadPayment(reference: string): Promise<ProviderVerificationResult> {
+    const secretKey = this.configService.get<string>('SQUAD_SECRET_KEY');
+    const baseUrl = this.configService.get<string>('SQUAD_BASE_URL');
+    if (!secretKey || !baseUrl) return { verified: false, reason: 'Squad verification is not configured' };
+
+    const response = await axios.get(`${baseUrl.replace(/\/+$/, '')}/transaction/verify/${encodeURIComponent(reference)}`, {
+      headers: { Authorization: `Bearer ${secretKey}` },
+    });
+    const data = response.data?.data ?? {};
+    const status = String(data.transaction_status ?? data.status ?? '').toLowerCase();
+    return {
+      verified: status === 'success' || status === 'successful',
+      reason: status === 'success' || status === 'successful' ? undefined : `Squad status ${status || 'unknown'}`,
+      providerResponse: response.data,
+      reconciliation: {
+        amountMinor: Number(data.amount ?? data.merchant_amount),
+        currency: data.currency ?? 'NGN',
+      },
+    };
+  }
+
+  private async verifyKorapayPayment(reference: string): Promise<ProviderVerificationResult> {
+    const secretKey = this.configService.get<string>('KORAPAY_SECRET_KEY');
+    if (!secretKey) return { verified: false, reason: 'KORAPAY_SECRET_KEY is not configured' };
+
+    const response = await axios.get(`https://api.korapay.com/merchant/api/v1/charges/${encodeURIComponent(reference)}`, {
+      headers: { Authorization: `Bearer ${secretKey}` },
+    });
+    const data = response.data?.data ?? {};
+    const status = String(data.status ?? '').toLowerCase();
+    return {
+      verified: status === 'success' || status === 'successful',
+      reason: status === 'success' || status === 'successful' ? undefined : `Korapay status ${status || 'unknown'}`,
+      providerResponse: response.data,
+      reconciliation: {
+        amountMinor: this.decimalToMinor(data.amount),
+        currency: data.currency,
+      },
+    };
+  }
+
+  private async verifyOpayPayment(reference: string): Promise<ProviderVerificationResult> {
+    const secretKey = resolveConfiguredEnv('OPAY_SECRET_KEY', this.configService);
+    const merchantId = this.configService.get<string>('OPAY_MERCHANT_ID');
+    if (!secretKey || !merchantId) return { verified: false, reason: 'OPay verification is not configured' };
+
+    const payload = { country: 'NG', reference };
+    const serialized = JSON.stringify(payload);
+    const signature = createHmac('sha512', secretKey).update(serialized).digest('hex');
+    const response = await axios.post(
+      `${this.getOpayBaseUrl()}/api/v1/international/cashier/status`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${signature}`,
+          MerchantId: merchantId,
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+    const data = response.data?.data ?? {};
+    const status = String(data.status ?? '').toUpperCase();
+    const amount = data.amount as { total?: unknown; currency?: unknown } | undefined;
+
+    return {
+      verified: status === 'SUCCESS' && data.reference === reference,
+      reason: status === 'SUCCESS' ? undefined : `OPay status ${status || 'unknown'}`,
+      providerResponse: response.data,
+      reconciliation: {
+        reference: data.reference,
+        providerStatus: status,
+        amountMinor: Number(amount?.total),
+        currency: this.asString(amount?.currency),
+      },
     };
   }
 
@@ -1096,60 +1442,140 @@ export class PaymentsService {
     });
   }
 
-  private assertPaystackSignature(body: Record<string, unknown>, headers: Record<string, string>) {
-    const hash = headers['x-paystack-signature'];
+  private assertPaystackSignature(
+    body: Record<string, unknown>,
+    headers: Record<string, string>,
+    rawBody?: Buffer,
+  ) {
+    const hash = this.headerValue(headers, 'x-paystack-signature');
     const secret = this.configService.get('PAYSTACK_SECRET_KEY');
     if (!hash || !secret) throw new BadRequestException('Invalid Paystack signature');
 
     const expectedHash = createHmac('sha512', secret)
-      .update(JSON.stringify(body))
+      .update(rawBody?.toString('utf8') ?? JSON.stringify(body))
       .digest('hex');
     if (!this.safeCompare(hash, expectedHash, 'hex')) {
       throw new BadRequestException('Invalid Paystack signature');
     }
   }
 
-  private assertSquadSignature(body: Record<string, unknown>, headers: Record<string, string>) {
-    const secret = this.configService.get('SQUAD_WEBHOOK_SECRET');
-    const received = headers['x-squad-signature'] || headers['x-webhook-signature'] || headers['signature'];
+  private assertFlutterwaveSignature(headers: Record<string, string>, rawBody?: Buffer) {
+    const secret = resolveConfiguredEnv('FLUTTERWAVE_WEBHOOK_HASH', this.configService);
+    if (!secret) throw new BadRequestException('Invalid Flutterwave signature');
+
+    const hmacSignature = this.headerValue(headers, 'flutterwave-signature');
+    if (hmacSignature && rawBody) {
+      const expected = createHmac('sha256', secret)
+        .update(rawBody.toString('utf8'))
+        .digest('base64');
+      if (this.safeCompare(hmacSignature, expected)) return;
+    }
+
+    const legacyHash = this.headerValue(headers, 'verif-hash');
+    if (legacyHash && this.safeCompare(legacyHash, secret)) return;
+
+    throw new BadRequestException('Invalid Flutterwave signature');
+  }
+
+  private assertSquadSignature(
+    body: Record<string, unknown>,
+    headers: Record<string, string>,
+    rawBody?: Buffer,
+  ) {
+    const secret = this.configService.get('SQUAD_WEBHOOK_SECRET') || this.configService.get('SQUAD_SECRET_KEY');
+    const received =
+      this.headerValue(headers, 'x-squad-encrypted-body') ||
+      this.headerValue(headers, 'x-squad-signature') ||
+      this.headerValue(headers, 'x-webhook-signature') ||
+      this.headerValue(headers, 'signature');
     if (!secret || !received) throw new BadRequestException('Invalid Squad signature');
 
-    const payload = JSON.stringify(body);
-    const expectedHex = createHmac('sha512', secret).update(payload).digest('hex');
+    const payload = rawBody?.toString('utf8') ?? JSON.stringify(body);
+    const expectedHex = createHmac('sha512', secret).update(payload).digest('hex').toUpperCase();
     const expectedBase64 = createHmac('sha512', secret).update(payload).digest('base64');
     const verified =
-      this.safeCompare(received, expectedHex, 'hex')
-      || this.safeCompare(received, expectedBase64, 'base64');
+      this.safeCompare(received.toUpperCase(), expectedHex)
+      || this.safeCompare(received, expectedBase64);
 
     if (!verified) throw new BadRequestException('Invalid Squad signature');
   }
 
-  private assertKorapaySignature(body: Record<string, unknown>, headers: Record<string, string>) {
-    const secret = this.configService.get('KORAPAY_WEBHOOK_SECRET');
-    const received = headers['x-korapay-signature'] || headers['x-signature'] || headers['signature'];
+  private assertKorapaySignature(
+    body: Record<string, unknown>,
+    headers: Record<string, string>,
+    rawBody?: Buffer,
+  ) {
+    const secret = this.configService.get('KORAPAY_WEBHOOK_SECRET') || this.configService.get('KORAPAY_SECRET_KEY');
+    const received =
+      this.headerValue(headers, 'x-korapay-signature') ||
+      this.headerValue(headers, 'x-signature') ||
+      this.headerValue(headers, 'signature');
     if (!secret || !received) throw new BadRequestException('Invalid Korapay signature');
 
-    const payload = JSON.stringify(body);
-    const expectedHex = createHmac('sha256', secret).update(payload).digest('hex');
-    const expectedBase64 = createHmac('sha256', secret).update(payload).digest('base64');
+    const dataPayload = JSON.stringify(body.data ?? {});
+    const rawPayload = rawBody?.toString('utf8') ?? JSON.stringify(body);
+    const expectedDataHex = createHmac('sha256', secret).update(dataPayload).digest('hex');
+    const expectedRawHex = createHmac('sha256', secret).update(rawPayload).digest('hex');
+    const expectedDataBase64 = createHmac('sha256', secret).update(dataPayload).digest('base64');
     const verified =
-      this.safeCompare(received, expectedHex, 'hex')
-      || this.safeCompare(received, expectedBase64, 'base64');
+      this.safeCompare(received, expectedDataHex)
+      || this.safeCompare(received, expectedRawHex)
+      || this.safeCompare(received, expectedDataBase64);
 
     if (!verified) throw new BadRequestException('Invalid Korapay signature');
   }
 
-  private assertOpaySignature(body: Record<string, unknown>, headers: Record<string, string>) {
-    const secret = this.configService.get('OPAY_WEBHOOK_SECRET');
-    const received = headers['x-opay-signature'] || headers['x-signature'] || headers['signature'];
-    if (!secret || !received) throw new BadRequestException('Invalid OPay signature');
+  private assertOpaySignature(
+    body: Record<string, unknown>,
+    headers: Record<string, string>,
+    rawBody?: Buffer,
+  ) {
+    const secret =
+      this.configService.get('OPAY_WEBHOOK_SECRET') ||
+      resolveConfiguredEnv('OPAY_SECRET_KEY', this.configService);
+    if (!secret) throw new BadRequestException('Invalid OPay signature');
 
-    const payload = JSON.stringify(body);
-    const expectedHex = createHmac('sha512', secret).update(payload).digest('hex');
-    const expectedBase64 = createHmac('sha512', secret).update(payload).digest('base64');
-    const verified =
-      this.safeCompare(received, expectedHex, 'hex')
-      || this.safeCompare(received, expectedBase64, 'base64');
+    const callbackPayload = body.payload && typeof body.payload === 'object'
+      ? body.payload as Record<string, unknown>
+      : undefined;
+    const callbackSignature = this.asString(body.sha512);
+    if (callbackPayload && callbackSignature) {
+      const refunded = callbackPayload.refunded === true ? 't' : 'f';
+      const signatureFields: Array<[string, string, boolean?]> = [
+        ['Amount', this.asString(callbackPayload.amount)],
+        ['Currency', this.asString(callbackPayload.currency)],
+        ['Reference', this.asString(callbackPayload.reference)],
+        ['Refunded', refunded, true],
+        ['Status', this.asString(callbackPayload.status)],
+        ['Timestamp', this.asString(callbackPayload.timestamp)],
+        ['To' + 'ken', this.asString(callbackPayload.token)],
+        ['TransactionID', this.asString(callbackPayload.transactionId)],
+      ];
+      const signaturePayload = `{${signatureFields
+        .map(([name, value, raw]) => `${name}:${raw ? value : `"${value}"`}`)
+        .join(',')}}`;
+      const expected = createHmac('sha3-512', secret).update(signaturePayload).digest('hex');
+      if (this.safeCompare(callbackSignature.toLowerCase(), expected)) return;
+    }
+
+    const received =
+      this.headerValue(headers, 'signature') ||
+      this.headerValue(headers, 'x-opay-signature') ||
+      this.headerValue(headers, 'x-signature') ||
+      callbackSignature;
+    if (!received) throw new BadRequestException('Invalid OPay signature');
+
+    const payload = rawBody?.toString('utf8') ?? JSON.stringify(body);
+    const timestamp = this.headerValue(headers, 'requesttimestamp') || this.headerValue(headers, 'request-timestamp');
+    const candidates = [
+      payload,
+      timestamp ? `${timestamp}${payload}` : '',
+    ].filter(Boolean);
+    const verified = candidates.some((candidate) => {
+      const expectedHex = createHmac('sha512', secret).update(candidate).digest('hex');
+      const expectedBase64 = createHmac('sha512', secret).update(candidate).digest('base64');
+      return this.safeCompare(received, expectedHex) || this.safeCompare(received, expectedBase64);
+    });
 
     if (!verified) throw new BadRequestException('Invalid OPay signature');
   }
@@ -1251,6 +1677,12 @@ export class PaymentsService {
     return Math.round(numeric * 100);
   }
 
+  private asString(value: unknown): string {
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    return '';
+  }
+
   private getWebUrl(): string {
     const configured =
       this.configService.get<string>('APP_URL') ||
@@ -1266,6 +1698,14 @@ export class PaymentsService {
     }
 
     return 'http://localhost:3000';
+  }
+
+  private getOpayBaseUrl(): string {
+    const configured = this.configService.get<string>('OPAY_BASE_URL');
+    if (configured) return configured.replace(/\/+$/, '');
+    return this.configService.get<string>('OPAY_SANDBOX') === 'true'
+      ? 'https://testapi.opaycheckout.com'
+      : 'https://liveapi.opaycheckout.com';
   }
 
   private getApiUrl(): string {
@@ -1284,6 +1724,13 @@ export class PaymentsService {
     } catch {
       return false;
     }
+  }
+
+  private headerValue(headers: Record<string, string>, name: string): string {
+    const direct = headers[name] || headers[name.toLowerCase()] || headers[name.toUpperCase()];
+    if (direct) return String(direct);
+    const found = Object.entries(headers || {}).find(([key]) => key.toLowerCase() === name.toLowerCase());
+    return found ? String(found[1]) : '';
   }
 
   private sortObject(value: unknown): unknown {

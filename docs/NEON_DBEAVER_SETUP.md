@@ -17,14 +17,14 @@ Do not commit real Neon credentials. Put real values in local `.env` files and p
 Use the Neon connection string format below in Railway and local API development:
 
 ```env
-DATABASE_URL=postgresql://neon_user:neon_password@ep-example-123456.us-east-2.aws.neon.tech/neondb?sslmode=require
+DATABASE_URL=
 DB_SSL=true
 DB_SSL_REJECT_UNAUTHORIZED=false
 DB_SYNCHRONIZE=false
 DB_LOGGING=false
 ```
 
-Replace the placeholder values with the values from Neon:
+Set `DATABASE_URL` to the exact production connection string copied from the Neon dashboard:
 
 | Value | Where it goes |
 | --- | --- |
@@ -48,7 +48,7 @@ Use a separate Neon branch or database per environment:
 Set these in Railway under `burner-point-api -> Variables`:
 
 ```env
-DATABASE_URL=postgresql://neon_user:neon_password@ep-example-123456.us-east-2.aws.neon.tech/neondb?sslmode=require
+DATABASE_URL=
 DB_SSL=true
 DB_SSL_REJECT_UNAUTHORIZED=false
 DB_SYNCHRONIZE=false
@@ -71,7 +71,7 @@ For local backend development:
 Copy-Item apps/api/.env.example apps/api/.env
 ```
 
-Then replace the placeholder Neon values in `apps/api/.env` with the real development Neon branch credentials. The TypeORM config also supports root `.env`, but `apps/api/.env` should be the app-specific source during API work.
+Then set the real development Neon branch credentials in `apps/api/.env`. The TypeORM config also supports root `.env`, but `apps/api/.env` should be the app-specific source during API work.
 
 ## DBeaver Connection
 
@@ -83,11 +83,11 @@ Create a new DBeaver connection:
 
 | DBeaver field | Value |
 | --- | --- |
-| Host | `ep-example-123456.us-east-2.aws.neon.tech` |
-| Port | `5432` |
-| Database | `neondb` |
-| Username | `neon_user` |
-| Password | `neon_password` |
+| Host | Copy from the Neon connection details |
+| Port | Copy from the Neon connection details |
+| Database | Copy from the Neon connection details |
+| Username | Copy from the Neon connection details |
+| Password | Copy from the Neon connection details |
 
 4. Open the `SSL` tab or driver properties.
 5. Enable SSL and set driver property `sslmode=require`.
