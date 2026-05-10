@@ -1,4 +1,5 @@
 export type BackendIntegrationId =
+  | 'revenuecat'
   | 'twilio'
   | 'telnyx'
   | 'bandwidth'
@@ -45,6 +46,34 @@ export interface BackendIntegrationContract {
 }
 
 export const BACKEND_INTEGRATION_CONTRACTS: BackendIntegrationContract[] = [
+  {
+    id: 'revenuecat',
+    name: 'RevenueCat',
+    category: 'payments',
+    backendOnly: true,
+    secretEnv: ['REVENUECAT_SECRET_API_KEY', 'REVENUECAT_PROJECT_ID'],
+    optionalEnv: [
+      'REVENUECAT_WEBHOOK_AUTHORIZATION',
+      'REVENUECAT_WEBHOOK_SECRET',
+      'REVENUECAT_ENTITLEMENT_BP_MESSENGER',
+      'REVENUECAT_ENTITLEMENT_BP_SECURE_TUNNEL',
+      'REVENUECAT_ENTITLEMENT_BP_PREMIUM',
+      'REVENUECAT_OFFERING_DEFAULT',
+      'REVENUECAT_OFFERING_MESSENGER',
+      'REVENUECAT_OFFERING_VPN',
+    ],
+    publicClientEnv: [
+      'EXPO_PUBLIC_REVENUECAT_APPLE_API_KEY',
+      'EXPO_PUBLIC_REVENUECAT_GOOGLE_API_KEY',
+      'NEXT_PUBLIC_REVENUECAT_WEB_API_KEY',
+    ],
+    frontendRule: 'Use RevenueCat public SDK keys on mobile only; the Burner Point backend verifies webhooks and syncs entitlements into Supabase-backed tables.',
+    endpoints: [
+      { method: 'POST', path: '/webhooks/revenuecat', auth: 'provider-signature', purpose: 'Receive RevenueCat subscription lifecycle webhooks' },
+      { method: 'GET', path: '/billing/entitlements', auth: 'user', purpose: 'Return the user entitlement snapshot synced from RevenueCat' },
+      { method: 'POST', path: '/billing/entitlements/refresh', auth: 'user', purpose: 'Force a backend RevenueCat resync after purchase or restore' },
+    ],
+  },
   {
     id: 'twilio',
     name: 'Twilio',

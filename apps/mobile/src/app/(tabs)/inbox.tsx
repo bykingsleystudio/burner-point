@@ -2,7 +2,10 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MessageSquare, Phone, ShieldCheck, Wifi } from 'lucide-react-native';
+
+import { EntitlementGate } from '../../components/EntitlementGate';
 import { BRAND } from '../../lib/brand';
+import { useRevenueCat } from '../../lib/revenuecat-context';
 
 const threads = [
   ['+1 415 555 0182', 'Telegram code received', 'OTP'],
@@ -12,6 +15,30 @@ const threads = [
 
 export default function InboxScreen() {
   const router = useRouter();
+  const { ready, loading, canAccessMessenger, restorePurchases, refresh } = useRevenueCat();
+
+  if (ready && !loading && !canAccessMessenger) {
+    return (
+      <SafeAreaView style={s.container}>
+        <View style={s.gateWrap}>
+          <EntitlementGate
+            eyebrow="BP Messenger Pro"
+            title="Premium private communication lives behind your active messenger entitlement."
+            text="Burner Point uses RevenueCat subscription entitlements to unlock inbox, private messaging, voicemail context, and premium communication workflows in the mobile app."
+            bullets={[
+              'Open Billing to start BP Messenger Pro or BP Premium.',
+              'Restore if this store account already owns the subscription.',
+              'Refresh access after purchase so Burner Point syncs the latest state.',
+            ]}
+            primaryLabel="Open Billing"
+            onPrimaryPress={() => router.push('/billing' as any)}
+            onSecondaryPress={() => { void restorePurchases().catch(() => undefined); }}
+            onTertiaryPress={() => { void refresh({ forceServerSync: true }).catch(() => undefined); }}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={s.container}>
@@ -66,6 +93,7 @@ export default function InboxScreen() {
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: BRAND.colors.black },
+  gateWrap: { padding: 20, paddingTop: 12 },
   content: { padding: 20, paddingBottom: 36 },
   kicker: { color: BRAND.colors.cyberGreen, fontSize: 11, fontWeight: '900', textTransform: 'uppercase' },
   title: { color: BRAND.colors.white, fontSize: 34, lineHeight: 35, fontWeight: '900', textTransform: 'uppercase', marginTop: 12 },

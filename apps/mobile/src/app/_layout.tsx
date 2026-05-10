@@ -12,6 +12,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { BurnerAuthProvider } from '../lib/auth-context';
 import { BRAND } from '../lib/brand';
+import { RevenueCatProvider } from '../lib/revenuecat-context';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -112,25 +113,27 @@ export default function RootLayout() {
 
   return (
     <BurnerAuthProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <SafeAreaProvider>
-        <StatusBar style="light" backgroundColor={BRAND.colors.black}/>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: BRAND.colors.black },
-            animation: Platform.OS === 'ios' ? 'default' : 'fade_from_bottom',
-          }}
-        >
-          <Stack.Screen name="onboarding"/>
-          <Stack.Screen name="auth/login"/>
-          <Stack.Screen name="auth/register"/>
-          <Stack.Screen name="auth/phone-verify"/>
-          <Stack.Screen name="(tabs)"/>
-          <Stack.Screen name="call/active" options={{ presentation: 'fullScreenModal' }}/>
-        </Stack>
-        </SafeAreaProvider>
-      </GestureHandlerRootView>
+      <RevenueCatProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <SafeAreaProvider>
+          <StatusBar style="light" backgroundColor={BRAND.colors.black}/>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: BRAND.colors.black },
+              animation: Platform.OS === 'ios' ? 'default' : 'fade_from_bottom',
+            }}
+          >
+            <Stack.Screen name="onboarding"/>
+            <Stack.Screen name="auth/login"/>
+            <Stack.Screen name="auth/register"/>
+            <Stack.Screen name="auth/phone-verify"/>
+            <Stack.Screen name="(tabs)"/>
+            <Stack.Screen name="call/active" options={{ presentation: 'fullScreenModal' }}/>
+          </Stack>
+          </SafeAreaProvider>
+        </GestureHandlerRootView>
+      </RevenueCatProvider>
     </BurnerAuthProvider>
   );
 }

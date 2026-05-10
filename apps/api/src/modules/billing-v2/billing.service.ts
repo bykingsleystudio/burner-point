@@ -10,6 +10,7 @@ import {
   PaymentGateway,
 } from '../../database/entities/extended-entities';
 import { User } from '../../database/entities/user.entity';
+import { RevenueCatService } from '../revenuecat/revenuecat.service';
 
 @Injectable()
 export class BillingService {
@@ -18,6 +19,7 @@ export class BillingService {
     @InjectRepository(SubscriptionPlan) private planRepo: Repository<SubscriptionPlan>,
     @InjectRepository(UserSubscription) private subRepo: Repository<UserSubscription>,
     @InjectRepository(User) private userRepo: Repository<User>,
+    private revenueCatService: RevenueCatService,
   ) {}
 
   async getLedger(userId: string, page = 1, limit = 20) {
@@ -35,10 +37,65 @@ export class BillingService {
   }
 
   async getSubscription(userId: string) {
-    return this.subRepo.findOne({
-      where: { userId, status: 'active' },
-      relations: ['plan'],
-    } as any);
+    const [legacySubscription, revenueCatSnapshot] = await Promise.all([
+      this.subRepo.findOne({
+        where: { userId, status: 'active' },
+        relations: ['plan'],
+      } as any),
+      this.revenueCatService.getEntitlementSnapshot(userId),
+    ]);
+
+    const revenueCatSubscription = revenueCatSnapshot.subscriptions.find((item) => item.isActive);
+    if (revenueCatSubscription) {
+      return {
+        id: revenueCatSubscription.id,
+        provider: 'revenuecat',
+        source: 'revenuecat',
+        status: revenueCatSubscription.status,
+        billingCycle: 'store_managed',
+        currentPeriodStart: revenueCatSubscription.currentPeriodStart,
+        currentPeriodEnd: revenueCatSubscription.currentPeriodEnd,
+        willRenew: revenueCatSubscription.willRenew,
+        renewsAt: revenueCatSubscription.renewsAt,
+        cancelledAt: revenueCatSubscription.cancelledAt,
+        expiresAt: revenueCatSubscription.expiresAt,
+        productId: revenueCatSubscription.productId,
+        offeringId: revenueCatSubscription.offeringId,
+        store: revenueCatSubscription.store,
+        environment: revenueCatSubscription.environment,
+        entitlements: revenueCatSnapshot.entitlements.filter((item) => item.active),
+        plan: {
+          id: revenueCatSubscription.id,
+          slug: this.resolveRevenueCatPlanSlug(revenueCatSnapshot),
+          name: this.resolveRevenueCatPlanName(revenueCatSnapshot),
+          description: 'Managed through RevenueCat and the App Store or Google Play.',
+        },
+      };
+    }
+
+    return legacySubscription;
+  }
+
+  getEntitlements(userId: string) {
+    return this.revenueCatService.getEntitlementSnapshot(userId);
+  }
+
+  refreshEntitlements(userId: string) {
+    return this.revenueCatService.refreshCustomerForUser(userId);
+  }
+
+  private resolveRevenueCatPlanName(snapshot: Awaited<ReturnType<RevenueCatService['getEntitlementSnapshot']>>) {
+    if (snapshot.summary.canAccessPremium) return 'BP Premium';
+    if (snapshot.summary.canAccessMessenger) return 'BP Messenger Pro';
+    if (snapshot.summary.canAccessSecureTunnel) return 'BP Secure Tunnel';
+    return 'RevenueCat Subscription';
+  }
+
+  private resolveRevenueCatPlanSlug(snapshot: Awaited<ReturnType<RevenueCatService['getEntitlementSnapshot']>>) {
+    if (snapshot.summary.canAccessPremium) return 'bp-premium';
+    if (snapshot.summary.canAccessMessenger) return 'bp-messenger-pro';
+    if (snapshot.summary.canAccessSecureTunnel) return 'bp-secure-tunnel';
+    return 'revenuecat-subscription';
   }
 
   async recordWalletTransaction(input: {

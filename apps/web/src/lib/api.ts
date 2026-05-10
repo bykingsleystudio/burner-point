@@ -213,6 +213,8 @@ export const billingApi = {
   ledger: (page = 1, limit = 20) => api.get('/billing/ledger', { params: { page, limit } }),
   plans: () => api.get('/billing/plans'),
   subscription: () => api.get('/billing/subscription'),
+  entitlements: () => api.get('/billing/entitlements'),
+  refreshEntitlements: () => api.post('/billing/entitlements/refresh'),
 };
 
 export const phoneAuthApi = {

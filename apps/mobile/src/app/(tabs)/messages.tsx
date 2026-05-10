@@ -1,42 +1,52 @@
 import { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { Alert, View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MessageSquare, Phone, UserRound, Voicemail, Zap, Shield } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import axios from 'axios';
+
+import { EntitlementGate } from '../../components/EntitlementGate';
 import { API_BASE_URL } from '../../lib/config';
 import { getApiAccessToken } from '../../lib/auth';
 import { useBurnerAuth } from '../../lib/auth-context';
 import { BRAND } from '../../lib/brand';
 import { triggerHaptic } from '../../lib/native-ux';
+import { useRevenueCat } from '../../lib/revenuecat-context';
 
 const HIT_SLOP = { top: 8, right: 8, bottom: 8, left: 8 };
 
 export default function MessagesScreen() {
   const router = useRouter();
   const { isLoaded, isSignedIn, session } = useBurnerAuth();
+  const { ready, loading: entitlementLoading, canAccessMessenger, restorePurchases, refresh } = useRevenueCat();
   const [numbers, setNumbers] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const hasAccess = canAccessMessenger;
+
   const loadMessagesForNumber = async (phoneNumberId: string) => {
     const token = await getApiAccessToken(undefined, session);
-    const h = { Authorization: `Bearer ${token}` };
-    const msgRes = await axios.get(`${API_BASE_URL}/messages?phoneNumberId=${phoneNumberId}`, { headers: h });
+    const headers = { Authorization: `Bearer ${token}` };
+    const msgRes = await axios.get(`${API_BASE_URL}/messages?phoneNumberId=${phoneNumberId}`, { headers });
     setMessages(msgRes.data);
   };
 
   useEffect(() => {
     (async () => {
-      if (!isLoaded) return;
+      if (!isLoaded || !ready) return;
       if (!isSignedIn) {
         router.replace('/auth/login' as any);
         return;
       }
+      if (!hasAccess) {
+        setLoading(false);
+        return;
+      }
       const token = await getApiAccessToken(undefined, session);
-      const h = { Authorization: `Bearer ${token}` };
-      const numsRes = await axios.get(`${API_BASE_URL}/numbers`, { headers: h });
+      const headers = { Authorization: `Bearer ${token}` };
+      const numsRes = await axios.get(`${API_BASE_URL}/numbers`, { headers });
       setNumbers(numsRes.data);
       if (numsRes.data.length) {
         setSelectedId(numsRes.data[0].id);
@@ -44,19 +54,64 @@ export default function MessagesScreen() {
       }
       setLoading(false);
     })().catch(() => setLoading(false));
-  }, [isLoaded, isSignedIn, router, session]);
+  }, [hasAccess, isLoaded, isSignedIn, ready, router, session]);
 
   const chooseNumber = async (id: string) => {
     triggerHaptic('selection');
     setSelectedId(id);
-    await loadMessagesForNumber(id).catch(() => {});
+    await loadMessagesForNumber(id).catch(() => undefined);
   };
 
-  if (loading) return (
-    <SafeAreaView style={s.container}>
-      <ActivityIndicator color={BRAND.colors.cyberGreen} style={{ marginTop: 40 }} accessibilityLabel="Loading conversation inbox" />
-    </SafeAreaView>
-  );
+  const restoreAccess = async () => {
+    triggerHaptic('selection');
+    try {
+      await restorePurchases();
+      await refresh({ forceServerSync: true });
+      Alert.alert('Purchases restored', 'Your BP Messenger access has been refreshed.');
+    } catch (caught: any) {
+      Alert.alert('Restore failed', caught?.message ?? 'Unable to restore BP Messenger access.');
+    }
+  };
+
+  const refreshAccess = async () => {
+    triggerHaptic('selection');
+    try {
+      await refresh({ forceServerSync: true });
+    } catch (caught: any) {
+      Alert.alert('Refresh failed', caught?.message ?? 'Unable to refresh messenger access.');
+    }
+  };
+
+  if (!ready || entitlementLoading || loading) {
+    return (
+      <SafeAreaView style={s.container}>
+        <ActivityIndicator color={BRAND.colors.cyberGreen} style={{ marginTop: 40 }} accessibilityLabel="Loading conversation access" />
+      </SafeAreaView>
+    );
+  }
+
+  if (!hasAccess) {
+    return (
+      <SafeAreaView style={s.container}>
+        <View style={s.gateWrap}>
+          <EntitlementGate
+            eyebrow="BP Messenger Pro"
+            title="Private inbox access needs an active messenger entitlement."
+            text="BP Messenger uses RevenueCat subscription entitlements for private inbox, calls, voicemail, and premium communication access inside the mobile app."
+            bullets={[
+              'Buy BP Messenger Pro or BP Premium from the mobile billing screen.',
+              'Use restore if this App Store or Google Play account already owns access.',
+              'Refresh access after a purchase to sync the latest subscription state.',
+            ]}
+            primaryLabel="Open Billing"
+            onPrimaryPress={() => router.push('/billing' as any)}
+            onSecondaryPress={() => { void restoreAccess(); }}
+            onTertiaryPress={() => { void refreshAccess(); }}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={s.container}>
@@ -88,43 +143,49 @@ export default function MessagesScreen() {
         ))}
       </View>
 
-      {/* Number tabs */}
-      <FlatList horizontal data={numbers} keyExtractor={(n) => n.id}
-        style={s.numList} showsHorizontalScrollIndicator={false}
+      <FlatList
+        horizontal
+        data={numbers}
+        keyExtractor={(n) => n.id}
+        style={s.numList}
+        showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
         renderItem={({ item: n }) => (
-          <TouchableOpacity onPress={() => chooseNumber(n.id)}
+          <TouchableOpacity
+            onPress={() => chooseNumber(n.id)}
             accessibilityRole="button"
             accessibilityLabel={`Select number ${n.number}`}
             accessibilityState={{ selected: selectedId === n.id }}
             hitSlop={HIT_SLOP}
-            style={[s.numTab, selectedId === n.id && s.numTabActive]}>
+            style={[s.numTab, selectedId === n.id && s.numTabActive]}
+          >
             <Text style={[s.numTabText, selectedId === n.id && s.numTabTextActive]}>{n.number}</Text>
           </TouchableOpacity>
         )}
       />
 
-      {/* Messages */}
-      <FlatList data={messages} keyExtractor={(m) => m.id}
+      <FlatList
+        data={messages}
+        keyExtractor={(m) => m.id}
         contentContainerStyle={{ padding: 16 }}
         inverted
-        ListEmptyComponent={
+        ListEmptyComponent={(
           <View style={s.empty}>
-            <MessageSquare size={28} color={BRAND.colors.muted}/>
+            <MessageSquare size={28} color={BRAND.colors.muted} />
             <Text style={s.emptyText}>No messages yet</Text>
           </View>
-        }
+        )}
         renderItem={({ item: m }) => (
           <View style={[s.bubble, m.direction === 'outbound' ? s.bubbleOut : s.bubbleIn]}>
             {m.extractedOtp && (
               <View style={s.otpBadge}>
-                <Zap size={12} color={BRAND.colors.cyberGreen}/>
+                <Zap size={12} color={BRAND.colors.cyberGreen} />
                 <Text style={s.otpText}>{m.extractedOtp}</Text>
               </View>
             )}
             {m.isSpam && (
               <View style={s.spamBadge}>
-                <Shield size={10} color={BRAND.colors.danger}/>
+                <Shield size={10} color={BRAND.colors.danger} />
                 <Text style={s.spamText}> Spam</Text>
               </View>
             )}
@@ -139,6 +200,7 @@ export default function MessagesScreen() {
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: BRAND.colors.black },
+  gateWrap: { padding: 20, paddingTop: 12 },
   header: { padding: 20, paddingBottom: 8 },
   kicker: { color: BRAND.colors.cyberGreen, fontSize: 11, fontWeight: '900', textTransform: 'uppercase' },
   title: { color: BRAND.colors.white, fontSize: 30, lineHeight: 32, fontWeight: '900', textTransform: 'uppercase', marginTop: 8 },

@@ -34,6 +34,7 @@ import { PlatformModule } from './modules/platform/platform.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { SecurityModule } from './modules/security/security.module';
 import { SupportModule } from './modules/support/support.module';
+import { RevenueCatModule } from './modules/revenuecat/revenuecat.module';
 
 // ── Security middleware ───────────────────────────────────────────────────────
 import { SecurityMiddleware } from './middleware/security.middleware';
@@ -105,6 +106,7 @@ import { SecurityMiddleware } from './middleware/security.middleware';
     SecurityModule,        // Redacted security audit logging
     PlatformModule,        // Safe stack registry + readiness status
     IntegrationsModule,    // Backend-only provider contracts, analytics, storage, eSIM/proxy/VPN adapters
+    RevenueCatModule,      // Mobile subscription entitlements + webhook sync
 
     // Feature modules — all 10 services connected
     AuthModule,

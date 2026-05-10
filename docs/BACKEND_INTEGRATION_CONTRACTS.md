@@ -31,6 +31,8 @@ The catalog never returns secret values.
 | Storage | `POST /api/integrations/storage/upload-intents` | Backend-controlled object upload intent |
 | Analytics | `POST /api/integrations/analytics/events` | Server-side PostHog capture |
 | Payments | `POST /api/payments/initialize` | Paystack, Paddle, NOWPayments, and deferred secondary gateways |
+| Subscription sync | `GET /api/billing/entitlements` | RevenueCat-backed entitlement snapshot |
+| Subscription sync | `POST /api/billing/entitlements/refresh` | Force RevenueCat resync after purchase or restore |
 
 ## Provider Webhooks
 
@@ -47,6 +49,7 @@ The catalog never returns secret values.
 | Oxylabs | `/api/webhooks/oxylabs` | HMAC when `OXYLABS_WEBHOOK_SECRET` is configured |
 | Smartproxy | `/api/webhooks/smartproxy` | HMAC when `SMARTPROXY_WEBHOOK_SECRET` is configured |
 | WireGuard control plane | `/api/webhooks/wireguard` | HMAC when `WIREGUARD_WEBHOOK_SECRET` is configured |
+| RevenueCat | `/api/webhooks/revenuecat` | Configured `Authorization` header verification plus idempotent event sync |
 | Paystack | `/api/webhooks/paystack` or `/api/payments/webhook/paystack` | HMAC SHA512 using secret key |
 | Flutterwave | `/api/webhooks/flutterwave` or `/api/payments/webhook/flutterwave` | Secret hash or HMAC validation |
 | Squad | `/api/webhooks/squad` or `/api/payments/webhook/squad` | Gateway signature |
@@ -70,6 +73,7 @@ Core server-side credentials:
 | Bandwidth | `BANDWIDTH_ACCOUNT_ID`, `BANDWIDTH_USERNAME`, `BANDWIDTH_PASSWORD` |
 | Tremil | `TREMIL_API_KEY` |
 | Paystack | `PAYSTACK_SECRET_KEY` |
+| RevenueCat | `REVENUECAT_SECRET_API_KEY`, `REVENUECAT_PROJECT_ID` |
 | Paddle | `PADDLE_API_KEY`, `PADDLE_WEBHOOK_SECRET` |
 | NOWPayments | `NOWPAYMENTS_API_KEY`, `NOWPAYMENTS_IPN_SECRET` |
 | Resend | `RESEND_API_KEY` |
@@ -88,6 +92,14 @@ Public client-safe Supabase keys:
 | --- | --- |
 | Next.js web | `NEXT_PUBLIC_SUPABASE_ANON_KEY` or `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` |
 | Expo mobile | `EXPO_PUBLIC_SUPABASE_ANON_KEY` or `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` |
+| Expo iOS subscriptions | `EXPO_PUBLIC_REVENUECAT_APPLE_API_KEY` |
+| Expo Android subscriptions | `EXPO_PUBLIC_REVENUECAT_GOOGLE_API_KEY` |
+
+RevenueCat rules:
+
+- Public SDK keys configure the mobile SDK only.
+- Secret keys prefixed `sk_` stay on Railway or another trusted server.
+- Webhooks must not trust client purchase state alone; after a RevenueCat webhook, Burner Point fetches the latest customer state from RevenueCat REST API v2 and syncs entitlements into Supabase-backed tables.
 
 Provider operation paths remain configurable because vendor APIs differ by contract, region, and product:
 

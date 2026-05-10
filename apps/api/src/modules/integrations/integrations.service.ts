@@ -6,6 +6,7 @@ import { UsersService } from '../users/users.service';
 import { BillingService } from '../billing-v2/billing.service';
 import { TransactionType } from '../../database/entities/extended-entities';
 import { resolveConfiguredEnv } from '../../config/runtime-env';
+import { RevenueCatService } from '../revenuecat/revenuecat.service';
 import {
   BACKEND_INTEGRATION_CONTRACTS,
   BackendIntegrationContract,
@@ -114,6 +115,7 @@ export class IntegrationsService {
     private readonly config: ConfigService,
     private readonly usersService: UsersService,
     private readonly billingService: BillingService,
+    private readonly revenueCatService: RevenueCatService,
   ) {}
 
   getCatalog() {
@@ -277,6 +279,26 @@ export class IntegrationsService {
   }
 
   async createVpnSession(userId: string, input: VpnSessionInput) {
+    const entitlementConfig = this.revenueCatService.getEntitlementConfig();
+    const hasSubscriptionAccess = await this.revenueCatService.hasAnyActiveEntitlement(userId, [
+      entitlementConfig.secureTunnel,
+      entitlementConfig.premium,
+    ]);
+
+    if (hasSubscriptionAccess) {
+      const providerResult = await this.callConfiguredProvider('wireguard.session', userId, {
+        ...input,
+        subscriptionAccess: true,
+      });
+
+      return {
+        ...providerResult,
+        walletDebitedUsdCents: 0,
+        walletChargeRecorded: false,
+        entitlementAccess: entitlementConfig.secureTunnel,
+      };
+    }
+
     return this.purchaseIntegrationProduct(
       userId,
       'wireguard.session',

@@ -158,6 +158,22 @@ CREATE INDEX IF NOT EXISTS idx_payment_sessions_user ON public.payment_sessions(
 CREATE INDEX IF NOT EXISTS idx_payment_sessions_provider ON public.payment_sessions(provider);
 CREATE INDEX IF NOT EXISTS idx_payment_sessions_status ON public.payment_sessions(status);
 
+-- Subscription plans
+CREATE TABLE IF NOT EXISTS public.subscription_plans (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  description TEXT,
+  price_usd_cents INTEGER NOT NULL,
+  price_ngn_cents INTEGER,
+  interval TEXT CHECK (interval IN ('daily', 'weekly', 'monthly', 'yearly')),
+  trial_days INTEGER DEFAULT 0,
+  features JSONB DEFAULT '[]'::jsonb,
+  is_active BOOLEAN DEFAULT TRUE,
+  metadata JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Subscriptions
 CREATE TABLE IF NOT EXISTS public.user_subscriptions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -175,22 +191,6 @@ CREATE TABLE IF NOT EXISTS public.user_subscriptions (
 
 CREATE INDEX IF NOT EXISTS idx_user_subscriptions_user ON public.user_subscriptions(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_subscriptions_status ON public.user_subscriptions(status);
-
--- Subscription plans
-CREATE TABLE IF NOT EXISTS public.subscription_plans (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  description TEXT,
-  price_usd_cents INTEGER NOT NULL,
-  price_ngn_cents INTEGER,
-  interval TEXT CHECK (interval IN ('daily', 'weekly', 'monthly', 'yearly')),
-  trial_days INTEGER DEFAULT 0,
-  features JSONB DEFAULT '[]'::jsonb,
-  is_active BOOLEAN DEFAULT TRUE,
-  metadata JSONB DEFAULT '{}'::jsonb,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
 
 -- Credit packages
 CREATE TABLE IF NOT EXISTS public.credit_packages (

@@ -1,6 +1,6 @@
 # Burner Point Payment System Architecture
 
-This document defines the production payment architecture for verification credits, number rentals, and monthly subscriptions.
+This document defines the production payment architecture for verification credits, number rentals, web checkout, and RevenueCat-managed mobile subscriptions.
 
 ## Product Pricing
 
@@ -8,7 +8,10 @@ This document defines the production payment architecture for verification credi
 | --- | --- | ---: | --- |
 | Verification credits | One-time | $0.99+ | Credit wallet after signed webhook confirmation |
 | Non-renewable rental | One-time | $5.99 | Assign selected US/Canada number after signed webhook, or create a paid rental entitlement for operator-assisted assignment |
-| Privacy Monthly | Recurring monthly | $15.99/month | Activate `user_subscriptions` after signed webhook confirmation |
+| Privacy Monthly (web) | Recurring monthly | $15.99/month | Activate `user_subscriptions` after signed webhook confirmation |
+| BP Messenger Pro (mobile) | Store subscription | RevenueCat offering | Sync `subscriptions` and `subscription_entitlements` after RevenueCat webhook confirmation |
+| BP Secure Tunnel (mobile) | Store subscription | RevenueCat offering | Sync `subscriptions` and `subscription_entitlements` after RevenueCat webhook confirmation |
+| BP Premium (mobile) | Store subscription | RevenueCat offering | Sync `subscriptions` and `subscription_entitlements` after RevenueCat webhook confirmation |
 
 `PAYMENT_USD_TO_NGN_RATE` converts USD target pricing to NGN kobo for Paystack and deferred Nigerian gateways. The current production default is `1500`.
 
@@ -16,15 +19,27 @@ This document defines the production payment architecture for verification credi
 
 | Gateway | Role | Status |
 | --- | --- | --- |
+| RevenueCat | Mobile subscription entitlement system for iOS App Store and Google Play | Core |
 | Paystack | Primary Nigerian/local card checkout | Core |
-| Paddle | International card and recurring subscription checkout | Core |
+| Paddle | International card and web recurring subscription checkout | Core |
 | NOWPayments | Crypto checkout | Core |
 | Flutterwave | Secondary Nigerian/local checkout | Deferred behind `SECONDARY_GATEWAYS_ENABLED=true` |
 | Squad by GTCO | Secondary Nigerian/local checkout | Deferred behind `SECONDARY_GATEWAYS_ENABLED=true` |
 | Korapay | Secondary Nigerian/local checkout | Deferred behind `SECONDARY_GATEWAYS_ENABLED=true` |
 | OPay | Secondary Nigerian/local checkout | Deferred behind `SECONDARY_GATEWAYS_ENABLED=true` |
 
-The frontend never calls gateway APIs directly. It only calls `POST /api/payments/initialize`, receives a checkout URL, and leaves fulfillment to webhooks.
+The frontend never calls gateway APIs directly. It only calls `POST /api/payments/initialize`, receives a checkout URL, and leaves fulfillment to webhooks. Native store subscriptions are handled by RevenueCat SDKs on iOS and Android, then synced back to the API through RevenueCat webhooks plus a backend refresh pass.
+
+## RevenueCat Subscription Flow
+
+1. Signed-in mobile app configures the RevenueCat SDK with the platform public API key and Supabase user ID as the App User ID.
+2. Mobile app fetches RevenueCat offerings and displays store-managed packages for BP Messenger Pro, BP Secure Tunnel, and BP Premium.
+3. User purchases or restores through the App Store or Google Play.
+4. RevenueCat updates the customer state and sends a webhook to `POST /api/webhooks/revenuecat`.
+5. Burner Point API verifies the configured authorization header, deduplicates the event by RevenueCat event `id`, fetches the latest RevenueCat customer state with the secret API key, and syncs active entitlements into `subscriptions`, `subscription_entitlements`, and `revenuecat_events`.
+6. API emits realtime subscription refresh events and the mobile app can also call `POST /api/billing/entitlements/refresh` after purchase or restore to force a fresh sync.
+
+RevenueCat does not fund the Burner Point wallet. Paystack, Flutterwave, Paddle, and NOWPayments remain responsible for wallet credits, web checkout, and one-time purchases.
 
 ## Backend Flow
 
@@ -66,6 +81,7 @@ Frontend rule: never show a product as paid because the browser returned from ch
 
 | Endpoint | Purpose |
 | --- | --- |
+| `POST /api/webhooks/revenuecat` | RevenueCat subscription lifecycle events and entitlement sync |
 | `POST /api/webhooks/paystack` | Recommended Paystack webhook URL for provider dashboards |
 | `POST /api/payments/webhook/paystack` | Paystack `charge.success` |
 | `POST /api/webhooks/paddle` | Recommended Paddle webhook URL for provider dashboards |
@@ -88,6 +104,18 @@ Webhook handlers must be public, but they must verify provider signatures and mu
 Required for core launch:
 
 ```env
+REVENUECAT_SECRET_API_KEY=sk_xxxxxxxxx
+REVENUECAT_WEBHOOK_AUTHORIZATION=Bearer your_long_random_value
+REVENUECAT_WEBHOOK_SECRET=your_fallback_webhook_secret
+REVENUECAT_PROJECT_ID=proj_xxxxxxxxx
+REVENUECAT_ENTITLEMENT_BP_MESSENGER=bp_messenger_pro
+REVENUECAT_ENTITLEMENT_BP_SECURE_TUNNEL=bp_secure_tunnel
+REVENUECAT_ENTITLEMENT_BP_PREMIUM=bp_premium
+REVENUECAT_OFFERING_DEFAULT=default
+REVENUECAT_OFFERING_MESSENGER=bp_messenger
+REVENUECAT_OFFERING_VPN=bp_secure_tunnel
+EXPO_PUBLIC_REVENUECAT_APPLE_API_KEY=appl_xxxxxxxxx
+EXPO_PUBLIC_REVENUECAT_GOOGLE_API_KEY=goog_xxxxxxxxx
 PAYMENT_USD_TO_NGN_RATE=1500
 PAYSTACK_SECRET_KEY=sk_live_xxxxxxxxx
 PAYSTACK_PUBLIC_KEY=pk_live_xxxxxxxxx
@@ -113,10 +141,11 @@ Native iOS and Android apps must not enable in-app external checkout for digital
 
 Current operating rule:
 
-- Web app can use Paystack, Paddle, and NOWPayments.
-- Native app opens web billing surfaces only when policy-safe.
+- Web app can use Paystack, Paddle, and NOWPayments for wallet funding and web checkout.
+- Native app uses RevenueCat plus App Store / Google Play billing for digital subscription entitlements.
+- Native app keeps wallet top-ups and external payment providers separated from RevenueCat-managed subscriptions.
 - `MOBILE_EXTERNAL_PAYMENTS_ENABLED=false` keeps the API from creating mobile-origin external checkout sessions by default.
-- If Burner Point sells digital credits, digital subscriptions, or app-unlocked functionality directly inside the native app, add StoreKit / Google Play Billing support or a compliant entitlement-specific external-purchase path before release.
+- If Burner Point sells digital credits or other native app-unlocked digital goods directly inside the native app, add StoreKit / Google Play Billing support or a compliant entitlement-specific external-purchase path before release.
 
 Primary policy references:
 
@@ -153,12 +182,17 @@ Primary policy references:
 1. Apply Supabase migrations:
    - `supabase/migrations/0001_initial_schema.sql`
    - `supabase/migrations/0002_rls_policies.sql`
+   - `supabase/migrations/0003_revenuecat_subscriptions.sql`
 2. Set Railway environment variables for payment providers.
-3. Confirm Paystack webhook URL points to `/api/webhooks/paystack`.
-4. Confirm Paddle webhook URL points to `/api/webhooks/paddle`.
-5. Confirm NOWPayments IPN URL points to `/api/webhooks/nowpayments`.
-6. Deploy API to Railway.
-7. Deploy web to Vercel.
-8. Run controlled live smoke tests for credits, rental entitlement, rental with selected test number, and subscription.
-9. Verify `payment_sessions`, `wallet_transactions`, `phone_numbers`, and `user_subscriptions`.
-10. Keep secondary gateways disabled until the core flows are stable in production.
+3. Set Railway environment variables for RevenueCat secret key, project id, and webhook authorization.
+4. Set Expo public environment variables for RevenueCat Apple and Google SDK keys.
+5. Confirm RevenueCat webhook URL points to `/api/webhooks/revenuecat`.
+6. Confirm Paystack webhook URL points to `/api/webhooks/paystack`.
+7. Confirm Paddle webhook URL points to `/api/webhooks/paddle`.
+8. Confirm NOWPayments IPN URL points to `/api/webhooks/nowpayments`.
+9. Deploy API to Railway.
+10. Deploy web to Vercel.
+11. Build and install native iOS and Android binaries with RevenueCat enabled; OTA updates alone do not add new native purchase dependencies.
+12. Run controlled live smoke tests for credits, rental entitlement, rental with selected test number, RevenueCat purchase, RevenueCat restore, and web subscription checkout.
+13. Verify `payment_sessions`, `wallet_transactions`, `user_subscriptions`, `subscriptions`, `subscription_entitlements`, and `revenuecat_events`.
+14. Keep secondary gateways disabled until the core flows are stable in production.
