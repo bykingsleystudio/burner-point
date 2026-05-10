@@ -1,4 +1,4 @@
-const DEFAULT_SUPPORT_EMAIL = 'support@burnerpoint.app';
+const DEFAULT_SUPPORT_EMAIL = 'info@burnerpoint.com';
 const DEFAULT_TELEGRAM_SUPPORT_URL = 'https://t.me/burnerpoint';
 const DEFAULT_TELEGRAM_COMMUNITY_URL = 'https://t.me/burnerpointapp';
 

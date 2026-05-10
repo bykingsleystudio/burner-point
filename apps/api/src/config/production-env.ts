@@ -5,88 +5,29 @@ const REQUIRED_PRODUCTION_ENV = [
   'API_URL',
   'NEXT_PUBLIC_APP_URL',
   'DATABASE_URL',
+  'SUPABASE_URL',
+  'SUPABASE_ANON_KEY',
+  'SUPABASE_SERVICE_ROLE_KEY',
   'REDIS_URL',
   'JWT_SECRET',
+  'JWT_REFRESH_SECRET',
   'ENCRYPTION_KEY',
   'CORS_ALLOWED_ORIGINS',
-  'CLERK_SECRET_KEY',
-  'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',
-  'CLERK_WEBHOOK_SECRET',
   'TWILIO_ACCOUNT_SID',
   'TWILIO_AUTH_TOKEN',
   'TWILIO_VERIFY_SERVICE_SID',
   'PAYSTACK_SECRET_KEY',
   'PAYSTACK_PUBLIC_KEY',
   'PAYSTACK_WEBHOOK_SECRET',
-  'FLUTTERWAVE_SECRET_KEY',
-  'FLUTTERWAVE_PUBLIC_KEY',
-  'FLUTTERWAVE_WEBHOOK_SECRET',
-  'PADDLE_API_KEY',
-  'PADDLE_WEBHOOK_SECRET',
-  'PADDLE_PRICE_VERIFICATION',
-  'PADDLE_PRICE_RENTAL',
-  'PADDLE_PRICE_SUB_MONTHLY',
-  'NOWPAYMENTS_API_KEY',
-  'NOWPAYMENTS_IPN_SECRET',
-  'SQUAD_SECRET_KEY',
-  'SQUAD_PUBLIC_KEY',
-  'SQUAD_WEBHOOK_SECRET',
-  'SQUAD_BASE_URL',
-  'KORAPAY_SECRET_KEY',
-  'KORAPAY_PUBLIC_KEY',
-  'KORAPAY_WEBHOOK_SECRET',
-  'OPAY_MERCHANT_ID',
-  'OPAY_PUBLIC_KEY',
-  'OPAY_PRIVATE_KEY',
-  'OPAY_WEBHOOK_SECRET',
-  'TELNYX_API_KEY',
-  'TELNYX_PUBLIC_KEY',
-  'TELNYX_MESSAGING_PROFILE_ID',
-  'TELNYX_CONNECTION_ID',
-  'TREMIL_API_KEY',
-  'TREMIL_API_SECRET',
-  'TREMIL_BASE_URL',
-  'BANDWIDTH_ACCOUNT_ID',
-  'BANDWIDTH_USERNAME',
-  'BANDWIDTH_PASSWORD',
-  'BANDWIDTH_MESSAGING_APPLICATION_ID',
-  'BANDWIDTH_VOICE_APPLICATION_ID',
-  'BANDWIDTH_SITE_ID',
-  'BANDWIDTH_SIPPEER_ID',
-  'BANDWIDTH_WEBHOOK_USERNAME',
-  'BANDWIDTH_WEBHOOK_PASSWORD',
-  'AIRALO_API_KEY',
-  'AIRALO_API_SECRET',
-  'AIRALO_BASE_URL',
-  'AIRALO_PLANS_PATH',
-  'AIRALO_ORDER_PATH',
-  'OXYLABS_USERNAME',
-  'OXYLABS_PASSWORD',
-  'OXYLABS_BASE_URL',
-  'OXYLABS_PROXY_ORDER_PATH',
-  'SMARTPROXY_API_KEY',
-  'SMARTPROXY_BASE_URL',
-  'SMARTPROXY_PROXY_ORDER_PATH',
-  'WIREGUARD_PRIVATE_KEY',
-  'WIREGUARD_PUBLIC_KEY',
-  'WIREGUARD_DNS',
-  'WIREGUARD_ALLOWED_IPS',
-  'WIREGUARD_SERVER_ENDPOINT',
-  'WIREGUARD_CONTROL_BASE_URL',
-  'WIREGUARD_SESSION_PATH',
-  'WIREGUARD_CONTROL_API_KEY',
-  'RESEND_API_KEY',
-  'SENTRY_DSN',
-  'SENTRY_AUTH_TOKEN',
-  'POSTHOG_KEY',
-  'OPENAI_API_KEY',
   'INTERNAL_API_KEY',
   'WEBHOOK_SIGNING_SECRET',
+  'SUPABASE_STORAGE_USER_UPLOADS_BUCKET',
+  'SUPABASE_STORAGE_MEDIA_BUCKET',
+  'SUPABASE_STORAGE_VERIFICATION_ASSETS_BUCKET',
+  'SUPABASE_STORAGE_DOCUMENTS_BUCKET',
 ];
 
 const LIVE_PREFIXES: Record<string, RegExp> = {
-  CLERK_SECRET_KEY: /^sk_live_/,
-  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: /^pk_live_/,
   PAYSTACK_SECRET_KEY: /^sk_live_/,
   PAYSTACK_PUBLIC_KEY: /^pk_live_/,
   FLUTTERWAVE_SECRET_KEY: /^FLWSECK_LIVE-/,
@@ -120,8 +61,11 @@ export function validateProductionEnv(env: EnvMap) {
     .split(',')
     .map((origin) => origin.trim().replace(/\/+$/, ''))
     .filter(Boolean);
-  if (!corsOrigins.includes('https://burnerpoint.vercel.app')) {
-    failures.push('CORS_ALLOWED_ORIGINS must include https://burnerpoint.vercel.app');
+  if (!corsOrigins.includes('https://burnerpoint.com')) {
+    failures.push('CORS_ALLOWED_ORIGINS must include https://burnerpoint.com');
+  }
+  if (!corsOrigins.includes('https://www.burnerpoint.com')) {
+    failures.push('CORS_ALLOWED_ORIGINS should include https://www.burnerpoint.com');
   }
 
   for (const name of ['PADDLE_SANDBOX', 'OPAY_SANDBOX', 'NOWPAYMENTS_SANDBOX', 'SECONDARY_GATEWAYS_SANDBOX']) {
@@ -130,6 +74,14 @@ export function validateProductionEnv(env: EnvMap) {
     }
   }
 
+  const hasSupabaseStorage = [
+    'SUPABASE_URL',
+    'SUPABASE_SERVICE_ROLE_KEY',
+    'SUPABASE_STORAGE_USER_UPLOADS_BUCKET',
+    'SUPABASE_STORAGE_MEDIA_BUCKET',
+    'SUPABASE_STORAGE_VERIFICATION_ASSETS_BUCKET',
+    'SUPABASE_STORAGE_DOCUMENTS_BUCKET',
+  ].every((name) => Boolean(env[name]?.trim()));
   const hasAwsS3 = [
     'AWS_ACCESS_KEY_ID',
     'AWS_SECRET_ACCESS_KEY',
@@ -142,8 +94,8 @@ export function validateProductionEnv(env: EnvMap) {
     'R2_SECRET_ACCESS_KEY',
     'R2_BUCKET',
   ].every((name) => Boolean(env[name]?.trim()));
-  if (!hasAwsS3 && !hasCloudflareR2) {
-    failures.push('Configure either a complete AWS S3 credential set or a complete Cloudflare R2 credential set');
+  if (!hasSupabaseStorage && !hasAwsS3 && !hasCloudflareR2) {
+    failures.push('Configure Supabase Storage buckets or a complete S3/R2 storage credential set');
   }
 
   if (failures.length) {

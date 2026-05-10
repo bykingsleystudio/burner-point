@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useClerk, useUser } from '@clerk/nextjs';
 import {
   Bell,
   CreditCard,
@@ -13,12 +12,30 @@ import {
   UserRound,
 } from 'lucide-react';
 import { BpTabs } from '@/components/design-system';
+import { authApi, clearApiSession } from '@/lib/api';
 import { SUPPORT_EMAIL_HREF, TELEGRAM_SUPPORT_URL } from '@/lib/support';
+import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/store';
 
 export default function SettingsPage() {
   const pathname = usePathname();
-  const { user } = useUser();
-  const { signOut } = useClerk();
+  const { user, refreshToken, clearAuth } = useAuthStore();
+  const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ');
+
+  const handleSignOut = async () => {
+    try {
+      if (refreshToken) {
+        await authApi.logout(refreshToken);
+      }
+    } catch {
+      // best-effort logout
+    } finally {
+      clearAuth();
+      clearApiSession();
+      await supabase.auth.signOut();
+      window.location.href = '/';
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -30,7 +47,7 @@ export default function SettingsPage() {
             </span>
             <div>
               <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Settings</p>
-              <h2 className="mt-2 text-3xl font-semibold text-white">{user?.fullName || 'Burner Point account'}</h2>
+              <h2 className="mt-2 text-3xl font-semibold text-white">{fullName || 'Burner Point account'}</h2>
               <p className="mt-2 text-sm leading-6 text-white/52">
                 Manage profile details, billing, support paths, and secure account controls from one settings index.
               </p>
@@ -39,7 +56,7 @@ export default function SettingsPage() {
 
           <button
             type="button"
-            onClick={() => signOut({ redirectUrl: '/' })}
+            onClick={() => void handleSignOut()}
             className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[1rem] border border-white/10 px-5 text-xs font-semibold uppercase tracking-[0.16em] text-white/72 transition hover:border-red-300/40 hover:text-red-300"
           >
             <LogOut className="h-4 w-4" />
@@ -77,11 +94,11 @@ export default function SettingsPage() {
             </div>
             <div className="rounded-[1rem] border border-white/8 bg-black/20 p-4">
               <p className="text-[11px] uppercase tracking-[0.12em] text-white/36">Email</p>
-              <p className="mt-2 text-white">{user?.primaryEmailAddress?.emailAddress || 'Secure email required'}</p>
+              <p className="mt-2 text-white">{user?.email || 'Secure email required'}</p>
             </div>
             <div className="rounded-[1rem] border border-white/8 bg-black/20 p-4">
               <p className="text-[11px] uppercase tracking-[0.12em] text-white/36">Phone</p>
-              <p className="mt-2 text-white">{user?.primaryPhoneNumber?.phoneNumber || 'Add in profile and verify'}</p>
+              <p className="mt-2 text-white">{user?.phoneNumber || 'Add in profile and verify'}</p>
             </div>
           </div>
 
@@ -178,7 +195,7 @@ export default function SettingsPage() {
           <div className="mt-4 flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => signOut({ redirectUrl: '/' })}
+              onClick={() => void handleSignOut()}
               className="rounded-[0.95rem] bg-brand-green px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:bg-[#1cffac]"
             >
               Sign Out

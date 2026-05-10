@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, HttpCode, HttpStatus, NotFoundException, BadRequestException, Deprecated } from '@nestjs/common';
+import { Body, Controller, Post, Req, HttpCode, HttpStatus, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Request } from 'express';
 import { SupabaseAuthService } from './supabase-auth.service';
@@ -65,8 +65,26 @@ export class AuthController {
     return this.authService.oauthLogin(provider);
   }
 
+  @Post('supabase/exchange')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Exchange a Supabase browser session for Burner Point API tokens' })
+  async exchangeSupabaseSession(
+    @Body('accessToken') accessToken: string,
+    @Body('profile') profile: Partial<{
+      email: string;
+      phoneNumber: string;
+      firstName: string;
+      lastName: string;
+      country: string;
+      acceptTerms: boolean;
+      acceptPrivacy: boolean;
+    }> | undefined,
+    @Req() req: Request,
+  ) {
+    return this.authService.exchangeSupabaseSession(accessToken, profile, req.ip);
+  }
+
   @Post('clerk/exchange')
-  @Deprecated()
   @ApiOperation({ summary: 'Deprecated - Use Supabase auth instead' })
   async exchangeClerkToken() {
     throw new BadRequestException('Clerk migration complete. Use Supabase authentication endpoints instead.');

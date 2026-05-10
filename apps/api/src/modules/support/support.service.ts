@@ -65,7 +65,7 @@ export class SupportService {
     try {
       await this.messagingService.sendSupportIntake({
         name: [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim() || 'Burner Point customer',
-        email: user?.email || 'unknown@burnerpoint.app',
+        email: user?.email || 'info@burnerpoint.com',
         product: input.product || input.category,
         reference: input.reference || ticket.ticketNumber,
         source: `dashboard-ticket:${ticket.ticketNumber}`,

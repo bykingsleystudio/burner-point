@@ -4,11 +4,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { useAuth, useUser } from '@clerk/nextjs';
 import toast from 'react-hot-toast';
 import { ArrowRight, CheckCircle2, PhoneCall, ShieldCheck, Smartphone, TimerReset } from 'lucide-react';
-import { authApi, phoneAuthApi, setApiSession } from '@/lib/api';
+import { phoneAuthApi } from '@/lib/api';
+import { exchangeSupabaseSession, getErrorMessage, sanitizeRedirect } from '@/lib/auth';
 import { INTERNATIONAL_PHONE_ERROR, isValidInternationalPhone, normalizeInternationalPhone } from '@/lib/phone';
+import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/store';
 
 type Channel = 'sms' | 'call';
 type OtpStep = 'loading-session' | 'ready' | 'sent' | 'approved';
@@ -16,8 +18,7 @@ type OtpStep = 'loading-session' | 'ready' | 'sent' | 'approved';
 export default function PhoneVerifyPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isLoaded, getToken } = useAuth();
-  const { user } = useUser();
+  const { user, updateUser } = useAuthStore();
   const [step, setStep] = useState<OtpStep>('loading-session');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [channel, setChannel] = useState<Channel>('sms');
@@ -31,62 +32,51 @@ export default function PhoneVerifyPage() {
   const normalizedPhone = useMemo(() => normalizeInternationalPhone(phoneNumber), [phoneNumber]);
   const phoneIsValid = isValidInternationalPhone(phoneNumber);
   const codeIsValid = /^\d{4,10}$/.test(code.trim());
-  const unsafePhoneNumber =
-    typeof user?.unsafeMetadata?.phoneNumber === 'string'
-      ? user.unsafeMetadata.phoneNumber
-      : undefined;
-  const firstName = user?.firstName;
-  const lastName = user?.lastName;
-  const primaryEmail = user?.primaryEmailAddress?.emailAddress;
-  const primaryPhone = user?.primaryPhoneNumber?.phoneNumber;
 
   useEffect(() => {
-    if (!isLoaded) return;
-
     let cancelled = false;
+
     async function prepareApiSession() {
       try {
-        const clerkToken = await getToken();
-        if (!clerkToken) throw new Error('Auth not ready');
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error('Sign in again to continue.');
 
-        const pendingPhone = typeof window !== 'undefined' ? sessionStorage.getItem('burnerPointPendingPhone') : null;
-        const { data } = await authApi.exchangeClerkToken(clerkToken, {
-          firstName,
-          lastName,
-          email: primaryEmail,
-          phoneNumber: pendingPhone || primaryPhone || unsafePhoneNumber,
+        const pendingPhone = typeof window !== 'undefined'
+          ? sessionStorage.getItem('burnerPointPendingPhone')
+          : null;
+        const result = await exchangeSupabaseSession(session, {
+          phoneNumber: pendingPhone || user?.phoneNumber,
         });
 
         if (cancelled) return;
-        setApiSession(data.accessToken, data.refreshToken);
 
-        const apiPhone = data.user?.phoneNumber || pendingPhone || primaryPhone || '';
+        const apiPhone = result.user?.phoneNumber || pendingPhone || user?.phoneNumber || '';
         setPhoneNumber(apiPhone);
 
-        if (data.needsOnboarding) {
+        if (result.needsOnboarding) {
           router.replace(`/onboarding?redirect=${encodeURIComponent(redirectTo)}`);
           return;
         }
 
-        if (!data.needsPhoneVerification || data.user?.phoneVerified) {
+        if (!result.needsPhoneVerification || result.user?.phoneVerified) {
           toast.success('Phone number already verified.');
           router.replace(redirectTo);
           return;
         }
 
         setStep('ready');
-      } catch {
+      } catch (error: unknown) {
         if (cancelled) return;
-        toast.error('Something went wrong. Please sign in again.');
+        toast.error(getErrorMessage(error, 'Something went wrong. Please sign in again.'));
         router.replace('/sign-in');
       }
     }
 
-    prepareApiSession();
+    void prepareApiSession();
     return () => {
       cancelled = true;
     };
-  }, [firstName, getToken, isLoaded, lastName, primaryEmail, primaryPhone, redirectTo, router, unsafePhoneNumber, user?.id]);
+  }, [redirectTo, router, user?.phoneNumber]);
 
   const sendCode = async () => {
     if (!phoneIsValid) {
@@ -102,7 +92,7 @@ export default function PhoneVerifyPage() {
       setAttemptsRemaining(data.attemptsRemaining);
       setStep('sent');
       toast.success(`${channel === 'sms' ? 'SMS' : 'Voice'} code sent.`);
-    } catch (error) {
+    } catch (error: unknown) {
       setLastError(getOtpError(error, 'Could not send the code. Try again.'));
     } finally {
       setLoading(false);
@@ -119,11 +109,14 @@ export default function PhoneVerifyPage() {
     setLastError(null);
     try {
       const { data } = await phoneAuthApi.verify({ phoneNumber: normalizedPhone, code: code.trim() });
+      updateUser({ phoneNumber: normalizedPhone, phoneVerified: true });
       setStep('approved');
-      if (typeof window !== 'undefined') sessionStorage.removeItem('burnerPointPendingPhone');
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('burnerPointPendingPhone');
+      }
       toast.success('Phone verified. Opening Burner Point.');
       router.replace(sanitizeRedirect(data.redirectTo || redirectTo));
-    } catch (error) {
+    } catch (error: unknown) {
       const message = getOtpError(error, 'Verification failed. Try again.');
       setLastError(message);
       const remaining = (error as { response?: { data?: { attemptsRemaining?: number } } })?.response?.data?.attemptsRemaining;
@@ -205,7 +198,7 @@ export default function PhoneVerifyPage() {
 
             <button
               type="button"
-              onClick={sendCode}
+              onClick={() => void sendCode()}
               disabled={loading || step === 'loading-session' || step === 'approved' || !phoneIsValid}
               className="bp-button-glow mt-4 flex min-h-10 w-full items-center justify-center rounded-bp bg-brand-green px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:mt-5 sm:min-h-11 sm:w-auto sm:px-5 sm:py-3 sm:text-sm sm:tracking-[0.18em]"
             >
@@ -243,7 +236,7 @@ export default function PhoneVerifyPage() {
                     </label>
                     <button
                       type="button"
-                      onClick={verifyCode}
+                      onClick={() => void verifyCode()}
                       disabled={loading || !codeIsValid}
                       className="mt-3 flex min-h-10 w-full items-center justify-center rounded-bp bg-brand-green px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-50 sm:mt-3.5 sm:min-h-11 sm:w-auto sm:px-5 sm:py-3 sm:text-sm sm:tracking-[0.18em]"
                     >
@@ -268,11 +261,6 @@ export default function PhoneVerifyPage() {
       </section>
     </main>
   );
-}
-
-function sanitizeRedirect(value?: string | null) {
-  if (value && value.startsWith('/') && !value.startsWith('//')) return value;
-  return '/dashboard';
 }
 
 function getOtpError(error: unknown, fallback: string) {

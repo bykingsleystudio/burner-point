@@ -2,7 +2,7 @@ import type { Metadata, MetadataRoute } from 'next';
 import { marketingPages, socialLinks, type MarketingPageContent } from './marketing-data';
 import { SUPPORT_EMAIL } from './support';
 
-export const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://burnerpoint.app').replace(/\/+$/, '');
+export const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://burnerpoint.com').replace(/\/+$/, '');
 export const siteName = 'Burner Point';
 export const siteTagline = 'Stay Anonymous. Stay Connected. Private By Design.';
 export const siteDescription =

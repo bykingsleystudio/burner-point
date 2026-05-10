@@ -1,12 +1,13 @@
-﻿'use client';
+'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { useSignIn } from '@clerk/nextjs';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Zap, Eye, EyeOff } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import { GlassInputWrapper, SignInPage } from '@/components/ui/sign-in';
+import { buildPostAuthRedirect, exchangeSupabaseSession, getErrorMessage, sanitizeRedirect } from '@/lib/auth';
 import {
   INTERNATIONAL_PHONE_ERROR,
   classifyAuthIdentifier,
@@ -14,50 +15,27 @@ import {
   normalizeAuthIdentifier,
 } from '@/lib/phone';
 
-const oauthProviders = [
-  { label: 'Google', strategy: 'oauth_google' },
-  { label: 'Apple', strategy: 'oauth_apple' },
-  { label: 'Microsoft', strategy: 'oauth_microsoft' },
-] as const;
+type OAuthProvider = 'google' | 'apple' | 'microsoft';
+
+const oauthProviders: Array<{ label: string; provider: OAuthProvider }> = [
+  { label: 'Google', provider: 'google' },
+  { label: 'Apple', provider: 'apple' },
+  { label: 'Microsoft', provider: 'microsoft' },
+];
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signIn, fetchStatus } = useSignIn();
+  const searchParams = useSearchParams();
+  const redirectTo = useMemo(() => sanitizeRedirect(searchParams.get('redirect')), [searchParams]);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const authReady = Boolean(signIn);
-  const isSubmitting = loading || fetchStatus === 'fetching' || !authReady;
   const canSubmit = identifier.trim().length >= 3 && password.length >= 8;
-
-  const finishSignIn = async () => {
-    if (!signIn) throw new Error('Auth not ready');
-    const { error } = await signIn.finalize({
-      navigate: ({ decorateUrl }) => {
-        router.push(decorateUrl('/dashboard'));
-      },
-    });
-    if (error) throw error;
-  };
-
-  const completeOrContinueSignIn = async () => {
-    if (!signIn) return;
-    if (signIn.status === 'complete') {
-      await finishSignIn();
-      toast.success('Welcome back.');
-      return;
-    }
-    toast.error('Something went wrong. Please sign in again.');
-  };
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!signIn) {
-      toast.error('Something went wrong. Please sign in again.');
-      return;
-    }
     if (!canSubmit) {
       toast.error('Enter your email or phone and password.');
       return;
@@ -73,40 +51,49 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const { error } = await signIn.password({
-        identifier: normalizedIdentifier,
-        password,
-      });
-      if (error) throw error;
-      await completeOrContinueSignIn();
-    } catch (err: any) {
-      const raw = err?.errors?.[0]?.message || err?.message || '';
-      if (/captcha|challenge|browser/i.test(raw)) {
-        toast.error('Verification failed. Try again or switch browser.');
-      } else if (/password|identifier|not found|invalid|incorrect/i.test(raw)) {
+      const { data, error } = await supabase.auth.signInWithPassword(
+        identifierType === 'phone'
+          ? { phone: normalizedIdentifier, password }
+          : { email: normalizedIdentifier.toLowerCase(), password },
+      );
+
+      if (error || !data.session) {
+        throw error ?? new Error('Unable to sign in.');
+      }
+
+      const result = await exchangeSupabaseSession(data.session);
+      toast.success('Welcome back.');
+      router.push(buildPostAuthRedirect(result, redirectTo));
+    } catch (error: unknown) {
+      const message = getErrorMessage(error, 'Something went wrong. Please sign in again.');
+      if (/password|identifier|not found|invalid|incorrect|credentials/i.test(message)) {
         toast.error('Email/phone or password is incorrect.');
+      } else if (/captcha|challenge|browser/i.test(message)) {
+        toast.error('Verification failed. Try again or switch browser.');
       } else {
-        toast.error('Something went wrong. Please sign in again.');
+        toast.error(message);
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const startOAuth = async (strategy: string) => {
-    if (!signIn) {
-      toast.error('Something went wrong. Please sign in again.');
-      return;
-    }
+  const startOAuth = async (provider: OAuthProvider) => {
     try {
-      const { error } = await signIn.sso({
-        strategy: strategy as any,
-        redirectUrl: '/dashboard',
-        redirectCallbackUrl: '/sso-callback',
+      const oauthProvider = provider === 'microsoft' ? 'azure' : provider;
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: oauthProvider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirectTo)}`,
+        },
       });
+
       if (error) throw error;
-    } catch (err) {
-      toast.error('Something went wrong. Please sign in again.');
+      if (data.url) {
+        window.location.assign(data.url);
+      }
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Something went wrong. Please sign in again.'));
     }
   };
 
@@ -116,13 +103,12 @@ export default function LoginPage() {
       description="Access your private dashboard"
     >
       <div className="space-y-4">
-        {/* Social Login Buttons */}
         <div className="grid grid-cols-1 gap-3">
           {oauthProviders.map((provider) => (
             <button
               key={provider.label}
-              onClick={() => startOAuth(provider.strategy)}
-              disabled={isSubmitting}
+              onClick={() => startOAuth(provider.provider)}
+              disabled={loading}
               className="group relative flex h-11 w-full items-center justify-center gap-2.5 rounded-lg border border-white/10 bg-gradient-to-b from-white/[0.08] to-white/[0.02] px-4 text-sm font-medium text-white backdrop-blur-xl transition-all duration-300 hover:border-[#00FF9D]/30 hover:shadow-[0_0_20px_rgba(0,255,157,0.15)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {provider.label === 'Google' && (
@@ -151,14 +137,12 @@ export default function LoginPage() {
           ))}
         </div>
 
-        {/* Divider */}
         <div className="relative flex items-center py-3">
           <div className="flex-1 border-t border-white/10" />
           <span className="mx-3 text-xs font-medium uppercase tracking-wider text-[#9FA6B2]">OR</span>
           <div className="flex-1 border-t border-white/10" />
         </div>
 
-        {/* Login Form */}
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
             <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-[#9FA6B2]">
@@ -216,10 +200,10 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={isSubmitting || !canSubmit}
+            disabled={loading || !canSubmit}
             className="group relative flex h-11 w-full items-center justify-center gap-2 overflow-hidden rounded-lg bg-gradient-to-r from-[#00FF9D] to-[#39FF14] font-semibold uppercase tracking-wider text-black shadow-[0_0_20px_rgba(0,255,157,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,255,157,0.5)] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isSubmitting ? (
+            {loading ? (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
             ) : (
               <>
@@ -230,7 +214,6 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Footer Links */}
         <p className="text-center text-xs text-[#9FA6B2]">
           Don&apos;t have an account?{' '}
           <Link href="/sign-up" className="text-[#00FF9D] transition-colors hover:text-[#39FF14] hover:underline">

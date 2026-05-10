@@ -5,7 +5,7 @@ import * as path from 'path';
 config({ path: path.resolve(__dirname, '../../.env') });
 config({ path: path.resolve(__dirname, '../../../../.env') });
 
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
 const databaseHost = process.env.DB_HOST ?? '';
 const requiresSsl =
   process.env.NODE_ENV === 'production' ||

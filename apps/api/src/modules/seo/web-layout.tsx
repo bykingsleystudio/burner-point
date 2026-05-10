@@ -29,7 +29,7 @@ const dmMono = DM_Mono({
 });
 
 // ─── Base metadata ────────────────────────────────────────────────────────────
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://burnerpoint.app';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://burnerpoint.com';
 const APP_NAME = 'BurnerPoint';
 const DESCRIPTION =
   'Privacy-first temporary phone numbers. Get anonymous SMS, OTP verifications, and burner numbers instantly. Starting from $0.99.';

@@ -38,8 +38,15 @@ class BurnerPointError(Exception):
 @dataclass
 class BurnerPointConfig:
     api_key: str
-    base_url: str = "https://api.burnerpoint.app"
+    base_url: str = "https://api.burnerpoint.com/api"
     timeout: int = 30
+
+
+def _normalize_base_url(base_url: str) -> str:
+    normalized = base_url.rstrip("/")
+    if normalized.endswith("/api"):
+        return normalized
+    return f"{normalized}/api"
 
 
 class _NumbersClient:
@@ -111,10 +118,11 @@ class _PaymentsClient:
 class BurnerPoint:
     """BurnerPoint API client."""
 
-    def __init__(self, api_key: str, base_url: str = "https://api.burnerpoint.app", timeout: int = 30):
-        self.config = BurnerPointConfig(api_key=api_key, base_url=base_url, timeout=timeout)
+    def __init__(self, api_key: str, base_url: str = "https://api.burnerpoint.com", timeout: int = 30):
+        normalized_base_url = _normalize_base_url(base_url)
+        self.config = BurnerPointConfig(api_key=api_key, base_url=normalized_base_url, timeout=timeout)
         self._http = httpx.Client(
-            base_url=base_url,
+            base_url=normalized_base_url,
             headers={"X-API-Key": api_key, "Content-Type": "application/json"},
             timeout=timeout,
         )

@@ -10,6 +10,11 @@ export interface BurnerPointConfig {
   timeout?: number;
 }
 
+function normalizeBaseUrl(baseUrl: string): string {
+  const normalized = baseUrl.replace(/\/+$/, '');
+  return /\/api$/i.test(normalized) ? normalized : `${normalized}/api`;
+}
+
 class BurnerPointError extends Error {
   constructor(public statusCode: number, message: string) {
     super(message);
@@ -24,7 +29,7 @@ export class BurnerPoint {
 
   constructor(config: BurnerPointConfig) {
     this.apiKey = config.apiKey;
-    this.baseUrl = config.baseUrl || 'https://api.burnerpoint.app';
+    this.baseUrl = normalizeBaseUrl(config.baseUrl || 'https://api.burnerpoint.com');
     this.timeout = config.timeout || 30000;
   }
 

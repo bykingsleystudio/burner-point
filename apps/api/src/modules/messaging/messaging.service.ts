@@ -58,7 +58,7 @@ export class MessagingService {
           this.configService.get<string>('RESEND_FROM_EMAIL') ||
           this.configService.get<string>('EMAIL_FROM') ||
           this.configService.get<string>('SMTP_FROM') ||
-          'Burner Point <noreply@burnerpoint.app>';
+          'Burner Point <no-reply@burnerpoint.com>';
 
         const result = await axios.post(
           'https://api.resend.com/emails',
@@ -175,7 +175,7 @@ export class MessagingService {
     const recipient =
       this.configService.get<string>('SUPPORT_EMAIL') ||
       this.configService.get<string>('RESEND_FROM_EMAIL') ||
-      'support@burnerpoint.app';
+      'info@burnerpoint.com';
 
     const html = this.wrapBrandedEmail(
       'New support request.',

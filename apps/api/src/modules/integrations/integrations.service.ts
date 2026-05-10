@@ -507,14 +507,32 @@ export class IntegrationsService {
 
   private hasStorageConfigured(): boolean {
     return (
+      [
+        'SUPABASE_URL',
+        'SUPABASE_SERVICE_ROLE_KEY',
+        'SUPABASE_STORAGE_USER_UPLOADS_BUCKET',
+        'SUPABASE_STORAGE_MEDIA_BUCKET',
+        'SUPABASE_STORAGE_VERIFICATION_ASSETS_BUCKET',
+        'SUPABASE_STORAGE_DOCUMENTS_BUCKET',
+      ].every((env) => this.hasEnv(env)) ||
       ['AWS_BUCKET', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY'].every((env) => this.hasEnv(env)) ||
       ['R2_BUCKET', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY'].every((env) => this.hasEnv(env))
     );
   }
 
   private getMissingStorageEnv(): string[] {
+    const supabaseMissing = [
+      'SUPABASE_URL',
+      'SUPABASE_SERVICE_ROLE_KEY',
+      'SUPABASE_STORAGE_USER_UPLOADS_BUCKET',
+      'SUPABASE_STORAGE_MEDIA_BUCKET',
+      'SUPABASE_STORAGE_VERIFICATION_ASSETS_BUCKET',
+      'SUPABASE_STORAGE_DOCUMENTS_BUCKET',
+    ].filter((env) => !this.hasEnv(env));
     const awsMissing = ['AWS_BUCKET', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY'].filter((env) => !this.hasEnv(env));
     const r2Missing = ['R2_BUCKET', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY'].filter((env) => !this.hasEnv(env));
+    if (supabaseMissing.length && supabaseMissing.length < 6) return supabaseMissing;
+    if (supabaseMissing.length === 0) return [];
     return awsMissing.length === 3 ? r2Missing : awsMissing;
   }
 }

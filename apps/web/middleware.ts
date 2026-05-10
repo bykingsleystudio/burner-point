@@ -1,11 +1,13 @@
-import { type NextRequest } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from './utils/supabase/middleware';
 
 export async function middleware(request: NextRequest) {
-  const supabaseResponse = createClient(request);
+  const { supabase, response } = createClient(request);
 
   // Check if the user is authenticated
-  const { data: { session } } = await supabaseResponse.supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
   // Protected routes
   const protectedRoutes = ['/dashboard', '/settings', '/profile'];
@@ -14,13 +16,13 @@ export async function middleware(request: NextRequest) {
   );
 
   // Auth routes (redirect if already logged in)
-  const authRoutes = ['/auth/login', '/auth/register'];
+  const authRoutes = ['/sign-in', '/sign-up', '/auth/login', '/auth/register'];
   const isAuthRoute = authRoutes.some(route => 
     request.nextUrl.pathname.startsWith(route)
   );
 
   if (isProtectedRoute && !session) {
-    const loginUrl = new URL('/auth/login', request.url);
+    const loginUrl = new URL('/sign-in', request.url);
     loginUrl.searchParams.set('redirect', request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
   }
@@ -29,7 +31,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  return supabaseResponse;
+  return response;
 }
 
 export const config = {

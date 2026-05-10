@@ -38,7 +38,7 @@ export class UsersService {
   }
 
   async deleteAccount(userId: string) {
-    await this.userRepo.update(userId, { deletedAt: new Date(), email: `deleted_${userId}@burnerpoint.app` });
+    await this.userRepo.update(userId, { deletedAt: new Date(), email: `deleted_${userId}@burnerpoint.com` });
     return { success: true };
   }
 

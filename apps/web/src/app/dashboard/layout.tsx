@@ -4,7 +4,6 @@ import { type ComponentType, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
 import { User } from '@supabase/supabase-js';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -29,8 +28,10 @@ import {
 import { io } from 'socket.io-client';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
-import { authApi, clearApiSession, setApiSession } from '@/lib/api';
+import { clearApiSession } from '@/lib/api';
+import { exchangeSupabaseSession } from '@/lib/auth';
 import { formatWalletPrimary, formatWalletSecondary } from '@/lib/money';
+import { supabase } from '@/lib/supabase';
 import { useAuthStore, useUIStore } from '@/store';
 import { BpLoadingState } from '@/components/design-system';
 import { AccountAttentionBanner } from '@/components/dashboard/account-attention-banner';
@@ -130,120 +131,113 @@ const QUICK_ACTIONS = [
 
 const MOBILE_NAV_ITEMS = ['/dashboard', '/dashboard/messenger', '/dashboard/verify-hub', '/dashboard/rentals', '/dashboard/settings'] as const;
 
+function mapSupabaseUser(sessionUser: User | null) {
+  if (!sessionUser) return null;
+
+  const metadata = (sessionUser.user_metadata ?? {}) as Record<string, unknown>;
+  const firstName = typeof metadata.first_name === 'string'
+    ? metadata.first_name
+    : typeof metadata.firstName === 'string'
+      ? metadata.firstName
+      : 'Burner';
+  const lastName = typeof metadata.last_name === 'string'
+    ? metadata.last_name
+    : typeof metadata.lastName === 'string'
+      ? metadata.lastName
+      : 'Point';
+  const phoneNumber = typeof metadata.phone_number === 'string'
+    ? metadata.phone_number
+    : typeof metadata.phoneNumber === 'string'
+      ? metadata.phoneNumber
+      : undefined;
+  const phoneVerified = typeof metadata.phone_verified === 'boolean'
+    ? metadata.phone_verified
+    : typeof metadata.phoneVerified === 'boolean'
+      ? metadata.phoneVerified
+      : undefined;
+  const needsOnboarding = typeof metadata.needs_onboarding === 'boolean'
+    ? metadata.needs_onboarding
+    : typeof metadata.needsOnboarding === 'boolean'
+      ? metadata.needsOnboarding
+      : undefined;
+  const onboardingMissingFields = Array.isArray(metadata.onboarding_missing_fields)
+    ? metadata.onboarding_missing_fields.filter((field): field is string => typeof field === 'string')
+    : Array.isArray(metadata.onboardingMissingFields)
+      ? metadata.onboardingMissingFields.filter((field): field is string => typeof field === 'string')
+      : undefined;
+
+  return {
+    id: sessionUser.id,
+    email: sessionUser.email ?? 'private@burnerpoint.com',
+    firstName,
+    lastName,
+    role: 'user',
+    walletBalanceKobo: 0,
+    phoneNumber,
+    phoneVerified,
+    needsOnboarding,
+    onboardingMissingFields,
+  };
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [sessionUser, setSessionUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const { user: storedUser, clearAuth } = useAuthStore();
   const { sidebarOpen, toggleSidebar, setSidebarOpen } = useUIStore();
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const currentUser = useMemo(() => storedUser ?? mapSupabaseUser(sessionUser), [sessionUser, storedUser]);
 
   useEffect(() => {
     const checkAuth = async () => {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        router.replace('/auth/login');
-        return;
-      }
-      
-      setUser(session.user);
-      setLoading(false);
-    };
-    
-    checkAuth();
-  }, [router]);
-
-  const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.replace('/auth/login');
-  };
-
-  if (loading) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-brand-black px-4 text-white">
-        <div className="w-full max-w-md">
-          <BpLoadingState label="Opening your Burner Point workspace..." />
-        </div>
-      </main>
-    );
-  }
-
-  useEffect(() => {
-    if (!isLoaded) return;
-
-    if (!isSignedIn) {
-      clearAuth();
-      clearApiSession();
-      router.replace('/sign-in');
-      return;
-    }
-
-    let cancelled = false;
-    async function exchangeSession() {
-      setSessionReady(false);
-      setFatalSessionError(null);
-
       try {
-        const clerkToken = await getToken();
-        if (!clerkToken) throw new Error('Missing session token');
+        const { data: { session } } = await supabase.auth.getSession();
 
-        const { data } = await authApi.exchangeClerkToken(clerkToken, {
-          firstName: clerkUser?.firstName,
-          lastName: clerkUser?.lastName,
-          email: clerkUser?.primaryEmailAddress?.emailAddress,
-          phoneNumber: clerkUser?.primaryPhoneNumber?.phoneNumber || unsafePhoneNumber,
-        });
-
-        if (cancelled) return;
-
-        const sessionUser = {
-          ...data.user,
-          phoneVerified: data.user.phoneVerified,
-          needsOnboarding: data.needsOnboarding,
-          onboardingMissingFields: data.onboarding?.missingFields ?? [],
-        };
-
-        setApiSession(data.accessToken, data.refreshToken);
-        setAuth(sessionUser, data.accessToken, data.refreshToken);
-        setAccessToken(data.accessToken);
-        setSessionReady(true);
-      } catch (error: unknown) {
-        if (cancelled) return;
-        const responseError = error as Error & {
-          response?: {
-            status?: number;
-            data?: { message?: string };
-          };
-        };
-
-        const message =
-          responseError.response?.status === 401
-            ? 'Something went wrong. Please sign in again.'
-            : responseError.response?.data?.message || 'We could not open your dashboard right now.';
-
-        clearApiSession();
-
-        if (responseError.response?.status === 401) {
+        if (!session) {
           clearAuth();
-          setFatalSessionError(message);
-          setSessionReady(true);
+          clearApiSession();
+          router.replace('/sign-in');
           return;
         }
 
-        toast.error(message);
-        setFatalSessionError(message);
-        setSessionReady(true);
-      }
-    }
+        setSessionUser(session.user);
+        let storedAccessToken: string | null = null;
 
-    exchangeSession();
-    return () => {
-      cancelled = true;
+        if (typeof window !== 'undefined') {
+          storedAccessToken =
+            window.sessionStorage.getItem('burnerpointApiAccessToken') ||
+            window.sessionStorage.getItem('accessToken');
+        }
+
+        if (!storedAccessToken || !storedUser) {
+          const exchange = await exchangeSupabaseSession(session);
+          storedAccessToken = exchange.accessToken;
+        }
+
+        if (storedAccessToken) {
+          setAccessToken(storedAccessToken);
+        }
+
+        setLoading(false);
+      } catch {
+        clearAuth();
+        clearApiSession();
+        await supabase.auth.signOut();
+        router.replace('/sign-in');
+      }
     };
-  }, [clearAuth, getToken, isLoaded, isSignedIn, clerkUser?.id, clerkUser?.firstName, clerkUser?.lastName, clerkUser?.primaryEmailAddress?.emailAddress, clerkUser?.primaryPhoneNumber?.phoneNumber, router, setAuth, unsafePhoneNumber]);
+    
+    checkAuth();
+  }, [clearAuth, router, storedUser]);
+
+  const handleSignOut = async () => {
+    clearAuth();
+    clearApiSession();
+    await supabase.auth.signOut();
+    router.replace('/sign-in');
+  };
 
   useEffect(() => {
     if (!accessToken) return;
@@ -281,36 +275,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return PAGE_META.find((item) => pathname.startsWith(item.match)) ?? PAGE_META[PAGE_META.length - 1];
   }, [pathname]);
 
-  const handleSignOut = async () => {
-    clearAuth();
-    clearApiSession();
-    await signOut({ redirectUrl: '/' });
-  };
-
-  if (!isLoaded || !sessionReady) {
+  if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-brand-black px-4 text-white">
         <div className="w-full max-w-md">
           <BpLoadingState label="Opening your Burner Point workspace..." />
-        </div>
-      </main>
-    );
-  }
-
-  if (fatalSessionError) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-brand-black px-4 text-white">
-        <div className="w-full max-w-md rounded-[2rem] border border-white/10 bg-white/[0.03] p-6">
-          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Session attention</p>
-          <h1 className="mt-3 text-2xl font-semibold text-white">Sign in again to continue</h1>
-          <p className="mt-3 text-sm leading-6 text-white/62">{fatalSessionError}</p>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="bp-button-glow mt-6 flex min-h-12 w-full items-center justify-center rounded-[1.1rem] bg-brand-green px-5 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac]"
-          >
-            Return to sign in
-          </button>
         </div>
       </main>
     );
@@ -345,8 +314,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">Credits balance</span>
               <CreditCard className="h-4 w-4 text-brand-green" />
             </div>
-            <p className="mt-3 font-mono text-2xl text-white">{formatWalletPrimary(user)}</p>
-            <p className="mt-2 text-xs leading-5 text-white/48">Local convenience value: {formatWalletSecondary(user)}</p>
+            <p className="mt-3 font-mono text-2xl text-white">{formatWalletPrimary(currentUser)}</p>
+            <p className="mt-2 text-xs leading-5 text-white/48">Local convenience value: {formatWalletSecondary(currentUser)}</p>
           </div>
         </div>
 
@@ -393,14 +362,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <details className="group [&_summary::-webkit-details-marker]:hidden">
             <summary className="flex min-h-12 cursor-pointer list-none items-center gap-3 rounded-[1.15rem] border border-white/8 bg-white/[0.03] px-3 py-3 transition hover:border-brand-green/22 hover:bg-brand-green/[0.05]">
               <span className="flex h-11 w-11 items-center justify-center rounded-full border border-brand-green/24 bg-brand-green/10 text-sm font-semibold text-brand-green">
-                {(user?.firstName || clerkUser?.firstName || 'B').slice(0, 1).toUpperCase()}
+                {(currentUser?.firstName || 'B').slice(0, 1).toUpperCase()}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-semibold text-white">
-                  {user?.firstName || clerkUser?.firstName || 'Burner Point user'}
+                  {currentUser?.firstName || 'Burner Point user'}
                 </span>
                 <span className="block truncate text-xs text-white/46">
-                  {user?.email || clerkUser?.primaryEmailAddress?.emailAddress || 'Private account'}
+                  {currentUser?.email || 'Private account'}
                 </span>
               </span>
               <ChevronDown className="h-4 w-4 text-white/42 transition group-open:rotate-180" />
@@ -471,8 +440,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <CreditCard className="h-4 w-4 text-brand-green" />
                 <div>
                   <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">Credits balance</p>
-                  <p className="text-sm font-semibold text-white">{formatWalletPrimary(user)}</p>
-                  <p className="mt-1 text-[11px] text-white/42">{formatWalletSecondary(user)}</p>
+                  <p className="text-sm font-semibold text-white">{formatWalletPrimary(currentUser)}</p>
+                  <p className="mt-1 text-[11px] text-white/42">{formatWalletSecondary(currentUser)}</p>
                 </div>
               </div>
 
@@ -505,9 +474,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         <AccountAttentionBanner
-          needsOnboarding={user?.needsOnboarding}
-          needsPhoneVerification={Boolean(user?.phoneNumber) && user?.phoneVerified === false}
-          missingFields={user?.onboardingMissingFields}
+          needsOnboarding={currentUser?.needsOnboarding}
+          needsPhoneVerification={Boolean(currentUser?.phoneNumber) && currentUser?.phoneVerified === false}
+          missingFields={currentUser?.onboardingMissingFields}
         />
 
         <main className="flex-1 px-4 py-5 md:px-6 md:py-6">

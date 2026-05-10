@@ -3,50 +3,62 @@
 import Link from 'next/link';
 import { Suspense, type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth, useUser } from '@clerk/nextjs';
 import { CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { AuthShell } from '@/components/ui/auth-shell';
-import { authApi, setApiSession } from '@/lib/api';
+import { buildPostAuthRedirect, exchangeSupabaseSession, getErrorMessage, sanitizeRedirect } from '@/lib/auth';
 import { INTERNATIONAL_PHONE_ERROR, isValidInternationalPhone, normalizeInternationalPhone } from '@/lib/phone';
-
-function sanitizeRedirect(value?: string | null) {
-  if (value && value.startsWith('/') && !value.startsWith('//')) return value;
-  return '/dashboard';
-}
+import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/store';
 
 function OnboardingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { getToken } = useAuth();
-  const { user } = useUser();
+  const { user } = useAuthStore();
   const redirectTo = useMemo(() => sanitizeRedirect(searchParams.get('redirect')), [searchParams]);
-  const userMetadata = (user?.unsafeMetadata ?? {}) as Record<string, string | boolean | undefined>;
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
-    firstName: user?.firstName || String(userMetadata.firstName || ''),
-    lastName: user?.lastName || String(userMetadata.lastName || ''),
-    email: user?.primaryEmailAddress?.emailAddress || '',
-    phoneNumber: user?.primaryPhoneNumber?.phoneNumber || String(userMetadata.phoneNumber || ''),
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    email: user?.email || '',
+    phoneNumber: user?.phoneNumber || '',
   });
 
   useEffect(() => {
-    setForm((current) => ({
-      firstName: current.firstName || user?.firstName || String(userMetadata.firstName || ''),
-      lastName: current.lastName || user?.lastName || String(userMetadata.lastName || ''),
-      email: current.email || user?.primaryEmailAddress?.emailAddress || '',
-      phoneNumber: current.phoneNumber || user?.primaryPhoneNumber?.phoneNumber || String(userMetadata.phoneNumber || ''),
-    }));
-  }, [
-    user?.id,
-    user?.firstName,
-    user?.lastName,
-    user?.primaryEmailAddress?.emailAddress,
-    user?.primaryPhoneNumber?.phoneNumber,
-    userMetadata.firstName,
-    userMetadata.lastName,
-    userMetadata.phoneNumber,
-  ]);
+    let active = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active || !data.session?.user) return;
+
+      const sessionUser = data.session.user;
+      const metadata = (sessionUser.user_metadata ?? {}) as Record<string, unknown>;
+
+      setForm((current) => ({
+        firstName:
+          current.firstName ||
+          user?.firstName ||
+          (typeof metadata.first_name === 'string' ? metadata.first_name : '') ||
+          (typeof metadata.firstName === 'string' ? metadata.firstName : ''),
+        lastName:
+          current.lastName ||
+          user?.lastName ||
+          (typeof metadata.last_name === 'string' ? metadata.last_name : '') ||
+          (typeof metadata.lastName === 'string' ? metadata.lastName : ''),
+        email: current.email || user?.email || sessionUser.email || '',
+        phoneNumber:
+          current.phoneNumber ||
+          user?.phoneNumber ||
+          (typeof metadata.phone_number === 'string' ? metadata.phone_number : '') ||
+          (typeof metadata.phoneNumber === 'string' ? metadata.phoneNumber : '') ||
+          sessionUser.phone ||
+          '',
+      }));
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [user?.email, user?.firstName, user?.lastName, user?.phoneNumber]);
 
   const setField = (key: keyof typeof form) => (value: string) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -70,25 +82,12 @@ function OnboardingContent() {
 
     setLoading(true);
     try {
-      if (user) {
-        await user.update({
-          firstName,
-          lastName,
-          unsafeMetadata: {
-            ...(user.unsafeMetadata ?? {}),
-            firstName,
-            lastName,
-            phoneNumber: normalizedPhone,
-            acceptTerms: true,
-            acceptPrivacy: true,
-          },
-        });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Sign in again to continue.');
       }
 
-      const clerkToken = await getToken();
-      if (!clerkToken) throw new Error('Auth not ready');
-
-      const { data } = await authApi.exchangeClerkToken(clerkToken, {
+      const result = await exchangeSupabaseSession(session, {
         firstName,
         lastName,
         email,
@@ -97,23 +96,10 @@ function OnboardingContent() {
         acceptPrivacy: true,
       });
 
-      setApiSession(data.accessToken, data.refreshToken);
-
-      if (data.needsOnboarding) {
-        toast.error('Check your details and try again.');
-        return;
-      }
-
-      if (data.user?.phoneNumber && data.needsPhoneVerification) {
-        sessionStorage.setItem('burnerPointPendingPhone', data.user.phoneNumber);
-        router.push(`/verify-phone?redirect=${encodeURIComponent(redirectTo)}`);
-        return;
-      }
-
       toast.success("You're all set.");
-      router.push(redirectTo);
-    } catch {
-      toast.error('Something went wrong. Please sign in again.');
+      router.push(buildPostAuthRedirect(result, redirectTo));
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Something went wrong. Please sign in again.'));
     } finally {
       setLoading(false);
     }
@@ -163,13 +149,11 @@ function OnboardingContent() {
           <Field label="Email address">
             <input
               value={form.email}
-              onChange={(event) => setField('email')(event.target.value)}
+              readOnly
               type="email"
               inputMode="email"
-              className="auth-input"
+              className="auth-input cursor-not-allowed opacity-70"
               autoComplete="email"
-              autoCapitalize="none"
-              enterKeyHint="next"
             />
           </Field>
           <Field label="Phone number">
@@ -201,7 +185,7 @@ function OnboardingContent() {
         <button
           type="button"
           disabled={loading}
-          onClick={completeOnboarding}
+          onClick={() => void completeOnboarding()}
           className="bp-button-glow flex min-h-11 w-full items-center justify-center rounded-[1rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-12 sm:rounded-[1.15rem] sm:px-5 sm:text-sm sm:tracking-[0.18em]"
         >
           {loading ? 'Saving...' : 'Continue'}

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 import { Zap, Mail, Lock, User, Phone, Eye, EyeOff } from 'lucide-react';
+import { buildPostAuthRedirect, exchangeSupabaseSession, getErrorMessage } from '@/lib/auth';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -77,10 +78,24 @@ export default function RegisterPage() {
 
       if (error) throw error;
 
-      toast.success('Account created! Please check your email to verify your account.');
-      router.push('/auth/verify');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to create account');
+      if (data.session) {
+        const result = await exchangeSupabaseSession(data.session, {
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+          email: formData.email.trim().toLowerCase(),
+          phoneNumber: formData.phone.trim(),
+          acceptTerms: true,
+          acceptPrivacy: true,
+        });
+        toast.success('Account created.');
+        router.push(buildPostAuthRedirect(result));
+        return;
+      }
+
+      toast.success('Account created. Check your email to verify your account, then sign in.');
+      router.push('/sign-in');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to create account'));
     } finally {
       setLoading(false);
     }
@@ -88,16 +103,20 @@ export default function RegisterPage() {
 
   const handleOAuthRegister = async (provider: 'google' | 'apple' | 'microsoft') => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
+      const oauthProvider = provider === 'microsoft' ? 'azure' : provider;
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: oauthProvider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 
       if (error) throw error;
-    } catch (error: any) {
-      toast.error(error.message || 'OAuth registration failed');
+      if (data.url) {
+        window.location.assign(data.url);
+      }
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'OAuth registration failed'));
     }
   };
 

@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useUser } from '@clerk/nextjs';
 import {
   ArrowRight,
   BellRing,
@@ -42,7 +41,6 @@ type LedgerItem = {
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
-  const { user: clerkUser } = useUser();
   const [numbers, setNumbers] = useState<NumberRecord[]>([]);
   const [activity, setActivity] = useState<LedgerItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,7 +81,7 @@ export default function DashboardPage() {
   const activeNumbers = numbers.filter((item) => item.status === 'active').length;
   const messagesToday = numbers.reduce((sum, item) => sum + Number(item.smsReceived ?? 0), 0);
   const activeRentals = numbers.filter((item) => item.type === 'rental' || item.type === 'burner').length;
-  const headlineName = user?.firstName || clerkUser?.firstName || 'there';
+  const headlineName = user?.firstName || 'there';
 
   return (
     <div className="space-y-6">

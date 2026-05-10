@@ -44,7 +44,7 @@ export class SeoService implements OnModuleInit {
   }
 
   getSitemap(): string {
-    const base = this.config.get<string>('WEB_URL', 'https://burnerpoint.app').replace(/\/+$/, '');
+    const base = this.config.get<string>('WEB_URL', 'https://burnerpoint.com').replace(/\/+$/, '');
     const now = new Date().toISOString().split('T')[0];
 
     const body = this.publicRoutes
@@ -74,7 +74,7 @@ ${body}
   }
 
   getRobots(): string {
-    const base = this.config.get<string>('WEB_URL', 'https://burnerpoint.app').replace(/\/+$/, '');
+    const base = this.config.get<string>('WEB_URL', 'https://burnerpoint.com').replace(/\/+$/, '');
     return `# BurnerPoint robots.txt
 User-agent: *
 Allow: /
@@ -120,7 +120,7 @@ Sitemap: ${base}/sitemap.xml`;
    * Embed in <script type="application/ld+json"> in the HTML <head>.
    */
   getStructuredData(): object {
-    const base = this.config.get<string>('WEB_URL', 'https://burnerpoint.app').replace(/\/+$/, '');
+    const base = this.config.get<string>('WEB_URL', 'https://burnerpoint.com').replace(/\/+$/, '');
     return {
       '@context': 'https://schema.org',
       '@type': 'SoftwareApplication',
@@ -164,7 +164,7 @@ Sitemap: ${base}/sitemap.xml`;
    * Much faster than waiting for Googlebot to crawl.
    */
   async pingIndexNow(urls?: string[]): Promise<void> {
-    const base = this.config.get<string>('WEB_URL', 'https://burnerpoint.app').replace(/\/+$/, '');
+    const base = this.config.get<string>('WEB_URL', 'https://burnerpoint.com').replace(/\/+$/, '');
     const host = new URL(base).hostname;
 
     const defaultUrls = [

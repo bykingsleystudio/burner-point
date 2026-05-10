@@ -1,10 +1,21 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+function trimTrailingSlash(url: string): string {
+  return url.replace(/\/+$/, '');
+}
 
-if (!API_URL) {
+function normalizeApiBaseUrl(url: string): string {
+  const normalized = trimTrailingSlash(url);
+  return /\/api$/i.test(normalized) ? normalized : `${normalized}/api`;
+}
+
+const apiOrigin = process.env.NEXT_PUBLIC_API_URL;
+
+if (!apiOrigin) {
   throw new Error('NEXT_PUBLIC_API_URL is required for Burner Point web runtime.');
 }
+
+const API_URL = normalizeApiBaseUrl(apiOrigin);
 
 const api: AxiosInstance = axios.create({
   baseURL: API_URL,
@@ -115,8 +126,8 @@ export const authApi = {
   register: (data: Record<string, unknown>) => api.post('/auth/register', data),
   login: (data: Record<string, unknown>) => api.post('/auth/login', data),
   logout: (refreshToken: string) => api.post('/auth/logout', { refreshToken }),
-  exchangeClerkToken: (clerkToken: string, profile?: Record<string, unknown>) =>
-    api.post<AuthExchangeResponse>('/auth/clerk/exchange', { clerkToken, profile }),
+  exchangeSupabaseToken: (accessToken: string, profile?: Record<string, unknown>) =>
+    api.post<AuthExchangeResponse>('/auth/supabase/exchange', { accessToken, profile }),
 };
 
 export const supportApi = {

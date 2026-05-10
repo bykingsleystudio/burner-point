@@ -19,7 +19,7 @@ export class FlutterwaveAdapter {
       currency: 'NGN',
       redirect_url: params.callbackUrl,
       customer: { email: params.email },
-      customizations: { title: 'BurnerPoint Credits', logo: 'https://burnerpoint.app/logo.png' },
+      customizations: { title: 'Burner Point Credits', logo: 'https://burnerpoint.com/assets/logo-mark.svg' },
     }, { headers: this.headers });
     return { checkoutUrl: data.data?.link, link: data.data?.link };
   }

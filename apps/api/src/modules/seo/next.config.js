@@ -110,7 +110,7 @@ const nextConfig = {
       {
         source: '/(.*)',
         has: [{ type: 'header', key: 'x-forwarded-proto', value: 'http' }],
-        destination: 'https://burnerpoint.app/:path*',
+        destination: 'https://burnerpoint.com/:path*',
         permanent: true,
       },
     ];
@@ -118,7 +118,7 @@ const nextConfig = {
 
   // ── Image allowlist ───────────────────────────────────────────────────────
   images: {
-    domains: isProduction ? ['burnerpoint.app', 'burnerpoint.vercel.app'] : ['burnerpoint.app', 'burnerpoint.vercel.app', 'localhost'],
+    domains: isProduction ? ['burnerpoint.com', 'www.burnerpoint.com', 'burnerpoint.vercel.app'] : ['burnerpoint.com', 'www.burnerpoint.com', 'burnerpoint.vercel.app', 'localhost'],
     formats: ['image/avif', 'image/webp'],
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",

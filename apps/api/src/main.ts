@@ -183,8 +183,14 @@ async function bootstrap() {
 
   httpAdapter.get('/health/storage', (_req: unknown, res: { status: (code: number) => { json: (body: object) => void } }) => {
     const storageConfigured = Boolean(
-      (process.env.AWS_BUCKET && process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY)
-      || (process.env.R2_BUCKET && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY),
+      (process.env.SUPABASE_URL
+        && process.env.SUPABASE_SERVICE_ROLE_KEY
+        && process.env.SUPABASE_STORAGE_USER_UPLOADS_BUCKET
+        && process.env.SUPABASE_STORAGE_MEDIA_BUCKET
+        && process.env.SUPABASE_STORAGE_VERIFICATION_ASSETS_BUCKET
+        && process.env.SUPABASE_STORAGE_DOCUMENTS_BUCKET)
+      || (process.env.AWS_BUCKET && process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY)
+      || (process.env.R2_BUCKET && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY)
     );
 
     res.status(storageConfigured ? 200 : 503).json({

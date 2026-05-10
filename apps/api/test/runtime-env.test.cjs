@@ -23,13 +23,13 @@ function test(name, fn) {
 
 test('resolveApiOrigin prefers API_URL over an incorrectly set APP_URL', () => {
   const env = {
-    API_URL: 'https://burner-point-api-production.up.railway.app/api',
-    APP_URL: 'https://burnerpoint.vercel.app',
+    API_URL: 'https://api.burnerpoint.com',
+    APP_URL: 'https://burnerpoint.com',
   };
 
-  assert.equal(resolveApiOrigin(env), 'https://burner-point-api-production.up.railway.app');
-  assert.equal(resolveApiUrl(env), 'https://burner-point-api-production.up.railway.app/api');
-  assert.equal(resolveWebhookBaseUrl(env), 'https://burner-point-api-production.up.railway.app/api/webhooks');
+  assert.equal(resolveApiOrigin(env), 'https://api.burnerpoint.com');
+  assert.equal(resolveApiUrl(env), 'https://api.burnerpoint.com/api');
+  assert.equal(resolveWebhookBaseUrl(env), 'https://api.burnerpoint.com/api/webhooks');
 });
 
 test('resolveApiOrigin falls back to Railway public domains when API_URL is absent', () => {
@@ -38,6 +38,15 @@ test('resolveApiOrigin falls back to Railway public domains when API_URL is abse
   };
 
   assert.equal(resolveApiOrigin(env), 'https://burner-point-api-production.up.railway.app');
+});
+
+test('resolveApiOrigin strips an accidental /api suffix from API_URL', () => {
+  const env = {
+    API_URL: 'https://api.burnerpoint.com/api',
+  };
+
+  assert.equal(resolveApiOrigin(env), 'https://api.burnerpoint.com');
+  assert.equal(resolveApiUrl(env), 'https://api.burnerpoint.com/api');
 });
 
 test('hasConfiguredEnv treats Clerk webhook secret aliases as equivalent', () => {

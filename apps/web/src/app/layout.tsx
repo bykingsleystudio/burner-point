@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
-import { ClerkProvider } from '@clerk/nextjs';
 import { Toaster } from 'react-hot-toast';
 import { BRAND } from '@/lib/brand';
 import {
@@ -59,28 +58,26 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className="min-h-screen bg-brand-black font-sans antialiased text-white">
-        <ClerkProvider>
-          <PostHogProvider>
-            <script
-              type="application/ld+json"
-              suppressHydrationWarning
-              dangerouslySetInnerHTML={{ __html: JSON.stringify(baseStructuredData()) }}
-            />
-            {children}
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                style: {
-                  background: BRAND.colors.surface,
-                  color: BRAND.colors.white,
-                  border: `1px solid ${BRAND.colors.border}`,
-                  borderRadius: BRAND.radii.md,
-                },
-                success: { iconTheme: { primary: BRAND.colors.cyberGreen, secondary: BRAND.colors.black } },
-              }}
-            />
-          </PostHogProvider>
-        </ClerkProvider>
+        <PostHogProvider>
+          <script
+            type="application/ld+json"
+            suppressHydrationWarning
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(baseStructuredData()) }}
+          />
+          {children}
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              style: {
+                background: BRAND.colors.surface,
+                color: BRAND.colors.white,
+                border: `1px solid ${BRAND.colors.border}`,
+                borderRadius: BRAND.radii.md,
+              },
+              success: { iconTheme: { primary: BRAND.colors.cyberGreen, secondary: BRAND.colors.black } },
+            }}
+          />
+        </PostHogProvider>
       </body>
     </html>
   );

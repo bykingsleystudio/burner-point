@@ -5,16 +5,20 @@ export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
   const origin = requestUrl.origin;
+  const redirectTo = requestUrl.searchParams.get('redirect');
+  const nextPath =
+    redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//')
+      ? redirectTo
+      : '/dashboard';
 
   if (code) {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     
     if (error) {
-      return NextResponse.redirect(`${origin}/auth/login?error=${error.message}`);
+      return NextResponse.redirect(`${origin}/sign-in?error=${encodeURIComponent(error.message)}`);
     }
   }
 
-  // URL redirect to /dashboard
-  return NextResponse.redirect(`${origin}/dashboard`);
+  return NextResponse.redirect(`${origin}${nextPath}`);
 }

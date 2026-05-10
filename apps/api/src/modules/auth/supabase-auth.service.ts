@@ -306,8 +306,10 @@ export class SupabaseAuthService {
    * OAuth login (Google, Apple, Microsoft)
    */
   async oauthLogin(provider: 'google' | 'apple' | 'microsoft') {
+    const supabaseProvider = provider === 'microsoft' ? 'azure' : provider;
+
     const { data, error } = await this.supabase.auth.signInWithOAuth({
-      provider,
+      provider: supabaseProvider,
       options: {
         redirectTo: `${process.env.APP_URL}/auth/callback`,
       },
@@ -318,6 +320,175 @@ export class SupabaseAuthService {
     }
 
     return { url: data.url };
+  }
+
+  /**
+   * Exchange a Supabase browser session for Burner Point API tokens.
+   * This lets web/mobile clients authenticate with Supabase directly
+   * and then bootstrap the API's JWT session for protected routes.
+   */
+  async exchangeSupabaseSession(
+    accessToken: string,
+    profile?: Partial<{
+      email: string;
+      phoneNumber: string;
+      firstName: string;
+      lastName: string;
+      country: string;
+      acceptTerms: boolean;
+      acceptPrivacy: boolean;
+    }>,
+    ip?: string,
+  ) {
+    const token = accessToken?.trim();
+    if (!token) {
+      throw new BadRequestException('Supabase access token is required.');
+    }
+
+    const { data, error } = await this.supabase.auth.getUser(token);
+    const authUser = data.user;
+    if (error || !authUser) {
+      throw new UnauthorizedException('Invalid Supabase session');
+    }
+
+    const metadata = (authUser.user_metadata ?? {}) as Record<string, unknown>;
+    const primaryEmail = authUser.email ?? profile?.email;
+    if (!primaryEmail) {
+      throw new BadRequestException('Supabase user must have an email address before using Burner Point.');
+    }
+
+    const primaryPhone =
+      authUser.phone
+      ?? this.asOptionalString(metadata.phone_number)
+      ?? this.asOptionalString(metadata.phoneNumber)
+      ?? profile?.phoneNumber;
+    const email = this.normalizeEmail(primaryEmail);
+    const phoneNumber = primaryPhone ? this.normalizePhoneNumber(primaryPhone) : undefined;
+    const firstName = this.normalizeOptionalText(
+      profile?.firstName,
+      this.asOptionalString(metadata.first_name),
+      this.asOptionalString(metadata.firstName),
+    );
+    const lastName = this.normalizeOptionalText(
+      profile?.lastName,
+      this.asOptionalString(metadata.last_name),
+      this.asOptionalString(metadata.lastName),
+    );
+    const country = this.normalizeOptionalText(
+      profile?.country,
+      this.asOptionalString(metadata.country),
+    ) || 'NG';
+    const existingById = await this.userRepo.findOne({ where: { id: authUser.id } });
+    const existingByEmail = await this.userRepo.findOne({ where: { email } });
+    const existingByPhone = phoneNumber ? await this.userRepo.findOne({ where: { phoneNumber } }) : null;
+
+    if (existingByEmail && existingByPhone && existingByEmail.id !== existingByPhone.id) {
+      throw new ConflictException('This email address and phone number are already linked to different Burner Point accounts.');
+    }
+
+    let user = existingById || existingByEmail || existingByPhone;
+    if (user?.status === UserStatus.BANNED) {
+      throw new ForbiddenException('Account banned');
+    }
+    if (user?.status === UserStatus.SUSPENDED) {
+      throw new ForbiddenException('Account suspended');
+    }
+
+    const termsAccepted =
+      Boolean(profile?.acceptTerms) ||
+      Boolean(metadata.acceptTerms) ||
+      Boolean(metadata.accept_terms) ||
+      Boolean((user?.preferences as any)?.termsAccepted);
+    const privacyAccepted =
+      Boolean(profile?.acceptPrivacy) ||
+      Boolean(metadata.acceptPrivacy) ||
+      Boolean(metadata.accept_privacy) ||
+      Boolean((user?.preferences as any)?.privacyAccepted);
+    const effectivePhoneNumber = phoneNumber || user?.phoneNumber;
+    const missingFields = this.getMissingProfileFields({
+      firstName,
+      lastName,
+      email,
+      phoneNumber: effectivePhoneNumber,
+      termsAccepted,
+      privacyAccepted,
+    });
+    const profileComplete = missingFields.length === 0;
+    const emailVerified = Boolean(
+      (authUser as { email_confirmed_at?: string | null }).email_confirmed_at ||
+      (authUser as { confirmed_at?: string | null }).confirmed_at,
+    );
+    const phoneVerified = Boolean(
+      (authUser as { phone_confirmed_at?: string | null }).phone_confirmed_at,
+    );
+    const now = new Date().toISOString();
+    const preferences = {
+      ...(user?.preferences || {}),
+      supabaseUserId: authUser.id,
+      supabaseProvider:
+        this.asOptionalString((authUser.app_metadata as Record<string, unknown> | undefined)?.provider)
+        ?? (Array.isArray(authUser.identities) ? authUser.identities[0]?.provider : undefined)
+        ?? 'email',
+      termsAccepted,
+      privacyAccepted,
+      termsAcceptedAt: (user?.preferences as any)?.termsAcceptedAt ?? (termsAccepted ? now : null),
+      privacyAcceptedAt: (user?.preferences as any)?.privacyAcceptedAt ?? (privacyAccepted ? now : null),
+      onboardingComplete: profileComplete,
+      onboardingMissingFields: missingFields,
+      pendingPhoneNumber: effectivePhoneNumber ?? null,
+      authProvider: 'supabase',
+    };
+
+    if (!user) {
+      user = this.userRepo.create({
+        id: authUser.id,
+        email,
+        phoneNumber: effectivePhoneNumber,
+        firstName,
+        lastName,
+        country,
+        referralCode: this.generateReferralCode(),
+        status: profileComplete ? UserStatus.ACTIVE : UserStatus.PENDING,
+        emailVerified,
+        phoneVerified,
+        lastLoginAt: new Date(),
+        lastLoginIp: ip,
+        preferences,
+      });
+    } else {
+      const phoneChanged = Boolean(
+        effectivePhoneNumber &&
+        user.phoneNumber &&
+        user.phoneNumber !== effectivePhoneNumber,
+      );
+
+      user.email = user.email || email;
+      user.phoneNumber = effectivePhoneNumber || user.phoneNumber;
+      user.firstName = firstName || user.firstName;
+      user.lastName = lastName || user.lastName;
+      user.country = country || user.country;
+      user.status = profileComplete ? UserStatus.ACTIVE : user.status;
+      user.emailVerified = user.emailVerified || emailVerified;
+      user.phoneVerified = phoneChanged ? phoneVerified : (user.phoneVerified || phoneVerified);
+      user.lastLoginAt = new Date();
+      user.lastLoginIp = ip;
+      user.preferences = preferences;
+    }
+
+    await this.userRepo.save(user);
+    const tokens = await this.generateTokens(user);
+    const needsPhoneVerification = Boolean(user.phoneNumber) && !user.phoneVerified;
+
+    return {
+      ...tokens,
+      user: withWalletPresentation(user, this.configService),
+      needsOnboarding: !profileComplete,
+      needsPhoneVerification,
+      onboarding: {
+        complete: profileComplete,
+        missingFields,
+      },
+    };
   }
 
   /**
@@ -465,5 +636,38 @@ export class SupabaseAuthService {
     return trimmed.includes('@')
       ? this.normalizeEmail(trimmed)
       : this.normalizePhoneNumber(trimmed);
+  }
+
+  private normalizeOptionalText(...values: Array<string | undefined | null>) {
+    for (const value of values) {
+      if (typeof value !== 'string') continue;
+      const normalized = value.trim();
+      if (normalized) return normalized;
+    }
+    return '';
+  }
+
+  private asOptionalString(value: unknown) {
+    return typeof value === 'string' ? value : undefined;
+  }
+
+  private getMissingProfileFields(profile: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phoneNumber?: string;
+    termsAccepted?: boolean;
+    privacyAccepted?: boolean;
+  }) {
+    const missing: string[] = [];
+
+    if (!profile.firstName?.trim()) missing.push('firstName');
+    if (!profile.lastName?.trim()) missing.push('lastName');
+    if (!profile.email?.trim()) missing.push('email');
+    if (!profile.phoneNumber?.trim()) missing.push('phoneNumber');
+    if (!profile.termsAccepted) missing.push('acceptTerms');
+    if (!profile.privacyAccepted) missing.push('acceptPrivacy');
+
+    return missing;
   }
 }

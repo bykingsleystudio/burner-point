@@ -5,7 +5,7 @@ setup(
     version="1.0.0",
     description="Official BurnerPoint Python SDK",
     author="BurnerPoint",
-    author_email="developers@burnerpoint.app",
+    author_email="developers@burnerpoint.com",
     url="https://github.com/burnerpoint/sdk-python",
     packages=find_packages(),
     install_requires=["httpx>=0.27.0"],
