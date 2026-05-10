@@ -24,14 +24,14 @@ export function AuthProviderButton({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'group flex min-h-[54px] w-full items-center gap-3 rounded-[1.2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-4 py-3 text-left text-[13px] font-semibold leading-tight text-white transition duration-[220ms] ease-out hover:border-brand-green/35 hover:bg-brand-green/[0.05] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60',
+        'bp-auth-provider group flex min-h-[54px] w-full items-center gap-3 rounded-[1.2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-4 py-3 text-left text-[13px] font-semibold leading-tight text-white transition duration-[220ms] ease-out hover:border-brand-green/35 hover:bg-brand-green/[0.05] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60',
         className,
       )}
       aria-label={`Continue with ${provider}`}
     >
       <span className="flex items-center gap-3">
         <ProviderLogo provider={provider} />
-        <span className="text-sm font-semibold text-white">{label || `Continue with ${provider}`}</span>
+        <span className="text-sm font-semibold text-current">{label || `Continue with ${provider}`}</span>
       </span>
     </button>
   );

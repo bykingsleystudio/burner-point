@@ -1,19 +1,23 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
-import { ArrowRight, CheckCircle2, PhoneCall, ShieldCheck, Smartphone, TimerReset } from 'lucide-react';
+import { CheckCircle2, PhoneCall, ShieldCheck, Smartphone, TimerReset } from 'lucide-react';
+import Button from '@/components/ui/button';
+import { GlassInputWrapper, SignInPage } from '@/components/ui/sign-in';
 import { phoneAuthApi } from '@/lib/api';
 import { exchangeSupabaseSession, getErrorMessage, sanitizeRedirect } from '@/lib/auth';
 import { INTERNATIONAL_PHONE_ERROR, isValidInternationalPhone, normalizeInternationalPhone } from '@/lib/phone';
 import { supabase } from '@/lib/supabase';
+import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store';
 
 type Channel = 'sms' | 'call';
 type OtpStep = 'loading-session' | 'ready' | 'sent' | 'approved';
+
+const recoveryChips = ['SMS OTP', 'Voice Call'];
 
 export default function PhoneVerifyPage() {
   const router = useRouter();
@@ -38,12 +42,12 @@ export default function PhoneVerifyPage() {
 
     async function prepareApiSession() {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (!session) throw new Error('Sign in again to continue.');
 
-        const pendingPhone = typeof window !== 'undefined'
-          ? sessionStorage.getItem('burnerPointPendingPhone')
-          : null;
+        const pendingPhone = typeof window !== 'undefined' ? sessionStorage.getItem('burnerPointPendingPhone') : null;
         const result = await exchangeSupabaseSession(session, {
           phoneNumber: pendingPhone || user?.phoneNumber,
         });
@@ -127,139 +131,152 @@ export default function PhoneVerifyPage() {
   };
 
   return (
-    <main className="relative min-h-screen bg-brand-black px-3 py-4 text-white sm:px-4 sm:py-6 md:py-8">
-      <div className="bp-grid-bg pointer-events-none fixed inset-0 opacity-60" />
-      <section className="relative z-10 mx-auto flex min-h-[calc(100dvh-2rem)] max-w-xl items-center">
-        <div className="bp-card w-full rounded-bp-lg p-3 sm:p-4 md:p-5 [&_input.auth-input]:min-h-11 [&_input.auth-input]:px-3.5 [&_input.auth-input]:py-3">
-          <div className="rounded-bp-lg border border-white/8 bg-black/24 p-4 sm:p-4 md:p-5">
-            <Link href="/" className="inline-flex items-center gap-2.5" aria-label="Burner Point home">
-              <span className="flex h-9 w-9 items-center justify-center rounded-bp-md border border-brand-green/25 bg-brand-green/10">
-                <Image src="/assets/logo-mark.svg" alt="" width={22} height={22} />
-              </span>
-              <span className="font-mono text-xs font-semibold uppercase tracking-[0.18em] sm:text-sm sm:tracking-[0.2em]">
-                Burner <span className="text-brand-green">Point</span>
-              </span>
-            </Link>
-
-            <div className="mt-4 flex h-11 w-11 items-center justify-center rounded-bp-md border border-brand-green/25 bg-brand-green/10 sm:mt-5 sm:h-12 sm:w-12">
-              <ShieldCheck className="h-5 w-5 text-brand-green sm:h-6 sm:w-6" />
-            </div>
-            <p className="mt-3 font-mono text-[9px] uppercase tracking-[0.18em] text-brand-green sm:mt-4 sm:text-[10px] sm:tracking-[0.22em]">Phone verification</p>
-            <h1 className="mt-2 text-lg font-semibold uppercase leading-none text-white sm:mt-3 sm:text-xl md:text-[1.8rem]">Verify your phone number</h1>
-            <p className="mt-2 text-xs leading-5 text-white/72 sm:text-sm sm:leading-6">
-              Choose SMS or voice, enter your phone number, and confirm the code to finish account security.
+    <SignInPage
+      title="Verify your phone number"
+      description="Confirm the number linked to your Burner Point account with SMS or voice delivery before continuing."
+      chips={recoveryChips}
+      footerContent={
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+          <Link href={`/sign-in?redirect=${encodeURIComponent(redirectTo)}`} className="bp-auth-inline-link font-medium">
+            Back to sign in
+          </Link>
+          <Link href="/dashboard/security" className="bp-auth-inline-link font-medium">
+            Security settings
+          </Link>
+        </div>
+      }
+    >
+      <div className="flex flex-col gap-4">
+        <div className="bp-auth-note flex items-start gap-3">
+          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-brand-green" />
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-current">Finish account security</p>
+            <p className="text-sm leading-6">
+              Choose SMS or voice, enter the secure code, and continue to the Burner Point destination you requested.
             </p>
-
-            <div className="mt-4 grid gap-3 sm:mt-5 sm:grid-cols-[1fr_0.6fr]">
-              <label className="block text-xs font-medium text-white/70 sm:text-sm">
-                Account phone number
-                <input
-                  value={phoneNumber}
-                  onChange={(event) => setPhoneNumber(event.target.value)}
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  enterKeyHint="next"
-                  placeholder="+1 415 555 0182"
-                  className="auth-input mt-1.5"
-                  disabled={step === 'approved'}
-                />
-                <span className="mt-1.5 block text-[10px] text-white/68 sm:text-xs">Include country code, for example +14155550182.</span>
-              </label>
-
-              <fieldset className="block text-xs font-medium text-white/70 sm:text-sm">
-                <legend>Delivery</legend>
-                <div className="mt-1.5 grid grid-cols-2 gap-2">
-                  {[
-                    { id: 'sms' as const, label: 'SMS', icon: Smartphone },
-                    { id: 'call' as const, label: 'Voice', icon: PhoneCall },
-                  ].map((item) => {
-                    const Icon = item.icon;
-                    const active = channel === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => setChannel(item.id)}
-                        className={`min-h-10 rounded-bp border px-2.5 text-[10px] font-semibold uppercase tracking-[0.1em] transition sm:min-h-11 sm:px-3 sm:text-xs sm:tracking-[0.12em] ${
-                          active
-                            ? 'border-brand-green bg-brand-green/10 text-brand-green'
-                            : 'border-brand-border bg-black/20 text-brand-muted hover:border-brand-green/35 hover:text-white'
-                        }`}
-                      >
-                        <Icon className="mx-auto mb-0.5 h-3.5 w-3.5 sm:mb-1 sm:h-4 sm:w-4" />
-                        {item.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </fieldset>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => void sendCode()}
-              disabled={loading || step === 'loading-session' || step === 'approved' || !phoneIsValid}
-              className="bp-button-glow mt-4 flex min-h-10 w-full items-center justify-center rounded-bp bg-brand-green px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-60 sm:mt-5 sm:min-h-11 sm:w-auto sm:px-5 sm:py-3 sm:text-sm sm:tracking-[0.18em]"
-            >
-              {loading ? 'Sending...' : step === 'sent' ? 'Send another code' : 'Send code'}
-              <ArrowRight className="ml-2 h-3.5 w-3.5 sm:ml-3 sm:h-4 sm:w-4" />
-            </button>
-
-            {step === 'sent' || step === 'approved' ? (
-              <div className="mt-4 rounded-bp-lg border border-brand-green/18 bg-brand-green/[0.05] p-3.5 sm:mt-5 sm:p-4">
-                <div className="flex flex-wrap items-center gap-2 text-xs text-brand-green sm:gap-3 sm:text-sm">
-                  <TimerReset className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  {expiresAt ? `Code expires ${new Date(expiresAt).toLocaleTimeString()}` : 'Code sent'}
-                  {attemptsRemaining !== null ? <span className="text-white/72">Attempts left: {attemptsRemaining}</span> : null}
-                </div>
-
-                {step === 'approved' ? (
-                  <div className="mt-3.5 flex items-center gap-2 text-brand-green">
-                    <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                    <span className="text-sm font-semibold sm:text-base">Approved. Redirecting...</span>
-                  </div>
-                ) : (
-                  <>
-                    <label className="mt-3.5 block text-xs font-medium text-white/70 sm:mt-4 sm:text-sm">
-                      Verification code
-                      <input
-                        value={code}
-                        onChange={(event) => setCode(event.target.value)}
-                        type="text"
-                        inputMode="numeric"
-                        autoComplete="one-time-code"
-                        enterKeyHint="done"
-                        placeholder="Enter verification code"
-                        className="auth-input mt-1.5 max-w-[12rem] font-mono text-base sm:max-w-sm sm:text-lg"
-                      />
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => void verifyCode()}
-                      disabled={loading || !codeIsValid}
-                      className="mt-3 flex min-h-10 w-full items-center justify-center rounded-bp bg-brand-green px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:bg-[#1cffac] disabled:cursor-not-allowed disabled:opacity-50 sm:mt-3.5 sm:min-h-11 sm:w-auto sm:px-5 sm:py-3 sm:text-sm sm:tracking-[0.18em]"
-                    >
-                      {loading ? 'Verifying...' : 'Verify and continue'}
-                    </button>
-                  </>
-                )}
-              </div>
-            ) : null}
-
-            {lastError ? (
-              <div className="mt-4 rounded-bp border border-red-400/20 bg-red-500/[0.06] p-3.5 text-xs leading-6 text-red-200 sm:mt-5 sm:p-4 sm:text-sm sm:leading-6" role="alert">
-                {lastError}
-              </div>
-            ) : null}
-
-            <div className="mt-3.5 rounded-bp-lg border border-white/8 bg-white/[0.02] p-3 text-[10px] leading-5 text-white/72 sm:mt-4 sm:p-3.5 sm:text-xs sm:leading-5">
-              Codes expire after 10 minutes. If one does not arrive, send another code or switch delivery method.
-            </div>
           </div>
         </div>
-      </section>
-    </main>
+
+        <div className="grid gap-4">
+          <div className="space-y-2">
+            <label htmlFor="phoneNumber" className="bp-auth-label">
+              Account phone number
+            </label>
+            <GlassInputWrapper>
+              <input
+                id="phoneNumber"
+                value={phoneNumber}
+                onChange={(event) => setPhoneNumber(event.target.value)}
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                enterKeyHint="next"
+                placeholder="+14155550182"
+                className="bp-auth-text-input"
+                disabled={step === 'approved'}
+              />
+            </GlassInputWrapper>
+            <p className="bp-auth-muted text-sm">Include the full international number with country code.</p>
+          </div>
+
+          <fieldset className="space-y-2">
+            <legend className="bp-auth-label">Delivery method</legend>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                { id: 'sms' as const, label: 'SMS', icon: Smartphone },
+                { id: 'call' as const, label: 'Voice call', icon: PhoneCall },
+              ].map((item) => {
+                const Icon = item.icon;
+                const active = channel === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setChannel(item.id)}
+                    className={cn('bp-auth-channel', active && 'bp-auth-channel-active')}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+        </div>
+
+        <Button
+          type="button"
+          onClick={() => void sendCode()}
+          variant="brand"
+          size="xl"
+          loading={loading && step !== 'sent'}
+          disabled={step === 'loading-session' || step === 'approved' || !phoneIsValid}
+          className="bp-button-glow h-12 w-full rounded-[1rem] px-5 text-sm uppercase tracking-[0.16em]"
+        >
+          {step === 'sent' ? 'Send another code' : 'Send code'}
+        </Button>
+
+        {step === 'sent' || step === 'approved' ? (
+          <div className="bp-auth-success">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <TimerReset className="h-4 w-4" />
+              {expiresAt ? `Code expires ${new Date(expiresAt).toLocaleTimeString()}` : 'Code sent'}
+              {attemptsRemaining !== null ? <span className="opacity-80">Attempts left: {attemptsRemaining}</span> : null}
+            </div>
+
+            {step === 'approved' ? (
+              <div className="mt-3 flex items-center gap-2 text-sm font-semibold">
+                <CheckCircle2 className="h-4 w-4" />
+                Approved. Redirecting...
+              </div>
+            ) : (
+              <div className="mt-4 flex flex-col gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="otpCode" className="bp-auth-label">
+                    Verification code
+                  </label>
+                  <GlassInputWrapper className="max-w-[16rem]">
+                    <input
+                      id="otpCode"
+                      value={code}
+                      onChange={(event) => setCode(event.target.value)}
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      enterKeyHint="done"
+                      placeholder="Enter code"
+                      className="bp-auth-text-input font-mono text-base tracking-[0.22em]"
+                    />
+                  </GlassInputWrapper>
+                </div>
+
+                <Button
+                  type="button"
+                  onClick={() => void verifyCode()}
+                  variant="brand"
+                  size="xl"
+                  loading={loading}
+                  disabled={!codeIsValid}
+                  className="bp-button-glow h-12 w-full rounded-[1rem] px-5 text-sm uppercase tracking-[0.16em]"
+                >
+                  Verify and continue
+                </Button>
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        {lastError ? (
+          <div className="bp-auth-error" role="alert">
+            {lastError}
+          </div>
+        ) : null}
+
+        <div className="bp-auth-note">
+          Codes expire after 10 minutes. If the message does not arrive, send another code or switch between SMS and voice delivery.
+        </div>
+      </div>
+    </SignInPage>
   );
 }
 

@@ -7,23 +7,23 @@ import { cn } from '@/lib/utils';
 const proofItems = [
   {
     icon: ShieldCheck,
-    title: 'Simple sign in',
-    text: 'Use email, phone, or a trusted account to get back in quickly.',
+    title: 'Private by default',
+    text: 'Use one secure Burner Point account across identity, messaging, payments, and connectivity.',
   },
   {
     icon: Globe2,
     title: 'Global access',
-    text: 'Use Burner Point wherever supported products are available.',
+    text: 'Move between regions, providers, and devices without changing how you access the platform.',
   },
   {
     icon: MessageSquareText,
     title: 'Clear next steps',
-    text: 'Every screen tells you exactly what to do next.',
+    text: 'Every auth surface is tuned for direct recovery, verification, and sign-in without visual noise.',
   },
   {
     icon: Smartphone,
-    title: 'Web and mobile ready',
-    text: 'The same clean experience carries across browser and mobile.',
+    title: 'Web and mobile aligned',
+    text: 'The same account state carries from BurnerPoint.com to the mobile app and back.',
   },
 ];
 
@@ -34,6 +34,7 @@ export function AuthShell({
   asideTitle,
   asideDescription,
   className,
+  helperContent,
 }: {
   title: string;
   description: string;
@@ -41,91 +42,129 @@ export function AuthShell({
   asideTitle?: string;
   asideDescription?: string;
   className?: string;
+  helperContent?: ReactNode;
 }) {
   return (
-    <main className="relative min-h-screen bg-brand-black px-3 py-4 text-white sm:px-4 sm:py-6 md:py-8">
-      <div className="pointer-events-none fixed inset-0">
+    <main className="bp-auth-page relative min-h-screen overflow-x-clip px-3 py-4 sm:px-4 sm:py-6 lg:py-8">
+      <div className="pointer-events-none absolute inset-0">
         <div className="bp-grid-bg absolute inset-0 opacity-60" />
-        <div className="absolute inset-x-0 top-0 h-[34rem] bg-[radial-gradient(circle_at_top_left,rgba(0,255,157,0.16),transparent_34%)]" />
-        <div className="absolute bottom-0 right-0 h-[30rem] w-[34rem] rounded-full bg-[radial-gradient(circle,rgba(57,255,20,0.08),transparent_68%)] blur-3xl" />
+        <div className="absolute inset-x-0 top-0 h-[36rem] bg-[radial-gradient(circle_at_top_left,rgba(0,255,157,0.18),transparent_34%)]" />
+        <div className="absolute bottom-[-8rem] right-[-6rem] h-[28rem] w-[28rem] rounded-full bg-[radial-gradient(circle,rgba(57,255,20,0.1),transparent_68%)] blur-3xl" />
       </div>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-[88rem] flex-col items-center justify-center gap-6 px-2 lg:flex-row lg:items-stretch lg:px-4 xl:px-6">
-        {/* Left Panel - Only show on screens >= 1100px */}
-        <section className={cn('hidden w-full max-w-[30rem] rounded-[2rem] border border-white/8 bg-[linear-gradient(135deg,rgba(1,50,32,0.92),rgba(0,0,0,0.96)_58%)] p-5 shadow-[0_40px_120px_rgba(0,0,0,0.42)] lg:max-w-[34rem] xl:flex xl:flex-col xl:justify-between xl:p-6 2xl:max-w-[38rem]', className)}>
+      <div className="relative z-10 mx-auto grid w-full max-w-[118rem] gap-5 min-[1100px]:min-h-[calc(100dvh-4rem)] min-[1100px]:grid-cols-[minmax(0,40rem)_minmax(0,36rem)] min-[1100px]:items-center">
+        <section
+          className={cn(
+            'bp-auth-panel hidden min-[1100px]:flex min-h-[44rem] flex-col justify-between rounded-[2rem] p-6 xl:p-7 2xl:min-h-[47rem]',
+            className,
+          )}
+        >
           <div>
-            <Link href="/" className="inline-flex items-center gap-2" aria-label="Burner Point home">
-              <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} className="h-7 w-7 sm:h-8 sm:w-8" />
-              <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={166} height={26} className="h-[1rem] w-auto sm:h-[1.15rem]" />
+            <Link href="/" className="inline-flex max-w-full items-center gap-3" aria-label="Burner Point home">
+              <span className="flex h-11 w-11 flex-none items-center justify-center rounded-[1rem] border border-brand-green/25 bg-brand-green/10 shadow-[0_0_24px_rgba(0,255,157,0.14)]">
+                <Image src="/assets/logo-mark.svg" alt="" width={24} height={24} className="h-6 w-6" />
+              </span>
+              <span className="inline-flex min-w-0 items-center rounded-full border border-white/8 bg-black/30 px-4 py-2">
+                <Image
+                  src="/assets/wordmark-white.svg"
+                  alt="Burner Point"
+                  width={176}
+                  height={28}
+                  className="h-[1.05rem] w-auto max-w-[10rem] lg:max-w-[11rem]"
+                />
+              </span>
             </Link>
 
-            <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.24em] text-brand-green sm:mt-7">Account access</p>
-            <h1 className="mt-3 max-w-[11ch] text-2xl font-semibold uppercase leading-[0.9] text-white sm:text-3xl xl:text-4xl 2xl:text-5xl">
+            <p className="bp-auth-kicker mt-8 font-mono text-[10px] uppercase tracking-[0.26em] text-brand-green">
+              Account access
+            </p>
+            <h1 className="mt-4 max-w-[13ch] text-[clamp(2.45rem,5vw,4.85rem)] font-semibold uppercase leading-[0.88] text-white">
               {asideTitle || 'Private entry that feels calm, direct, and fast.'}
             </h1>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-[#E5E7EB] sm:mt-4 sm:text-base sm:leading-7">
-              {asideDescription || 'Access your private numbers, codes, rentals, travel data, proxies, billing, and support from one clean account.'}
+            <p className="bp-auth-panel-copy mt-4 max-w-[34rem] text-base leading-7 text-[#E5E7EB]">
+              {asideDescription ||
+                'Access messaging, numbers, verifications, rentals, wallets, subscriptions, and support from one secure Burner Point account.'}
             </p>
 
-            <div className="mt-5 flex flex-wrap gap-2.5">
-              <span className="inline-flex min-h-9 items-center rounded-full border border-brand-green/24 bg-brand-green/10 px-3.5 text-xs font-medium text-brand-green">
-                Stay Anonymous. Stay Connected.
-              </span>
-              <span className="inline-flex min-h-9 items-center rounded-full border border-white/10 bg-white/[0.04] px-3.5 text-xs font-medium text-[#E5E7EB]">
-                Private by Design
-              </span>
+            <div className="mt-6 flex flex-wrap gap-2.5">
+              <span className="bp-auth-chip bp-auth-chip-primary">Stay Anonymous. Stay Connected.</span>
+              <span className="bp-auth-chip">Supabase secured</span>
+              <span className="bp-auth-chip">BurnerPoint.com</span>
             </div>
           </div>
 
-          <div className="mt-5 grid gap-2.5 sm:grid-cols-2 sm:gap-3 xl:mt-6">
+          <div className="mt-8 grid gap-3 xl:grid-cols-2">
             {proofItems.map((item) => {
               const Icon = item.icon;
               return (
-                <article key={item.title} className="rounded-[1.4rem] border border-white/10 bg-black/22 p-3.5 backdrop-blur-sm">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-brand-green/12 text-brand-green">
-                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                <article
+                  key={item.title}
+                  className="rounded-[1.45rem] border border-white/10 bg-black/22 p-4 backdrop-blur-sm"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-[1rem] bg-brand-green/12 text-brand-green">
+                    <Icon className="h-5 w-5" />
                   </div>
-                  <h2 className="mt-2.5 text-sm font-semibold text-white">{item.title}</h2>
-                  <p className="mt-1.5 text-xs leading-6 text-[#E5E7EB]">{item.text}</p>
+                  <h2 className="mt-3 text-sm font-semibold text-white">{item.title}</h2>
+                  <p className="mt-2 text-sm leading-6 text-[#E5E7EB]">{item.text}</p>
                 </article>
               );
             })}
           </div>
         </section>
 
-        {/* Right Auth Card */}
-        <section className="bp-card mx-auto w-full max-w-[28rem] overflow-hidden rounded-[1.35rem] p-3 sm:max-w-[30rem] sm:p-4 md:max-w-[32rem] md:p-5 lg:max-w-[34rem] lg:rounded-[2rem] lg:p-6">
-          <div className="flex flex-col overflow-hidden rounded-[1.15rem] border border-white/8 bg-black/24 p-3 sm:rounded-[1.6rem] sm:p-4 lg:p-5">
-            {/* Header */}
-            <div className="mb-3 sm:mb-4 lg:mb-5">
-              <Link href="/" className="inline-flex max-w-full items-center gap-2" aria-label="Burner Point home">
-                <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} className="h-7 w-7 flex-none sm:h-8 sm:w-8" />
-                <span className="min-w-0 rounded-full bg-white/[0.04] px-2 py-1.5 sm:px-2.5 sm:py-2">
-                  <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={156} height={26} className="h-3 w-auto max-w-[6rem] sm:h-3.5 sm:max-w-[8rem] lg:h-4 lg:max-w-[10rem]" />
-                </span>
-              </Link>
-              <p className="mt-2.5 font-mono text-[9px] uppercase tracking-[0.18em] text-brand-green sm:mt-3 sm:text-[11px] sm:tracking-[0.22em]">Account access</p>
-              <h2 className="mt-1.5 text-lg font-semibold leading-none text-white sm:mt-2 sm:text-xl lg:mt-2.5 lg:text-[2rem]">{title}</h2>
-              <p className="mt-1.5 line-clamp-2 max-w-lg text-xs leading-5 text-[#E5E7EB] sm:mt-2 sm:text-sm sm:leading-6 lg:text-base">{description}</p>
-            </div>
+        <section className="mx-auto flex w-full max-w-[36rem] items-center">
+          <div className="bp-card bp-auth-card w-full overflow-hidden rounded-[1.75rem] p-3 sm:p-4 lg:p-5">
+            <div className="bp-auth-surface flex flex-col gap-5 rounded-[1.4rem] p-4 sm:p-5 lg:p-6">
+              <div className="bp-auth-header">
+                <Link href="/" className="inline-flex max-w-full items-center gap-3" aria-label="Burner Point home">
+                  <span className="flex h-10 w-10 flex-none items-center justify-center rounded-[0.95rem] border border-brand-green/25 bg-brand-green/10 shadow-[0_0_18px_rgba(0,255,157,0.12)]">
+                    <Image src="/assets/logo-mark.svg" alt="" width={22} height={22} className="h-5.5 w-5.5" />
+                  </span>
+                  <span className="inline-flex min-w-0 items-center rounded-full border border-white/8 bg-black/32 px-3.5 py-1.5">
+                    <Image
+                      src="/assets/wordmark-white.svg"
+                      alt="Burner Point"
+                      width={160}
+                      height={26}
+                      className="h-[0.95rem] w-auto max-w-[9.25rem] sm:max-w-[10rem] lg:max-w-[11rem]"
+                    />
+                  </span>
+                </Link>
 
-            {/* Content */}
-            <div className="min-h-0 flex-1">{children}</div>
+                <p className="bp-auth-kicker mt-4 font-mono text-[10px] uppercase tracking-[0.24em] text-brand-green">
+                  Account access
+                </p>
+                <h2 className="bp-auth-title mt-2 text-[clamp(1.7rem,4vw,2.35rem)] font-semibold leading-[0.95]">
+                  {title}
+                </h2>
+                <p className="bp-auth-desc mt-3 max-w-[34rem] text-sm leading-6 text-[#E5E7EB] sm:text-[0.96rem]">
+                  {description}
+                </p>
+              </div>
 
-            {/* Helper Card - Only show on large screens where there's room */}
-            <div className="mt-4 hidden rounded-[1.4rem] border border-white/8 bg-white/[0.03] p-3.5 xl:block">
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-brand-green" />
-                <div>
-                  <p className="text-sm font-semibold text-white">One account for every Burner Point product.</p>
-                  <p className="mt-1.5 text-sm leading-6 text-[#E5E7EB]">
-                    Access numbers, codes, rentals, eSIM orders, proxy plans, billing, and support.
-                  </p>
-                  <Link href="/pricing" className="mt-2.5 inline-flex items-center gap-2 text-sm font-medium text-brand-green transition hover:gap-3">
-                    View pricing
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
+              <div className="min-h-0 flex-1">{children}</div>
+
+              <div className="bp-auth-helper hidden min-[1366px]:block">
+                {helperContent ?? (
+                  <div className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] p-4">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-brand-green" />
+                      <div>
+                        <p className="text-sm font-semibold text-white">One account across all Burner Point products.</p>
+                        <p className="mt-1.5 text-sm leading-6 text-[#E5E7EB]">
+                          Access messaging, numbers, rentals, subscriptions, connectivity, wallet activity, and support.
+                        </p>
+                        <Link
+                          href="/pricing"
+                          className="bp-auth-inline-link mt-3 inline-flex items-center gap-2 text-sm font-medium transition hover:gap-3"
+                        >
+                          View pricing
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -1,33 +1,44 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
-import { ArrowRight } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import Button from '@/components/ui/button';
 import { GlassInputWrapper, SignInPage } from '@/components/ui/sign-in';
 import { getErrorMessage } from '@/lib/auth';
+import { classifyAuthIdentifier } from '@/lib/phone';
+import { supabase } from '@/lib/supabase';
+
+const recoveryChips = ['Account Recovery', 'Security'];
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [loading, setLoading] = useState(false);
+  const identifierType = useMemo(() => classifyAuthIdentifier(identifier), [identifier]);
+  const emailValue = identifier.trim().toLowerCase();
+  const enteredPhoneNumber = identifier.trim().length > 0 && identifierType === 'phone';
 
-  const handleSendReset = async (event: React.FormEvent) => {
+  const handleSendReset = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!email.trim()) {
-      toast.error('Enter your email address.');
+    if (!identifier.trim()) {
+      toast.error('Enter your email address or phone number.');
+      return;
+    }
+
+    if (identifierType !== 'email') {
+      toast.error('Web password recovery sends a secure reset link to your account email. Enter that email address or manage recovery from Security settings after sign-in.');
       return;
     }
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+      const { error } = await supabase.auth.resetPasswordForEmail(emailValue, {
         redirectTo: `${window.location.origin}/auth/reset-password`,
       });
 
       if (error) throw error;
 
-      toast.success('Check your email for the reset link.');
+      toast.success('Check your email for the secure reset link.');
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, 'Failed to send reset email.'));
     } finally {
@@ -38,55 +49,60 @@ export default function ForgotPasswordPage() {
   return (
     <SignInPage
       title="Reset your password"
-      description="We’ll email you a secure recovery link."
-    >
-      <div className="space-y-4">
-        <form onSubmit={handleSendReset} className="space-y-4">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-gray-400">
-              Email address
-            </label>
-            <GlassInputWrapper>
-              <input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                type="email"
-                placeholder="you@example.com"
-                className="w-full rounded-lg bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none"
-                autoComplete="email"
-                required
-              />
-            </GlassInputWrapper>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading || !email.trim()}
-            className="flex h-11 w-full items-center justify-center rounded-lg bg-gradient-to-r from-[#00FF9D] to-[#39FF14] font-semibold text-black transition-all hover:shadow-[0_0_20px_rgba(0,255,157,0.4)] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {loading ? 'Sending...' : 'Send Reset Link'}
-          </button>
-        </form>
-
-        <div className="rounded-[1rem] border border-white/8 bg-white/[0.03] p-4 text-xs leading-6 text-white/60">
-          Password recovery currently uses email. If your account only has a phone number connected, contact support after you regain access to add a recovery email.
-        </div>
-
-        <div className="flex items-center justify-between text-xs">
-          <Link
-            href="/sign-in"
-            className="flex items-center gap-1 text-[#00FF9D] hover:underline"
-          >
-            <ArrowRight className="h-3 w-3 rotate-180" />
+      description="Use the email address on your Burner Point account to receive a secure recovery link."
+      chips={recoveryChips}
+      footerContent={
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+          <Link href="/sign-in" className="bp-auth-inline-link font-medium">
             Back to sign in
           </Link>
-          <Link
-            href="/sign-up"
-            className="text-[#00FF9D] hover:underline"
-          >
+          <Link href="/sign-up" className="bp-auth-inline-link font-medium">
             Create account
           </Link>
+          <Link href="/dashboard/security" className="bp-auth-inline-link font-medium">
+            Security settings after sign-in
+          </Link>
         </div>
+      }
+    >
+      <form onSubmit={handleSendReset} className="flex flex-col gap-4">
+        <div className="space-y-2">
+          <label htmlFor="identifier" className="bp-auth-label">
+            Email address or phone number
+          </label>
+          <GlassInputWrapper>
+            <input
+              id="identifier"
+              value={identifier}
+              onChange={(event) => setIdentifier(event.target.value)}
+              type="text"
+              placeholder="you@example.com or +14155550182"
+              className="bp-auth-text-input"
+              autoComplete="email"
+              required
+            />
+          </GlassInputWrapper>
+          <p className="bp-auth-muted text-sm">
+            {enteredPhoneNumber
+              ? 'Web password recovery still sends the reset link to the email on your account. Use that email, then re-check your phone settings after sign-in.'
+              : 'If you normally use phone sign-in, enter the email attached to your account here. Phone verification remains available once you are back inside Security settings.'}
+          </p>
+        </div>
+
+        <Button
+          type="submit"
+          variant="brand"
+          size="xl"
+          loading={loading}
+          disabled={!identifier.trim()}
+          className="bp-button-glow h-12 w-full rounded-[1rem] px-5 text-sm uppercase tracking-[0.16em]"
+        >
+          {loading ? 'Sending reset link' : 'Send reset link'}
+        </Button>
+      </form>
+
+      <div className="bp-auth-note">
+        Burner Point preserves the current Supabase email recovery flow on web. If your account only has phone verification configured, sign in when you regain access and update recovery options from Security settings.
       </div>
     </SignInPage>
   );
