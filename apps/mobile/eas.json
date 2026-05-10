@@ -15,6 +15,7 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.burnerpoint.com",
         "EXPO_PUBLIC_WEB_URL": "https://burnerpoint.com",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://sdjcavvwramruehjdhpb.supabase.co",
         "EXPO_PUBLIC_PAYMENT_USD_TO_NGN_RATE": "1500"
       }
     },
@@ -24,6 +25,7 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.burnerpoint.com",
         "EXPO_PUBLIC_WEB_URL": "https://burnerpoint.com",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://sdjcavvwramruehjdhpb.supabase.co",
         "EXPO_PUBLIC_PAYMENT_USD_TO_NGN_RATE": "1500"
       }
     }

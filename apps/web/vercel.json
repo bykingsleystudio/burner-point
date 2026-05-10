@@ -4,12 +4,5 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "regions": ["us-east-1"],
-  "env": {
-    "NEXT_PUBLIC_APP_URL": "@NEXT_PUBLIC_APP_URL",
-    "NEXT_PUBLIC_API_URL": "@NEXT_PUBLIC_API_URL",
-    "NEXT_PUBLIC_WS_URL": "@NEXT_PUBLIC_WS_URL",
-    "NEXT_PUBLIC_SUPABASE_URL": "@NEXT_PUBLIC_SUPABASE_URL",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@NEXT_PUBLIC_SUPABASE_ANON_KEY"
-  }
+  "regions": ["iad1"]
 }
