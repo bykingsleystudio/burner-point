@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHmac, createPublicKey, timingSafeEqual, verify as verifySignature } from 'crypto';
 import { Repository } from 'typeorm';
-import { verifyWebhook } from '@clerk/backend/webhooks';
 import twilio from 'twilio';
 import { Request } from 'express';
 import { Message, MessageDirection, MessageStatus, MessageType } from '../../database/entities/message.entity';
@@ -11,7 +10,7 @@ import { Call, CallDirection, CallStatus, WebhookDedup } from '../../database/en
 import { PhoneNumber } from '../../database/entities/phone-number.entity';
 import { EventsGateway } from '../gateway/events.gateway';
 import { AiService } from '../ai/ai.service';
-import { resolveClerkWebhookSigningSecret, resolveWebhookBaseUrl } from '../../config/runtime-env';
+import { resolveWebhookBaseUrl } from '../../config/runtime-env';
 
 type ProviderWebhookSource = 'airalo' | 'bandwidth' | 'oxylabs' | 'smartproxy' | 'wireguard';
 
@@ -310,67 +309,6 @@ export class WebhooksService {
     return {
       success: true,
       source,
-      eventId: providerEventId,
-      eventType,
-      duplicate,
-      verified,
-    };
-  }
-
-  async handleClerkWebhook(
-    payload: Record<string, unknown>,
-    headers: Record<string, string>,
-    rawBody: Buffer | undefined,
-    url: string,
-  ) {
-    const secret = resolveClerkWebhookSigningSecret(this.configService);
-    let verified = false;
-    let verifiedPayload = payload;
-    const isProduction = process.env.NODE_ENV === 'production';
-
-    if (secret) {
-      if (!rawBody) throw new BadRequestException('Missing raw body for Clerk webhook verification');
-
-      try {
-        const requestHeaders = new Headers();
-        Object.entries(headers || {}).forEach(([key, value]) => {
-          if (value !== undefined) requestHeaders.set(key, String(value));
-        });
-        const event = await verifyWebhook(
-          new Request(url, {
-            method: 'POST',
-            headers: requestHeaders,
-            body: rawBody.toString('utf8'),
-          }),
-          { signingSecret: secret },
-        );
-        verifiedPayload = event as unknown as Record<string, unknown>;
-        verified = true;
-      } catch (error) {
-        this.logger.warn(`Clerk webhook verification failed: ${error instanceof Error ? error.message : String(error)}`);
-        throw new BadRequestException('Invalid Clerk webhook signature');
-      }
-    } else {
-      this.logger.warn('Clerk webhook rejected because CLERK_WEBHOOK_SIGNING_SECRET is not configured');
-      if (isProduction) throw new BadRequestException('Webhook verification not configured');
-    }
-
-    const eventType = this.asString(verifiedPayload.type ?? verifiedPayload.event) || 'clerk.webhook';
-    const data = verifiedPayload.data as Record<string, unknown> | undefined;
-    const providerEventId =
-      this.asString(verifiedPayload.id) ||
-      this.asString(data?.id) ||
-      this.headerValue(headers, 'svix-id') ||
-      `${Date.now()}`;
-    const eventId = `clerk:${providerEventId}:${eventType}`;
-    const duplicate = await this.storeWebhookEvent(eventId, 'clerk', eventType, {
-      ...verifiedPayload,
-      verified,
-    });
-
-    return {
-      success: true,
-      source: 'clerk',
       eventId: providerEventId,
       eventType,
       duplicate,

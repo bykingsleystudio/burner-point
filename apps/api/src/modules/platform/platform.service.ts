@@ -40,7 +40,7 @@ export interface PlatformStackSnapshot {
   policies: {
     webHosting: 'Vercel';
     apiHosting: 'Railway';
-    database: 'Neon Postgres';
+    database: 'Supabase Postgres';
     mobileDelivery: 'Expo / EAS';
     primaryPayments: readonly string[];
     secondaryPayments: readonly string[];
@@ -81,7 +81,7 @@ export interface DeploymentReadinessSnapshot {
     sourceControl: 'GitHub';
     webDeployment: 'Vercel';
     apiDeployment: 'Railway';
-    database: 'Neon Postgres';
+    database: 'Supabase Postgres';
     mobileDelivery: 'Expo / EAS';
     appStores: ['iOS App Store', 'Google Play Store'];
     secretsRule: 'Secrets live only in deployment secret stores or ignored local env files';
@@ -131,7 +131,7 @@ export class PlatformService {
       policies: {
         webHosting: 'Vercel',
         apiHosting: 'Railway',
-        database: 'Neon Postgres',
+        database: 'Supabase Postgres',
         mobileDelivery: 'Expo / EAS',
         primaryPayments: CORE_PAYMENT_GATEWAYS,
         secondaryPayments: SECONDARY_PAYMENT_GATEWAYS,
@@ -220,7 +220,7 @@ export class PlatformService {
         sourceControl: 'GitHub',
         webDeployment: 'Vercel',
         apiDeployment: 'Railway',
-        database: 'Neon Postgres',
+        database: 'Supabase Postgres',
         mobileDelivery: 'Expo / EAS',
         appStores: ['iOS App Store', 'Google Play Store'],
         secretsRule: 'Secrets live only in deployment secret stores or ignored local env files',

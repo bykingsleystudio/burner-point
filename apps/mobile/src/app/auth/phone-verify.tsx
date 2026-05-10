@@ -6,7 +6,7 @@ import { ArrowRight, CheckCircle2, PhoneCall, ShieldCheck, Smartphone, TimerRese
 import axios from 'axios';
 
 import { getApiAccessToken } from '../../lib/auth';
-import { useAuth } from '@clerk/clerk-expo';
+import { useBurnerAuth } from '../../lib/auth-context';
 import { API_BASE_URL } from '../../lib/config';
 import { BRAND } from '../../lib/brand';
 import { triggerHaptic } from '../../lib/native-ux';
@@ -19,7 +19,7 @@ const e164Pattern = /^\+[1-9]\d{6,14}$/;
 export default function PhoneVerifyScreen() {
   const router = useRouter();
   const { redirect } = useLocalSearchParams<{ redirect?: string }>();
-  const { getToken } = useAuth();
+  const { isLoaded, session } = useBurnerAuth();
   const [step, setStep] = useState<OtpStep>('loading');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [channel, setChannel] = useState<Channel>('sms');
@@ -40,8 +40,14 @@ export default function PhoneVerifyScreen() {
     let cancelled = false;
 
     async function bootstrap() {
+      if (!isLoaded) return;
+      if (!session) {
+        router.replace('/auth/login' as any);
+        return;
+      }
+
       try {
-        const token = await getApiAccessToken(getToken);
+        const token = await getApiAccessToken(undefined, session);
         const { data } = await axios.get(`${API_BASE_URL}/users/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -66,7 +72,7 @@ export default function PhoneVerifyScreen() {
     return () => {
       cancelled = true;
     };
-  }, [getToken, redirectTarget, router]);
+  }, [isLoaded, redirectTarget, router, session]);
 
   const sendCode = async () => {
     triggerHaptic('selection');
@@ -77,7 +83,7 @@ export default function PhoneVerifyScreen() {
 
     setLoading(true);
     try {
-      const token = await getApiAccessToken(getToken);
+      const token = await getApiAccessToken(undefined, session);
       const { data } = await axios.post(
         `${API_BASE_URL}/phone-auth/send`,
         { phoneNumber: normalizedPhone, channel },
@@ -104,8 +110,8 @@ export default function PhoneVerifyScreen() {
 
     setLoading(true);
     try {
-      const token = await getApiAccessToken(getToken);
-      const { data } = await axios.post(
+      const token = await getApiAccessToken(undefined, session);
+      await axios.post(
         `${API_BASE_URL}/phone-auth/verify`,
         { phoneNumber: normalizedPhone, code: code.trim() },
         { headers: { Authorization: `Bearer ${token}` } },
@@ -113,7 +119,7 @@ export default function PhoneVerifyScreen() {
 
       setStep('approved');
       setTimeout(() => {
-        router.replace(((data?.redirectTo as string) || redirectTarget) as any);
+        router.replace(redirectTarget as any);
       }, 250);
     } catch (error: any) {
       setAttemptsRemaining(error.response?.data?.attemptsRemaining ?? attemptsRemaining);

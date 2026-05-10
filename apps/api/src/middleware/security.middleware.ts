@@ -30,7 +30,6 @@ const AUTH_ROUTES = [
   '/auth/refresh',
   '/auth/logout',
   '/auth/oauth',
-  '/auth/clerk/exchange',
   '/phone-auth/send',
   '/phone-auth/verify',
   '/api/auth/login',
@@ -38,7 +37,6 @@ const AUTH_ROUTES = [
   '/api/auth/refresh',
   '/api/auth/logout',
   '/api/auth/oauth',
-  '/api/auth/clerk/exchange',
   '/api/phone-auth/send',
   '/api/phone-auth/verify',
 ];
@@ -61,7 +59,6 @@ const WEBHOOK_ROUTES = [
   '/webhooks/oxylabs',
   '/webhooks/smartproxy',
   '/webhooks/wireguard',
-  '/webhooks/clerk',
   '/api/webhooks/twilio',
   '/api/webhooks/telnyx',
   '/api/webhooks/bandwidth',
@@ -70,7 +67,6 @@ const WEBHOOK_ROUTES = [
   '/api/webhooks/oxylabs',
   '/api/webhooks/smartproxy',
   '/api/webhooks/wireguard',
-  '/api/webhooks/clerk',
   '/paddle/webhook',
   '/api/paddle/webhook',
 ];
@@ -406,8 +402,7 @@ export class SecurityMiddleware implements NestMiddleware {
       body?.identifier ||
       body?.email ||
       body?.phoneNumber ||
-      body?.refreshToken ||
-      body?.clerkToken;
+      body?.refreshToken;
     if (typeof raw !== 'string' || raw.trim().length < 3) return null;
     return createHash('sha256')
       .update(raw.trim().toLowerCase())

@@ -4,10 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Activity, CreditCard, LogOut, Shield, Copy, Share2, HelpCircle, ChevronRight } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
-import { useAuth } from '@clerk/clerk-expo';
 import axios from 'axios';
 import { API_BASE_URL } from '../../lib/config';
 import { clearApiSession, getApiAccessToken } from '../../lib/auth';
+import { useBurnerAuth } from '../../lib/auth-context';
 import { BRAND } from '../../lib/brand';
 import { formatNgnKobo, formatUsdCents, getWalletUsdCents } from '../../lib/money';
 import { triggerHaptic } from '../../lib/native-ux';
@@ -24,16 +24,17 @@ type ProfileUser = {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { getToken, signOut } = useAuth();
+  const { isLoaded, session, signOut } = useBurnerAuth();
   const [user, setUser] = useState<ProfileUser | null>(null);
 
   useEffect(() => {
     (async () => {
-      const token = await getApiAccessToken(getToken);
+      if (!isLoaded || !session) return;
+      const token = await getApiAccessToken(undefined, session);
       const res = await axios.get(`${API_BASE_URL}/users/me`, { headers: { Authorization: `Bearer ${token}` } });
       setUser(res.data);
     })().catch(() => {});
-  }, [getToken]);
+  }, [isLoaded, session]);
 
   const logout = () => {
     triggerHaptic('warning');

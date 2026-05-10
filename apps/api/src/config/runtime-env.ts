@@ -3,8 +3,6 @@ export type RuntimeEnvSource =
   | { get<T = string>(name: string): T | undefined };
 
 const ENV_ALIASES: Record<string, string[]> = {
-  CLERK_WEBHOOK_SECRET: ['CLERK_WEBHOOK_SIGNING_SECRET', 'CLERK_WEBHOOK_SECRET'],
-  CLERK_WEBHOOK_SIGNING_SECRET: ['CLERK_WEBHOOK_SIGNING_SECRET', 'CLERK_WEBHOOK_SECRET'],
   JWT_ACCESS_SECRET: ['JWT_ACCESS_SECRET', 'JWT_SECRET'],
   JWT_REFRESH_SECRET: ['JWT_REFRESH_SECRET', 'JWT_SECRET'],
   FLUTTERWAVE_WEBHOOK_SECRET: ['FLUTTERWAVE_WEBHOOK_SECRET', 'FLUTTERWAVE_WEBHOOK_HASH'],
@@ -72,10 +70,6 @@ export function resolveConfiguredEnv(name: string, source: RuntimeEnvSource): st
     if (isConfiguredValue(value)) return value;
   }
   return undefined;
-}
-
-export function resolveClerkWebhookSigningSecret(source: RuntimeEnvSource): string | undefined {
-  return resolveConfiguredEnv('CLERK_WEBHOOK_SIGNING_SECRET', source);
 }
 
 export function resolveJwtAccessSecret(source: RuntimeEnvSource): string | undefined {

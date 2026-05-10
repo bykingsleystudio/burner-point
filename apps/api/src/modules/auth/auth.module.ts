@@ -6,7 +6,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthController } from './auth.controller';
 import { SupabaseAuthService } from './supabase-auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { LocalStrategy } from './strategies/local.strategy';
 import { User } from '../../database/entities/user.entity';
 import { RedisService } from '../global/redis.service';
 import { resolveJwtAccessSecret } from '../../config/runtime-env';
@@ -25,7 +24,7 @@ import { resolveJwtAccessSecret } from '../../config/runtime-env';
     }),
   ],
   controllers: [AuthController],
-  providers: [SupabaseAuthService, JwtStrategy, LocalStrategy, RedisService],
+  providers: [SupabaseAuthService, JwtStrategy, RedisService],
   exports: [SupabaseAuthService, JwtModule],
 })
 export class AuthModule {}

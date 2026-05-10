@@ -25,8 +25,6 @@ const nextConfig = {
       "style-src 'self' 'unsafe-inline'",
       [
         "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-        'https://*.clerk.com',
-        'https://*.clerk.dev',
         'https://*.sentry.io',
         'https://js.sentry-cdn.com',
         'https://app.posthog.com',
@@ -36,21 +34,18 @@ const nextConfig = {
       ].join(' '),
       [
         "connect-src 'self' https: wss:",
-        'https://*.clerk.com',
-        'https://*.clerk.dev',
         'https://*.sentry.io',
         'https://app.posthog.com',
         'https://*.posthog.com',
         'https://prod.spline.design',
+        'https://*.supabase.co',
       ].join(' '),
       [
         "frame-src 'self'",
-        'https://*.clerk.com',
-        'https://*.clerk.dev',
         'https://checkout.paddle.com',
         'https://*.paddle.com',
       ].join(' '),
-      "form-action 'self' https://*.clerk.com https://*.clerk.dev",
+      "form-action 'self'",
       'upgrade-insecure-requests',
     ].join('; ');
 

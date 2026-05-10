@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MessageSquare, Phone, UserRound, Voicemail, Zap, Shield } from 'lucide-react-native';
-import { useAuth } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 import axios from 'axios';
 import { API_BASE_URL } from '../../lib/config';
 import { getApiAccessToken } from '../../lib/auth';
+import { useBurnerAuth } from '../../lib/auth-context';
 import { BRAND } from '../../lib/brand';
 import { triggerHaptic } from '../../lib/native-ux';
 
@@ -14,14 +14,14 @@ const HIT_SLOP = { top: 8, right: 8, bottom: 8, left: 8 };
 
 export default function MessagesScreen() {
   const router = useRouter();
-  const { getToken } = useAuth();
+  const { isLoaded, isSignedIn, session } = useBurnerAuth();
   const [numbers, setNumbers] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadMessagesForNumber = async (phoneNumberId: string) => {
-    const token = await getApiAccessToken(getToken);
+    const token = await getApiAccessToken(undefined, session);
     const h = { Authorization: `Bearer ${token}` };
     const msgRes = await axios.get(`${API_BASE_URL}/messages?phoneNumberId=${phoneNumberId}`, { headers: h });
     setMessages(msgRes.data);
@@ -29,7 +29,12 @@ export default function MessagesScreen() {
 
   useEffect(() => {
     (async () => {
-      const token = await getApiAccessToken(getToken);
+      if (!isLoaded) return;
+      if (!isSignedIn) {
+        router.replace('/auth/login' as any);
+        return;
+      }
+      const token = await getApiAccessToken(undefined, session);
       const h = { Authorization: `Bearer ${token}` };
       const numsRes = await axios.get(`${API_BASE_URL}/numbers`, { headers: h });
       setNumbers(numsRes.data);
@@ -39,7 +44,7 @@ export default function MessagesScreen() {
       }
       setLoading(false);
     })().catch(() => setLoading(false));
-  }, [getToken]);
+  }, [isLoaded, isSignedIn, router, session]);
 
   const chooseNumber = async (id: string) => {
     triggerHaptic('selection');

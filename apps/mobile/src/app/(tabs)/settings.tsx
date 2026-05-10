@@ -1,10 +1,10 @@
 import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useAuth, useUser } from '@clerk/clerk-expo';
 import { Bell, ChevronRight, HelpCircle, LogOut, ShieldCheck, SlidersHorizontal, User } from 'lucide-react-native';
 
 import { clearApiSession } from '../../lib/auth';
+import { useBurnerAuth } from '../../lib/auth-context';
 import { BRAND } from '../../lib/brand';
 import { WEB_APP_URL } from '../../lib/config';
 import { BURNER_POINT_STACK } from '../../lib/stack';
@@ -22,8 +22,12 @@ const settings = [
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { signOut } = useAuth();
-  const { user } = useUser();
+  const { signOut, user } = useBurnerAuth();
+  const userMetadata = (user?.user_metadata ?? {}) as Record<string, unknown>;
+  const displayName = [
+    typeof userMetadata.first_name === 'string' ? userMetadata.first_name : '',
+    typeof userMetadata.last_name === 'string' ? userMetadata.last_name : '',
+  ].filter(Boolean).join(' ');
 
   const logout = () => {
     triggerHaptic('warning');
@@ -49,11 +53,11 @@ export default function SettingsScreen() {
 
         <View style={s.identityCard}>
           <View style={s.avatar}>
-            <Text style={s.avatarText}>{user?.firstName?.[0]?.toUpperCase() || 'B'}</Text>
+            <Text style={s.avatarText}>{displayName[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'B'}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={s.name}>{user?.fullName || 'Burner Point user'}</Text>
-            <Text style={s.email}>{user?.primaryEmailAddress?.emailAddress || 'Secure account session'}</Text>
+            <Text style={s.name}>{displayName || 'Burner Point user'}</Text>
+            <Text style={s.email}>{user?.email || 'Secure account session'}</Text>
           </View>
         </View>
 

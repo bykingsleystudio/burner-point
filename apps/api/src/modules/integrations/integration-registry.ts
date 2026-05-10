@@ -16,8 +16,8 @@ export type BackendIntegrationId =
   | 'paddle'
   | 'nowpayments'
   | 'resend'
-  | 'clerk'
-  | 'neon'
+  | 'supabase-auth'
+  | 'supabase-postgres'
   | 'sentry'
   | 'railway'
   | 'dbeaver'
@@ -297,26 +297,27 @@ export const BACKEND_INTEGRATION_CONTRACTS: BackendIntegrationContract[] = [
     ],
   },
   {
-    id: 'clerk',
-    name: 'Clerk',
+    id: 'supabase-auth',
+    name: 'Supabase Auth',
     category: 'auth',
     backendOnly: true,
-    secretEnv: ['CLERK_SECRET_KEY'],
-    optionalEnv: ['CLERK_WEBHOOK_SIGNING_SECRET', 'CLERK_WEBHOOK_SECRET'],
-    publicClientEnv: ['NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY', 'EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY'],
-    frontendRule: 'Clients use Clerk publishable keys only; API exchanges Clerk sessions server-side.',
+    secretEnv: ['SUPABASE_SERVICE_ROLE_KEY'],
+    optionalEnv: ['SUPABASE_URL', 'SUPABASE_ANON_KEY'],
+    publicClientEnv: ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'EXPO_PUBLIC_SUPABASE_URL', 'EXPO_PUBLIC_SUPABASE_ANON_KEY'],
+    frontendRule: 'Clients authenticate with Supabase public keys only; API exchanges Supabase sessions server-side.',
     endpoints: [
-      { method: 'POST', path: '/auth/clerk/exchange', auth: 'public', purpose: 'Exchange Clerk token for Burner Point API session' },
-      { method: 'POST', path: '/webhooks/clerk', auth: 'provider-signature', purpose: 'Normalize Clerk user/session webhooks' },
+      { method: 'POST', path: '/auth/supabase/exchange', auth: 'public', purpose: 'Exchange Supabase session token for Burner Point API session' },
+      { method: 'POST', path: '/auth/password/reset', auth: 'public', purpose: 'Trigger Supabase password reset flow through the API' },
+      { method: 'POST', path: '/phone-auth/send', auth: 'user', purpose: 'Initiate Twilio-backed phone verification tied to a Supabase-authenticated user' },
     ],
   },
   {
-    id: 'neon',
-    name: 'Neon Postgres',
+    id: 'supabase-postgres',
+    name: 'Supabase Postgres',
     category: 'data',
     backendOnly: true,
-    secretEnv: ['DATABASE_URL'],
-    optionalEnv: ['DB_SSL', 'DB_SSL_REJECT_UNAUTHORIZED'],
+    secretEnv: ['DATABASE_URL', 'DIRECT_DATABASE_URL'],
+    optionalEnv: ['POOLER_URL', 'DB_SSL', 'DB_SSL_REJECT_UNAUTHORIZED'],
     publicClientEnv: [],
     frontendRule: 'Clients never connect to the database.',
     endpoints: [
@@ -395,7 +396,7 @@ export const BACKEND_INTEGRATION_CONTRACTS: BackendIntegrationContract[] = [
     backendOnly: true,
     secretEnv: ['EXPO_PROJECT_ID'],
     optionalEnv: ['EXPO_PUBLIC_API_URL', 'EXPO_PUBLIC_WEB_URL'],
-    publicClientEnv: ['EXPO_PUBLIC_API_URL', 'EXPO_PUBLIC_WEB_URL', 'EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY'],
+    publicClientEnv: ['EXPO_PUBLIC_API_URL', 'EXPO_PUBLIC_WEB_URL', 'EXPO_PUBLIC_SUPABASE_URL', 'EXPO_PUBLIC_SUPABASE_ANON_KEY'],
     frontendRule: 'Expo public values identify app endpoints only; secrets stay on the API or EAS secret store.',
     endpoints: [
       { method: 'GET', path: '/integrations/catalog', auth: 'user', purpose: 'Expose mobile-safe backend integration contracts' },

@@ -3,10 +3,10 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CalendarDays, Phone, Trash2, Clock, ShieldCheck } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '@clerk/clerk-expo';
 import axios from 'axios';
 import { API_BASE_URL } from '../../lib/config';
 import { getApiAccessToken } from '../../lib/auth';
+import { useBurnerAuth } from '../../lib/auth-context';
 import { BRAND } from '../../lib/brand';
 import { triggerHaptic } from '../../lib/native-ux';
 import { EmptyState, LoadingState } from '../../components/design-system';
@@ -15,19 +15,24 @@ const HIT_SLOP = { top: 8, right: 8, bottom: 8, left: 8 };
 
 export default function NumbersScreen() {
   const router = useRouter();
-  const { getToken } = useAuth();
+  const { isLoaded, isSignedIn, session } = useBurnerAuth();
   const [numbers, setNumbers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
     try {
-      const token = await getApiAccessToken(getToken);
+      if (!isLoaded) return;
+      if (!isSignedIn) {
+        router.replace('/auth/login' as any);
+        return;
+      }
+      const token = await getApiAccessToken(undefined, session);
       const res = await axios.get(`${API_BASE_URL}/numbers`, { headers: { Authorization: `Bearer ${token}` } });
       setNumbers(res.data);
     } catch {} finally { setLoading(false); }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [isLoaded, isSignedIn, router, session]);
 
   const release = (id: string, number: string) => {
     triggerHaptic('warning');
@@ -35,7 +40,7 @@ export default function NumbersScreen() {
       { text: 'Cancel', style: 'cancel' },
       { text: 'Release', style: 'destructive', onPress: async () => {
         try {
-          const token = await getApiAccessToken(getToken);
+          const token = await getApiAccessToken(undefined, session);
           await axios.delete(`${API_BASE_URL}/numbers/${id}`, { headers: { Authorization: `Bearer ${token}` } });
           setNumbers((n) => n.filter((num) => num.id !== id));
         } catch {}

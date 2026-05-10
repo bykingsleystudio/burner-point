@@ -157,14 +157,14 @@ Get these from Supabase Dashboard > Project Settings > API:
 ```env
 # Supabase Configuration
 SUPABASE_URL=https://your-project-ref.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_ANON_KEY=<supabase-anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<supabase-service-role-key>
 SUPABASE_JWT_SECRET=your-jwt-secret
 
 # Database URLs (from Project Settings > Database)
-DATABASE_URL=postgresql://postgres:[PASSWORD]@db.your-project-ref.supabase.co:5432/postgres
-DIRECT_DATABASE_URL=postgresql://postgres:[PASSWORD]@db.your-project-ref.supabase.co:5432/postgres
-POOLER_URL=postgresql://postgres:[PASSWORD]@aws-0-[region].pooler.supabase.com:6543/postgres
+DATABASE_URL=<supabase-runtime-postgres-url>
+DIRECT_DATABASE_URL=<supabase-direct-postgres-url>
+POOLER_URL=<supabase-pooled-postgres-url>
 ```
 
 ### Update All Environment Files

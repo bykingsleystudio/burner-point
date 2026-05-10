@@ -1,38 +1,34 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ComponentProps } from 'react';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import * as ExpoLinking from 'expo-linking';
-import { useAuth, useSignUp, useSSO } from '@clerk/clerk-expo';
+import { router, useLocalSearchParams } from 'expo-router';
 import { ShieldCheck } from 'lucide-react-native';
 
 import { AuthProviderButton } from '../../components/auth-provider-button';
-import { exchangeClerkForApiSession } from '../../lib/auth';
+import { exchangeSupabaseSession, type BurnerProfile, startOAuthSignIn } from '../../lib/auth';
+import { useBurnerAuth } from '../../lib/auth-context';
 import { BRAND } from '../../lib/brand';
 import { WEB_APP_URL } from '../../lib/config';
 import { triggerHaptic } from '../../lib/native-ux';
+import { supabase } from '../../lib/supabase';
 
 const providers = [
-  ['Google', 'oauth_google'],
-  ['Apple', 'oauth_apple'],
-  ['Microsoft', 'oauth_microsoft'],
+  ['Google', 'google'],
+  ['Apple', 'apple'],
+  ['Microsoft', 'microsoft'],
 ] as const;
-
-type PendingVerification = 'email' | 'phone';
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const phonePattern = /^\+?[0-9\s().-]{7,24}$/;
 const strongPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,72}$/;
 
 export default function RegisterScreen() {
-  const { isLoaded, signUp, setActive } = useSignUp();
-  const { getToken } = useAuth();
-  const { startSSOFlow } = useSSO();
+  const { mode } = useLocalSearchParams<{ mode?: string }>();
+  const isCompletingProfile = mode === 'complete-profile';
+  const { isLoaded, isSignedIn, session, user } = useBurnerAuth();
   const phoneInputRef = useRef<TextInput>(null);
   const [loading, setLoading] = useState(false);
-  const [verificationCode, setVerificationCode] = useState('');
-  const [pendingVerification, setPendingVerification] = useState<PendingVerification | null>(null);
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -41,8 +37,28 @@ export default function RegisterScreen() {
     password: '',
   });
 
+  useEffect(() => {
+    const metadata = (user?.user_metadata ?? {}) as Record<string, unknown>;
+    setForm((prev) => ({
+      ...prev,
+      firstName: prev.firstName || (typeof metadata.first_name === 'string' ? metadata.first_name : ''),
+      lastName: prev.lastName || (typeof metadata.last_name === 'string' ? metadata.last_name : ''),
+      email: prev.email || user?.email || '',
+      phoneNumber: prev.phoneNumber || (typeof metadata.phone_number === 'string' ? metadata.phone_number : ''),
+    }));
+  }, [user]);
+
   const setField = (key: keyof typeof form) => (value: string | boolean) =>
     setForm((prev) => ({ ...prev, [key]: value }));
+
+  const profilePayload = (): BurnerProfile => ({
+    email: form.email.trim().toLowerCase(),
+    phoneNumber: form.phoneNumber.trim(),
+    firstName: form.firstName.trim(),
+    lastName: form.lastName.trim(),
+    acceptTerms: true,
+    acceptPrivacy: true,
+  });
 
   const validateProfile = () => {
     if (!form.firstName || !form.lastName || !form.email || !form.phoneNumber) {
@@ -60,16 +76,16 @@ export default function RegisterScreen() {
     return true;
   };
 
-  const finishBurnerSession = async (sessionId: string) => {
-    await setActive({ session: sessionId });
-    const data = await exchangeClerkForApiSession(getToken, {
-      email: form.email.trim(),
-      phoneNumber: form.phoneNumber.trim(),
-      firstName: form.firstName.trim(),
-      lastName: form.lastName.trim(),
-      acceptTerms: true,
-      acceptPrivacy: true,
-    });
+  const finishBurnerSession = async (nextSession = session) => {
+    if (!nextSession) {
+      throw new Error('No secure session is available. Sign in again to continue.');
+    }
+
+    const data = await exchangeSupabaseSession(nextSession, profilePayload());
+    if (data.needsOnboarding) {
+      Alert.alert('Missing profile details', 'Add your name, email, and phone number before continuing.');
+      return;
+    }
 
     if (data.user?.phoneNumber && data.user.phoneVerified === false) {
       router.replace({ pathname: '/auth/phone-verify', params: { redirect: '/(tabs)' } } as any);
@@ -79,119 +95,61 @@ export default function RegisterScreen() {
     router.replace('/(tabs)' as any);
   };
 
-  const continueVerification = async (result: any) => {
-    if (result.status === 'complete' && result.createdSessionId) {
-      await finishBurnerSession(result.createdSessionId);
-      return;
-    }
-
-    if (result.unverifiedFields?.includes('email_address')) {
-      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-      setPendingVerification('email');
-      setVerificationCode('');
-      Alert.alert('Check your email', 'Enter the email verification code to continue.');
-      return;
-    }
-
-    if (result.unverifiedFields?.includes('phone_number')) {
-      await signUp.preparePhoneNumberVerification({ strategy: 'phone_code' });
-      setPendingVerification('phone');
-      setVerificationCode('');
-      Alert.alert('Check your phone', 'Enter the phone verification code to finish signup.');
-      return;
-    }
-
-    Alert.alert('Verification required', 'Another verification step is required before this account can be completed.');
-  };
-
   const createAccount = async () => {
     triggerHaptic('impact');
     if (!isLoaded || !validateProfile()) return;
-    if (!strongPasswordPattern.test(form.password)) {
+    if (!isCompletingProfile && !strongPasswordPattern.test(form.password)) {
       Alert.alert('Stronger password required', 'Use 8 or more characters with uppercase, lowercase, and a number.');
       return;
     }
 
     setLoading(true);
     try {
-      const result = await signUp.create({
-        emailAddress: form.email.trim(),
-        phoneNumber: form.phoneNumber.trim(),
+      if (isCompletingProfile && isSignedIn && session) {
+        await finishBurnerSession(session);
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email: form.email.trim().toLowerCase(),
         password: form.password,
-        firstName: form.firstName.trim(),
-        lastName: form.lastName.trim(),
-        legalAccepted: true,
-        unsafeMetadata: {
-          firstName: form.firstName.trim(),
-          lastName: form.lastName.trim(),
-          acceptTerms: true,
-          acceptPrivacy: true,
+        options: {
+          data: {
+            first_name: form.firstName.trim(),
+            last_name: form.lastName.trim(),
+            phone_number: form.phoneNumber.trim(),
+            accept_terms: true,
+            accept_privacy: true,
+          },
         },
       });
 
-      await continueVerification(result);
+      if (error) throw error;
+
+      if (data.session) {
+        await finishBurnerSession(data.session);
+        return;
+      }
+
+      Alert.alert('Verify your email', 'Your account was created. Open the verification email, then sign in.');
+      router.replace('/auth/login' as any);
     } catch (error: any) {
-      Alert.alert('Signup failed', error.errors?.[0]?.longMessage || error.errors?.[0]?.message || 'Please check your details and try again.');
+      Alert.alert('Signup failed', error?.message || 'Please check your details and try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const verifyCode = async () => {
-    triggerHaptic('impact');
-    if (!isLoaded || !pendingVerification || !verificationCode.trim()) return;
-
+  const oauth = async (provider: (typeof providers)[number][1]) => {
+    triggerHaptic('selection');
     setLoading(true);
     try {
-      const code = verificationCode.trim();
-      const result =
-        pendingVerification === 'email'
-          ? await signUp.attemptEmailAddressVerification({ code })
-          : await signUp.attemptPhoneNumberVerification({ code });
-
-      await continueVerification(result);
+      const oauthSession = await startOAuthSignIn(provider);
+      await finishBurnerSession(oauthSession);
     } catch (error: any) {
-      Alert.alert('Verification failed', error.errors?.[0]?.message || 'Unable to verify this code.');
+      Alert.alert('Provider sign-up failed', error?.message || 'Unable to continue with this provider.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const oauth = async (strategy: (typeof providers)[number][1]) => {
-    triggerHaptic('selection');
-
-    try {
-      const { createdSessionId, setActive: setOAuthActive } = await startSSOFlow({
-        strategy,
-        redirectUrl: ExpoLinking.createURL('auth/register'),
-        unsafeMetadata: {
-          firstName: form.firstName.trim() || undefined,
-          lastName: form.lastName.trim() || undefined,
-          acceptTerms: true,
-          acceptPrivacy: true,
-        },
-      });
-
-      if (createdSessionId && setOAuthActive) {
-        await setOAuthActive({ session: createdSessionId });
-        const data = await exchangeClerkForApiSession(getToken, {
-          email: form.email.trim() || undefined,
-          phoneNumber: form.phoneNumber.trim() || undefined,
-          firstName: form.firstName.trim() || undefined,
-          lastName: form.lastName.trim() || undefined,
-          acceptTerms: true,
-          acceptPrivacy: true,
-        });
-
-        if (data.user?.phoneNumber && data.user.phoneVerified === false) {
-          router.replace({ pathname: '/auth/phone-verify', params: { redirect: '/(tabs)' } } as any);
-          return;
-        }
-
-        router.replace('/(tabs)' as any);
-      }
-    } catch (error: any) {
-      Alert.alert('Provider sign-up failed', error.errors?.[0]?.message || 'Unable to continue with this provider.');
     }
   };
 
@@ -206,49 +164,39 @@ export default function RegisterScreen() {
         </TouchableOpacity>
 
         <View style={s.card}>
-          <Text style={s.kicker}>Create account</Text>
+          <Text style={s.kicker}>{isCompletingProfile ? 'Complete account' : 'Create account'}</Text>
 
-          {pendingVerification ? (
-            <>
-              <Input
-                label={pendingVerification === 'email' ? 'Email verification code' : 'Phone verification code'}
-                value={verificationCode}
-                onChangeText={setVerificationCode}
-                keyboardType="number-pad"
-                autoComplete="one-time-code"
-                placeholder="Enter code"
-              />
-              <TouchableOpacity style={[s.btn, loading && s.disabled]} onPress={verifyCode} disabled={loading} activeOpacity={0.85}>
-                {loading ? <ActivityIndicator color={BRAND.colors.dark} /> : <Text style={s.btnText}>Verify and continue</Text>}
-              </TouchableOpacity>
-            </>
-          ) : (
+          {!isCompletingProfile ? (
             <>
               <View style={s.providerGrid}>
-                {providers.map(([label, strategy]) => (
-                  <AuthProviderButton key={label} provider={label} onPress={() => oauth(strategy)} disabled={loading || !isLoaded} />
+                {providers.map(([label, provider]) => (
+                  <AuthProviderButton key={label} provider={label} onPress={() => oauth(provider)} disabled={loading || !isLoaded} />
                 ))}
               </View>
 
               <Text style={s.or}>or continue with email and phone number</Text>
-
-              <View style={s.row}>
-                <Input label="First name" value={form.firstName} onChangeText={setField('firstName')} autoComplete="given-name" placeholder="First name" />
-                <Input label="Last name" value={form.lastName} onChangeText={setField('lastName')} autoComplete="family-name" placeholder="Last name" />
-              </View>
-              <Input label="Email" value={form.email} onChangeText={setField('email')} keyboardType="email-address" autoCapitalize="none" autoComplete="email" placeholder="you@example.com" />
-              <Input inputRef={phoneInputRef} label="Phone number" value={form.phoneNumber} onChangeText={setField('phoneNumber')} keyboardType="phone-pad" autoComplete="tel" placeholder="+1 415 555 0182" />
-              <Input label="Password" value={form.password} onChangeText={setField('password')} secureTextEntry autoCapitalize="none" autoComplete="new-password" placeholder="8+ chars, mixed case + number" />
-
-              <TouchableOpacity style={[s.btn, loading && s.disabled]} onPress={createAccount} disabled={loading || !isLoaded} activeOpacity={0.85}>
-                {loading ? <ActivityIndicator color={BRAND.colors.dark} /> : <Text style={s.btnText}>Get started</Text>}
-              </TouchableOpacity>
             </>
-          )}
+          ) : null}
 
-          <TouchableOpacity onPress={() => router.push('/auth/login' as any)} style={s.linkRow}>
-            <Text style={s.linkText}>Already have an account? <Text style={s.linkStrong}>Sign in</Text></Text>
+          <View style={s.row}>
+            <Input label="First name" value={form.firstName} onChangeText={setField('firstName')} autoComplete="given-name" placeholder="First name" />
+            <Input label="Last name" value={form.lastName} onChangeText={setField('lastName')} autoComplete="family-name" placeholder="Last name" />
+          </View>
+          <Input label="Email" value={form.email} onChangeText={setField('email')} keyboardType="email-address" autoCapitalize="none" autoComplete="email" placeholder="you@example.com" />
+          <Input inputRef={phoneInputRef} label="Phone number" value={form.phoneNumber} onChangeText={setField('phoneNumber')} keyboardType="phone-pad" autoComplete="tel" placeholder="+1 415 555 0182" />
+          {!isCompletingProfile ? (
+            <Input label="Password" value={form.password} onChangeText={setField('password')} secureTextEntry autoCapitalize="none" autoComplete="new-password" placeholder="8+ chars, mixed case + number" />
+          ) : null}
+
+          <TouchableOpacity style={[s.btn, loading && s.disabled]} onPress={createAccount} disabled={loading || !isLoaded} activeOpacity={0.85}>
+            {loading ? <ActivityIndicator color={BRAND.colors.dark} /> : <Text style={s.btnText}>{isCompletingProfile ? 'Continue' : 'Get started'}</Text>}
           </TouchableOpacity>
+
+          {!isCompletingProfile ? (
+            <TouchableOpacity onPress={() => router.push('/auth/login' as any)} style={s.linkRow}>
+              <Text style={s.linkText}>Already have an account? <Text style={s.linkStrong}>Sign in</Text></Text>
+            </TouchableOpacity>
+          ) : null}
 
           <Text style={s.legalText}>
             By continuing you agree to the

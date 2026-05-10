@@ -11,8 +11,8 @@ const requiresSsl =
   process.env.NODE_ENV === 'production' ||
   process.env.DB_SSL === 'true' ||
   databaseUrl?.includes('sslmode=require') ||
-  databaseUrl?.includes('.neon.tech') ||
-  databaseHost.includes('.neon.tech');
+  databaseUrl?.includes('.supabase.co') ||
+  databaseHost.includes('.supabase.co');
 
 const baseOptions = {
   type: 'postgres' as const,

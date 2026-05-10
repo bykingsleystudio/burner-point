@@ -47,7 +47,7 @@ import { SecurityMiddleware } from './middleware/security.middleware';
       ignoreEnvFile: process.env.NODE_ENV === 'production',
     }),
 
-    // Database - Neon Postgres via DATABASE_URL, with DB_* fallbacks for local tooling.
+    // Database - Supabase Postgres via DATABASE_URL, with DB_* fallbacks for local tooling.
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -59,8 +59,8 @@ import { SecurityMiddleware } from './middleware/security.middleware';
           isProduction ||
           cfg.get<string>('DB_SSL') === 'true' ||
           databaseUrl?.includes('sslmode=require') ||
-          databaseUrl?.includes('.neon.tech') ||
-          databaseHost.includes('.neon.tech');
+          databaseUrl?.includes('.supabase.co') ||
+          databaseHost.includes('.supabase.co');
         const ssl = requiresSsl
           ? { rejectUnauthorized: cfg.get<string>('DB_SSL_REJECT_UNAUTHORIZED') === 'true' }
           : false;

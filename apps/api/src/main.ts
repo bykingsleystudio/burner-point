@@ -18,7 +18,6 @@ import { IoAdapter } from '@nestjs/platform-socket.io';
 import { DataSource } from 'typeorm';
 import helmet from 'helmet';
 import * as express from 'express';
-import { hasConfiguredEnv } from './config/runtime-env';
 import { validateProductionEnv } from './config/production-env';
 import { RedisService } from './modules/global/redis.service';
 
@@ -87,9 +86,6 @@ async function bootstrap() {
     logger.warn(
       'CORS_ALLOWED_ORIGINS is empty in production. Browser clients will be rejected until an explicit origin is configured.',
     );
-  }
-  if (isProduction && !hasConfiguredEnv('CLERK_WEBHOOK_SIGNING_SECRET', process.env)) {
-    logger.warn('CLERK_WEBHOOK_SIGNING_SECRET is missing in production. Clerk webhook verification is disabled.');
   }
 
   app.enableCors({

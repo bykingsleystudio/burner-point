@@ -2,12 +2,12 @@ import { Tabs } from 'expo-router';
 import { Redirect } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { LayoutDashboard, MessageSquare, Phone, ShieldCheck, UserCircle } from 'lucide-react-native';
-import { useAuth } from '@clerk/clerk-expo';
+import { useBurnerAuth } from '../../lib/auth-context';
 import { BRAND } from '../../lib/brand';
 import { triggerHaptic } from '../../lib/native-ux';
 
 export default function TabsLayout() {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn } = useBurnerAuth();
 
   if (!isLoaded) return null;
   if (!isSignedIn) return <Redirect href="/auth/login" />;

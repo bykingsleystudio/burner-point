@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, HttpCode, HttpStatus, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Body, Controller, Post, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Request } from 'express';
 import { SupabaseAuthService } from './supabase-auth.service';
@@ -82,11 +82,5 @@ export class AuthController {
     @Req() req: Request,
   ) {
     return this.authService.exchangeSupabaseSession(accessToken, profile, req.ip);
-  }
-
-  @Post('clerk/exchange')
-  @ApiOperation({ summary: 'Deprecated - Use Supabase auth instead' })
-  async exchangeClerkToken() {
-    throw new BadRequestException('Clerk migration complete. Use Supabase authentication endpoints instead.');
   }
 }

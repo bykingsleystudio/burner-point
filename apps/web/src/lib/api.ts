@@ -271,7 +271,7 @@ export interface PlatformStackSnapshot {
   policies: {
     webHosting: 'Vercel';
     apiHosting: 'Railway';
-    database: 'Neon Postgres';
+    database: 'Supabase Postgres';
     mobileDelivery: 'Expo / EAS';
     primaryPayments: readonly string[];
     secondaryPayments: readonly string[];

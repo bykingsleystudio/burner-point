@@ -29,24 +29,24 @@ Edit `.env` file:
 ```env
 # Add these lines
 SUPABASE_URL=https://your-project-ref.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_ANON_KEY=<supabase-anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<supabase-service-role-key>
 
 # Update DATABASE_URL
-DATABASE_URL=postgresql://postgres:[PASSWORD]@db.your-project-ref.supabase.co:5432/postgres
+DATABASE_URL=<supabase-direct-or-pooled-postgres-url>
 ```
 
 ### Step 4: Install Supabase CLI (2 min)
 
 ```bash
-# Install globally
-npm install -g supabase
+# Install locally in the repo
+npm install supabase --save-dev
 
-# Login
-supabase login
+# Run via npx
+npx supabase login
 
 # Link project (get ref from Step 2 URL)
-supabase link --project-ref your-project-ref
+npx supabase link --project-ref your-project-ref
 ```
 
 ### Step 5: Apply Database Schema (2 min)
@@ -56,7 +56,7 @@ supabase link --project-ref your-project-ref
 cd burner-point
 
 # Apply migrations
-supabase db push
+npx supabase db push
 ```
 
 Or manually:
@@ -98,7 +98,7 @@ async function test() {
   // Test signup
   const { data: signupData, error: signupError } = await supabase.auth.signUp({
     email: 'test@example.com',
-    password: 'TestPassword123!',
+    password: process.env.TEST_PASSWORD,
   });
 
   if (signupError) {
@@ -111,7 +111,7 @@ async function test() {
   // Test login
   const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
     email: 'test@example.com',
-    password: 'TestPassword123!',
+    password: process.env.TEST_PASSWORD,
   });
 
   if (loginError) {

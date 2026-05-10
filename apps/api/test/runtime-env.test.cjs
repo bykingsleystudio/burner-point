@@ -8,7 +8,6 @@ const {
   resolveApiOrigin,
   resolveApiUrl,
   resolveWebhookBaseUrl,
-  resolveClerkWebhookSigningSecret,
 } = require('../src/config/runtime-env.ts');
 
 function test(name, fn) {
@@ -49,14 +48,13 @@ test('resolveApiOrigin strips an accidental /api suffix from API_URL', () => {
   assert.equal(resolveApiUrl(env), 'https://api.burnerpoint.com/api');
 });
 
-test('hasConfiguredEnv treats Clerk webhook secret aliases as equivalent', () => {
+test('hasConfiguredEnv treats Flutterwave webhook aliases as equivalent', () => {
   const env = {
-    CLERK_WEBHOOK_SECRET: 'whsec_legacy',
+    FLUTTERWAVE_WEBHOOK_HASH: 'live_webhook_hash',
   };
 
-  assert.equal(hasConfiguredEnv('CLERK_WEBHOOK_SIGNING_SECRET', env), true);
-  assert.equal(hasConfiguredEnv('CLERK_WEBHOOK_SECRET', env), true);
-  assert.equal(resolveClerkWebhookSigningSecret(env), 'whsec_legacy');
+  assert.equal(hasConfiguredEnv('FLUTTERWAVE_WEBHOOK_SECRET', env), true);
+  assert.equal(hasConfiguredEnv('FLUTTERWAVE_WEBHOOK_HASH', env), true);
 });
 
 test('isConfiguredValue rejects blank and placeholder values', () => {

@@ -1,24 +1,28 @@
 FROM node:20-alpine
+
 WORKDIR /app
 
-RUN apk add --no-cache libc6-compat python3 make g++
+# Install system dependencies
+RUN apk add --no-cache python3 make g++
 
-COPY package.json package-lock.json ./
+# Install dependencies
+COPY package*.json ./
+COPY apps/api/package*.json ./apps/api/
 
-RUN npm ci
+RUN npm ci --prefix apps/api
 
+# Copy source code
 COPY . .
 
-RUN ./node_modules/.bin/nest build
+# Build the application
+RUN npm run build --prefix apps/api
 
-RUN test -f dist/main.js || (echo "ERROR: dist/main.js not found after build" && exit 1)
-
-ENV NODE_ENV=production
-ENV PORT=3001
-
+# Expose port
 EXPOSE 3001
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD sh -c "wget -qO- http://127.0.0.1:$${PORT:-3001}/health || exit 1"
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3001/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-CMD ["node", "dist/main.js"]
+# Start the application
+CMD ["npm", "run", "start:prod", "--prefix", "apps/api"]

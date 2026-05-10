@@ -4,11 +4,11 @@ import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Activity, Bell, CalendarDays, CreditCard, Globe2, Lock, MessageSquare, Phone, ShieldCheck, Smartphone, Wifi } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '@clerk/clerk-expo';
 import axios from 'axios';
 
 import { API_BASE_URL } from '../../lib/config';
 import { getApiAccessToken } from '../../lib/auth';
+import { useBurnerAuth } from '../../lib/auth-context';
 import { BRAND } from '../../lib/brand';
 import { triggerHaptic } from '../../lib/native-ux';
 type AppIcon = ComponentType<any>;
@@ -17,7 +17,7 @@ const HIT_SLOP = { top: 8, right: 8, bottom: 8, left: 8 };
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isLoaded, isSignedIn, getToken } = useAuth();
+  const { isLoaded, isSignedIn, session } = useBurnerAuth();
   const [user, setUser] = useState<any>(null);
   const [numbers, setNumbers] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -26,7 +26,7 @@ export default function HomeScreen() {
     try {
       if (!isLoaded) return;
       if (!isSignedIn) { router.replace('/auth/login' as any); return; }
-      const token = await getApiAccessToken(getToken);
+      const token = await getApiAccessToken(undefined, session);
       const headers = { Authorization: `Bearer ${token}` };
       const [userRes, numsRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/users/me`, { headers }),
@@ -39,7 +39,7 @@ export default function HomeScreen() {
     }
   };
 
-  useEffect(() => { load(); }, [isLoaded, isSignedIn]);
+  useEffect(() => { load(); }, [isLoaded, isSignedIn, session]);
   const onRefresh = async () => { setRefreshing(true); await load(); setRefreshing(false); };
 
   const quickActions = [

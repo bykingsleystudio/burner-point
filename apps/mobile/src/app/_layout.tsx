@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ClerkProvider } from '@clerk/clerk-expo';
-import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import * as Font from 'expo-font';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as Notifications from 'expo-notifications';
@@ -12,11 +10,10 @@ import Constants from 'expo-constants';
 import { Platform, View, Text, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { BurnerAuthProvider } from '../lib/auth-context';
 import { BRAND } from '../lib/brand';
 
 WebBrowser.maybeCompleteAuthSession();
-
-const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -114,7 +111,7 @@ export default function RootLayout() {
   }
 
   return (
-    <ClerkProvider publishableKey={clerkPublishableKey || ''} tokenCache={tokenCache}>
+    <BurnerAuthProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaProvider>
         <StatusBar style="light" backgroundColor={BRAND.colors.black}/>
@@ -134,7 +131,7 @@ export default function RootLayout() {
         </Stack>
         </SafeAreaProvider>
       </GestureHandlerRootView>
-    </ClerkProvider>
+    </BurnerAuthProvider>
   );
 }
 

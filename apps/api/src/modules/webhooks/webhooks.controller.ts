@@ -131,18 +131,4 @@ export class WebhooksController {
   ) {
     return this.service.handleProviderWebhook('wireguard', body, headers, req.rawBody);
   }
-
-  @Post('clerk')
-  @HttpCode(200)
-  @ApiOperation({ summary: 'Clerk user/session webhook receiver' })
-  async clerkWebhook(
-    @Body() body: Record<string, unknown>,
-    @Headers() headers: Record<string, string>,
-    @Req() req: RawBodyRequest<Request>,
-  ) {
-    return this.service.handleClerkWebhook(body, headers, req.rawBody, this.requestUrl(req));
-  }
-  private requestUrl(req: Request): string {
-    return `${req.protocol}://${req.get('host')}${req.originalUrl}`;
-  }
 }
