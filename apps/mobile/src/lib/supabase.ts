@@ -8,11 +8,13 @@ const SECURE_STORE_OPTIONS: SecureStore.SecureStoreOptions = {
 };
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL?.trim();
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY?.trim();
+const supabaseAnonKey =
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY?.trim()
+  || process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim();
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
-    'Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY in the mobile runtime.',
+    'Missing EXPO_PUBLIC_SUPABASE_URL or a public Supabase key in the mobile runtime.',
   );
 }
 

@@ -49,26 +49,10 @@ const PAYMENT_ROUTES = [
 ];
 
 const WEBHOOK_ROUTES = [
+  '/webhooks',
+  '/api/webhooks',
   '/payments/webhook',
   '/api/payments/webhook',
-  '/webhooks/twilio',
-  '/webhooks/telnyx',
-  '/webhooks/bandwidth',
-  '/webhooks/bandwidth/voice',
-  '/webhooks/airalo',
-  '/webhooks/oxylabs',
-  '/webhooks/smartproxy',
-  '/webhooks/wireguard',
-  '/api/webhooks/twilio',
-  '/api/webhooks/telnyx',
-  '/api/webhooks/bandwidth',
-  '/api/webhooks/bandwidth/voice',
-  '/api/webhooks/airalo',
-  '/api/webhooks/oxylabs',
-  '/api/webhooks/smartproxy',
-  '/api/webhooks/wireguard',
-  '/paddle/webhook',
-  '/api/paddle/webhook',
 ];
 
 const STATE_CHANGING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);

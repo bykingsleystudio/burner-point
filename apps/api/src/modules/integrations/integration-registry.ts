@@ -195,6 +195,7 @@ export const BACKEND_INTEGRATION_CONTRACTS: BackendIntegrationContract[] = [
     frontendRule: 'Use /payments/initialize; checkout URLs are created server-side.',
     endpoints: [
       { method: 'POST', path: '/payments/initialize', auth: 'user', purpose: 'Create Paystack checkout session' },
+      { method: 'POST', path: '/webhooks/paystack', auth: 'provider-signature', purpose: 'Recommended Paystack webhook alias for provider dashboards' },
       { method: 'POST', path: '/payments/webhook/paystack', auth: 'provider-signature', purpose: 'Confirm payment and fulfill product' },
     ],
   },
@@ -209,6 +210,7 @@ export const BACKEND_INTEGRATION_CONTRACTS: BackendIntegrationContract[] = [
     frontendRule: 'Deferred gateway; enable only after core revenue flow is stable.',
     endpoints: [
       { method: 'POST', path: '/payments/initialize', auth: 'user', purpose: 'Create Flutterwave checkout when secondary gateways are enabled' },
+      { method: 'POST', path: '/webhooks/flutterwave', auth: 'provider-signature', purpose: 'Recommended Flutterwave webhook alias for provider dashboards' },
       { method: 'POST', path: '/payments/webhook/flutterwave', auth: 'provider-signature', purpose: 'Confirm payment and fulfill product' },
     ],
   },
@@ -223,6 +225,7 @@ export const BACKEND_INTEGRATION_CONTRACTS: BackendIntegrationContract[] = [
     frontendRule: 'Deferred gateway; enable only after core revenue flow is stable.',
     endpoints: [
       { method: 'POST', path: '/payments/initialize', auth: 'user', purpose: 'Create Squad checkout when secondary gateways are enabled' },
+      { method: 'POST', path: '/webhooks/squad', auth: 'provider-signature', purpose: 'Recommended Squad webhook alias for provider dashboards' },
       { method: 'POST', path: '/payments/webhook/squad', auth: 'provider-signature', purpose: 'Confirm payment and fulfill product' },
     ],
   },
@@ -237,6 +240,7 @@ export const BACKEND_INTEGRATION_CONTRACTS: BackendIntegrationContract[] = [
     frontendRule: 'Deferred gateway; enable only after core revenue flow is stable.',
     endpoints: [
       { method: 'POST', path: '/payments/initialize', auth: 'user', purpose: 'Create Korapay checkout when secondary gateways are enabled' },
+      { method: 'POST', path: '/webhooks/korapay', auth: 'provider-signature', purpose: 'Recommended Korapay webhook alias for provider dashboards' },
       { method: 'POST', path: '/payments/webhook/korapay', auth: 'provider-signature', purpose: 'Confirm payment and fulfill product' },
     ],
   },
@@ -251,6 +255,7 @@ export const BACKEND_INTEGRATION_CONTRACTS: BackendIntegrationContract[] = [
     frontendRule: 'Deferred gateway; enable only after core revenue flow is stable.',
     endpoints: [
       { method: 'POST', path: '/payments/initialize', auth: 'user', purpose: 'Create OPay checkout when secondary gateways are enabled' },
+      { method: 'POST', path: '/webhooks/opay', auth: 'provider-signature', purpose: 'Recommended OPay webhook alias for provider dashboards' },
       { method: 'POST', path: '/payments/webhook/opay', auth: 'provider-signature', purpose: 'Confirm payment and fulfill product' },
     ],
   },
@@ -262,11 +267,11 @@ export const BACKEND_INTEGRATION_CONTRACTS: BackendIntegrationContract[] = [
     secretEnv: ['PADDLE_API_KEY', 'PADDLE_WEBHOOK_SECRET'],
     optionalEnv: ['PADDLE_PRICE_VERIFICATION', 'PADDLE_PRICE_RENTAL', 'PADDLE_PRICE_SUB_MONTHLY', 'PADDLE_CLIENT_TOKEN'],
     publicClientEnv: ['NEXT_PUBLIC_PADDLE_CLIENT_TOKEN'],
-    frontendRule: 'Use /payments/initialize or /paddle/checkout; API key and price IDs stay server-side.',
+    frontendRule: 'Use /payments/initialize; API key and price IDs stay server-side.',
     endpoints: [
       { method: 'POST', path: '/payments/initialize', auth: 'user', purpose: 'Create Paddle checkout session' },
+      { method: 'POST', path: '/webhooks/paddle', auth: 'provider-signature', purpose: 'Recommended Paddle webhook alias for provider dashboards' },
       { method: 'POST', path: '/payments/webhook/paddle', auth: 'provider-signature', purpose: 'Confirm transaction/subscription events' },
-      { method: 'POST', path: '/paddle/webhook', auth: 'provider-signature', purpose: 'Legacy Paddle webhook receiver' },
     ],
   },
   {
@@ -280,6 +285,7 @@ export const BACKEND_INTEGRATION_CONTRACTS: BackendIntegrationContract[] = [
     frontendRule: 'Use /payments/initialize; crypto invoices are created server-side.',
     endpoints: [
       { method: 'POST', path: '/payments/initialize', auth: 'user', purpose: 'Create crypto invoice' },
+      { method: 'POST', path: '/webhooks/nowpayments', auth: 'provider-signature', purpose: 'Recommended NOWPayments webhook alias for provider dashboards' },
       { method: 'POST', path: '/payments/webhook/nowpayments', auth: 'provider-signature', purpose: 'Confirm crypto settlement' },
     ],
   },

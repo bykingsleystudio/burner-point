@@ -10,7 +10,7 @@ This document defines the production payment architecture for verification credi
 | Non-renewable rental | One-time | $5.99 | Assign selected US/Canada number after signed webhook, or create a paid rental entitlement for operator-assisted assignment |
 | Privacy Monthly | Recurring monthly | $15.99/month | Activate `user_subscriptions` after signed webhook confirmation |
 
-`PAYMENT_USD_TO_NGN_RATE` converts USD target pricing to NGN kobo for Paystack and deferred Nigerian gateways. The launch default is `1600`.
+`PAYMENT_USD_TO_NGN_RATE` converts USD target pricing to NGN kobo for Paystack and deferred Nigerian gateways. The current production default is `1500`.
 
 ## Gateway Policy
 
@@ -66,12 +66,19 @@ Frontend rule: never show a product as paid because the browser returned from ch
 
 | Endpoint | Purpose |
 | --- | --- |
+| `POST /api/webhooks/paystack` | Recommended Paystack webhook URL for provider dashboards |
 | `POST /api/payments/webhook/paystack` | Paystack `charge.success` |
+| `POST /api/webhooks/paddle` | Recommended Paddle webhook URL for provider dashboards |
 | `POST /api/payments/webhook/paddle` | Paddle transaction and subscription events |
+| `POST /api/webhooks/nowpayments` | Recommended NOWPayments IPN URL for provider dashboards |
 | `POST /api/payments/webhook/nowpayments` | NOWPayments IPN |
+| `POST /api/webhooks/flutterwave` | Recommended Flutterwave webhook URL for provider dashboards |
 | `POST /api/payments/webhook/flutterwave` | Deferred gateway |
+| `POST /api/webhooks/squad` | Recommended Squad webhook URL for provider dashboards |
 | `POST /api/payments/webhook/squad` | Deferred gateway |
+| `POST /api/webhooks/korapay` | Recommended Korapay webhook URL for provider dashboards |
 | `POST /api/payments/webhook/korapay` | Deferred gateway |
+| `POST /api/webhooks/opay` | Recommended OPay webhook URL for provider dashboards |
 | `POST /api/payments/webhook/opay` | Deferred gateway |
 
 Webhook handlers must be public, but they must verify provider signatures and must not trust browser redirects.
@@ -81,19 +88,19 @@ Webhook handlers must be public, but they must verify provider signatures and mu
 Required for core launch:
 
 ```env
-PAYMENT_USD_TO_NGN_RATE=1600
-PAYSTACK_SECRET_KEY=sk_live_or_test
-PAYSTACK_PUBLIC_KEY=pk_live_or_test
-PAYSTACK_WEBHOOK_SECRET=provider_secret_if_used
-PADDLE_API_KEY=pdl_live_or_sandbox
-PADDLE_CLIENT_TOKEN=client_token
-PADDLE_WEBHOOK_SECRET=webhook_secret
-PADDLE_SANDBOX=true
+PAYMENT_USD_TO_NGN_RATE=1500
+PAYSTACK_SECRET_KEY=sk_live_xxxxxxxxx
+PAYSTACK_PUBLIC_KEY=pk_live_xxxxxxxxx
+PAYSTACK_WEBHOOK_SECRET=your_paystack_webhook_secret
+PADDLE_API_KEY=pdl_live_apikey_xxxxxxxxx
+PADDLE_CLIENT_TOKEN=live_xxxxxxxxx
+PADDLE_WEBHOOK_SECRET=pdl_ntfset_xxxxxxxxx
+PADDLE_SANDBOX=false
 PADDLE_PRICE_VERIFICATION=pri_xxx
 PADDLE_PRICE_RENTAL=pri_xxx
 PADDLE_PRICE_SUB_MONTHLY=pri_xxx
-NOWPAYMENTS_API_KEY=xxx
-NOWPAYMENTS_IPN_SECRET=xxx
+NOWPAYMENTS_API_KEY=NP_live_xxxxxxxxx
+NOWPAYMENTS_IPN_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 SECONDARY_GATEWAYS_ENABLED=false
 MOBILE_EXTERNAL_PAYMENTS_ENABLED=false
 ```
@@ -143,15 +150,15 @@ Primary policy references:
 
 ## Deployment Order
 
-1. Apply migrations through Neon/Railway migration workflow:
-   - `005_bind_phone_otp_to_users.sql`
-   - `006_payment_fulfillment_architecture.sql`
+1. Apply Supabase migrations:
+   - `supabase/migrations/0001_initial_schema.sql`
+   - `supabase/migrations/0002_rls_policies.sql`
 2. Set Railway environment variables for payment providers.
-3. Confirm Paystack webhook URL points to `/api/payments/webhook/paystack`.
-4. Confirm Paddle webhook URL points to `/api/payments/webhook/paddle`.
-5. Confirm NOWPayments IPN URL points to `/api/payments/webhook/nowpayments`.
+3. Confirm Paystack webhook URL points to `/api/webhooks/paystack`.
+4. Confirm Paddle webhook URL points to `/api/webhooks/paddle`.
+5. Confirm NOWPayments IPN URL points to `/api/webhooks/nowpayments`.
 6. Deploy API to Railway.
 7. Deploy web to Vercel.
-8. Run sandbox payments for credits, rental entitlement, rental with selected test number, and subscription.
+8. Run controlled live smoke tests for credits, rental entitlement, rental with selected test number, and subscription.
 9. Verify `payment_sessions`, `wallet_transactions`, `phone_numbers`, and `user_subscriptions`.
 10. Keep secondary gateways disabled until the core flows are stable in production.

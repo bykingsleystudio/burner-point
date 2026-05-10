@@ -19,6 +19,7 @@ import { DataSource } from 'typeorm';
 import helmet from 'helmet';
 import * as express from 'express';
 import { validateProductionEnv } from './config/production-env';
+import { hasConfiguredEnv } from './config/runtime-env';
 import { RedisService } from './modules/global/redis.service';
 
 async function bootstrap() {
@@ -180,7 +181,7 @@ async function bootstrap() {
   httpAdapter.get('/health/storage', (_req: unknown, res: { status: (code: number) => { json: (body: object) => void } }) => {
     const storageConfigured = Boolean(
       (process.env.SUPABASE_URL
-        && process.env.SUPABASE_SERVICE_ROLE_KEY
+        && hasConfiguredEnv('SUPABASE_SERVICE_ROLE_KEY', process.env)
         && process.env.SUPABASE_STORAGE_USER_UPLOADS_BUCKET
         && process.env.SUPABASE_STORAGE_MEDIA_BUCKET
         && process.env.SUPABASE_STORAGE_VERIFICATION_ASSETS_BUCKET

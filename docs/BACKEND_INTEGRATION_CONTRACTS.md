@@ -1,6 +1,6 @@
 # Burner Point Backend Integration Contracts
 
-Burner Point integrations are backend-only unless an environment variable is explicitly marked public. Web, mobile web, and Expo clients call Burner Point API routes only. Provider API keys, webhook secrets, database URLs, SMTP credentials, payment secrets, S3 access keys, WireGuard private keys, and OpenAI keys stay on the API service or deployment secret store.
+Burner Point web and mobile clients talk to the Burner Point API only. Supabase, telecom providers, payment gateways, storage credentials, webhook secrets, and operator tooling remain server-side or in deployment secret stores.
 
 ## Runtime Catalog
 
@@ -8,8 +8,8 @@ Authenticated clients can inspect safe integration status through:
 
 | Method | Route | Purpose |
 | --- | --- | --- |
-| GET | `/api/integrations/catalog` | Safe integration readiness catalog with configured/missing env names only |
-| GET | `/api/integrations/contracts` | Endpoint contract list for provider-backed features |
+| GET | `/api/integrations/catalog` | Safe integration readiness catalog with configured or missing env names only |
+| GET | `/api/integrations/contracts` | Backend integration contract list |
 | GET | `/api/integrations/:id` | One safe integration contract |
 
 The catalog never returns secret values.
@@ -18,80 +18,91 @@ The catalog never returns secret values.
 
 | Product area | Route | Provider abstraction |
 | --- | --- | --- |
-| Phone OTP | `POST /api/phone-auth/send` | Twilio Verify, server-side |
-| Phone OTP | `POST /api/phone-auth/verify` | Twilio Verify check, server-side |
-| Messaging | `POST /api/messaging/sms/send` | Twilio, Infobip, Vonage routing |
+| Supabase session exchange | `POST /api/auth/supabase/exchange` | Supabase browser or mobile session to Burner Point API session |
+| Password reset | `POST /api/auth/password/reset` | Supabase Auth |
+| Phone OTP | `POST /api/phone-auth/send` | Twilio Verify via backend |
+| Phone OTP | `POST /api/phone-auth/verify` | Twilio Verify via backend |
+| Messaging | `POST /api/messaging/sms/send` | Twilio, Telnyx, Bandwidth, Tremil routing |
 | Email | `POST /api/messaging/email/send` | Resend API first, SMTP fallback |
-| eSIM | `POST /api/integrations/esim/plans` | Configured 1GLOBAL catalog endpoint |
-| eSIM | `POST /api/integrations/esim/orders` | Configured 1GLOBAL order endpoint |
-| Proxies | `POST /api/integrations/proxies/orders` | Configured Bright Data proxy endpoint |
-| VPN | `POST /api/integrations/vpn/sessions` | Configured WireGuard control-plane endpoint |
-| Storage | `POST /api/integrations/storage/upload-intents` | Backend-controlled S3-compatible upload intent |
+| eSIM | `POST /api/integrations/esim/plans` | Airalo catalog |
+| eSIM | `POST /api/integrations/esim/orders` | Airalo order creation |
+| Proxies | `POST /api/integrations/proxies/orders` | Oxylabs or Smartproxy |
+| VPN | `POST /api/integrations/vpn/sessions` | WireGuard control-plane integration |
+| Storage | `POST /api/integrations/storage/upload-intents` | Backend-controlled object upload intent |
 | Analytics | `POST /api/integrations/analytics/events` | Server-side PostHog capture |
-| Payments | `POST /api/payments/initialize` | Paystack, Paddle, NOWPayments, deferred secondary gateways |
+| Payments | `POST /api/payments/initialize` | Paystack, Paddle, NOWPayments, and deferred secondary gateways |
 
 ## Provider Webhooks
 
 | Provider | Route | Verification |
 | --- | --- | --- |
-| Twilio | `/api/webhooks/twilio/sms` | Twilio webhook secret, pending provider-specific hardening |
-| Twilio | `/api/webhooks/twilio/voice` | Twilio webhook secret, pending provider-specific hardening |
-| Twilio | `/api/webhooks/twilio/status` | Twilio webhook secret, pending provider-specific hardening |
+| Twilio SMS | `/api/webhooks/twilio/sms` | Twilio request signature |
+| Twilio Voice | `/api/webhooks/twilio/voice` | Twilio request signature |
+| Twilio Status | `/api/webhooks/twilio/status` | Twilio request signature |
 | Twilio Verify | `/api/webhooks/twilio/verify` | Twilio callback receiver |
-| Vonage | `/api/webhooks/vonage/inbound` | Provider callback receiver |
-| Vonage | `/api/webhooks/vonage/status` | Provider callback receiver |
-| Infobip | `/api/webhooks/infobip/inbound` | Provider callback receiver |
-| Infobip | `/api/webhooks/infobip/status` | Provider callback receiver |
-| Bandwidth | `/api/webhooks/bandwidth` | HMAC when `BANDWIDTH_WEBHOOK_SECRET` is configured |
-| 1GLOBAL | `/api/webhooks/oneglobal` | HMAC when `ONEGLOBAL_WEBHOOK_SECRET` is configured |
-| Bright Data | `/api/webhooks/brightdata` | HMAC when `BRIGHTDATA_WEBHOOK_SECRET` is configured |
+| Telnyx | `/api/webhooks/telnyx` | Telnyx Ed25519 signature |
+| Bandwidth messaging | `/api/webhooks/bandwidth` | Basic auth or HMAC fallback |
+| Bandwidth voice | `/api/webhooks/bandwidth/voice` | Basic auth or HMAC fallback |
+| Airalo | `/api/webhooks/airalo` | HMAC when `AIRALO_WEBHOOK_SECRET` is configured |
+| Oxylabs | `/api/webhooks/oxylabs` | HMAC when `OXYLABS_WEBHOOK_SECRET` is configured |
+| Smartproxy | `/api/webhooks/smartproxy` | HMAC when `SMARTPROXY_WEBHOOK_SECRET` is configured |
 | WireGuard control plane | `/api/webhooks/wireguard` | HMAC when `WIREGUARD_WEBHOOK_SECRET` is configured |
-| Clerk | `/api/webhooks/clerk` | Standard Webhooks when `CLERK_WEBHOOK_SIGNING_SECRET` is configured |
-| Paystack | `/api/payments/webhook/paystack` | Gateway signature |
-| Paddle | `/api/payments/webhook/paddle` | Gateway signature |
-| NOWPayments | `/api/payments/webhook/nowpayments` | IPN signature |
-| Flutterwave | `/api/payments/webhook/flutterwave` | Deferred gateway signature |
-| Squad | `/api/payments/webhook/squad` | Deferred gateway signature |
-| Korapay | `/api/payments/webhook/korapay` | Deferred gateway signature |
-| OPay | `/api/payments/webhook/opay` | Deferred gateway signature |
+| Paystack | `/api/webhooks/paystack` or `/api/payments/webhook/paystack` | HMAC SHA512 using secret key |
+| Flutterwave | `/api/webhooks/flutterwave` or `/api/payments/webhook/flutterwave` | Secret hash or HMAC validation |
+| Squad | `/api/webhooks/squad` or `/api/payments/webhook/squad` | Gateway signature |
+| Korapay | `/api/webhooks/korapay` or `/api/payments/webhook/korapay` | Gateway signature |
+| OPay | `/api/webhooks/opay` or `/api/payments/webhook/opay` | Gateway signature |
+| Paddle | `/api/webhooks/paddle` or `/api/payments/webhook/paddle` | `Paddle-Signature` verification |
+| NOWPayments | `/api/webhooks/nowpayments` or `/api/payments/webhook/nowpayments` | IPN signature |
 
-Webhook events are stored through `WebhookDedup` using provider-prefixed event IDs to prevent replay and duplicate processing.
+Webhook events are deduplicated through `webhook_dedup` with provider-prefixed event IDs to prevent replay and double fulfillment.
 
 ## Environment Contract
 
-Core server-only secrets:
+Core server-side credentials:
 
 | Integration | Required env |
 | --- | --- |
-| Twilio | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_VERIFY_SERVICE_SID` |
-| Infobip | `INFOBIP_BASE_URL`, `INFOBIP_API_KEY` |
-| Vonage | `VONAGE_API_KEY`, `VONAGE_API_SECRET` |
-| Bandwidth | `BANDWIDTH_ACCOUNT_ID`, `BANDWIDTH_API_TOKEN` |
-| OpenAI | `OPENAI_API_KEY` |
-| 1GLOBAL | `ONEGLOBAL_API_KEY` |
-| Bright Data | `BRIGHTDATA_API_KEY` |
-| WireGuard | `WIREGUARD_PRIVATE_KEY`, `WIREGUARD_SERVER_ENDPOINT` |
-| Resend | `RESEND_API_KEY` |
-| Clerk | `CLERK_SECRET_KEY` |
-| Neon | `DATABASE_URL` |
-| S3-compatible storage | `AWS_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` or `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` |
-| PostHog | `POSTHOG_KEY` |
+| Supabase Auth | `SUPABASE_URL` plus `SUPABASE_SERVICE_ROLE_KEY` or `SUPABASE_SECRET_KEY` |
+| Supabase Postgres | `DATABASE_URL`, `DIRECT_DATABASE_URL` |
+| Twilio Verify | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_VERIFY_SERVICE_SID` |
+| Telnyx | `TELNYX_API_KEY` |
+| Bandwidth | `BANDWIDTH_ACCOUNT_ID`, `BANDWIDTH_USERNAME`, `BANDWIDTH_PASSWORD` |
+| Tremil | `TREMIL_API_KEY` |
 | Paystack | `PAYSTACK_SECRET_KEY` |
 | Paddle | `PADDLE_API_KEY`, `PADDLE_WEBHOOK_SECRET` |
 | NOWPayments | `NOWPAYMENTS_API_KEY`, `NOWPAYMENTS_IPN_SECRET` |
+| Resend | `RESEND_API_KEY` |
+| Airalo | `AIRALO_API_KEY`, `AIRALO_API_SECRET` |
+| Oxylabs | `OXYLABS_USERNAME`, `OXYLABS_PASSWORD` |
+| Smartproxy | `SMARTPROXY_API_KEY` |
+| WireGuard | `WIREGUARD_PRIVATE_KEY`, `WIREGUARD_SERVER_ENDPOINT` |
+| Redis | `REDIS_URL` |
+| OpenAI | `OPENAI_API_KEY` |
+| Sentry | `SENTRY_DSN` |
+| PostHog | `POSTHOG_KEY` |
 
-Provider operation paths are configurable because telecom/connectivity vendors can differ by account, region, and product contract:
+Public client-safe Supabase keys:
+
+| Surface | Supported env |
+| --- | --- |
+| Next.js web | `NEXT_PUBLIC_SUPABASE_ANON_KEY` or `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` |
+| Expo mobile | `EXPO_PUBLIC_SUPABASE_ANON_KEY` or `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` |
+
+Provider operation paths remain configurable because vendor APIs differ by contract, region, and product:
 
 | Env | Purpose |
 | --- | --- |
-| `ONEGLOBAL_BASE_URL` | 1GLOBAL API base |
-| `ONEGLOBAL_PLANS_PATH` | eSIM plans endpoint path |
-| `ONEGLOBAL_ORDER_PATH` | eSIM order endpoint path |
-| `BRIGHTDATA_BASE_URL` | Bright Data API base |
-| `BRIGHTDATA_PROXY_ORDER_PATH` | Proxy order endpoint path |
+| `AIRALO_BASE_URL` | Airalo API base |
+| `AIRALO_PLANS_PATH` | Airalo plans endpoint path |
+| `AIRALO_ORDER_PATH` | Airalo order endpoint path |
+| `OXYLABS_BASE_URL` | Oxylabs API base |
+| `OXYLABS_PROXY_ORDER_PATH` | Oxylabs proxy order endpoint path |
+| `SMARTPROXY_BASE_URL` | Smartproxy API base |
+| `SMARTPROXY_PROXY_ORDER_PATH` | Smartproxy proxy order endpoint path |
 | `WIREGUARD_CONTROL_BASE_URL` | Burner Point WireGuard control API base |
-| `WIREGUARD_SESSION_PATH` | VPN session/config endpoint path |
+| `WIREGUARD_SESSION_PATH` | VPN session or config endpoint path |
 
 ## Frontend Rule
 
-Frontend code may use only public app configuration such as `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `EXPO_PUBLIC_API_URL`, `EXPO_PUBLIC_WEB_URL`, and public observability DSNs/keys when appropriate. Any direct frontend call to Twilio, Infobip, Vonage, Bandwidth, OpenAI, 1GLOBAL, Bright Data, WireGuard, payment gateways, Resend, Neon, S3, or private PostHog capture is a security violation.
+Frontend code may use only public app configuration such as `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `EXPO_PUBLIC_API_URL`, `EXPO_PUBLIC_WEB_URL`, and public observability DSNs or keys when appropriate. Any direct frontend call to Supabase server keys, Twilio, Telnyx, Bandwidth, Tremil, Airalo, Oxylabs, Smartproxy, WireGuard, payment gateways, Resend, database URLs, private PostHog capture, or OpenAI is a security violation.

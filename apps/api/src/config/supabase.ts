@@ -14,6 +14,7 @@
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { ConfigService } from '@nestjs/config';
+import { resolveConfiguredEnv, type RuntimeEnvSource } from './runtime-env';
 
 // Supabase configuration interface
 export interface SupabaseConfig {
@@ -22,16 +23,24 @@ export interface SupabaseConfig {
   serviceRoleKey: string;
 }
 
+function readSupabasePublicKey(source: RuntimeEnvSource): string | undefined {
+  return resolveConfiguredEnv('SUPABASE_ANON_KEY', source);
+}
+
+function readSupabaseServerKey(source: RuntimeEnvSource): string | undefined {
+  return resolveConfiguredEnv('SUPABASE_SERVICE_ROLE_KEY', source);
+}
+
 // Get Supabase configuration from environment
 export function getSupabaseConfig(): SupabaseConfig {
   const url = process.env.SUPABASE_URL;
-  const anonKey = process.env.SUPABASE_ANON_KEY;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const anonKey = readSupabasePublicKey(process.env);
+  const serviceRoleKey = readSupabaseServerKey(process.env);
 
   if (!url || !anonKey || !serviceRoleKey) {
     throw new Error(
       'Missing required Supabase environment variables. ' +
-      'Ensure SUPABASE_URL, SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY are set.'
+      'Ensure SUPABASE_URL plus a publishable/anon key and a secret/service-role key are set.'
     );
   }
 
@@ -88,8 +97,8 @@ export function createUserSupabaseClient(
 // NestJS ConfigService helper
 export function createSupabaseFromConfig(configService: ConfigService): SupabaseClient {
   const url = configService.get<string>('SUPABASE_URL');
-  const anonKey = configService.get<string>('SUPABASE_ANON_KEY');
-  const serviceRoleKey = configService.get<string>('SUPABASE_SERVICE_ROLE_KEY');
+  const anonKey = readSupabasePublicKey(configService);
+  const serviceRoleKey = readSupabaseServerKey(configService);
 
   if (!url || !anonKey || !serviceRoleKey) {
     throw new Error(

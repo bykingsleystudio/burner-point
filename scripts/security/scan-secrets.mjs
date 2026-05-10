@@ -50,6 +50,9 @@ const detectors = [
   { name: 'secret-assignment-literal', regex: /\b(?:SECRET|TOKEN|API_KEY|PRIVATE_KEY|PASSWORD|AUTH_TOKEN)\b\s*[:=]\s*["'][^"']{12,}["']/i },
 ];
 
+const envSubstitutionPattern =
+  /\b(?:SECRET|TOKEN|API_KEY|PRIVATE_KEY|PASSWORD|AUTH_TOKEN)\b\s*[:=]\s*["']env\([^)]+\)["']/i;
+
 const listed = spawnSync('git', ['ls-files', '-z'], { encoding: 'buffer' });
 const usedGit = listed.status === 0;
 const rawFiles = usedGit
@@ -78,6 +81,7 @@ for (const file of files) {
   const lines = content.split(/\r?\n/);
   lines.forEach((line, index) => {
     if (placeholderPattern.test(line)) return;
+    if (envSubstitutionPattern.test(line)) return;
     for (const detector of detectors) {
       detector.regex.lastIndex = 0;
       if (detector.regex.test(line)) {

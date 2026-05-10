@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import Twilio = require('twilio');
 import { RedisService } from './redis.service';
-import { resolveWebhookBaseUrl } from '../../config/runtime-env';
+import { resolveApiUrl } from '../../config/runtime-env';
 
 export enum ProviderName {
   TWILIO = 'twilio',
@@ -934,7 +934,7 @@ export class ProviderService {
   }
 
   private getWebhookBaseUrl(): string {
-    return resolveWebhookBaseUrl(this.configService);
+    return resolveApiUrl(this.configService);
   }
 
   private healthKey(provider: ProviderName, product: RouteProduct, countryCode: string): string {

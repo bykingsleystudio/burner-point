@@ -57,6 +57,20 @@ test('hasConfiguredEnv treats Flutterwave webhook aliases as equivalent', () => 
   assert.equal(hasConfiguredEnv('FLUTTERWAVE_WEBHOOK_HASH', env), true);
 });
 
+test('hasConfiguredEnv treats Supabase publishable and secret key aliases as equivalent', () => {
+  const env = {
+    SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_live_value',
+    SUPABASE_SECRET_KEY: 'sb_secret_live_value',
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_live_value',
+    EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_live_value',
+  };
+
+  assert.equal(hasConfiguredEnv('SUPABASE_ANON_KEY', env), true);
+  assert.equal(hasConfiguredEnv('SUPABASE_SERVICE_ROLE_KEY', env), true);
+  assert.equal(hasConfiguredEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', env), true);
+  assert.equal(hasConfiguredEnv('EXPO_PUBLIC_SUPABASE_ANON_KEY', env), true);
+});
+
 test('isConfiguredValue rejects blank and placeholder values', () => {
   assert.equal(isConfiguredValue(''), false);
   assert.equal(isConfiguredValue('   '), false);

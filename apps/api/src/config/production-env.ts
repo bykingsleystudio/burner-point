@@ -1,3 +1,5 @@
+import { resolveConfiguredEnv } from './runtime-env';
+
 type EnvMap = Record<string, string | undefined>;
 
 const REQUIRED_PRODUCTION_ENV = [
@@ -44,7 +46,7 @@ export function validateProductionEnv(env: EnvMap) {
   const failures: string[] = [];
 
   for (const name of REQUIRED_PRODUCTION_ENV) {
-    const value = env[name]?.trim();
+    const value = resolveConfiguredEnv(name, env)?.trim();
     if (!value) {
       failures.push(`${name} is missing`);
       continue;
@@ -53,7 +55,7 @@ export function validateProductionEnv(env: EnvMap) {
   }
 
   for (const [name, pattern] of Object.entries(LIVE_PREFIXES)) {
-    const value = env[name]?.trim();
+    const value = resolveConfiguredEnv(name, env)?.trim();
     if (value && !pattern.test(value)) failures.push(`${name} must use a live key prefix`);
   }
 
@@ -81,7 +83,7 @@ export function validateProductionEnv(env: EnvMap) {
     'SUPABASE_STORAGE_MEDIA_BUCKET',
     'SUPABASE_STORAGE_VERIFICATION_ASSETS_BUCKET',
     'SUPABASE_STORAGE_DOCUMENTS_BUCKET',
-  ].every((name) => Boolean(env[name]?.trim()));
+  ].every((name) => Boolean(resolveConfiguredEnv(name, env)?.trim()));
   const hasAwsS3 = [
     'AWS_ACCESS_KEY_ID',
     'AWS_SECRET_ACCESS_KEY',

@@ -26,7 +26,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -36,6 +36,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { withWalletPresentation } from '../../config/money';
 import { resolveJwtRefreshSecret } from '../../config/runtime-env';
+import { createSupabaseFromConfig } from '../../config/supabase';
 
 const BCRYPT_ROUNDS = 12;
 const MAX_FAILED_ATTEMPTS = 5;
@@ -56,22 +57,15 @@ export class SupabaseAuthService {
   }
 
   private initializeSupabaseClient(): SupabaseClient {
-    const url = this.configService.get<string>('SUPABASE_URL');
-    const serviceRoleKey = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY');
-
-    if (!url || !serviceRoleKey) {
+    try {
+      return createSupabaseFromConfig(this.configService);
+    } catch (error) {
       throw new InternalServerErrorException(
-        'Supabase configuration missing. Ensure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set.'
+        error instanceof Error
+          ? error.message
+          : 'Supabase configuration missing. Ensure SUPABASE_URL and a server-side Supabase key are set.',
       );
     }
-
-    return createClient(url, serviceRoleKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-        detectSessionInUrl: false,
-      },
-    });
   }
 
   /**
