@@ -54,7 +54,7 @@ export default function AccountNotificationsPage() {
         <h2 className="text-base font-semibold text-white">What to include</h2>
         <div className="mt-4 grid gap-2">
           {supportChecklist.map((item) => (
-            <div key={item} className="rounded-[1rem] border border-white/8 bg-black/20 px-4 py-3 text-sm text-white/62">
+            <div key={item} className="rounded-[1rem] border border-white/8 bg-[#020806]/20 px-4 py-3 text-sm text-white/62">
               {item}
             </div>
           ))}

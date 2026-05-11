@@ -12,14 +12,14 @@ The final stack direction is:
 - Web frontend: Vercel + Next.js
 - Mobile app: Expo + React Native
 - API and workers: Railway + NestJS
-- Database: Neon Postgres
+- Database: Supabase Postgres
 - Cache, queues, and routing state: Redis
-- Auth: Clerk
+- Auth: Supabase Auth
 - Email: Resend
-- Communications: Twilio, Bandwidth, Vonage, Infobip
+- Communications: Twilio, Telnyx, Bandwidth, Tremil
 - Payments: Paystack, Paddle, NOWPayments, with Flutterwave deferred
-- eSIM: 1GLOBAL
-- Proxies: Bright Data
+- eSIM: Airalo
+- Proxies: Oxylabs and Smartproxy
 - VPN feature: self-hosted WireGuard
 - AI: OpenAI behind an internal non-blocking service wrapper
 - Database client: DBeaver
@@ -42,16 +42,16 @@ Users and developers
   -> Expo mobile app
   -> Developer API clients
       -> Railway NestJS API
-          -> Clerk identity bridge
+          -> Supabase Auth identity bridge
           -> Wallet, ledger, support, audit, risk, API keys
           -> Routing engine
-              -> Conversation providers: Twilio, Bandwidth, Vonage
-              -> Verification providers: Twilio, Infobip, Vonage
-              -> Add-ons: 1GLOBAL, Bright Data, WireGuard control plane
+              -> Conversation providers: Twilio, Telnyx, Bandwidth, Tremil
+              -> Verification providers: Twilio, Telnyx, Bandwidth, Tremil
+              -> Add-ons: Airalo, Oxylabs, Smartproxy, WireGuard control plane
               -> Payments: Paystack, Paddle, NOWPayments, later Flutterwave
           -> Redis queues, rate limits, provider health cache
-          -> Neon Postgres system of record
-          -> S3-compatible object storage
+          -> Supabase Postgres system of record
+          -> Supabase Storage
           -> Sentry, BetterStack/Logtail, PostHog
 ```
 
@@ -61,16 +61,16 @@ The Conversation Feature should not reuse the Verification Feature's global OTP 
 
 ### Conversation System: US/CA
 
-Decision: launch with Twilio, Bandwidth, and Vonage.
+Decision: launch with Twilio, Telnyx, Bandwidth, and Tremil routing support.
 
 | Responsibility | Provider | Rationale |
 | --- | --- | --- |
 | Primary messaging, MMS/photos, voice, WebRTC, voicemail | Twilio | Twilio provides the broadest early-stage developer surface for messaging, voice, Verify, and browser-based calling. Twilio's Voice JavaScript SDK supports browser-based voice connections, and Programmable Messaging supports SMS/MMS messaging. |
 | Number infrastructure for US/CA | Bandwidth | Number ownership and messaging delivery should be abstracted away from the primary messaging engine. Bandwidth is useful as a number and carrier-facing infrastructure layer so Burner Point is not forced to source every long-lived US/CA number from the same vendor that handles application logic. |
-| Fallback SMS/voice route | Vonage | Fallback must be a different provider. If Twilio fails, is rate-limited, or pauses an account, retrying on Twilio again is not resilience. Vonage gives Burner Point a second commercial/provider path. |
-| Deferred cost optimization | Telnyx | Telnyx is not a launch blocker. Add it only when usage data shows Twilio voice/SMS costs or routing reliability justify the integration. |
+| Fallback SMS/voice route | Telnyx | Fallback must be a different provider. If Twilio fails, is rate-limited, or pauses an account, retrying on Twilio again is not resilience. Telnyx gives Burner Point a second commercial/provider path. |
+| Deferred cost optimization | Tremil | Tremil is optional for cost optimization. Add it where usage data shows local-route economics justify the integration. |
 
-Correction: "Fallback Messaging -> Twilio" is invalid. A fallback route that depends on the same provider, same account, same policy exposure, and same outage domain does not reduce risk. It only repeats the same failure. The launch architecture must use Vonage as the independent fallback for conversation traffic, with Bandwidth separating number infrastructure from the Twilio application engine.
+Correction: "Fallback Messaging -> Twilio" is invalid. A fallback route that depends on the same provider, same account, same policy exposure, and same outage domain does not reduce risk. It only repeats the same failure. The launch architecture must use Telnyx/Bandwidth as independent fallbacks for conversation traffic, with Bandwidth separating number infrastructure from the Twilio application engine.
 
 Conversation cost controls:
 
@@ -82,29 +82,29 @@ Conversation cost controls:
 
 ### Verification System: Global OTP
 
-Decision: launch with Twilio, Infobip, and Vonage.
+Decision: launch with Twilio, Telnyx, Bandwidth, and Tremil.
 
 | Route label | Provider | Role | Rationale |
 | --- | --- | --- | --- |
 | BP Core Verify | Twilio | Primary OTP route | Fast integration and strong early-stage trust for SMS and voice verification. |
-| BP Global Route | Infobip | Secondary global delivery | Strong global CPaaS footprint and useful coverage in countries where Twilio delivery or cost is weaker. |
-| BP Smart Route | Vonage | Tertiary cost and fallback route | Balances fallback reliability with cost-aware routing and prevents over-dependence on Twilio/Infobip. |
+| BP Global Route | Telnyx | Secondary global delivery | Independent CPaaS route for countries where Twilio delivery or cost is weaker. |
+| BP Smart Route | Bandwidth | Number and carrier infrastructure route | Balances routing reliability with long-term number quality and prevents over-dependence on Twilio/Telnyx. |
 | BP Budget Route | Plivo | Deferred | Useful later for margin optimization, but not a launch dependency. |
 | BP Nigeria Local Route | Termii | Deferred | Reserve for +234 delivery improvement if Nigerian carrier filtering or Twilio route cost harms conversion. |
 
 Verification routing must be separate from conversation routing. Example policy:
 
-- US/Canada OTP: start with Twilio if success rate and provider health are acceptable; fallback to Vonage when Twilio degrades.
-- India/Pakistan/Africa-sensitive routes: prefer Infobip when delivery history beats Twilio; fallback to Vonage.
-- Nigeria: begin with Infobip or Twilio based on measured success and cost; evaluate Termii only when local-route metrics justify it.
+- US/Canada OTP: start with Twilio if success rate and provider health are acceptable; fallback to Telnyx or Bandwidth when Twilio degrades.
+- India/Pakistan/Africa-sensitive routes: prefer Telnyx when delivery history beats Twilio; fallback to Telnyx or Bandwidth.
+- Nigeria: begin with Twilio, Telnyx, or Tremil based on measured success and cost; evaluate Termii only when local-route metrics justify it.
 - Expensive or high-abuse services: require higher trust score, stricter velocity limits, and lower retry budgets.
 
 ### Add-On Features
 
 | Feature | Provider/approach | Integration model | Rationale |
 | --- | --- | --- | --- |
-| eSIM purchase | 1GLOBAL | Burner Point backend owns plans, orders, entitlement state, activation status, and usage snapshots; 1GLOBAL supplies eSIM/connectivity functions through its Connect API model | Best fit for an embedded telco-style product because 1GLOBAL exposes eSIM, plan, roaming, KYC, and number-porting concepts suitable for a branded platform. |
-| Proxies purchase | Bright Data | Burner Point sells and manages proxy plans; Bright Data supplies residential, ISP, datacenter, mobile, and location targeting capability | Bright Data has broad proxy coverage, API/control-panel management, and mobile/residential depth. Burner Point must enforce acceptable-use controls before provisioning. |
+| eSIM purchase | Airalo | Burner Point backend owns plans, orders, entitlement state, activation status, and usage snapshots; Airalo supplies eSIM plan, order, and activation functions | Best fit for an embedded telco-style product because Airalo exposes eSIM catalog, package, and activation concepts suitable for a branded platform. |
+| Proxies purchase | Oxylabs and Smartproxy | Burner Point sells and manages proxy plans; Oxylabs and Smartproxy supply residential, datacenter, mobile, and location targeting capability | Oxylabs and Smartproxy provide broad proxy coverage, API/control-panel management, and mobile/residential depth. Burner Point must enforce acceptable-use controls before provisioning. |
 | VPN privacy feature | Self-hosted WireGuard | Burner Point runs a VPN control plane and region-based WireGuard servers; app/web surfaces expose toggle, server selection, and session status | WireGuard is the right build choice because VPN is a platform feature, not a resold branded product. This keeps control, cost, and user experience inside Burner Point. |
 
 Partner VPNs such as NordVPN or Proton VPN should be considered only if Burner Point does not want to operate servers. That trade-off reduces operational burden but introduces branding limits, revenue sharing, partner dependency, and less control over session telemetry and abuse response.
@@ -119,8 +119,8 @@ The following layers are production-critical, not optional.
 | Structured logs and uptime | BetterStack/Logtail or equivalent | Centralizes API/worker logs, webhook traces, provider errors, and uptime alerts. |
 | Product analytics | PostHog | Tracks onboarding, verification conversion, payment funnel, support friction, feature adoption, and retention across web/mobile. |
 | Queues and background jobs | Redis-backed queues such as BullMQ | Processes provider callbacks, retries, OTP state transitions, webhook fan-out, billing reconciliation, fraud checks, expiry jobs, and notifications. |
-| Object storage | S3-compatible storage | Stores MMS media, voicemail recordings, call artifacts where allowed, exports, support attachments, and compliance documents behind signed URLs and retention policies. |
-| Audit and event logging | Neon Postgres append-only event tables | Records security-sensitive user actions, provider route attempts, billing events, admin actions, API key usage, and support actions. |
+| Object storage | Supabase Storage | Stores MMS media, voicemail recordings, call artifacts where allowed, exports, support attachments, and compliance documents behind signed URLs and retention policies. |
+| Audit and event logging | Supabase Postgres append-only event tables | Records security-sensitive user actions, provider route attempts, billing events, admin actions, API key usage, and support actions. |
 | Fraud and abuse controls | Internal risk engine | Scores users, devices, IPs, payment methods, destination numbers, services, provider failures, and velocity patterns before provisioning or routing. |
 | Secrets management | Railway, Vercel, Expo EAS env stores, with documented rotation | Keeps provider keys server-side, separates dev/staging/prod credentials, and prevents frontend exposure of telecom/payment secrets. |
 
@@ -157,8 +157,8 @@ Request enters Burner Point API
   -> Validate auth, entitlement, balance, and terms acceptance
   -> Score fraud risk and apply rate limits
   -> Determine product route family
-      -> Conversation US/CA: Twilio primary, Vonage fallback, Bandwidth number source
-      -> Verification global: Twilio, Infobip, Vonage based on country/service metrics
+      -> Conversation US/CA: Twilio primary, Telnyx/Bandwidth fallback, Bandwidth number source
+      -> Verification global: Twilio, Telnyx, Bandwidth, Tremil based on country/service metrics
       -> eSIM/proxy/VPN: provider-specific allocation through add-on adapters
   -> Check provider health and circuit breakers
   -> Select lowest-risk route that satisfies success, speed, and margin thresholds
@@ -232,13 +232,13 @@ Anti-ban architecture is not a moderation afterthought. It is part of routing, b
 
 ## 7. Database And Storage Design
 
-Neon Postgres is the primary system of record. Use DBeaver as the database client for day-to-day inspection and admin work.
+Supabase Postgres is the primary system of record. Use DBeaver as the database client for day-to-day inspection and admin work.
 
 Recommended schema organization:
 
 | Schema/domain | Data ownership |
 | --- | --- |
-| identity | Burner Point user profiles, Clerk mapping, OAuth identities, device sessions, terms/privacy acceptance, 2FA settings, backup codes |
+| identity | Burner Point user profiles, Supabase Auth mapping, OAuth identities, device sessions, terms/privacy acceptance, 2FA settings, backup codes |
 | wallet_billing | Wallet ledger, payment sessions, transactions, subscriptions, refunds, chargebacks, gateway events, credit packages, discount tiers |
 | conversation | US/CA phone numbers, rentals, conversation threads, messages, MMS metadata, calls, voicemail, contacts, call history, renewal events |
 | verification | Service catalog, country catalog, pricing, verification attempts, code delivery state, route attempts, retry budgets, provider inventory |
@@ -252,8 +252,8 @@ Recommended schema organization:
 Storage policy:
 
 - Store raw provider payloads in event logs with sensitive fields redacted or encrypted where necessary.
-- Store MMS photos, voicemail recordings, call recordings if allowed, exports, KYC documents if introduced, and support attachments in S3-compatible object storage.
-- Reference files by object key, checksum, retention class, access policy, and owning entity in Neon.
+- Store MMS photos, voicemail recordings, call recordings if allowed, exports, KYC documents if introduced, and support attachments in Supabase Storage.
+- Reference files by object key, checksum, retention class, access policy, and owning entity in Supabase Postgres.
 - Use signed URLs for private file access.
 - Apply retention rules separately for conversation artifacts, support attachments, audit logs, provider events, and analytics events.
 
@@ -268,7 +268,7 @@ API surface groups:
 
 | API group | Responsibility |
 | --- | --- |
-| Auth and profile | Clerk session bridge, onboarding profile fields, terms/privacy acceptance, 2FA state, device sessions |
+| Auth and profile | Supabase session bridge, onboarding profile fields, terms/privacy acceptance, 2FA state, device sessions |
 | Dashboard | Active numbers, wallet balance, stats, renewals, recent verifications, alerts |
 | Conversation | US/CA number search, purchase, renewal, release, inbox threads, SMS/MMS, calls, voicemail, contacts, call history |
 | Verification | Service catalog, country pricing, availability, purchase, active attempts, code receive state, voice OTP, history |
@@ -288,20 +288,20 @@ Webhook flows:
 | --- | --- |
 | Twilio messaging/voice/Verify | Validate signature, persist event, enqueue processing, update messages/calls/verifications, update provider health |
 | Bandwidth number/messaging events | Validate provider signature model, persist event, update number/message delivery state |
-| Vonage messaging/voice/verify events | Validate signature, persist event, update fallback delivery and provider health metrics |
-| Infobip OTP/voice events | Validate signature, persist event, update global OTP attempt state and route metrics |
+| Telnyx messaging/voice/verify events | Validate signature, persist event, update fallback delivery and provider health metrics |
+| Tremil OTP/voice events | Validate signature, persist event, update global OTP attempt state and route metrics |
 | Paystack | Verify signature, apply idempotency, update payment session and wallet ledger |
 | Paddle | Verify signature, apply idempotency, update subscriptions, invoices, entitlements, and ledger |
 | NOWPayments | Verify IPN signature/secret, wait for sufficient confirmation status, update ledger only after confirmed states |
-| 1GLOBAL | Persist activation/usage/order callbacks, update eSIM entitlement and usage state |
-| Bright Data | Persist allocation/status events where available, update proxy entitlement state |
+| Airalo | Persist activation/usage/order callbacks, update eSIM entitlement and usage state |
+| Oxylabs/Smartproxy | Persist allocation/status events where available, update proxy entitlement state |
 | WireGuard control plane | Internal events only; update VPN server/session health and user session status |
 
-Developer-facing API docs should be organized by product domain, not by provider. Developers should see Burner Point concepts such as verification attempts, numbers, messages, wallet transactions, and webhooks. They should not need to understand Twilio, Infobip, or Vonage-specific payloads.
+Developer-facing API docs should be organized by product domain, not by provider. Developers should see Burner Point concepts such as verification attempts, numbers, messages, wallet transactions, and webhooks. They should not need to understand Twilio, Telnyx, Bandwidth, or Tremil-specific payloads.
 
 ## 9. Authentication And Security Layers
 
-Clerk is the auth authority for web and mobile sessions.
+Supabase Auth is the auth authority for web and mobile sessions.
 
 Auth requirements:
 
@@ -313,7 +313,7 @@ Auth requirements:
 
 Backend security:
 
-- The API validates Clerk session/JWT state through an internal auth bridge instead of spreading provider-specific auth logic everywhere.
+- The API validates Supabase session/JWT state through an internal auth bridge instead of spreading provider-specific auth logic everywhere.
 - API keys are hashed at rest, scoped, rate-limited, and shown only once at creation.
 - Developer webhooks should be signed with per-endpoint secrets.
 - Admin endpoints require higher trust, 2FA, and audit logging.
@@ -323,10 +323,10 @@ Backend security:
 
 Token/session strategy:
 
-- Web uses Clerk-managed browser sessions.
-- Mobile uses Clerk/Expo-compatible session persistence and secure device storage.
-- Backend issues or maps internal authorization context from the validated Clerk user.
-- Short-lived internal claims can be used for API authorization, but the internal user record remains linked to Clerk's canonical identity.
+- Web uses Supabase-managed browser sessions.
+- Mobile uses Supabase/Expo-compatible session persistence and secure device storage.
+- Backend issues or maps internal authorization context from the validated Supabase user.
+- Short-lived internal claims can be used for API authorization, but the internal user record remains linked to Supabase Auth's canonical identity.
 
 ## 10. Deployment And Infrastructure Topology
 
@@ -365,16 +365,16 @@ Railway
   -> Provider adapters
   -> Redis for queues, rate limits, sessions, provider health cache
 
-Neon Postgres
+Supabase Postgres
   -> System of record for users, wallet, numbers, OTP, audit, provider events, support, developer API, add-ons
 
 External providers
-  -> Clerk for auth
+  -> Supabase Auth for auth
   -> Resend for email
-  -> Twilio, Bandwidth, Vonage, Infobip for telecom
+  -> Twilio, Telnyx, Bandwidth, Tremil for telecom
   -> Paystack, Paddle, NOWPayments, later Flutterwave for payments
-  -> 1GLOBAL for eSIM
-  -> Bright Data for proxies
+  -> Airalo for eSIM
+  -> Oxylabs and Smartproxy for proxies
   -> WireGuard servers for VPN sessions
   -> OpenAI for async classification/assistant features
   -> Sentry, BetterStack/Logtail, PostHog for observability and telemetry
@@ -385,14 +385,14 @@ Environment strategy:
 | Environment | Purpose | Data/provider posture |
 | --- | --- | --- |
 | Development | Local iteration and safe testing | Local/test database, sandbox payment keys, provider test credentials where possible, no production webhooks |
-| Staging | Pre-production validation | Separate Neon branch or database, staging Railway/Vercel/Expo builds, sandbox payments, test provider routes, full observability |
-| Production | Real users and money | Production Neon database, production provider keys, real webhooks, strict secrets, monitoring alerts, audit retention |
+| Staging | Pre-production validation | Separate Supabase project or database, staging Railway/Vercel/Expo builds, sandbox payments, test provider routes, full observability |
+| Production | Real users and money | Production Supabase database, production provider keys, real webhooks, strict secrets, monitoring alerts, audit retention |
 
 Production constraints:
 
 - Railway API services must be always-on for telecom and payment webhooks.
 - Webhooks must not depend on sleeping/free-tier behavior.
-- Neon is the database source of truth, not Railway Postgres.
+- Supabase Postgres is the database source of truth, not Railway Postgres.
 - DBeaver is the selected database client, not TablePlus.
 - OpenAI calls are non-blocking and must not drop messages or break OTP/payment flows if unavailable.
 - All provider adapters should expose a Burner Point internal model so future provider changes do not rewrite business logic.
@@ -405,6 +405,6 @@ Production constraints:
 - [Twilio Programmable Messaging](https://www.twilio.com/docs/messaging)
 - [Twilio Verify](https://www.twilio.com/docs/verify)
 - [Bandwidth Messaging API docs](https://dev.bandwidth.com/docs/messaging/)
-- [1GLOBAL eSIM connectivity page](https://www.1global.com/telco-as-a-service/esim-app)
-- [Bright Data proxy types](https://brightdata.com/proxy-types)
+- [Airalo partners](https://www.airalo.com/partners)
+- [Oxylabs proxy solutions](https://oxylabs.io/products)
 - [WireGuard official overview](https://www.wireguard.com/)

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import Image from 'next/image';
 import Link from 'next/link';
@@ -58,7 +58,7 @@ export function MarketingHeader() {
       <div className="mx-auto flex min-h-20 max-w-[92rem] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
           <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} className="h-8 w-8 flex-none sm:h-9 sm:w-9" priority />
-          <span className="flex items-center rounded-full bg-black/[0.03] px-3 py-2 dark:bg-white/[0.04]">
+          <span className="flex items-center rounded-full bg-[#020806]/[0.03] px-3 py-2 dark:bg-white/[0.04]">
             <Image src="/assets/wordmark-black.svg" alt="Burner Point" width={166} height={26} className="h-[1.05rem] w-auto dark:hidden sm:h-[1.15rem]" />
             <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={166} height={26} className="hidden h-[1.05rem] w-auto dark:block sm:h-[1.15rem]" />
           </span>

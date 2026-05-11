@@ -58,7 +58,7 @@ export function AccountAttentionBanner({
           {needsOnboarding ? (
             <Link
               href="/onboarding?redirect=/dashboard"
-              className="inline-flex min-h-11 items-center justify-center rounded-[1rem] border border-white/10 bg-black/24 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-white/74 transition hover:border-brand-green/28 hover:text-white"
+              className="inline-flex min-h-11 items-center justify-center rounded-[1rem] border border-white/10 bg-[#020806]/24 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-white/74 transition hover:border-brand-green/28 hover:text-white"
             >
               Complete Profile
             </Link>

@@ -203,7 +203,7 @@ export function NativeSupportWidget() {
       <Text style={s.widgetTitle}>Privacy-safe help.</Text>
       <Text style={s.widgetText}>Use scoped references for verification, rentals, billing, eSIM, proxies, secure tunnel, or account issues.</Text>
       <View style={s.widgetActions}>
-        <NativeButton label="Email" href="mailto:info.burnerpoint@gmail.com" variant="secondary" icon={<Mail size={BRAND.iconSizes.sm} color={BRAND.colors.white} />} />
+        <NativeButton label="Email" href="mailto:info@burnerpoint.com" variant="secondary" icon={<Mail size={BRAND.iconSizes.sm} color={BRAND.colors.white} />} />
         <NativeButton label="Telegram" href="https://t.me/burnerpoint" variant="ghost" />
       </View>
     </NativeCard>

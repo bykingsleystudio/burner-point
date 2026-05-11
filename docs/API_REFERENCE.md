@@ -26,15 +26,16 @@ Core encoded providers:
 
 - Web: Next.js, React, Tailwind CSS, TypeScript, Vercel.
 - API: NestJS on Railway.
-- Data: Neon Postgres, Redis queues, S3-compatible storage.
-- Auth: Clerk.
+- Data: Supabase Postgres, Supabase Storage, Supabase Realtime, Redis queues.
+- Auth: Supabase Auth with email/password, phone sign-in, Google, Apple, and Microsoft OAuth.
 - Email: Resend.
 - Monitoring: Sentry and PostHog.
-- Payments: Paystack, Paddle, NOWPayments.
-- Deferred payments: Flutterwave, Squad by GTCO, Korapay, OPay behind `SECONDARY_GATEWAYS_ENABLED`.
-- Conversation: Twilio primary, Bandwidth number infrastructure, Vonage fallback.
-- Verification: Twilio Verify primary, Infobip global route, Vonage fallback.
-- Add-ons: 1GLOBAL eSIM, Bright Data proxies, WireGuard in-platform VPN.
+- Payments: Paystack, Flutterwave, Paddle, NOWPayments.
+- Subscriptions: RevenueCat for App Store / Google Play entitlements.
+- Secondary payments: Squad by GTCO, Korapay, OPay behind `SECONDARY_GATEWAYS_ENABLED`.
+- Conversation: Twilio, Telnyx, Bandwidth, Tremil.
+- Verification: Twilio Verify primary with provider routing.
+- Add-ons: Airalo eSIM, Oxylabs and Smartproxy proxies, WireGuard in-platform VPN.
 
 ```json
 Response: {
@@ -43,7 +44,7 @@ Response: {
   "policies": {
     "webHosting": "Vercel",
     "apiHosting": "Railway",
-    "database": "Neon Postgres",
+    "database": "Supabase Postgres",
     "mobileDelivery": "Expo / EAS",
     "primaryPayments": ["paystack", "paddle", "nowpayments"],
     "secondaryGatewaysEnabled": false,
@@ -81,7 +82,7 @@ Response: {
 
 Returns the safe deployment target matrix, environment model, release gates, observability checks, rollback notes, and missing production configuration. Secret values are never returned.
 
-Use this after setting Vercel, Railway, Neon, Clerk, Sentry, PostHog, Expo/EAS, telecom, payment, storage, and provider environment variables.
+Use this after setting Vercel, Railway, Supabase, Sentry, PostHog, Expo/EAS, telecom, payment, storage, subscription, and provider environment variables.
 
 ```json
 Response: {
@@ -91,7 +92,7 @@ Response: {
     "sourceControl": "GitHub",
     "webDeployment": "Vercel",
     "apiDeployment": "Railway",
-    "database": "Neon Postgres",
+    "database": "Supabase Postgres",
     "mobileDelivery": "Expo / EAS"
   },
   "blockers": [
@@ -99,7 +100,7 @@ Response: {
       "id": "vercel",
       "name": "Vercel",
       "status": "partial",
-      "missingEnv": ["NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"]
+      "missingEnv": ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY"]
     }
   ],
   "releaseGates": [
@@ -125,9 +126,9 @@ Refresh token lifetime: 30 days
 
 ---
 
-## 1. Authentication (Clerk Primary + API Session)
+## 1. Authentication (Supabase Auth + API Session)
 
-Clerk is the primary authentication provider for web and mobile. Burner Point exchanges a verified Clerk session token for a short-lived Burner Point API access token and a refresh token. Legacy password endpoints remain for compatibility, but accounts with MFA enabled must use the Clerk flow.
+Supabase Auth is the primary authentication provider for web and mobile. Burner Point exchanges a verified Supabase access token for a short-lived Burner Point API access token and a refresh token. Email/password, phone sign-in, password recovery, Google, Apple, and Microsoft OAuth are handled through Supabase Auth.
 
 Auth routes are rate-limited at 5 attempts per route per 15 minutes by IP and by hashed account identifier. Suspicious auth velocity is logged for abuse review.
 
@@ -160,11 +161,11 @@ Response: { "accessToken": "...", "refreshToken": "...", "userId": "..." }
 ```
 Rate limit: 5 attempts / 15 minutes per route, per IP and hashed account identifier
 
-### POST /auth/clerk/exchange
-Exchanges a verified Clerk session for Burner Point API tokens. The API requires first name, last name, email, phone number, Terms acceptance, and Privacy Policy acceptance before issuing local API tokens.
+### POST /auth/supabase/exchange
+Exchanges a verified Supabase access token for Burner Point API tokens. The API requires first name, last name, email, phone number, Terms acceptance, and Privacy Policy acceptance before issuing local API tokens.
 ```json
 Body: {
-  "clerkToken": "clerk_session_jwt",
+  "accessToken": "supabase_access_token",
   "profile": {
     "firstName": "Kingsley",
     "lastName": "Doe",
@@ -396,7 +397,7 @@ Response: { "active": true, "killSwitch": false }
 
 ### POST /admin/indexnow/ping  [ADMIN]
 ```json
-Body: { "urls": ["https://burnerpoint.app/blog/new-post"] }
+Body: { "urls": ["https://burnerpoint.com/blog/new-post"] }
 ```
 
 ---
@@ -425,7 +426,7 @@ Set `GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION`, and `INDEXNOW_KEY` in 
 All third-party provider calls route through the BurnerPoint backend. Clients never call provider APIs directly and never receive provider secrets.
 
 ### GET /integrations/catalog  [AUTH REQUIRED]
-Returns safe integration readiness for Twilio, Infobip, Vonage, Bandwidth, OpenAI, 1GLOBAL, Bright Data, WireGuard, Paystack, Flutterwave, Squad, Korapay, OPay, Paddle, NOWPayments, Resend, Clerk, Neon, Sentry, Railway, DBeaver, S3, PostHog, and Expo. Secret values are never returned.
+Returns safe integration readiness for Twilio, Telnyx, Tremil, Bandwidth, OpenAI, Airalo, Oxylabs, Smartproxy, WireGuard, Paystack, Flutterwave, Squad, Korapay, OPay, Paddle, NOWPayments, RevenueCat, Resend, Supabase, Sentry, Railway, DBeaver, PostHog, and Expo. Secret values are never returned.
 
 ### GET /integrations/contracts  [AUTH REQUIRED]
 Returns the backend endpoint contract map for every integration.
@@ -440,13 +441,13 @@ Captures sensitive product analytics through server-side PostHog.
 Creates a backend-controlled private upload intent. S3 credentials stay server-side.
 
 ### POST /integrations/esim/plans  [AUTH REQUIRED]
-Queries the configured 1GLOBAL eSIM plans endpoint through the backend.
+Queries the configured Airalo eSIM plans endpoint through the backend.
 
 ### POST /integrations/esim/orders  [AUTH REQUIRED]
-Creates a configured 1GLOBAL eSIM order through the backend.
+Creates a configured Airalo eSIM order through the backend.
 
 ### POST /integrations/proxies/orders  [AUTH REQUIRED]
-Creates a configured Bright Data proxy order through the backend.
+Creates a configured Oxylabs or Smartproxy order through the backend.
 
 ### POST /integrations/vpn/sessions  [AUTH REQUIRED]
 Creates a configured WireGuard VPN session through the backend control plane.
@@ -460,15 +461,14 @@ Creates a configured WireGuard VPN session through the backend control plane.
 ### POST /webhooks/twilio/status
 ### POST /webhooks/twilio/recording
 ### POST /webhooks/twilio/verify
-### ALL /webhooks/vonage/inbound
-### ALL /webhooks/vonage/status
-### POST /webhooks/infobip/inbound
-### POST /webhooks/infobip/status
+### POST /webhooks/telnyx
+### POST /webhooks/tremil
 ### POST /webhooks/bandwidth
-### POST /webhooks/oneglobal
-### POST /webhooks/brightdata
+### POST /webhooks/airalo
+### POST /webhooks/oxylabs
+### POST /webhooks/smartproxy
 ### POST /webhooks/wireguard
-### POST /webhooks/clerk
+### POST /webhooks/revenuecat
 
 ---
 
@@ -516,5 +516,6 @@ Creates a configured WireGuard VPN session through the backend control plane.
 The frontend never calls Twilio, OpenAI, Paystack, Flutterwave, Paddle, or
 NOWPayments directly. All calls route through the BurnerPoint backend.
 
-This also applies to Infobip, Vonage, Bandwidth, 1GLOBAL, Bright Data,
-WireGuard, Resend, Neon, S3-compatible storage, and private PostHog capture.
+This also applies to Telnyx, Tremil, Bandwidth, Airalo, Oxylabs, Smartproxy,
+WireGuard, RevenueCat server keys, Resend, Supabase service-role access,
+database URLs, and private PostHog capture.

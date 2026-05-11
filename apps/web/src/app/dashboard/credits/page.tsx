@@ -322,7 +322,7 @@ function GatewayButton({ gateway, selected, onSelect }: { gateway: Gateway; sele
           : 'border-brand-border bg-brand-card hover:border-brand-muted'
       }`}
     >
-      <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/25 font-mono text-[10px] font-semibold text-white/70">
+      <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-white/10 bg-[#020806]/25 font-mono text-[10px] font-semibold text-white/70">
         {gateway.code}
       </span>
       <div className="min-w-0">

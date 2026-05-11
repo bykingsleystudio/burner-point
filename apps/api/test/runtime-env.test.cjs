@@ -48,6 +48,15 @@ test('resolveApiOrigin strips an accidental /api suffix from API_URL', () => {
   assert.equal(resolveApiUrl(env), 'https://api.burnerpoint.com/api');
 });
 
+test('resolveApiOrigin rejects APP_URL fallback in production', () => {
+  const env = {
+    NODE_ENV: 'production',
+    APP_URL: 'https://burnerpoint.com',
+  };
+
+  assert.throws(() => resolveApiOrigin(env), /API_URL must be configured in production/);
+});
+
 test('hasConfiguredEnv treats Flutterwave webhook aliases as equivalent', () => {
   const env = {
     FLUTTERWAVE_WEBHOOK_HASH: 'live_webhook_hash',

@@ -147,31 +147,16 @@ export class SupabaseAuthService {
 
     const normalizedIdentifier = this.normalizeLoginIdentifier(identifier);
     const isEmail = normalizedIdentifier.includes('@');
-    
+
     // Find user
     const where = isEmail
       ? { email: normalizedIdentifier }
       : { phoneNumber: normalizedIdentifier };
 
-    const user = await this.userRepo.findOne({
-      where,
-      select: [
-        'id',
-        'email',
-        'passwordHash',
-        'status',
-        'twoFactorEnabled',
-        'twoFactorSecret',
-        'failedLoginAttempts',
-        'lockedUntil',
-        'role',
-      ],
-    });
-
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    let user = await this.userRepo.findOne({ where });
 
     // Check account lock
-    if (user.lockedUntil && user.lockedUntil > new Date()) {
+    if (user?.lockedUntil && user.lockedUntil > new Date()) {
       const remaining = Math.ceil(
         (user.lockedUntil.getTime() - Date.now()) / 60000
       );
@@ -180,25 +165,38 @@ export class SupabaseAuthService {
       );
     }
 
-    if (user.status === UserStatus.BANNED)
+    if (user?.status === UserStatus.BANNED)
       throw new ForbiddenException('Account banned');
-    if (user.status === UserStatus.SUSPENDED)
+    if (user?.status === UserStatus.SUSPENDED)
       throw new ForbiddenException('Account suspended');
-    if (!user.passwordHash) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
 
     // Authenticate with Supabase
-    const { error: signInError } = await this.supabase.auth.signInWithPassword({
+    const { data: signInData, error: signInError } = await this.supabase.auth.signInWithPassword({
       email: isEmail ? normalizedIdentifier : undefined,
       phone: !isEmail ? normalizedIdentifier : undefined,
       password: dto.password,
     });
 
     if (signInError) {
-      await this.handleFailedLogin(user);
-      throw new UnauthorizedException(signInError.message);
+      if (user) await this.handleFailedLogin(user);
+      throw new UnauthorizedException('Invalid credentials');
     }
+
+    if (!signInData.user) {
+      if (user) await this.handleFailedLogin(user);
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (user && user.id !== signInData.user.id) {
+      throw new ConflictException('Supabase account is linked to a different Burner Point user record.');
+    }
+
+    user = await this.syncLocalUserFromSupabaseAuthUser(signInData.user, user, ip);
+
+    if (user.status === UserStatus.BANNED)
+      throw new ForbiddenException('Account banned');
+    if (user.status === UserStatus.SUSPENDED)
+      throw new ForbiddenException('Account suspended');
 
     if (user.twoFactorEnabled)
       throw new ForbiddenException('Additional verification required');
@@ -265,11 +263,11 @@ export class SupabaseAuthService {
    */
   async requestPasswordReset(email: string) {
     const normalizedEmail = this.normalizeEmail(email);
-    
+
     const { error } = await this.supabase.auth.resetPasswordForEmail(
       normalizedEmail,
       {
-        redirectTo: `${process.env.APP_URL}/auth/reset-password`,
+        redirectTo: `${this.getWebUrl()}/auth/reset-password`,
       }
     );
 
@@ -305,7 +303,7 @@ export class SupabaseAuthService {
     const { data, error } = await this.supabase.auth.signInWithOAuth({
       provider: supabaseProvider,
       options: {
-        redirectTo: `${process.env.APP_URL}/auth/callback`,
+        redirectTo: `${this.getWebUrl()}/auth/callback`,
       },
     });
 
@@ -582,6 +580,116 @@ export class SupabaseAuthService {
     return { accessToken, refreshToken, userId: user.id };
   }
 
+  private async syncLocalUserFromSupabaseAuthUser(
+    authUser: {
+      id: string;
+      email?: string | null;
+      phone?: string | null;
+      user_metadata?: Record<string, unknown>;
+      app_metadata?: Record<string, unknown>;
+      identities?: Array<{ provider?: string }>;
+      email_confirmed_at?: string | null;
+      phone_confirmed_at?: string | null;
+      confirmed_at?: string | null;
+    },
+    existingUser?: User | null,
+    ip?: string,
+  ) {
+    const metadata = authUser.user_metadata ?? {};
+    const email = authUser.email ? this.normalizeEmail(authUser.email) : existingUser?.email;
+    if (!email) {
+      throw new BadRequestException('Supabase user must have an email address before using Burner Point.');
+    }
+
+    const metadataPhone =
+      this.asOptionalString(metadata.phone_number) ||
+      this.asOptionalString(metadata.phoneNumber);
+    const phoneNumber = authUser.phone || metadataPhone
+      ? this.normalizePhoneNumber(String(authUser.phone || metadataPhone))
+      : existingUser?.phoneNumber;
+    const firstName = this.normalizeOptionalText(
+      existingUser?.firstName,
+      this.asOptionalString(metadata.first_name),
+      this.asOptionalString(metadata.firstName),
+    );
+    const lastName = this.normalizeOptionalText(
+      existingUser?.lastName,
+      this.asOptionalString(metadata.last_name),
+      this.asOptionalString(metadata.lastName),
+    );
+    const country = this.normalizeOptionalText(
+      existingUser?.country,
+      this.asOptionalString(metadata.country),
+    ) || 'NG';
+    const emailVerified = Boolean(authUser.email_confirmed_at || authUser.confirmed_at);
+    const phoneVerified = Boolean(authUser.phone_confirmed_at);
+    const provider =
+      this.asOptionalString(authUser.app_metadata?.provider) ||
+      authUser.identities?.[0]?.provider ||
+      'email';
+    const termsAccepted =
+      Boolean((existingUser?.preferences as any)?.termsAccepted) ||
+      Boolean(metadata.acceptTerms) ||
+      Boolean(metadata.accept_terms);
+    const privacyAccepted =
+      Boolean((existingUser?.preferences as any)?.privacyAccepted) ||
+      Boolean(metadata.acceptPrivacy) ||
+      Boolean(metadata.accept_privacy);
+    const missingFields = this.getMissingProfileFields({
+      firstName,
+      lastName,
+      email,
+      phoneNumber,
+      termsAccepted,
+      privacyAccepted,
+    });
+    const profileComplete = missingFields.length === 0;
+    const preferences = {
+      ...(existingUser?.preferences || {}),
+      supabaseUserId: authUser.id,
+      supabaseProvider: provider,
+      authProvider: 'supabase',
+      termsAccepted,
+      privacyAccepted,
+      onboardingComplete: profileComplete,
+      onboardingMissingFields: missingFields,
+      pendingPhoneNumber: phoneNumber ?? null,
+    };
+
+    if (existingUser) {
+      existingUser.email = existingUser.email || email;
+      existingUser.phoneNumber = existingUser.phoneNumber || phoneNumber;
+      existingUser.firstName = existingUser.firstName || firstName;
+      existingUser.lastName = existingUser.lastName || lastName;
+      existingUser.country = existingUser.country || country;
+      existingUser.status = profileComplete ? UserStatus.ACTIVE : existingUser.status;
+      existingUser.emailVerified = existingUser.emailVerified || emailVerified;
+      existingUser.phoneVerified = existingUser.phoneVerified || phoneVerified;
+      existingUser.lastLoginAt = new Date();
+      existingUser.lastLoginIp = ip;
+      existingUser.preferences = preferences;
+      return this.userRepo.save(existingUser);
+    }
+
+    const created = this.userRepo.create({
+      id: authUser.id,
+      email,
+      phoneNumber,
+      firstName,
+      lastName,
+      country,
+      referralCode: this.generateReferralCode(),
+      status: profileComplete ? UserStatus.ACTIVE : UserStatus.PENDING,
+      emailVerified,
+      phoneVerified,
+      lastLoginAt: new Date(),
+      lastLoginIp: ip,
+      preferences,
+    });
+
+    return this.userRepo.save(created);
+  }
+
   /**
    * Handle failed login attempt
    */
@@ -600,6 +708,23 @@ export class SupabaseAuthService {
    */
   private generateReferralCode(): string {
     return Math.random().toString(36).slice(2, 9).toUpperCase();
+  }
+
+  private getWebUrl(): string {
+    const configured =
+      this.configService.get<string>('APP_URL') ||
+      this.configService.get<string>('WEB_URL') ||
+      this.configService.get<string>('NEXT_PUBLIC_APP_URL');
+
+    if (configured) {
+      return configured.replace(/\/+$/, '');
+    }
+
+    if (this.configService.get<string>('NODE_ENV') === 'production') {
+      throw new BadRequestException('APP_URL must be configured before starting auth redirects');
+    }
+
+    return 'https://burnerpoint.com';
   }
 
   /**

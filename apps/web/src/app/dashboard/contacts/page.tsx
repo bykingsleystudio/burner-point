@@ -157,7 +157,7 @@ export default function ContactsPage() {
                       </p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         {contact.linkedNumbers.map((item) => (
-                          <span key={item} className="rounded-full border border-white/8 bg-black/20 px-3 py-1 text-[11px] text-white/52">
+                          <span key={item} className="rounded-full border border-white/8 bg-[#020806]/20 px-3 py-1 text-[11px] text-white/52">
                             {item}
                           </span>
                         ))}
@@ -206,7 +206,7 @@ export default function ContactsPage() {
           <p className="mt-3 text-sm leading-6 text-white/52">
             Contact editing, save, delete, and block actions belong here once first-class contact controls are enabled for the account.
           </p>
-          <div className="mt-4 rounded-[1rem] border border-white/8 bg-black/20 p-4 text-sm leading-6 text-white/48">
+          <div className="mt-4 rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4 text-sm leading-6 text-white/48">
             This screen already reads live conversation relationships. The next step is wiring a first-class contact record layer on top of those threads.
           </div>
         </aside>

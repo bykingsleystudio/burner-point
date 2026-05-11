@@ -7,7 +7,7 @@
 4. Replace homepage with new product-positioned landing page.
 5. Add shared marketing shell.
 6. Add dedicated FAQ categories page.
-7. Redesign auth shell without touching Clerk logic.
+7. Redesign auth shell without touching Supabase Auth logic.
 8. Build and verify production output.
 
 ## Next recommended slice

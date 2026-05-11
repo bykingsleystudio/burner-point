@@ -212,10 +212,7 @@ select {
 }
 
 .bp-metal-text {
-  background: linear-gradient(105deg, var(--bp-metal-start), var(--bp-metal-end) 46%, #ffffff 58%, var(--bp-metal-start));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--bp-metal-end);
 }
 
 .bp-brand-wordmark {

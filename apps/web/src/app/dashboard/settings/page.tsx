@@ -84,19 +84,19 @@ export default function SettingsPage() {
             <h3 className="text-base font-semibold text-white">Profile</h3>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-[1rem] border border-white/8 bg-black/20 p-4">
+            <div className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4">
               <p className="text-[11px] uppercase tracking-[0.12em] text-white/36">First name</p>
               <p className="mt-2 text-white">{user?.firstName || 'Add in profile'}</p>
             </div>
-            <div className="rounded-[1rem] border border-white/8 bg-black/20 p-4">
+            <div className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4">
               <p className="text-[11px] uppercase tracking-[0.12em] text-white/36">Last name</p>
               <p className="mt-2 text-white">{user?.lastName || 'Add in profile'}</p>
             </div>
-            <div className="rounded-[1rem] border border-white/8 bg-black/20 p-4">
+            <div className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4">
               <p className="text-[11px] uppercase tracking-[0.12em] text-white/36">Email</p>
               <p className="mt-2 text-white">{user?.email || 'Secure email required'}</p>
             </div>
-            <div className="rounded-[1rem] border border-white/8 bg-black/20 p-4">
+            <div className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4">
               <p className="text-[11px] uppercase tracking-[0.12em] text-white/36">Phone</p>
               <p className="mt-2 text-white">{user?.phoneNumber || 'Add in profile and verify'}</p>
             </div>
@@ -123,7 +123,7 @@ export default function SettingsPage() {
               'Rental expiry and renewal reminders',
               'Verification results and support replies',
             ].map((item) => (
-              <div key={item} className="rounded-[1rem] border border-white/8 bg-black/20 px-4 py-3 text-sm text-white/62">
+              <div key={item} className="rounded-[1rem] border border-white/8 bg-[#020806]/20 px-4 py-3 text-sm text-white/62">
                 {item}
               </div>
             ))}
@@ -139,11 +139,11 @@ export default function SettingsPage() {
             <h3 className="text-base font-semibold text-white">Billing & Subscription</h3>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <Link href="/dashboard/billing" className="rounded-[1rem] border border-white/8 bg-black/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
+            <Link href="/dashboard/billing" className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
               <p className="text-sm font-semibold text-white">Wallet balance</p>
               <p className="mt-2 text-sm leading-6 text-white/50">Review funding history, invoices, and active subscriptions.</p>
             </Link>
-            <Link href="/dashboard/billing" className="rounded-[1rem] border border-white/8 bg-black/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
+            <Link href="/dashboard/billing" className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
               <p className="text-sm font-semibold text-white">Deposit options</p>
               <p className="mt-2 text-sm leading-6 text-white/50">Fund the wallet for usage-based products and renewals.</p>
             </Link>
@@ -156,11 +156,11 @@ export default function SettingsPage() {
             <h3 className="text-base font-semibold text-white">Support</h3>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <Link href="/dashboard/support" className="rounded-[1rem] border border-white/8 bg-black/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
+            <Link href="/dashboard/support" className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
               <p className="text-sm font-semibold text-white">Create ticket</p>
               <p className="mt-2 text-sm leading-6 text-white/50">Open a scoped support request with account, billing, or product context.</p>
             </Link>
-            <a href={TELEGRAM_SUPPORT_URL} target="_blank" rel="noreferrer" className="rounded-[1rem] border border-white/8 bg-black/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
+            <a href={TELEGRAM_SUPPORT_URL} target="_blank" rel="noreferrer" className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
               <p className="text-sm font-semibold text-white">Telegram support</p>
               <p className="mt-2 text-sm leading-6 text-white/50">Reach the support channel without leaving the Burner Point support surface.</p>
             </a>
@@ -173,11 +173,11 @@ export default function SettingsPage() {
             <h3 className="text-base font-semibold text-white">Legal</h3>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <Link href="/terms-of-service" className="rounded-[1rem] border border-white/8 bg-black/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
+            <Link href="/terms-of-service" className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
               <p className="text-sm font-semibold text-white">Terms of Service</p>
               <p className="mt-2 text-sm leading-6 text-white/50">Review the current Burner Point terms effective April 23, 2026.</p>
             </Link>
-            <Link href="/privacy-policy" className="rounded-[1rem] border border-white/8 bg-black/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
+            <Link href="/privacy-policy" className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
               <p className="text-sm font-semibold text-white">Privacy Policy</p>
               <p className="mt-2 text-sm leading-6 text-white/50">See how Burner Point collects, uses, and protects account data.</p>
             </Link>

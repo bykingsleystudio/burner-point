@@ -64,7 +64,7 @@ export function AuthShell({
               <span className="flex h-11 w-11 flex-none items-center justify-center rounded-[1rem] border border-brand-green/25 bg-brand-green/10 shadow-[0_0_24px_rgba(0,255,157,0.14)]">
                 <Image src="/assets/logo-mark.svg" alt="" width={24} height={24} className="h-6 w-6" />
               </span>
-              <span className="inline-flex min-w-0 items-center rounded-full border border-white/8 bg-black/30 px-4 py-2">
+              <span className="inline-flex min-w-0 items-center rounded-full border border-white/8 bg-[#020806]/30 px-4 py-2">
                 <Image
                   src="/assets/wordmark-white.svg"
                   alt="Burner Point"
@@ -99,7 +99,7 @@ export function AuthShell({
               return (
                 <article
                   key={item.title}
-                  className="rounded-[1.45rem] border border-white/10 bg-black/22 p-4 backdrop-blur-sm"
+                  className="rounded-[1.45rem] border border-white/10 bg-[#020806]/22 p-4 backdrop-blur-sm"
                 >
                   <div className="flex h-10 w-10 items-center justify-center rounded-[1rem] bg-brand-green/12 text-brand-green">
                     <Icon className="h-5 w-5" />
@@ -120,7 +120,7 @@ export function AuthShell({
                   <span className="flex h-10 w-10 flex-none items-center justify-center rounded-[0.95rem] border border-brand-green/25 bg-brand-green/10 shadow-[0_0_18px_rgba(0,255,157,0.12)]">
                     <Image src="/assets/logo-mark.svg" alt="" width={22} height={22} className="h-5.5 w-5.5" />
                   </span>
-                  <span className="inline-flex min-w-0 items-center rounded-full border border-white/8 bg-black/32 px-3.5 py-1.5">
+                  <span className="inline-flex min-w-0 items-center rounded-full border border-white/8 bg-[#020806]/32 px-3.5 py-1.5">
                     <Image
                       src="/assets/wordmark-white.svg"
                       alt="Burner Point"

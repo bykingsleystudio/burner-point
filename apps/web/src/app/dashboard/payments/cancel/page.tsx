@@ -30,7 +30,7 @@ function PaymentCancelContent() {
         </p>
 
         {reference ? (
-          <div className="mt-5 rounded-xl border border-white/10 bg-black/25 p-4">
+          <div className="mt-5 rounded-xl border border-white/10 bg-[#020806]/25 p-4">
             <p className="text-xs text-brand-muted">Reference</p>
             <p className="mt-1 break-all font-mono text-sm text-white">{reference}</p>
           </div>

@@ -81,7 +81,7 @@ export default function TermsPage() {
         </p>
         <p>
           To request a refund, contact{' '}
-          <a href="mailto:billing@burnerpoint.app">billing@burnerpoint.app</a>.
+          <a href="mailto:billing@burnerpoint.com">billing@burnerpoint.com</a>.
         </p>
 
         <h3>4.3 Payment processing</h3>
@@ -117,7 +117,7 @@ export default function TermsPage() {
         <ul>
           <li>Maintaining the confidentiality of your login credentials</li>
           <li>All activity that occurs under your account</li>
-          <li>Notifying us immediately of any unauthorised access at security@burnerpoint.app</li>
+          <li>Notifying us immediately of any unauthorised access at security@burnerpoint.com</li>
         </ul>
       </section>
 
@@ -187,9 +187,9 @@ export default function TermsPage() {
         <h2>13. Contact</h2>
         <p>
           <strong>Legal inquiries:</strong>{' '}
-          <a href="mailto:legal@burnerpoint.app">legal@burnerpoint.app</a><br />
+          <a href="mailto:legal@burnerpoint.com">legal@burnerpoint.com</a><br />
           <strong>Abuse reports:</strong>{' '}
-          <a href="mailto:abuse@burnerpoint.app">abuse@burnerpoint.app</a>
+          <a href="mailto:abuse@burnerpoint.com">abuse@burnerpoint.com</a>
         </p>
       </section>
     </div>

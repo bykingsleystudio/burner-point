@@ -1,6 +1,6 @@
 # Burner Point Deployment Runbook
 
-This runbook prepares Burner Point for production deployment across GitHub, Vercel, Railway, Neon, Clerk, Sentry, PostHog, Expo, iOS App Store, Google Play Store, telecom providers, payment gateways, eSIM, proxy, VPN, email, storage, and operator tooling.
+This runbook prepares Burner Point for production deployment across GitHub, Vercel, Railway, Supabase, Sentry, PostHog, Expo, iOS App Store, Google Play Store, telecom providers, payment gateways, RevenueCat, eSIM, proxy, VPN, email, storage, and operator tooling.
 
 It is intentionally operational. It does not claim that any external service has been pushed, deployed, verified, or connected. Use it as the step-by-step release path for developers and operators.
 
@@ -9,13 +9,13 @@ It is intentionally operational. It does not claim that any external service has
 - Use GitHub as the source of truth for code, review, CI, and release history.
 - Use Vercel for the Next.js web app.
 - Use Railway for the NestJS API.
-- Use Neon Postgres for production and staging databases.
-- Use Clerk for auth and sessions across web and mobile.
+- Use Supabase Postgres for production and staging databases.
+- Use Supabase Auth for web and mobile authentication.
 - Use Expo/EAS for iOS and Android builds.
 - Use Sentry for runtime errors and release diagnostics.
 - Use PostHog for privacy-aware product analytics.
 - Keep every private provider key server-side in Railway, Vercel, EAS environment storage, provider dashboards, or ignored local env files.
-- Do not place Twilio, Infobip, Vonage, Bandwidth, OpenAI, 1GLOBAL, Bright Data, WireGuard, payment, Resend, S3, Neon, or private PostHog keys in frontend bundles.
+- Do not place Twilio, Telnyx, Bandwidth, Tremil, OpenAI, Airalo, Oxylabs, Smartproxy, WireGuard, payment, RevenueCat secret, Resend, Supabase service-role, or private PostHog keys in frontend bundles.
 - Release through staging first, then production.
 
 ## 2. Environment Model
@@ -42,8 +42,8 @@ Purpose: production-like release validation with isolated data.
 Storage:
 - Vercel Preview environment
 - Railway staging environment
-- Neon staging branch or separate staging database
-- Clerk test/development instance
+- Supabase staging project or separate staging database
+- Supabase Auth staging configuration
 - EAS preview environment variables
 - Sentry staging projects
 - PostHog staging project or tagged events
@@ -60,8 +60,8 @@ Purpose: live customer traffic, billing, telecom, and store releases.
 Storage:
 - Vercel Production environment
 - Railway production environment
-- Neon production database
-- Clerk production instance
+- Supabase production project
+- Supabase Auth production configuration
 - EAS production environment variables
 - App Store Connect and Google Play Console
 - Provider dashboards
@@ -153,9 +153,10 @@ GET /api/platform/readiness
 | GitHub | Source control | PRs, CI, release history | Yes |
 | Vercel | Web | Next.js app, SEO, dashboard shell, auth pages | Yes |
 | Railway | API | NestJS API, webhooks, realtime, providers | Yes |
-| Neon | Database | Postgres data and migrations | Yes |
+| Supabase Postgres | Database | Postgres data and migrations | Yes |
 | DBeaver | Operator tooling | Manual database inspection | Supporting |
-| Clerk | Auth | Sessions, OAuth, phone/email verification | Yes |
+| Supabase Auth | Auth | Sessions, OAuth, phone/email verification | Yes |
+| RevenueCat | Subscriptions | iOS, Android, and premium entitlement sync | Yes |
 | Resend | Email | Transactional email | Yes |
 | Sentry | Observability | Errors and release diagnostics | Yes |
 | PostHog | Analytics | Product and funnel events | Supporting |
@@ -163,12 +164,13 @@ GET /api/platform/readiness
 | iOS App Store | Mobile | iOS distribution | Yes for iOS launch |
 | Google Play Store | Mobile | Android distribution | Yes for Android launch |
 | Twilio | Telecom | SMS, MMS, voice, voicemail, Verify | Yes |
-| Infobip | Telecom | Global verification routing | Primary expansion |
-| Vonage | Telecom | Independent fallback | Yes before high-volume launch |
+| Telnyx | Telecom | Independent SMS/MMS/voice fallback and number routing | Yes before high-volume launch |
 | Bandwidth | Telecom | Number infrastructure | Primary for long-term number quality |
+| Tremil | Telecom | Economy verification fallback route | Optional expansion |
 | OpenAI | AI | Server-side message classification | Supporting, kill-switchable |
-| 1GLOBAL | eSIM | Plans, orders, activation, webhooks | Before eSIM sales |
-| Bright Data | Proxies | Proxy purchase and management | Before proxy sales |
+| Airalo | eSIM | Plans, orders, activation, webhooks | Before eSIM sales |
+| Oxylabs | Proxies | Proxy purchase and management | Before proxy sales |
+| Smartproxy | Proxies | Secondary proxy purchase and management | Before proxy sales |
 | WireGuard | VPN | In-platform VPN protection | Before VPN activation |
 | Paystack | Payments | Nigerian/local checkout | Yes |
 | Paddle | Payments | International cards and subscriptions | Yes |
@@ -177,7 +179,7 @@ GET /api/platform/readiness
 | Squad | Payments | Secondary gateway | Deferred |
 | Korapay | Payments | Secondary gateway | Deferred |
 | OPay | Payments | Secondary gateway | Deferred |
-| S3-compatible storage | Storage | Private uploads and media | Before MMS/voicemail/document upload scale |
+| Supabase Storage | Storage | Private uploads and media | Before MMS/voicemail/document upload scale |
 
 ## 7. Vercel Web Deployment
 
@@ -185,7 +187,8 @@ Required production env:
 
 - `NEXT_PUBLIC_APP_URL`
 - `NEXT_PUBLIC_API_URL`
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN` if Paddle checkout is active
 - `NEXT_PUBLIC_PADDLE_SANDBOX=false` for live Paddle
 
@@ -224,9 +227,9 @@ Required production env:
 - `APP_ENV=production`
 - `DATABASE_URL`
 - `REDIS_URL`
-- `CORS_ORIGINS`
+- `CORS_ALLOWED_ORIGINS`
 - `RAILWAY_ENVIRONMENT`
-- auth, telecom, payment, email, observability, storage, and provider secrets as needed
+- Supabase, RevenueCat, telecom, payment, email, observability, storage, and provider secrets as needed
 
 Pre-release checks:
 
@@ -236,7 +239,7 @@ Pre-release checks:
 4. Confirm `GET /health` returns 200.
 5. Confirm `GET /api/platform/readiness`.
 6. Confirm `GET /api/platform/deployment-readiness`.
-7. Smoke test Clerk token exchange.
+7. Smoke test Supabase token exchange.
 8. Smoke test Twilio OTP send/check with test values.
 9. Smoke test payment webhook signature verification.
 10. Confirm provider webhook endpoints reject malformed requests.
@@ -246,13 +249,13 @@ Rollback:
 - Redeploy the previous Railway deployment if schema is compatible.
 - If schema changed, prefer a forward hotfix migration over destructive rollback.
 
-## 9. Neon and DBeaver
+## 9. Supabase Postgres and DBeaver
 
-Neon setup:
+Supabase setup:
 
-1. Create separate development, staging, and production databases or branches.
+1. Create separate development, staging, and production Supabase projects or isolated databases.
 2. Require SSL for staging and production.
-3. Store `DATABASE_URL` only in Railway and ignored local env files.
+3. Store `DATABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and JWT secrets only in Railway and ignored local env files.
 4. Apply migrations to staging first.
 5. Back up production before risky schema changes.
 
@@ -263,28 +266,23 @@ DBeaver setup:
 3. Do not store production passwords in screenshots, docs, chat, or issue comments.
 4. Use read-only credentials for routine inspection.
 
-## 10. Clerk
+## 10. Supabase Auth
 
 Production setup:
 
-1. Create or verify the Clerk production instance.
-2. Enable email, phone, Google, Apple, and Microsoft auth as required.
-3. Add web redirects:
-   - `https://YOUR_DOMAIN/auth/login`
-   - `https://YOUR_DOMAIN/auth/signup`
-   - `https://YOUR_DOMAIN/sso-callback`
-   - `https://YOUR_DOMAIN/dashboard`
-4. Add Expo/native redirect URLs for the Burner Point scheme.
-5. Configure webhook endpoint on Railway:
-   - `https://YOUR_API_DOMAIN/api/webhooks/clerk`
-6. Store `CLERK_SECRET_KEY` and `CLERK_WEBHOOK_SIGNING_SECRET` in Railway. `CLERK_WEBHOOK_SECRET` is supported as a legacy alias but should not be the primary name.
-7. Store `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` in Vercel.
-8. Store `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` in EAS environment variables, not in `eas.json`.
-
-Operator note:
-
-- Clerk does not expose a general account-management CLI in this runbook. The verified official CLI surface used here is `@clerk/upgrade`, which helps with SDK upgrade and migration guidance rather than dashboard account administration.
-- Provider redirects, OAuth connections, live keys, and webhook signing secrets still come from the Clerk dashboard.
+1. Create or verify the Supabase production project.
+2. Enable email/password, phone OTP, Google, Apple, and Microsoft auth.
+3. Configure Twilio Verify in Supabase Auth for phone OTP.
+4. Set the site URL to `https://burnerpoint.com`.
+5. Add web redirects:
+   - `https://burnerpoint.com/auth/callback`
+   - `https://www.burnerpoint.com/auth/callback`
+   - `https://burnerpoint.com/auth/reset-password`
+6. Add Expo/native redirect URLs for the Burner Point scheme:
+   - `burnerpoint://redirect`
+7. Store `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` in Railway.
+8. Store `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in Vercel.
+9. Store `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` in EAS environment variables, not in `eas.json`.
 
 ## 10.1 PostHog CLI Note
 
@@ -315,7 +313,10 @@ Before production:
    - `EXPO_PROJECT_ID`
    - `EXPO_PUBLIC_API_URL`
    - `EXPO_PUBLIC_WEB_URL`
-   - `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`
+   - `EXPO_PUBLIC_SUPABASE_URL`
+   - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+   - `EXPO_PUBLIC_REVENUECAT_APPLE_API_KEY`
+   - `EXPO_PUBLIC_REVENUECAT_GOOGLE_API_KEY`
    - `EXPO_PUBLIC_SENTRY_DSN`
 2. Confirm `apps/mobile/eas.json` uses separate `preview` and `production` channels.
 3. Confirm iOS bundle ID: `app.burnerpoint.mobile`.
@@ -337,15 +338,15 @@ Twilio:
 - Verify inbound SMS, MMS status callbacks, inbound call, voicemail recording callback, and signature rules.
 - Point webhooks to Railway production only after staging succeeds.
 
-Infobip:
+Telnyx:
 
-- Verify global SMS/voice route for selected countries.
+- Verify SMS/MMS/voice fallback routes for selected countries.
 - Keep route metrics and fallback behavior visible.
 
-Vonage:
+Tremil:
 
-- Treat as independent fallback, not as another path through Twilio.
-- Verify fallback delivery before high-volume launch.
+- Treat as an economy fallback and verification expansion route.
+- Verify route quality before high-volume launch.
 
 Bandwidth:
 
@@ -380,12 +381,12 @@ Enable secondary gateways only when `SECONDARY_GATEWAYS_ENABLED=true` and core g
 
 ## 14. Connectivity and Privacy Providers
 
-1GLOBAL:
+Airalo:
 
 - Enable only after plans, orders, activation, and webhooks are verified.
 - Hide eSIM purchase CTAs until production credentials and support workflows are ready.
 
-Bright Data:
+Oxylabs and Smartproxy:
 
 - Enable only after proxy order, region selection, credential masking, and webhook handling are verified.
 
@@ -395,7 +396,7 @@ WireGuard:
 - Verify server health, key rotation, device config lifecycle, and session expiry.
 - Keep `AI_KILL_SWITCH` and VPN controls independent.
 
-S3-compatible storage:
+Supabase Storage:
 
 - Required before scaling MMS, voicemail, support attachments, exports, or sensitive uploads.
 - Use private buckets, signed URLs, content-type limits, object key randomization, and audit logs.
@@ -410,9 +411,9 @@ Minimum production monitoring:
 - Railway logs and health status
 - Vercel deployment and function logs
 - PostHog funnels for onboarding, verification, payment, support, and retention
-- Provider dashboards for Twilio, Infobip, Vonage, Bandwidth, 1GLOBAL, Bright Data, WireGuard
+- Provider dashboards for Twilio, Telnyx, Bandwidth, Tremil, Airalo, Oxylabs, Smartproxy, WireGuard
 - Payment dashboards for Paystack, Paddle, NOWPayments
-- Neon database metrics
+- Supabase database metrics
 
 Release blocker signals:
 
@@ -440,7 +441,7 @@ Release blocker signals:
 12. Promote web to Vercel production.
 13. Build native production artifacts.
 14. Submit iOS and Android builds when store metadata is ready.
-15. Monitor Sentry, PostHog, Railway, Vercel, Neon, and provider dashboards.
+15. Monitor Sentry, PostHog, Railway, Vercel, Supabase, and provider dashboards.
 
 ## 17. Rollback Rules
 
@@ -462,8 +463,8 @@ Before public launch:
 4. Vercel production env is complete.
 5. Railway production env is complete.
 6. EAS production env is complete.
-7. Clerk production redirects and webhooks are complete.
-8. Neon production database is backed up.
+7. Supabase Auth production redirects and Twilio Verify settings are complete.
+8. Supabase production database is backed up.
 9. Sentry projects are receiving events.
 10. PostHog captures server-side events.
 11. Twilio OTP and conversation webhooks pass smoke tests.

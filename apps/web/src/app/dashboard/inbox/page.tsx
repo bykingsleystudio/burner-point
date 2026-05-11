@@ -264,7 +264,7 @@ export default function InboxPage() {
                 className={`w-full rounded-[1rem] border px-3 py-3 text-left transition ${
                   selectedNumberId === number.id
                     ? 'border-brand-green/24 bg-brand-green/[0.08]'
-                    : 'border-white/8 bg-black/18 hover:border-brand-green/20 hover:bg-brand-green/[0.04]'
+                    : 'border-white/8 bg-[#020806]/18 hover:border-brand-green/20 hover:bg-brand-green/[0.04]'
                 }`}
               >
                 <p className="font-mono text-sm text-white">{number.number}</p>
@@ -290,7 +290,7 @@ export default function InboxPage() {
                     className={`w-full rounded-[1rem] border px-3 py-3 text-left transition ${
                       selectedThread?.id === thread.id
                         ? 'border-brand-green/24 bg-brand-green/[0.08]'
-                        : 'border-white/8 bg-black/18 hover:border-brand-green/20 hover:bg-brand-green/[0.04]'
+                        : 'border-white/8 bg-[#020806]/18 hover:border-brand-green/20 hover:bg-brand-green/[0.04]'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-3">
@@ -304,7 +304,7 @@ export default function InboxPage() {
                   </button>
                 ))
               ) : (
-                <div className="rounded-[1rem] border border-white/8 bg-black/20 p-4 text-sm leading-6 text-white/48">
+                <div className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4 text-sm leading-6 text-white/48">
                   Conversations appear here once this number has inbound or outbound message activity.
                 </div>
               )}
@@ -371,7 +371,7 @@ export default function InboxPage() {
                     <div className={`max-w-[88%] rounded-[1.3rem] px-4 py-3 text-sm leading-6 shadow-[0_12px_28px_rgba(0,0,0,0.2)] md:max-w-[72%] ${
                       message.direction === 'outbound'
                         ? 'border border-brand-green/20 bg-brand-green/[0.12] text-white'
-                        : 'border border-white/8 bg-black/24 text-white/78'
+                        : 'border border-white/8 bg-[#020806]/24 text-white/78'
                     }`}>
                       {message.extractedOtp ? (
                         <div className="mb-2 inline-flex items-center rounded-full border border-brand-green/24 bg-brand-green/10 px-3 py-1 font-mono text-xs uppercase tracking-[0.12em] text-brand-green">
@@ -414,7 +414,7 @@ export default function InboxPage() {
                     type="button"
                     disabled
                     title={`${item.label} is enabled only when secure media configuration is active for this account.`}
-                    className="flex min-h-11 items-center justify-center rounded-[0.95rem] border border-white/8 bg-black/18 text-white/28"
+                    className="flex min-h-11 items-center justify-center rounded-[0.95rem] border border-white/8 bg-[#020806]/18 text-white/28"
                   >
                     <Icon className="h-4 w-4" />
                   </button>
@@ -452,7 +452,7 @@ export default function InboxPage() {
           <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Contact info</p>
           {selectedThread ? (
             <div className="mt-4 space-y-4">
-              <div className="rounded-[1rem] border border-white/8 bg-black/18 p-4">
+              <div className="rounded-[1rem] border border-white/8 bg-[#020806]/18 p-4">
                 <p className="text-base font-semibold text-white">{selectedThread.counterpart}</p>
                 <p className="mt-1 font-mono text-xs text-white/42">BP Messenger thread</p>
                 <p className="mt-3 text-sm leading-6 text-white/56">
@@ -480,7 +480,7 @@ export default function InboxPage() {
                 </button>
               </div>
 
-              <div className="rounded-[1rem] border border-white/8 bg-black/18 p-4">
+              <div className="rounded-[1rem] border border-white/8 bg-[#020806]/18 p-4">
                 <p className="text-sm font-semibold text-white">Supported region policy</p>
                 <p className="mt-2 text-sm leading-6 text-white/50">
                   BP Messenger conversation routing is currently scoped to USA, Canada, and the United Kingdom for app messaging and calling.
@@ -488,7 +488,7 @@ export default function InboxPage() {
               </div>
             </div>
           ) : (
-            <div className="mt-4 rounded-[1rem] border border-white/8 bg-black/18 p-4 text-sm leading-6 text-white/50">
+            <div className="mt-4 rounded-[1rem] border border-white/8 bg-[#020806]/18 p-4 text-sm leading-6 text-white/50">
               Choose a thread to view message context, call actions, and moderation tools.
             </div>
           )}

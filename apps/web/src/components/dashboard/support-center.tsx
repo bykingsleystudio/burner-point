@@ -263,14 +263,14 @@ export function SupportCenter({ fullHistory = false }: { fullHistory?: boolean }
           <div className="rounded-[1.5rem] border border-white/8 bg-brand-card p-5">
             <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Direct channels</p>
             <div className="mt-4 space-y-3">
-              <a href={SUPPORT_EMAIL_HREF} className="flex items-center justify-between rounded-[1rem] border border-white/8 bg-black/20 p-4 transition hover:border-brand-green/24 hover:bg-brand-green/[0.04]">
+              <a href={SUPPORT_EMAIL_HREF} className="flex items-center justify-between rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4 transition hover:border-brand-green/24 hover:bg-brand-green/[0.04]">
                 <span>
                   <p className="text-sm font-semibold text-white">Email support</p>
                   <p className="mt-1 text-sm text-white/46">{SUPPORT_EMAIL}</p>
                 </span>
                 <Mail className="h-4 w-4 text-brand-green" />
               </a>
-              <a href={TELEGRAM_SUPPORT_URL} target="_blank" rel="noreferrer" className="flex items-center justify-between rounded-[1rem] border border-white/8 bg-black/20 p-4 transition hover:border-brand-green/24 hover:bg-brand-green/[0.04]">
+              <a href={TELEGRAM_SUPPORT_URL} target="_blank" rel="noreferrer" className="flex items-center justify-between rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4 transition hover:border-brand-green/24 hover:bg-brand-green/[0.04]">
                 <span>
                   <p className="text-sm font-semibold text-white">Telegram support</p>
                   <p className="mt-1 text-sm text-white/46">{TELEGRAM_SUPPORT_HANDLE}</p>
@@ -314,13 +314,13 @@ export function SupportCenter({ fullHistory = false }: { fullHistory?: boolean }
         {loading ? (
           <div className="mt-5 space-y-3">
             {[1, 2, 3].map((item) => (
-              <div key={item} className="h-24 animate-pulse rounded-[1.2rem] border border-white/8 bg-black/20" />
+              <div key={item} className="h-24 animate-pulse rounded-[1.2rem] border border-white/8 bg-[#020806]/20" />
             ))}
           </div>
         ) : visibleTickets.length ? (
           <div className="mt-5 grid gap-3">
             {visibleTickets.map((ticket) => (
-              <article key={ticket.id} className="rounded-[1.2rem] border border-white/8 bg-black/20 p-4">
+              <article key={ticket.id} className="rounded-[1.2rem] border border-white/8 bg-[#020806]/20 p-4">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="flex items-start gap-4">
                     <span className="flex h-11 w-11 flex-none items-center justify-center rounded-[1rem] border border-brand-green/18 bg-brand-green/10">
@@ -339,11 +339,11 @@ export function SupportCenter({ fullHistory = false }: { fullHistory?: boolean }
                   </div>
 
                   <div className="grid gap-2 text-sm text-white/58 md:grid-cols-2">
-                    <div className="rounded-[1rem] border border-white/8 bg-black/24 px-4 py-3">
+                    <div className="rounded-[1rem] border border-white/8 bg-[#020806]/24 px-4 py-3">
                       <p className="text-[11px] uppercase tracking-[0.12em] text-white/36">Category</p>
                       <p className="mt-2 text-white">{ticket.product || ticket.category}</p>
                     </div>
-                    <div className="rounded-[1rem] border border-white/8 bg-black/24 px-4 py-3">
+                    <div className="rounded-[1rem] border border-white/8 bg-[#020806]/24 px-4 py-3">
                       <p className="text-[11px] uppercase tracking-[0.12em] text-white/36">Reference</p>
                       <p className="mt-2 text-white">{ticket.reference || 'Not provided'}</p>
                     </div>

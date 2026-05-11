@@ -178,13 +178,13 @@ export default function ProxiesPage() {
           <div className="rounded-[1.5rem] border border-white/8 bg-brand-card p-5">
             <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Order channels</p>
             <div className="mt-4 space-y-3">
-              <div className="rounded-[1rem] border border-white/8 bg-black/20 p-4">
+              <div className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4">
                 <p className="text-sm font-semibold text-white">Primary order path</p>
                 <p className="mt-2 text-sm text-white/52">
                   {primaryChannel?.status === 'configured' ? 'Ready' : primaryChannel?.status === 'partial' ? 'Needs attention' : 'Unavailable'}
                 </p>
               </div>
-              <div className="rounded-[1rem] border border-white/8 bg-black/20 p-4">
+              <div className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4">
                 <p className="text-sm font-semibold text-white">Fallback routing</p>
                 <p className="mt-2 text-sm text-white/52">
                   {fallbackChannel?.status === 'configured' ? 'Ready' : fallbackChannel?.status === 'partial' ? 'Needs attention' : 'Unavailable'}
@@ -205,12 +205,12 @@ export default function ProxiesPage() {
             <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Recent proxy orders</p>
             {loading ? (
               <div className="mt-4 space-y-3">
-                {[1, 2].map((item) => <div key={item} className="h-20 animate-pulse rounded-[1rem] border border-white/8 bg-black/20" />)}
+                {[1, 2].map((item) => <div key={item} className="h-20 animate-pulse rounded-[1rem] border border-white/8 bg-[#020806]/20" />)}
               </div>
             ) : history.length ? (
               <div className="mt-4 space-y-3">
                 {history.slice(0, 5).map((item) => (
-                  <div key={item.id} className="rounded-[1rem] border border-white/8 bg-black/20 p-4">
+                  <div key={item.id} className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-sm font-semibold text-white">{item.description || 'Proxy order'}</p>

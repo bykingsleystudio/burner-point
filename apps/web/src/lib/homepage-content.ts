@@ -52,8 +52,8 @@ export type FaqCategory = {
 export const supportContacts = SUPPORT_CONTACTS;
 
 export const socialProfiles = [
-  { label: 'Instagram', handle: '@burnerpoint.app', href: 'https://www.instagram.com/burnerpoint.app' },
-  { label: 'Facebook', handle: '@burnerpoint.app', href: 'https://www.facebook.com/burnerpoint.app' },
+  { label: 'Instagram', handle: '@burnerpointapp', href: 'https://www.instagram.com/burnerpointapp' },
+  { label: 'Facebook', handle: '@burnerpointapp', href: 'https://www.facebook.com/burnerpointapp' },
   { label: 'LinkedIn', handle: '@burnerpointapp', href: 'https://www.linkedin.com/company/burnerpointapp' },
   { label: 'TikTok', handle: '@burnerpointapp', href: 'https://www.tiktok.com/@burnerpointapp' },
   { label: 'Twitter/X', handle: '@burnerpointapp', href: 'https://x.com/burnerpointapp' },

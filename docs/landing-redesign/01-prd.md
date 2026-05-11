@@ -12,7 +12,7 @@ Ship a new Burner Point public web experience that positions the company as a pr
 ## In scope
 - Homepage IA, copy, visuals, CTA structure, FAQ preview, trust/safety messaging.
 - Shared marketing header/footer.
-- Login and signup visual redesign without changing Clerk business logic.
+- Login and signup visual redesign without changing Supabase Auth business logic.
 - FAQ route and SEO.
 
 ## Out of scope

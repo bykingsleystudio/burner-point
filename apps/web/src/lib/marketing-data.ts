@@ -98,8 +98,8 @@ export const footerGroups = [
 ];
 
 export const socialLinks = [
-  { label: 'Instagram', short: 'ig', handle: '@burnerpoint.app', href: 'https://www.instagram.com/burnerpoint.app' },
-  { label: 'Facebook', short: 'fb', handle: '@burnerpoint.app', href: 'https://www.facebook.com/burnerpoint.app' },
+  { label: 'Instagram', short: 'ig', handle: '@burnerpointapp', href: 'https://www.instagram.com/burnerpointapp' },
+  { label: 'Facebook', short: 'fb', handle: '@burnerpointapp', href: 'https://www.facebook.com/burnerpointapp' },
   { label: 'LinkedIn', short: 'in', handle: '@burnerpointapp', href: 'https://www.linkedin.com/company/burnerpointapp' },
   { label: 'TikTok', short: 'tt', handle: '@burnerpointapp', href: 'https://www.tiktok.com/@burnerpointapp' },
   { label: 'Twitter/X', short: 'x', handle: '@burnerpointapp', href: 'https://x.com/burnerpointapp' },

@@ -7,24 +7,47 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsEmail, IsEnum, IsOptional, IsString, Matches, MaxLength, MinLength, ValidateIf } from 'class-validator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ProviderName, RouteProduct } from '../global/provider.service';
 import { MessagingService } from './messaging.service';
 
 class SendEmailDto {
+  @IsEmail()
+  @MaxLength(254)
   to: string;
+
+  @IsString()
+  @MinLength(2)
+  @MaxLength(180)
   subject: string;
+
+  @ValidateIf((dto: SendEmailDto) => !dto.text)
+  @IsString()
+  @MinLength(1)
+  @MaxLength(100_000)
   html?: string;
+
+  @ValidateIf((dto: SendEmailDto) => !dto.html)
+  @IsString()
+  @MinLength(1)
+  @MaxLength(20_000)
   text?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(320)
   from?: string;
 }
 
 class SendSmsDto {
   @IsString()
+  @Matches(/^\+[1-9]\d{6,14}$/, { message: 'Recipient must be an E.164 phone number.' })
   to: string;
 
   @IsString()
+  @MinLength(1)
+  @MaxLength(1600)
   body: string;
 
   @IsOptional()

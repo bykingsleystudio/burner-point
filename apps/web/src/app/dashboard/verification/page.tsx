@@ -262,7 +262,7 @@ export default function VerificationPage() {
           </div>
 
           {availableNumbers.length ? (
-            <div className="mt-5 rounded-[1.2rem] border border-white/8 bg-black/18 p-4">
+            <div className="mt-5 rounded-[1.2rem] border border-white/8 bg-[#020806]/18 p-4">
               <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-brand-green">Available numbers</p>
               <div className="mt-4 space-y-2">
                 {availableNumbers.map((item) => (
@@ -271,7 +271,7 @@ export default function VerificationPage() {
                     type="button"
                     onClick={() => assignNumber(item.number)}
                     disabled={Boolean(provisioning)}
-                    className="flex w-full items-center justify-between rounded-[1rem] border border-white/8 bg-black/20 px-4 py-3 text-left transition hover:border-brand-green/22 hover:bg-brand-green/[0.04] disabled:opacity-50"
+                    className="flex w-full items-center justify-between rounded-[1rem] border border-white/8 bg-[#020806]/20 px-4 py-3 text-left transition hover:border-brand-green/22 hover:bg-brand-green/[0.04] disabled:opacity-50"
                   >
                     <div>
                       <p className="font-mono text-sm text-white">{item.number}</p>
@@ -308,7 +308,7 @@ export default function VerificationPage() {
             </div>
 
             {latestInbound?.body ? (
-              <div className="mt-4 rounded-[1rem] border border-white/8 bg-black/22 p-4">
+              <div className="mt-4 rounded-[1rem] border border-white/8 bg-[#020806]/22 p-4">
                 <p className="text-sm leading-6 text-white/68">{latestInbound.body}</p>
               </div>
             ) : null}
@@ -348,7 +348,7 @@ export default function VerificationPage() {
 
         {history.length ? (
           <div className="mt-5 overflow-hidden rounded-[1.2rem] border border-white/8">
-            <div className="grid grid-cols-[1.1fr_0.8fr_0.7fr_0.7fr_1fr] gap-3 border-b border-white/8 bg-black/20 px-4 py-3 text-[11px] uppercase tracking-[0.12em] text-white/38">
+            <div className="grid grid-cols-[1.1fr_0.8fr_0.7fr_0.7fr_1fr] gap-3 border-b border-white/8 bg-[#020806]/20 px-4 py-3 text-[11px] uppercase tracking-[0.12em] text-white/38">
               <span>Service</span>
               <span>Country</span>
               <span>Cost</span>

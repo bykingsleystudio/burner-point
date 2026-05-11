@@ -363,13 +363,13 @@ export function DashboardModulePage({ module }: { module: DashboardModuleContent
                 <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-brand-green">Module status</p>
                 <p className="mt-2 text-lg font-semibold text-white">{module.status}</p>
               </div>
-              <span className="flex h-11 w-11 items-center justify-center rounded-lg border border-brand-green/25 bg-black/25">
+              <span className="flex h-11 w-11 items-center justify-center rounded-lg border border-brand-green/25 bg-[#020806]/25">
                 <ShieldCheck className="h-5 w-5 text-brand-green" />
               </span>
             </div>
             <div className="mt-5 grid grid-cols-3 gap-2">
               {module.stats.map((stat) => (
-                <div key={`${stat.label}-${stat.value}`} className="rounded-[1rem] border border-white/8 bg-black/20 p-3">
+                <div key={`${stat.label}-${stat.value}`} className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-3">
                   <p className="font-mono text-base font-semibold text-brand-green">{stat.value}</p>
                   <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-[#E5E7EB]">{stat.label}</p>
                 </div>

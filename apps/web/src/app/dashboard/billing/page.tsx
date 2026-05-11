@@ -131,11 +131,11 @@ export default function BillingPage() {
               : 'Start a monthly plan when you need renewable number access, continuity, and account recovery support.'}
           </p>
           <div className="mt-5 grid grid-cols-2 gap-2">
-            <div className="rounded-bp border border-white/8 bg-black/20 p-3">
+            <div className="rounded-bp border border-white/8 bg-[#020806]/20 p-3">
               <p className="font-mono text-lg text-brand-green">$15.99</p>
               <p className="text-[10px] uppercase text-white/38">monthly target</p>
             </div>
-            <div className="rounded-bp border border-white/8 bg-black/20 p-3">
+            <div className="rounded-bp border border-white/8 bg-[#020806]/20 p-3">
               <p className="font-mono text-lg text-brand-green">Protected</p>
               <p className="text-[10px] uppercase text-white/38">checkout</p>
             </div>
@@ -153,7 +153,7 @@ export default function BillingPage() {
 
           <div className="mt-5 grid gap-3 md:grid-cols-3">
             {loading ? (
-              [1, 2, 3].map((item) => <div key={item} className="h-36 animate-pulse rounded-bp border border-brand-border bg-black/20" />)
+              [1, 2, 3].map((item) => <div key={item} className="h-36 animate-pulse rounded-bp border border-brand-border bg-[#020806]/20" />)
             ) : (
               plans.map((plan) => {
                 const selected = selectedPlanId === plan.id;
@@ -163,7 +163,7 @@ export default function BillingPage() {
                     type="button"
                     onClick={() => setSelectedPlanId(plan.id)}
                     className={`rounded-bp-lg border p-4 text-left transition ${
-                      selected ? 'border-brand-green bg-brand-green/10' : 'border-brand-border bg-black/18 hover:border-brand-green/30'
+                      selected ? 'border-brand-green bg-brand-green/10' : 'border-brand-border bg-[#020806]/18 hover:border-brand-green/30'
                     }`}
                   >
                     <p className="text-sm font-semibold uppercase text-white">{plan.name}</p>
@@ -217,7 +217,7 @@ export default function BillingPage() {
         <div className="mt-5 overflow-hidden rounded-bp-lg border border-white/8">
           {loading ? (
             <div className="space-y-2 p-4">
-              {[1, 2, 3].map((item) => <div key={item} className="h-14 animate-pulse rounded-bp bg-black/24" />)}
+              {[1, 2, 3].map((item) => <div key={item} className="h-14 animate-pulse rounded-bp bg-[#020806]/24" />)}
             </div>
           ) : ledger.length ? (
             <div className="divide-y divide-white/7">

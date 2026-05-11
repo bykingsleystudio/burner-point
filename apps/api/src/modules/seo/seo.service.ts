@@ -129,8 +129,8 @@ Sitemap: ${base}/sitemap.xml`;
         'Privacy-first temporary phone numbers for anonymous SMS, OTP verification, and secure calling.',
       url: base,
       sameAs: [
-        'https://www.instagram.com/burnerpoint.app',
-        'https://www.facebook.com/burnerpoint.app',
+        'https://www.instagram.com/burnerpointapp',
+        'https://www.facebook.com/burnerpointapp',
         'https://www.linkedin.com/company/burnerpointapp',
         'https://www.tiktok.com/@burnerpointapp',
         'https://x.com/burnerpointapp',

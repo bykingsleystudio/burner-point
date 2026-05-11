@@ -1,47 +1,48 @@
-# Burner Point Neon Postgres And DBeaver Setup
+# Burner Point Supabase Postgres And DBeaver Setup
 
-This codebase uses Postgres through TypeORM. Neon Postgres is the selected database, and DBeaver is the selected database client. TablePlus is not required for this repo.
+This codebase uses Supabase Postgres through TypeORM and Supabase client APIs. DBeaver is the approved database client for manual inspection and support operations.
 
 ## Source Of Truth
 
-- Runtime database: Neon Postgres.
+- Runtime database: Supabase Postgres.
 - Database client: DBeaver.
-- API env key: `DATABASE_URL`.
-- Optional fallback env keys: `DB_HOST`, `DB_PORT`, `DB_USER` or `DB_USERNAME`, `DB_PASS` or `DB_PASSWORD`, `DB_NAME` or `DB_DATABASE`.
+- API database env key: `DATABASE_URL`.
+- Supabase API env keys: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
+- Optional database fallback env keys: `DB_HOST`, `DB_PORT`, `DB_USER` or `DB_USERNAME`, `DB_PASS` or `DB_PASSWORD`, `DB_NAME` or `DB_DATABASE`.
 - SSL keys: `DB_SSL=true`, `DB_SSL_REJECT_UNAUTHORIZED=false`.
 
-Do not commit real Neon credentials. Put real values in local `.env` files and platform secret stores only.
+Do not commit real Supabase credentials. Put real values in ignored `.env` files and platform secret stores only.
 
-## Neon Connection Format
+## Supabase Connection Format
 
-Use the Neon connection string format below in Railway and local API development:
+Use the Supabase pooled connection string in Railway and production API environments:
 
 ```env
-DATABASE_URL=
+DATABASE_URL=<paste_supabase_pooled_connection_string_with_sslmode_require>
 DB_SSL=true
 DB_SSL_REJECT_UNAUTHORIZED=false
 DB_SYNCHRONIZE=false
 DB_LOGGING=false
 ```
 
-Set `DATABASE_URL` to the exact production connection string copied from the Neon dashboard:
+Set `DATABASE_URL` to the exact pooled production connection string copied from the Supabase dashboard:
 
 | Value | Where it goes |
 | --- | --- |
 | Host | `DB_HOST` and the host section of `DATABASE_URL` |
-| Port | `DB_PORT`, usually `5432` |
+| Port | `DB_PORT`, usually `6543` for the Supabase pooler |
 | Database | `DB_NAME` and the path section of `DATABASE_URL` |
 | User | `DB_USER` and the username section of `DATABASE_URL` |
 | Password | `DB_PASS` and the password section of `DATABASE_URL` |
 | SSL mode | `?sslmode=require` plus `DB_SSL=true` |
 
-Use a separate Neon branch or database per environment:
+Use separate Supabase projects or isolated databases per environment:
 
-| Environment | Neon target |
+| Environment | Supabase target |
 | --- | --- |
-| Development | Development branch/database |
-| Staging | Staging branch/database |
-| Production | Production branch/database |
+| Development | Development project or local Supabase |
+| Staging | Staging project |
+| Production | Production project |
 
 ## Railway API Variables
 
@@ -53,6 +54,9 @@ DB_SSL=true
 DB_SSL_REJECT_UNAUTHORIZED=false
 DB_SYNCHRONIZE=false
 DB_LOGGING=false
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
 ```
 
 Keep Redis on Railway if that is your active Redis service:
@@ -61,7 +65,7 @@ Keep Redis on Railway if that is your active Redis service:
 REDIS_URL=${{Redis.REDIS_URL}}
 ```
 
-Do not use a Railway Postgres plugin as the production system of record for Burner Point unless you intentionally roll back this Neon decision.
+Do not use a Railway Postgres plugin as the production system of record unless you intentionally roll back the Supabase database decision.
 
 ## Local API Setup
 
@@ -71,7 +75,7 @@ For local backend development:
 Copy-Item apps/api/.env.example apps/api/.env
 ```
 
-Then set the real development Neon branch credentials in `apps/api/.env`. The TypeORM config also supports root `.env`, but `apps/api/.env` should be the app-specific source during API work.
+Then set development Supabase credentials in `apps/api/.env`. The TypeORM config also supports root `.env`, but `apps/api/.env` should be the app-specific source during API work.
 
 ## DBeaver Connection
 
@@ -79,22 +83,22 @@ Create a new DBeaver connection:
 
 1. Select `Database -> New Database Connection`.
 2. Choose `PostgreSQL`.
-3. Use these connection fields:
+3. Use these connection fields from the Supabase database settings or pooler details:
 
 | DBeaver field | Value |
 | --- | --- |
-| Host | Copy from the Neon connection details |
-| Port | Copy from the Neon connection details |
-| Database | Copy from the Neon connection details |
-| Username | Copy from the Neon connection details |
-| Password | Copy from the Neon connection details |
+| Host | Supabase database or pooler host |
+| Port | Supabase database or pooler port |
+| Database | Supabase database name |
+| Username | Supabase database username |
+| Password | Supabase database password |
 
 4. Open the `SSL` tab or driver properties.
 5. Enable SSL and set driver property `sslmode=require`.
 6. Test the connection.
-7. Save it as `Burner Point - Neon - Development`, `Burner Point - Neon - Staging`, or `Burner Point - Neon - Production`.
+7. Save it as `Burner Point - Supabase - Development`, `Burner Point - Supabase - Staging`, or `Burner Point - Supabase - Production`.
 
-If DBeaver prompts for a PostgreSQL driver download, allow it to install the official PostgreSQL JDBC driver.
+Use read-only credentials for routine inspection where possible.
 
 ## Verification
 
@@ -125,11 +129,11 @@ Then check the API health endpoint:
 Invoke-WebRequest -Uri "http://localhost:3001/health" -UseBasicParsing
 ```
 
-Production validation should be done through Railway after setting the Neon `DATABASE_URL` and redeploying `burner-point-api`.
+Production validation should be done through Railway after setting the Supabase `DATABASE_URL` and redeploying `burner-point-api`, then checking `https://api.burnerpoint.com/health`.
 
 ## Notes
 
 - Existing TypeORM entities and SQL migrations are Postgres-compatible.
-- Neon requires SSL; the API now infers SSL from `NODE_ENV=production`, `DB_SSL=true`, `sslmode=require`, or `.neon.tech` hosts.
+- Supabase production database connections require SSL; the API infers SSL from `NODE_ENV=production`, `DB_SSL=true`, `sslmode=require`, or Supabase pooler hosts.
+- Supabase Auth and Storage credentials are separate from the Postgres connection string.
 - DBeaver is only a database client. No runtime code imports or depends on DBeaver.
-- TablePlus is not referenced by the active source tree.

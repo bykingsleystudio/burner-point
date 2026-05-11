@@ -3,7 +3,7 @@ import { BpButton, BpKicker, BpLogo } from '@/components/ui/bp-landing-primitive
 
 export default function NotFound() {
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black px-6 text-white">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#020806] px-6 text-white">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_14%,rgba(0,255,157,0.12),transparent_24%),radial-gradient(circle_at_82%_18%,rgba(57,255,20,0.08),transparent_18%),linear-gradient(180deg,rgba(1,50,32,0.34),rgba(0,0,0,0.98)_58%)]" />
       <div className="relative z-10 w-full max-w-2xl rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(1,50,32,0.78),rgba(0,0,0,0.96))] p-8 text-center shadow-[0_30px_90px_rgba(0,0,0,0.34)]">
         <div className="flex justify-center">

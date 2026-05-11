@@ -178,7 +178,7 @@ export default function RentalsPage() {
           </div>
 
           <div className="mt-5 overflow-hidden rounded-[1.2rem] border border-white/8">
-            <div className="grid grid-cols-[1fr_0.8fr_0.7fr_0.9fr_auto] gap-3 border-b border-white/8 bg-black/20 px-4 py-3 text-[11px] uppercase tracking-[0.12em] text-white/38">
+            <div className="grid grid-cols-[1fr_0.8fr_0.7fr_0.9fr_auto] gap-3 border-b border-white/8 bg-[#020806]/20 px-4 py-3 text-[11px] uppercase tracking-[0.12em] text-white/38">
               <span>Country</span>
               <span>Type</span>
               <span>Price</span>
@@ -236,7 +236,7 @@ export default function RentalsPage() {
                 className={`flex min-h-11 w-full items-center justify-between rounded-[0.95rem] border px-4 text-sm transition ${
                   gateway === item.id
                     ? 'border-brand-green/24 bg-brand-green/[0.08] text-brand-green'
-                    : 'border-white/8 bg-black/20 text-white/58 hover:border-brand-green/20 hover:text-white'
+                    : 'border-white/8 bg-[#020806]/20 text-white/58 hover:border-brand-green/20 hover:text-white'
                 }`}
               >
                 <span>{item.label}</span>
@@ -260,12 +260,12 @@ export default function RentalsPage() {
 
         {loadingActive ? (
           <div className="mt-5 space-y-3">
-            {[1, 2, 3].map((item) => <div key={item} className="h-24 animate-pulse rounded-[1.2rem] border border-white/8 bg-black/20" />)}
+            {[1, 2, 3].map((item) => <div key={item} className="h-24 animate-pulse rounded-[1.2rem] border border-white/8 bg-[#020806]/20" />)}
           </div>
         ) : activeRentals.length ? (
           <div className="mt-5 grid gap-3">
             {activeRentals.map((item) => (
-              <article key={item.id} className="rounded-[1.2rem] border border-white/8 bg-black/20 p-4">
+              <article key={item.id} className="rounded-[1.2rem] border border-white/8 bg-[#020806]/20 p-4">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div className="flex items-start gap-4">
                     <span className="flex h-11 w-11 flex-none items-center justify-center rounded-[1rem] border border-brand-green/20 bg-brand-green/10">
@@ -280,11 +280,11 @@ export default function RentalsPage() {
                   </div>
 
                   <div className="grid gap-2 text-sm text-white/56 md:grid-cols-2">
-                    <div className="rounded-[1rem] border border-white/8 bg-black/24 px-4 py-3">
+                    <div className="rounded-[1rem] border border-white/8 bg-[#020806]/24 px-4 py-3">
                       <p className="text-[11px] uppercase tracking-[0.12em] text-white/36">Renewal status</p>
                       <p className="mt-2 text-white">{item.status || 'Active'}</p>
                     </div>
-                    <div className="rounded-[1rem] border border-white/8 bg-black/24 px-4 py-3">
+                    <div className="rounded-[1rem] border border-white/8 bg-[#020806]/24 px-4 py-3">
                       <p className="text-[11px] uppercase tracking-[0.12em] text-white/36">Next billing</p>
                       <p className="mt-2 text-white">
                         {item.expiresAt ? new Date(item.expiresAt).toLocaleDateString() : 'Managed in billing'}

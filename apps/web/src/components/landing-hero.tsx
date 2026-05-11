@@ -122,7 +122,7 @@ export function LandingHero({
             </LiquidButton>
             <Link
               href="/sign-in"
-              className="inline-flex min-h-[54px] items-center justify-center rounded-full border border-white/14 bg-black/20 px-8 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-white transition hover:border-brand-green/35 hover:bg-brand-green/[0.05]"
+              className="inline-flex min-h-[54px] items-center justify-center rounded-full border border-white/14 bg-[#020806]/20 px-8 py-4 text-sm font-semibold uppercase tracking-[0.16em] text-white transition hover:border-brand-green/35 hover:bg-brand-green/[0.05]"
             >
               Sign In
             </Link>
@@ -261,7 +261,7 @@ export function LandingHero({
                         initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: shouldReduceMotion ? 0 : 0.44 + index * 0.08 }}
-                        className="rounded-full bg-black/36 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-white/72 backdrop-blur-md"
+                        className="rounded-full bg-[#020806]/36 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-white/72 backdrop-blur-md"
                       >
                         <div className="mb-2 flex justify-center">
                           <SignalIcon className="h-4 w-4 text-brand-green" />
@@ -283,7 +283,7 @@ export function LandingHero({
                   </div>
                   <div className="grid grid-cols-3 gap-2 sm:min-w-[18rem]">
                     {routingSignals.map((signal) => (
-                      <div key={signal.label} className="rounded-[1.15rem] border border-white/8 bg-black/24 px-3 py-3 text-center">
+                      <div key={signal.label} className="rounded-[1.15rem] border border-white/8 bg-[#020806]/24 px-3 py-3 text-center">
                         <div className="font-mono text-sm text-brand-green">{signal.value}</div>
                         <div className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[#E5E7EB]">{signal.label}</div>
                       </div>

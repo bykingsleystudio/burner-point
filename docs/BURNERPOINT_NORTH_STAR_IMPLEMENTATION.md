@@ -27,10 +27,10 @@ Current implemented foundations include:
 - Brand tokens in `apps/web/src/lib/brand.ts`.
 - Public content, nav links, footer links, FAQ, blog, updates, careers, help, about, eSIM, proxies, security, terms, and privacy through `apps/web/src/lib/marketing-data.ts` and public routes.
 - SEO registry, sitemap, robots, Open Graph image, Twitter image, IndexNow key route, noindex auth layout, and public metadata through `apps/web/src/lib/seo.ts`.
-- Clerk-oriented auth pages and onboarding routes.
+- Supabase Auth-oriented auth pages and onboarding routes.
 - Dashboard routes for verification, rentals, numbers, inbox, calls, voicemail, eSIM, proxies, VPN, billing, support, API, webhooks, settings, profile, and security.
 - Twilio OTP backend through `phone-auth` endpoints.
-- Backend integration contracts for Twilio, Infobip, Vonage, Bandwidth, OpenAI, 1GLOBAL, Bright Data, WireGuard, Paystack, Flutterwave, Squad, Korapay, OPay, Paddle, NOWPayments, Resend, Clerk, Neon, Sentry, Railway, DBeaver, S3, PostHog, and Expo.
+- Backend integration contracts for Twilio, Telnyx, Bandwidth, Tremil, OpenAI, Airalo, Oxylabs, Smartproxy, WireGuard, Paystack, Flutterwave, Squad, Korapay, OPay, Paddle, NOWPayments, RevenueCat, Resend, Supabase, Sentry, Railway, DBeaver, Supabase Storage, PostHog, and Expo.
 - Payment architecture and provider adapters with core gateway posture.
 - Security middleware, audit service, upload hardening, RLS migration, and secret scanning.
 - Deployment readiness endpoint, GitHub CI, EAS environment separation, and deployment runbook.
@@ -78,7 +78,7 @@ Burner Point revenue should come from:
 Build Burner Point as a modular product platform, not a pile of pages:
 
 1. Public site converts visitors with clear privacy, telecom, pricing, and trust messaging.
-2. Clerk owns authentication and session security.
+2. Supabase Auth owns authentication and session security.
 3. The dashboard becomes the private telecom control center.
 4. The backend owns every provider integration and never exposes secrets to web or mobile.
 5. Wallet, billing, ledger, webhooks, and audit logs become the revenue source of truth.
@@ -171,7 +171,7 @@ Do not create microservices yet. Candidate future extractions are provider routi
 
 | Domain | Modules |
 | --- | --- |
-| Auth | `auth`, `phone-auth`, Clerk exchange |
+| Auth | `auth`, `phone-auth`, Supabase Auth exchange |
 | Users | `users`, profile, wallet |
 | Telecom | `numbers`, `messaging`, `webhooks`, `global/provider.service` |
 | Payments | `payments`, `paddle`, `billing-v2` |
@@ -285,7 +285,7 @@ Sections:
 - Instant activation.
 - Multi-country access.
 - Usage tracking.
-- 1GLOBAL provider abstraction.
+- Airalo provider abstraction.
 
 ### Proxies
 
@@ -452,7 +452,7 @@ Screens:
 
 ### Sign Up and Sign In
 
-Use Clerk Expo:
+Use Supabase Auth with Expo:
 
 - Email.
 - Phone.
@@ -597,7 +597,7 @@ Features:
 
 ### Auth Provider
 
-Clerk is the primary authentication provider. Burner Point backend may exchange Clerk identity for internal API context, but Clerk remains the source of truth for sessions, OAuth, email verification, phone verification, password reset, and MFA.
+Supabase Auth is the primary authentication provider. Burner Point backend exchanges Supabase sessions for internal API context, and Supabase remains the source of truth for sessions, OAuth, email verification, phone verification, password reset, and MFA.
 
 ### Required Account Fields
 
@@ -616,8 +616,8 @@ Clerk is the primary authentication provider. Burner Point backend may exchange 
 3. User enters first name, last name, email, phone, password.
 4. User accepts Terms and Privacy Policy separately.
 5. User chooses email/password or OAuth.
-6. Clerk creates the user.
-7. Clerk verifies email and/or phone based on dashboard configuration.
+6. Supabase Auth creates the user.
+7. Supabase Auth verifies email and/or phone based on dashboard configuration.
 8. Backend stores or maps Burner Point profile context.
 9. User is routed to onboarding or dashboard.
 
@@ -628,13 +628,13 @@ Clerk is the primary authentication provider. Burner Point backend may exchange 
 3. Logo routes to `/`.
 4. Identifier supports email or phone.
 5. User enters password or chooses Google, Apple, or Microsoft.
-6. Clerk handles 2FA if enabled.
+6. Supabase Auth handles MFA when enabled.
 7. Backend session bridge completes where needed.
 8. User lands in `/dashboard`.
 
 ### Password Reset
 
-Use Clerk reset flows:
+Use Supabase Auth reset flows:
 
 - Request reset.
 - Receive email or code.
@@ -765,7 +765,7 @@ Hierarchy:
 2. Instant activation.
 3. Multi-country plans.
 4. Usage visibility.
-5. 1GLOBAL backend abstraction.
+5. Airalo backend abstraction.
 6. CTA: Get Your eSIM.
 
 ### Proxies Purchase
@@ -876,7 +876,7 @@ Hierarchy:
 
 | Contact | Link |
 | --- | --- |
-| Email | `mailto:info.burnerpoint@gmail.com` |
+| Email | `mailto:info@burnerpoint.com` |
 | Telegram support | `https://t.me/burnerpoint` |
 | Telegram app channel | `https://t.me/burnerpointapp` |
 
@@ -884,8 +884,8 @@ Hierarchy:
 
 | Channel | Link |
 | --- | --- |
-| Instagram | `https://www.instagram.com/burnerpoint.app` |
-| Facebook | `https://www.facebook.com/burnerpoint.app` |
+| Instagram | `https://www.instagram.com/burnerpointapp` |
+| Facebook | `https://www.facebook.com/burnerpointapp` |
 | LinkedIn | `https://www.linkedin.com/company/burnerpointapp` |
 | TikTok | `https://www.tiktok.com/@burnerpointapp` |
 | Twitter/X | `https://x.com/burnerpointapp` |
@@ -1025,7 +1025,7 @@ States:
 
 ### Backend Shape
 
-Burner Point uses NestJS on Railway with Neon Postgres, Redis-compatible queues/cache, and backend-only provider adapters.
+Burner Point uses NestJS on Railway with Supabase Postgres, Railway Redis, and backend-only provider adapters.
 
 Core modules:
 
@@ -1056,12 +1056,12 @@ The frontend and mobile apps only call Burner Point backend endpoints. Provider 
 Backend-only providers:
 
 - Twilio.
-- Infobip.
-- Vonage.
+- Telnyx.
+- Tremil.
 - Bandwidth.
 - OpenAI.
-- 1GLOBAL.
-- Bright Data.
+- Airalo.
+- Oxylabs.
 - WireGuard.
 - Paystack.
 - Flutterwave.
@@ -1071,8 +1071,8 @@ Backend-only providers:
 - Paddle.
 - NOWPayments.
 - Resend.
-- Clerk secret APIs.
-- Neon.
+- Supabase service-role and JWT secrets.
+- Supabase Postgres.
 - Sentry auth token.
 - S3 credentials.
 - Private PostHog capture.
@@ -1083,12 +1083,12 @@ Allowed public values only:
 
 - `NEXT_PUBLIC_API_URL`.
 - `NEXT_PUBLIC_APP_URL`.
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`.
+- `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 - `NEXT_PUBLIC_SENTRY_DSN`.
 - `NEXT_PUBLIC_POSTHOG_KEY` where public analytics is intended.
 - `EXPO_PUBLIC_API_URL`.
 - `EXPO_PUBLIC_WEB_URL`.
-- `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`.
+- `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, and RevenueCat public mobile keys.
 - `EXPO_PUBLIC_SENTRY_DSN`.
 
 ### Webhook Strategy
@@ -1105,13 +1105,13 @@ Every webhook must:
 Webhook receivers include:
 
 - Twilio SMS, voice, status, recording, verify.
-- Vonage inbound and status.
-- Infobip inbound and status.
+- Telnyx inbound and status.
+- Tremil inbound and status where enabled.
 - Bandwidth.
-- 1GLOBAL.
-- Bright Data.
+- Airalo.
+- Oxylabs.
 - WireGuard.
-- Clerk.
+- Supabase Auth.
 - Paystack.
 - Paddle.
 - NOWPayments.
@@ -1343,7 +1343,7 @@ This runs:
 5. Review security, env, migrations, and webhooks.
 6. Merge only when clean.
 
-### Step 4: Neon
+### Step 4: Supabase Postgres
 
 1. Create development, staging, and production databases or branches.
 2. Enable SSL.
@@ -1372,7 +1372,7 @@ This runs:
 5. Deploy production.
 6. Check `/`, `/sitemap.xml`, `/robots.txt`, `/opengraph-image`, `/auth/login`, `/dashboard`.
 
-### Step 7: Clerk
+### Step 7: Supabase Auth
 
 1. Configure production app.
 2. Enable email, phone, Google, Apple, Microsoft.
@@ -1395,11 +1395,11 @@ This runs:
 Configure and smoke test:
 
 - Twilio.
-- Infobip.
-- Vonage.
+- Telnyx.
+- Tremil.
 - Bandwidth.
-- 1GLOBAL.
-- Bright Data.
+- Airalo.
+- Oxylabs.
 - WireGuard.
 - Resend.
 - S3.
@@ -1429,7 +1429,7 @@ Monitor:
 - Sentry.
 - Railway logs.
 - Vercel logs.
-- Neon metrics.
+- Supabase database metrics.
 - PostHog funnels.
 - Provider dashboards.
 - Payment dashboards.
@@ -1501,7 +1501,7 @@ Make the public product feel premium, secure, and conversion-ready.
 
 Work on:
 
-- Clerk dashboard settings.
+- Supabase Auth dashboard settings.
 - Sign-up validation.
 - Sign-in with email/phone.
 - OAuth.
@@ -1539,8 +1539,8 @@ Work on:
 - Twilio OTP.
 - Twilio SMS/MMS/voice.
 - Bandwidth number infrastructure.
-- Infobip global route.
-- Vonage fallback.
+- Telnyx global route.
+- Tremil fallback where enabled.
 - Provider health and circuit breakers.
 
 Goal:
@@ -1567,8 +1567,8 @@ Make revenue flows safe and auditable.
 
 Work on:
 
-- eSIM with 1GLOBAL.
-- Proxies with Bright Data.
+- eSIM with Airalo.
+- Proxies with Oxylabs and Smartproxy.
 - VPN with WireGuard.
 - S3 media/document storage.
 
@@ -1599,8 +1599,8 @@ Work on:
 - GitHub CI.
 - Vercel env.
 - Railway env.
-- Neon migrations.
-- Clerk production app.
+- Supabase migrations.
+- Supabase production project.
 - Sentry/PostHog.
 - EAS env.
 - Store metadata.

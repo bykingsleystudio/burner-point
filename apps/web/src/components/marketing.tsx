@@ -154,7 +154,7 @@ export function MarketingPage({ page }: { page: MarketingPageContent }) {
               {page.highlights?.length ? (
                 <div className="mt-6 grid gap-3">
                   {page.highlights.map((item) => (
-                    <div key={item} className="flex items-center gap-3 rounded-[1rem] border border-white/10 bg-black/20 px-4 py-3">
+                    <div key={item} className="flex items-center gap-3 rounded-[1rem] border border-white/10 bg-[#020806]/20 px-4 py-3">
                       <span className="h-2.5 w-2.5 rounded-full bg-[#00FF9D]" />
                       <span className="text-sm text-white/78">{item}</span>
                     </div>

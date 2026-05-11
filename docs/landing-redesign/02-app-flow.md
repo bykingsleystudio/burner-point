@@ -9,8 +9,8 @@
 
 ## Auth flow
 1. User chooses OAuth, phone, or email/password.
-2. Clerk handles sign-in or sign-up.
-3. Verification and recovery remain in the existing Clerk-driven states.
+2. Supabase Auth handles sign-in or sign-up.
+3. Verification and recovery remain in the existing Supabase Auth-driven states.
 4. User lands in dashboard after successful auth.
 
 ## Support flow

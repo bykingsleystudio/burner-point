@@ -69,7 +69,7 @@ export default function CallsPage() {
                     className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-[0.95rem] border px-4 text-xs font-semibold uppercase tracking-[0.12em] transition ${
                       active
                         ? 'border-brand-green/24 bg-brand-green/[0.08] text-brand-green'
-                        : 'border-white/8 bg-black/20 text-white/58 hover:border-brand-green/20 hover:text-white'
+                        : 'border-white/8 bg-[#020806]/20 text-white/58 hover:border-brand-green/20 hover:text-white'
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -95,7 +95,7 @@ export default function CallsPage() {
             />
           </div>
 
-          <div className="mt-5 rounded-[1.2rem] border border-white/8 bg-black/20 p-4">
+          <div className="mt-5 rounded-[1.2rem] border border-white/8 bg-[#020806]/20 p-4">
             <div className="flex items-center gap-3">
               <span className="flex h-11 w-11 items-center justify-center rounded-[1rem] border border-brand-green/20 bg-brand-green/10">
                 <Voicemail className="h-5 w-5 text-brand-green" />
@@ -106,7 +106,7 @@ export default function CallsPage() {
               </div>
             </div>
 
-            <div className="mt-4 rounded-[1rem] border border-white/8 bg-black/24 p-4 text-sm leading-6 text-white/50">
+            <div className="mt-4 rounded-[1rem] border border-white/8 bg-[#020806]/24 p-4 text-sm leading-6 text-white/50">
               No voicemail recordings are available yet. When a line receives missed calls, playback and callback actions will appear here.
             </div>
           </div>
@@ -114,7 +114,7 @@ export default function CallsPage() {
 
         <aside className="rounded-[1.5rem] border border-white/8 bg-brand-card p-5">
           <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Dial keypad</p>
-          <div className="mt-4 rounded-[1rem] border border-white/8 bg-black/20 px-4 py-5">
+          <div className="mt-4 rounded-[1rem] border border-white/8 bg-[#020806]/20 px-4 py-5">
             <p className="text-xs uppercase tracking-[0.12em] text-white/38">Dialed number</p>
             <p className="mt-3 min-h-[2.5rem] break-all font-mono text-2xl text-white">
               {dialValue || 'Enter number'}
@@ -127,7 +127,7 @@ export default function CallsPage() {
                 key={value}
                 type="button"
                 onClick={() => appendDigit(value)}
-                className="rounded-[1rem] border border-white/8 bg-black/20 px-3 py-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.05]"
+                className="rounded-[1rem] border border-white/8 bg-[#020806]/20 px-3 py-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.05]"
               >
                 <p className="font-mono text-xl text-white">{value}</p>
                 <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-white/34">{letters || '\u00A0'}</p>

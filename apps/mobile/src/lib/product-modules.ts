@@ -151,7 +151,7 @@ export const MOBILE_PRODUCT_MODULES = {
       'Reach support for verification delivery, rentals, eSIM activation, proxies, secure tunnel access, account access, or billing reconciliation.',
     status: 'Support center',
     primaryAction: { label: 'Open Tickets', href: '/support-tickets' },
-    secondaryAction: { label: 'Email Support', href: 'mailto:info.burnerpoint@gmail.com' },
+    secondaryAction: { label: 'Email Support', href: 'mailto:info@burnerpoint.com' },
     stats: [
       { label: 'Email', value: 'Active' },
       { label: 'Telegram', value: 'Ready' },
@@ -171,7 +171,7 @@ export const MOBILE_PRODUCT_MODULES = {
     description:
       'A ticket queue gives users a structured path for failed OTPs, payment references, number issues, eSIM install help, proxies, and account access.',
     status: 'Ticket framework',
-    primaryAction: { label: 'Contact Support', href: 'mailto:info.burnerpoint@gmail.com' },
+    primaryAction: { label: 'Contact Support', href: 'mailto:info@burnerpoint.com' },
     secondaryAction: { label: 'Back To Support', href: '/support' },
     stats: [
       { label: 'Scope', value: 'Private' },

@@ -108,7 +108,7 @@ function HeroSection() {
           <div className="w-full max-w-[42rem] rounded-[2.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-4 shadow-[0_44px_120px_rgba(0,0,0,.48)] backdrop-blur-2xl">
             <div className="mb-4 grid gap-3 sm:grid-cols-3">
               {trustedChips.slice(0, 3).map((item) => (
-                <div key={item} className="rounded-[1.2rem] border border-white/10 bg-black/18 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.12em] text-white/70">
+                <div key={item} className="rounded-[1.2rem] border border-white/10 bg-[#020806]/18 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.12em] text-white/70">
                   {item}
                 </div>
               ))}
@@ -136,7 +136,7 @@ function DashboardGlass() {
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {accountSignals.map((item) => (
-          <div key={item.label} className="rounded-[1.25rem] border border-white/10 bg-black/24 p-4">
+          <div key={item.label} className="rounded-[1.25rem] border border-white/10 bg-[#020806]/24 p-4">
             <p className="text-xs uppercase tracking-[0.16em] text-white/70">{item.label}</p>
             <p className="mt-2 text-xl font-black text-white">{item.value}</p>
             <p className="mt-1 text-xs text-white/72">{item.meta}</p>
@@ -264,7 +264,7 @@ function ProductVisual({ sectionIndex }: { sectionIndex: number }) {
 
         <div className="grid gap-3">
           {['Choose product', 'Confirm availability', 'Start using it'].map((step, index) => (
-            <div key={step} className="flex items-center gap-3 rounded-[1.2rem] border border-white/10 bg-black/28 px-4 py-3">
+            <div key={step} className="flex items-center gap-3 rounded-[1.2rem] border border-white/10 bg-[#020806]/28 px-4 py-3">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#00FF9D]/12 font-mono text-xs font-black text-[#00FF9D]">
                 {index + 1}
               </span>

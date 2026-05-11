@@ -45,7 +45,7 @@ Use EAS-managed credentials for launch unless there is a reason to manually cont
 
 ## Sentry DSN Setup
 
-Sentry is separate from GitHub, Neon, Railway, Vercel, Clerk, Resend, Expo, and OpenAI. Create separate Sentry projects so errors do not mix across surfaces:
+Sentry is separate from GitHub, Supabase, Railway, Vercel, Resend, Expo, and OpenAI. Create separate Sentry projects so errors do not mix across surfaces:
 
 - `burner-point-web` using the Next.js platform.
 - `burner-point-api` using the Node.js platform.
@@ -64,15 +64,15 @@ apps/mobile/.env:
 EXPO_PUBLIC_SENTRY_DSN=https://your_real_mobile_dsn_here
 ```
 
-For deployed environments, set the same values in Railway, Vercel, and EAS environment variables. A DSN is not a Clerk key, API key, or database URL; it is the full Sentry URL-like value for the specific Sentry project.
+For deployed environments, set the same values in Railway, Vercel, and EAS environment variables. A DSN is not a Supabase key, API key, or database URL; it is the full Sentry URL-like value for the specific Sentry project.
 
 `SENTRY_AUTH_TOKEN` is optional for runtime error reporting. Add it only when Burner Point should upload source maps or attach release metadata during builds. The DSN variables are the required values for basic error capture.
 
-## Clerk Secret Rotation
+## Supabase Secret Rotation
 
-The Clerk secret key was shared during setup. Rotate it in Clerk before production or real users, then update:
+If any Supabase service-role key, JWT secret, database URL, or provider secret was shared during setup, rotate it in the owning dashboard before production or real users, then update:
 
 - Local ignored `.env` files.
 - Vercel web environment variables.
 - Railway API environment variables.
-- Any CI/CD secret store that references `CLERK_SECRET_KEY`.
+- Any CI/CD secret store that references Supabase service-role, JWT, database, RevenueCat, payment, telecom, or webhook secrets.

@@ -91,11 +91,11 @@ Set these in Railway under:
 burner-point-api -> Variables
 ```
 
-Burner Point uses Neon Postgres as the system-of-record database. Railway should run the API and Redis, but the production `DATABASE_URL` should come from Neon.
+Burner Point uses Supabase Postgres as the system-of-record database. Railway should run the API and Redis, but the production `DATABASE_URL` should come from Supabase's pooled connection string.
 
 ### Database And Cache
 
-Use real values from the Neon dashboard. Do not commit real Neon credentials.
+Use real values from the Supabase dashboard. Do not commit real Supabase credentials.
 
 ```env
 DATABASE_URL=
@@ -118,12 +118,18 @@ Notes:
 NODE_ENV=production
 APP_PORT=3001
 JWT_SECRET=
+JWT_REFRESH_SECRET=
 ENCRYPTION_KEY=
 ADMIN_SECRET_KEY=
-CLERK_SECRET_KEY=
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+REVENUECAT_SECRET_API_KEY=
+REVENUECAT_PROJECT_ID=
+REVENUECAT_WEBHOOK_AUTHORIZATION=
 ```
 
-Do not commit the Clerk secret key. If it was shared in chat or screenshots during setup, rotate it in Clerk before production and update Railway/Vercel/EAS with the rotated value.
+Do not commit Supabase service-role keys, RevenueCat secret keys, JWT secrets, or provider API keys. Rotate any secret that was shared in chat or screenshots before production.
 
 ### Twilio
 
@@ -136,9 +142,9 @@ TWILIO_DEFAULT_FROM=
 
 ### Telnyx and Tremil Routing
 
-Set these when enabling the global verification fallback routes, Telnyx number infrastructure, and the Tremil economy route. Provider callback URLs should point to your Railway API domain under the global `/api` prefix:
+Set these when enabling the global verification fallback routes, Telnyx number infrastructure, and the Tremil economy route. Provider callback URLs should point to the production API domain under the global `/api` prefix:
 
-- Telnyx messaging and number events: `https://your-railway-domain.up.railway.app/api/webhooks/telnyx`
+- Telnyx messaging and number events: `https://api.burnerpoint.com/api/webhooks/telnyx`
 
 ```env
 SMS_DEFAULT_FROM=BurnerPoint
@@ -168,9 +174,9 @@ PADDLE_PRICE_VERIFICATION=
 PADDLE_PRICE_RENTAL=
 PADDLE_PRICE_SUB_MONTHLY=
 
-NOWPAYMENTS_API_KEY=xxx
-NOWPAYMENTS_IPN_SECRET=xxx
-NOWPAYMENTS_SANDBOX=true
+NOWPAYMENTS_API_KEY=
+NOWPAYMENTS_IPN_SECRET=
+NOWPAYMENTS_SANDBOX=false
 ```
 
 Flutterwave, Squad, Korapay, and OPay can stay disabled or sandbox-only unless they are intentionally enabled for the current revenue flow.
@@ -186,11 +192,13 @@ AI_KILL_SWITCH=false
 ### Email
 
 ```env
+RESEND_API_KEY=
+RESEND_FROM_EMAIL=Burner Point <no-reply@burnerpoint.com>
 SMTP_HOST=smtp.resend.com
 SMTP_PORT=465
 SMTP_USER=resend
-SMTP_PASS=re_xxx
-SMTP_FROM=noreply@burnerpoint.app
+SMTP_PASS=
+SMTP_FROM=Burner Point <no-reply@burnerpoint.com>
 ```
 
 ### CORS
@@ -198,9 +206,10 @@ SMTP_FROM=noreply@burnerpoint.app
 Set this to your actual production web domains:
 
 ```env
-CORS_ORIGINS=https://burnerpoint.vercel.app,https://burnerpoint.app,https://www.burnerpoint.app
-WEB_URL=https://burnerpoint.vercel.app
-APP_URL=https://burner-point-api-production.up.railway.app
+CORS_ALLOWED_ORIGINS=https://burnerpoint.com,https://www.burnerpoint.com
+WEB_URL=https://burnerpoint.com
+APP_URL=https://burnerpoint.com
+API_URL=https://api.burnerpoint.com
 ```
 
 ## Local Verification Before Deploy
@@ -238,7 +247,7 @@ railway service status --service burner-point-api --environment production --jso
 Check the health endpoint:
 
 ```powershell
-Invoke-WebRequest -Uri "https://burner-point-api-production.up.railway.app/health" -UseBasicParsing |
+Invoke-WebRequest -Uri "https://api.burnerpoint.com/health" -UseBasicParsing |
   Select-Object -ExpandProperty Content
 ```
 
@@ -273,17 +282,17 @@ Confirm `@nestjs/cli` is available in [apps/api/package.json](apps/api/package.j
 Confirm:
 
 - `/health` returns HTTP 200.
-- `DATABASE_URL` is set to the Neon connection string.
+- `DATABASE_URL` is set to the Supabase pooled connection string.
 - `REDIS_URL` is set.
 - `JWT_SECRET`, `ENCRYPTION_KEY`, and `ADMIN_SECRET_KEY` are set.
-- Neon allows SSL connections and the URL includes `?sslmode=require`.
+- Supabase allows SSL connections and the URL includes the correct pooler parameters.
 
 ### DATABASE_URL not set
 
-Copy the connection string from Neon and add it to Railway as:
+Copy the pooled connection string from Supabase and add it to Railway as:
 
 ```env
-DATABASE_URL=postgresql://...?...sslmode=require
+DATABASE_URL=<paste_supabase_pooled_connection_string_with_sslmode_require>
 ```
 
-Do not use Railway Postgres as the production system of record unless you intentionally roll back the Neon database decision.
+Do not use Railway Postgres as the production system of record unless you intentionally roll back the Supabase database decision.

@@ -343,7 +343,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       'mt-0.5 flex h-10 w-10 flex-none items-center justify-center rounded-[0.95rem] border transition',
                       active
                         ? 'border-brand-green/28 bg-brand-green/12 text-brand-green'
-                        : 'border-white/8 bg-black/20 text-white/44 group-hover:border-brand-green/20 group-hover:text-brand-green',
+                        : 'border-white/8 bg-[#020806]/20 text-white/44 group-hover:border-brand-green/20 group-hover:text-brand-green',
                     )}
                   >
                     <Icon className="h-5 w-5" />
@@ -374,7 +374,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </span>
               <ChevronDown className="h-4 w-4 text-white/42 transition group-open:rotate-180" />
             </summary>
-            <div className="mt-2 rounded-[1.15rem] border border-white/8 bg-black/36 p-2">
+            <div className="mt-2 rounded-[1.15rem] border border-white/8 bg-[#020806]/36 p-2">
               <Link href="/dashboard/settings" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-white/68 transition hover:bg-white/[0.04] hover:text-white">
                 <UserCircle2 className="h-4 w-4 text-brand-green" />
                 Profile
@@ -413,7 +413,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           type="button"
           aria-label="Close dashboard navigation"
           onClick={toggleSidebar}
-          className="fixed inset-0 z-30 bg-black/58 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-30 bg-[#020806]/58 backdrop-blur-sm md:hidden"
         />
       ) : null}
 

@@ -100,5 +100,5 @@ Reviewed screenshots from `C:\Users\HP\Pictures\Screenshots\` dated April 24-25,
 - Navigation: simple, sticky, conversion-oriented.
 - Pricing: productized cards with direct action labels.
 - Footer: support-first, with full contact and social coverage.
-- Auth: simplified branded entry flow tied directly to Clerk and phone verification.
+- Auth: simplified branded entry flow tied directly to Supabase Auth and phone verification.
 - Dashboard: unified shell with premium control-room styling and module-specific continuity.

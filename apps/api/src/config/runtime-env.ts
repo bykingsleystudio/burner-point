@@ -101,14 +101,14 @@ export function resolveApiOrigin(source: RuntimeEnvSource): string {
     if (isConfiguredValue(value)) return ensureHttps(value);
   }
 
-  const appUrl = readEnv(source, 'APP_URL');
-  if (isConfiguredValue(appUrl)) return stripApiSuffix(appUrl);
-
   if (readEnv(source, 'NODE_ENV') === 'production') {
     throw new Error('API_URL must be configured in production');
   }
 
-  return 'http://localhost:3001';
+  const appUrl = readEnv(source, 'APP_URL');
+  if (isConfiguredValue(appUrl)) return stripApiSuffix(appUrl);
+
+  return 'https://api.burnerpoint.com';
 }
 
 export function resolveApiUrl(source: RuntimeEnvSource): string {

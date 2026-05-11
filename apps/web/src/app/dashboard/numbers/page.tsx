@@ -195,7 +195,7 @@ export default function NumbersPage() {
       )}
 
       {showModal ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={() => setShowModal(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#020806]/70 p-4 backdrop-blur-sm" onClick={() => setShowModal(false)}>
           <div className="w-full max-w-lg rounded-lg border border-brand-border bg-brand-card p-6" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-lg font-bold">Get a private number</h2>
             <p className="mb-5 mt-1 text-sm leading-6 text-brand-muted">Choose the country and lifecycle that match your privacy need.</p>

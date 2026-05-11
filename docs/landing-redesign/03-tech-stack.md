@@ -7,7 +7,7 @@
 - Existing Burner Point brand primitives
 
 ## Existing integrations preserved
-- Clerk authentication
+- Supabase authentication
 - Sentry
 - PostHog
 - Existing marketing/SEO helpers

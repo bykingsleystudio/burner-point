@@ -97,7 +97,7 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="rounded-[1.6rem] border border-white/10 bg-black/28 p-5">
+          <div className="rounded-[1.6rem] border border-white/10 bg-[#020806]/28 p-5">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Credits balance</p>
@@ -188,7 +188,7 @@ export default function DashboardPage() {
                 <Link
                   key={action.href}
                   href={action.href}
-                  className="group rounded-[1.35rem] border border-white/8 bg-black/24 p-4 transition hover:-translate-y-0.5 hover:border-brand-green/28 hover:bg-brand-green/[0.05]"
+                  className="group rounded-[1.35rem] border border-white/8 bg-[#020806]/24 p-4 transition hover:-translate-y-0.5 hover:border-brand-green/28 hover:bg-brand-green/[0.05]"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <span className="flex h-11 w-11 items-center justify-center rounded-[1rem] border border-brand-green/18 bg-brand-green/10">
@@ -209,7 +209,7 @@ export default function DashboardPage() {
           <div className="mt-5 space-y-3">
             {activity.length ? (
               activity.map((item) => (
-                <div key={item.id} className="rounded-[1.25rem] border border-white/8 bg-black/24 p-4">
+                <div key={item.id} className="rounded-[1.25rem] border border-white/8 bg-[#020806]/24 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-white">{item.description || item.type || 'Wallet event'}</p>
@@ -225,7 +225,7 @@ export default function DashboardPage() {
                 </div>
               ))
             ) : (
-              <div className="rounded-[1.25rem] border border-white/8 bg-black/24 p-5 text-sm leading-6 text-white/52">
+              <div className="rounded-[1.25rem] border border-white/8 bg-[#020806]/24 p-5 text-sm leading-6 text-white/52">
                 Recent verification events, rentals, and wallet activity will appear here once the account starts transacting.
               </div>
             )}
@@ -258,7 +258,7 @@ export default function DashboardPage() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="group rounded-[1.35rem] border border-white/8 bg-black/24 p-4 transition hover:-translate-y-0.5 hover:border-brand-green/28 hover:bg-brand-green/[0.05]"
+                className="group rounded-[1.35rem] border border-white/8 bg-[#020806]/24 p-4 transition hover:-translate-y-0.5 hover:border-brand-green/28 hover:bg-brand-green/[0.05]"
               >
                 <div className="flex items-center justify-between gap-3">
                   <span className="flex h-11 w-11 items-center justify-center rounded-[1rem] border border-brand-green/18 bg-brand-green/10">

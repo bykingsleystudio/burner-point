@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, HttpCode, HttpStatus } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Param, Post, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Request } from 'express';
 import { SupabaseAuthService } from './supabase-auth.service';
@@ -61,7 +61,10 @@ export class AuthController {
   @Post('oauth/:provider')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'OAuth login with Google, Apple, or Microsoft' })
-  async oauthLogin(@Body('provider') provider: 'google' | 'apple' | 'microsoft') {
+  async oauthLogin(@Param('provider') provider: 'google' | 'apple' | 'microsoft') {
+    if (!['google', 'apple', 'microsoft'].includes(provider)) {
+      throw new BadRequestException('Unsupported OAuth provider');
+    }
     return this.authService.oauthLogin(provider);
   }
 

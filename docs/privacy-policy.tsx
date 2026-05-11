@@ -16,7 +16,7 @@ export default function PrivacyPolicyPage() {
         <h2>1. Who We Are</h2>
         <p>
           BurnerPoint ("we," "our," "us") operates the BurnerPoint platform,
-          including the website at burnerpoint.app, the iOS application, and the
+          including the website at burnerpoint.com, the iOS application, and the
           Android application (collectively, the "Service"). We provide temporary
           phone numbers for privacy-conscious individuals and businesses.
         </p>
@@ -113,7 +113,7 @@ export default function PrivacyPolicyPage() {
         </ul>
         <p>
           To exercise these rights, contact us at{' '}
-          <a href="mailto:privacy@burnerpoint.app">privacy@burnerpoint.app</a>.
+          <a href="mailto:privacy@burnerpoint.com">privacy@burnerpoint.com</a>.
           We respond within 30 days.
         </p>
       </section>
@@ -145,7 +145,7 @@ export default function PrivacyPolicyPage() {
         <p>
           The Service is not directed at children under 16 (18 in some jurisdictions).
           We do not knowingly collect data from minors. If you believe a minor has
-          created an account, contact us at privacy@burnerpoint.app.
+          created an account, contact us at privacy@burnerpoint.com.
         </p>
       </section>
 
@@ -172,9 +172,9 @@ export default function PrivacyPolicyPage() {
         <p>
           <strong>Data Controller:</strong> BurnerPoint<br />
           <strong>Email:</strong>{' '}
-          <a href="mailto:privacy@burnerpoint.app">privacy@burnerpoint.app</a><br />
+          <a href="mailto:privacy@burnerpoint.com">privacy@burnerpoint.com</a><br />
           <strong>Support:</strong>{' '}
-          <a href="mailto:support@burnerpoint.app">support@burnerpoint.app</a>
+          <a href="mailto:support@burnerpoint.com">support@burnerpoint.com</a>
         </p>
       </section>
     </div>
