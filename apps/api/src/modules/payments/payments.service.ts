@@ -1697,7 +1697,7 @@ export class PaymentsService {
       throw new BadRequestException('APP_URL must be configured before starting payment flows');
     }
 
-    return 'http://localhost:3000';
+    return 'https://burnerpoint.com';
   }
 
   private getOpayBaseUrl(): string {

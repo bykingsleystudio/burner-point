@@ -7,7 +7,7 @@ This redesign is intentionally frontend-only.
 - Homepage product list
 - Pricing cards
 - FAQ categories
-- Testimonials placeholders
+- Testimonials collection
 - Support and social metadata
 
 ## Future schema opportunities

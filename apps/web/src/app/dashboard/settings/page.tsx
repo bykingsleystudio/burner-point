@@ -139,11 +139,11 @@ export default function SettingsPage() {
             <h3 className="text-base font-semibold text-white">Billing & Subscription</h3>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <Link href="/dashboard/billing" className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
+            <Link href="/dashboard/wallet" className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
               <p className="text-sm font-semibold text-white">Wallet balance</p>
               <p className="mt-2 text-sm leading-6 text-white/50">Review funding history, invoices, and active subscriptions.</p>
             </Link>
-            <Link href="/dashboard/billing" className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
+            <Link href="/dashboard/wallet" className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4 transition hover:border-brand-green/20 hover:bg-brand-green/[0.04]">
               <p className="text-sm font-semibold text-white">Deposit options</p>
               <p className="mt-2 text-sm leading-6 text-white/50">Fund the wallet for usage-based products and renewals.</p>
             </Link>

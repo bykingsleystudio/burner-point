@@ -23,6 +23,9 @@ const REQUIRED_PRODUCTION_ENV = [
   'PAYSTACK_WEBHOOK_SECRET',
   'INTERNAL_API_KEY',
   'WEBHOOK_SIGNING_SECRET',
+  'REVENUECAT_SECRET_API_KEY',
+  'REVENUECAT_PROJECT_ID',
+  'REVENUECAT_WEBHOOK_AUTHORIZATION',
   'SUPABASE_STORAGE_USER_UPLOADS_BUCKET',
   'SUPABASE_STORAGE_MEDIA_BUCKET',
   'SUPABASE_STORAGE_VERIFICATION_ASSETS_BUCKET',
@@ -35,6 +38,7 @@ const LIVE_PREFIXES: Record<string, RegExp> = {
   FLUTTERWAVE_SECRET_KEY: /^FLWSECK_LIVE-/,
   FLUTTERWAVE_PUBLIC_KEY: /^FLWPUBK_LIVE-/,
   PADDLE_API_KEY: /^pdl_live_apikey_/,
+  REVENUECAT_SECRET_API_KEY: /^sk_/,
 };
 
 const BLOCKED_VALUE_PATTERN =
@@ -68,6 +72,11 @@ export function validateProductionEnv(env: EnvMap) {
   }
   if (!corsOrigins.includes('https://www.burnerpoint.com')) {
     failures.push('CORS_ALLOWED_ORIGINS should include https://www.burnerpoint.com');
+  }
+  const allowedProductionOrigins = new Set(['https://burnerpoint.com', 'https://www.burnerpoint.com']);
+  const unexpectedOrigins = corsOrigins.filter((origin) => !allowedProductionOrigins.has(origin));
+  if (unexpectedOrigins.length) {
+    failures.push(`CORS_ALLOWED_ORIGINS contains non-production origins: ${unexpectedOrigins.join(', ')}`);
   }
 
   for (const name of ['PADDLE_SANDBOX', 'OPAY_SANDBOX', 'NOWPAYMENTS_SANDBOX', 'SECONDARY_GATEWAYS_SANDBOX']) {

@@ -1,4 +1,4 @@
-# BurnerPoint Product Specification And Implementation Roadmap
+﻿# BurnerPoint Product Specification And Implementation Roadmap
 
 ## Purpose
 
@@ -152,7 +152,7 @@ Convert visitors into authenticated users, buyers, and app downloads while estab
 **Status**
 
 - Exists in `apps/web/src/app/page.tsx`
-- Needs refinement to match the referenced “final” landing design
+- Needs refinement to match the referenced â€œfinalâ€ landing design
 
 **Primary User Flows**
 
@@ -286,7 +286,7 @@ Create low-friction but high-trust account entry with strong recovery and verifi
   - `POST /auth/oauth/apple`
   - `POST /auth/oauth/microsoft`
   - `POST /auth/forgot-password`
-  - `POST /auth/reset-password`
+  - `POST /auth/password/reset`
   - `POST /auth/2fa/setup`
   - `POST /auth/2fa/verify`
   - `POST /auth/2fa/disable`
@@ -386,7 +386,7 @@ Provide a unified communications console for SMS, MMS, calls, voicemail, and con
 
 **Primary User Flows**
 
-- Open a number’s conversation thread
+- Open a numberâ€™s conversation thread
 - Read inbound SMS and extracted OTPs
 - Send SMS or MMS
 - Receive incoming call alert
@@ -464,7 +464,7 @@ Make OTP acquisition and service verification the fastest path in the product.
 **Status**
 
 - OTP send/verify endpoints exist
-- Full “900+ services” catalog and verification tracking model still need productization
+- Full â€œ900+ servicesâ€ catalog and verification tracking model still need productization
 
 **Primary User Flows**
 
@@ -581,7 +581,7 @@ Support short-term and renewable number rentals with billing clarity and expiry 
 
 **Mobile Adaptation**
 
-- Emphasize “expiring soon” cards
+- Emphasize â€œexpiring soonâ€ cards
 - Quick renew from push notification deep link
 
 ### 7. Numbers
@@ -644,8 +644,8 @@ Extend BurnerPoint from virtual identity protection into mobile connectivity.
 
 **Status**
 
-- Placeholder route exists in web
-- Product and backend are not yet implemented
+- Live product and dashboard routes exist in web
+- Provider fulfillment and account lifecycle flows still require backend completion
 
 **Primary User Flows**
 
@@ -704,8 +704,8 @@ Sell and manage privacy connectivity options that complement BurnerPoint numbers
 
 **Status**
 
-- Placeholder route exists in web
-- Full product model not implemented
+- Live product and dashboard routes exist in web
+- Provider catalog and fulfillment flows are still being completed behind the API
 
 **Primary User Flows**
 
@@ -758,8 +758,8 @@ Provide lightweight privacy connectivity and routing from the same account.
 
 **Status**
 
-- Placeholder route exists in web
-- Not yet implemented end to end
+- Live product and dashboard routes exist in web
+- Provisioning and device lifecycle are not yet implemented end to end
 
 **Primary User Flows**
 
@@ -798,7 +798,7 @@ Provide lightweight privacy connectivity and routing from the same account.
 **Design Notes**
 
 - Keep VPN status obvious and honest
-- Avoid fake “protected” language if not fully connected
+- Avoid fake "protected" language if not fully connected
 
 ### 11. Credits And Billing
 
@@ -845,9 +845,9 @@ Handle all prepaid and subscription economics with transparency and local-market
   - `POST /payments/initialize`
   - `GET /payments/history`
   - `/payments/webhook/*`
-  - `POST /paddle/checkout`
-  - `GET /paddle/subscription`
-  - `POST /paddle/subscription/cancel`
+  - `POST /payments/initialize` with `gateway = "paddle"`
+  - `GET /billing/subscription`
+  - `POST /billing/entitlements/refresh`
 
 **Permissions / Security**
 
@@ -873,8 +873,8 @@ Reduce churn and operational frustration with visible help channels and trackabl
 
 **Status**
 
-- Placeholder route exists in web
-- Backend ticketing not yet implemented
+- Live support routes exist in web
+- Backend ticket routing and agent workflows still require completion
 
 **Primary User Flows**
 
@@ -1136,10 +1136,10 @@ Turn BurnerPoint into a programmable telecom platform with secure automation.
 
 ### Auth
 
-- `/auth/login`
-- `/auth/register`
-- `/auth/forgot-password`
-- `/auth/reset-password`
+- `/sign-in`
+- `/sign-up`
+- `/forgot-password`
+- `/reset-password`
 - `/auth/2fa`
 - `/auth/terms`
 
@@ -1155,7 +1155,7 @@ Turn BurnerPoint into a programmable telecom platform with secure automation.
 - `/dashboard/esim`
 - `/dashboard/proxies`
 - `/dashboard/vpn`
-- `/dashboard/credits`
+- `/dashboard/wallet`
 - `/dashboard/support`
 - `/dashboard/settings`
 - `/dashboard/api`

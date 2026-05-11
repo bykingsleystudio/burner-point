@@ -1,0 +1,23 @@
+# Burner Point Post-Deployment Checklist
+
+- [ ] Vercel production build serves `https://burnerpoint.com`
+- [ ] Railway production build serves `https://api.burnerpoint.com`
+- [ ] DNS resolves for `burnerpoint.com`, `www.burnerpoint.com`, and `api.burnerpoint.com`
+- [ ] `GET /health` returns 200
+- [ ] `GET /health/db` returns 200
+- [ ] `GET /health/redis` returns 200
+- [ ] `GET /health/storage` returns 200
+- [ ] `GET /api/platform/readiness` reviewed
+- [ ] Supabase migrations applied
+- [ ] RLS enabled on production tables
+- [ ] Supabase storage buckets verified
+- [ ] Supabase Auth redirects verified
+- [ ] Paystack webhook verified
+- [ ] Paddle webhook verified
+- [ ] NOWPayments webhook verified
+- [ ] RevenueCat webhook verified
+- [ ] Twilio Verify send/check verified
+- [ ] Telecom inbound webhook routes verified
+- [ ] Support email delivery verified
+- [ ] Web sign-up, sign-in, forgot-password, verify-phone, and reset-password routes verified
+- [ ] Dashboard wallet, billing, messenger, verify-hub, rentals, eSIM, proxy, secure-tunnel, settings, and support routes verified

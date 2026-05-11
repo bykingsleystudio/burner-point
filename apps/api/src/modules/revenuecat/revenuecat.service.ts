@@ -256,7 +256,7 @@ export class RevenueCatService {
     event?: Record<string, unknown>;
   }) {
     const { appUserId } = args;
-    const [customer, activeEntitlements] = await Promise.all([
+    const [_customer, activeEntitlements] = await Promise.all([
       this.fetchCustomer(appUserId),
       this.fetchActiveEntitlements(appUserId),
     ]);

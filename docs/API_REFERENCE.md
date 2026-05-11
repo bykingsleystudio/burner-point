@@ -1,6 +1,6 @@
-# BurnerPoint — Complete Backend API Reference
+﻿# BurnerPoint â€” Complete Backend API Reference
 # All 10 service integrations documented
-# Frontend communicates ONLY through these endpoints — never directly to third parties
+# Frontend communicates ONLY through these endpoints â€” never directly to third parties
 
 ## Architecture Principle
 
@@ -8,9 +8,9 @@ Frontend and mobile clients communicate only with the Burner Point backend. Thir
 
 ```
 Frontend (Next.js / React Native)
-    ↓  HTTP only
+    â†“  HTTP only
 Backend (NestJS on Railway)
-    ↓  Server-side SDK calls (API keys never reach frontend)
+    â†“  Server-side SDK calls (API keys never reach frontend)
 Third-party services (Twilio, Paddle, Paystack, OpenAI, etc.)
 ```
 
@@ -257,7 +257,7 @@ Marks a message as read.
 
 ---
 
-## 5. Payments — Nigerian Gateways
+## 5. Payments â€” Nigerian Gateways
 All 5 gateways use the same initialize endpoint with different `gateway` values.
 
 ### GET /payments/packages
@@ -284,7 +284,7 @@ Frontend opens checkoutUrl in browser. Never calls gateway directly.
 ### GET /payments/history  [AUTH REQUIRED]
 Returns last 50 wallet transactions.
 
-### POST /payments/webhook/:gateway  [NO AUTH — verified by signature]
+### POST /payments/webhook/:gateway  [NO AUTH â€” verified by signature]
 Webhook receivers for all payment gateways.
 ```
 /payments/webhook/flutterwave
@@ -298,45 +298,32 @@ Returns: { "received": true } (always 200)
 
 ---
 
-## 6. Paddle — Cards + Subscriptions
+## 6. Paddle - gateway behavior
 
-### POST /paddle/checkout  [AUTH REQUIRED]
-Creates Paddle checkout for credits, rental, or subscription.
+Paddle remains a supported payment gateway, but checkout is created through the shared payment initializer:
+
+### POST /payments/initialize  [AUTH REQUIRED]
+Use:
 ```json
 Body: {
-  "type": "verification",
-  // "verification" = $0.99 one-time OTP credits
-  // "rental"       = $5.99 one-time phone rental
-  // "subscription" = $15.99/month recurring
-  "metadata": {}  // optional
-}
-Response: {
-  "checkoutUrl": "https://checkout.paddle.com/...",
-  "transactionId": "txn_xxx"
-}
-```
-Frontend opens checkoutUrl. Never receives Paddle API key or Price IDs.
-
-### GET /paddle/subscription  [AUTH REQUIRED]
-```json
-Response: {
-  "active": true,
-  "status": "active",
-  "nextBilledAt": "2026-05-06T00:00:00Z",
-  "canceledAt": null
+  "paymentType": "subscription",
+  "gateway": "paddle",
+  "planId": "plan_uuid",
+  "clientPlatform": "web"
 }
 ```
 
-### POST /paddle/subscription/cancel  [AUTH REQUIRED]
-```json
-Response: { "cancelled": true }
-```
-Effective at end of current billing period.
+For wallet top-ups or one-time purchases, use `paymentType` values such as `credits` or `rental` with `gateway: "paddle"` when that flow is enabled.
 
-### POST /paddle/webhook  [NO AUTH — verified by HMAC-SHA256]
-Handles: transaction.completed, subscription.created, subscription.updated, subscription.canceled
+Subscription state is exposed through billing endpoints:
 
----
+- `GET /billing/subscription`
+- `GET /billing/entitlements`
+- `POST /billing/entitlements/refresh`
+
+Paddle webhooks are received on:
+
+- `POST /webhooks/paddle`
 
 ## 7. User Profile
 
@@ -363,7 +350,7 @@ Soft-deletes account. Data retained per Privacy Policy schedule.
 Body: { "name": "Production", "scopes": ["read", "write"] }
 Response: {
   "id": "uuid",
-  "rawKey": "bp_xxxxx",  // shown ONCE — user must save this
+  "rawKey": "bp_xxxxx",  // shown ONCE â€” user must save this
   "keyPrefix": "bp_abc123",
   "scopes": ["read", "write"]
 }
@@ -502,16 +489,16 @@ Creates a configured WireGuard VPN session through the backend control plane.
 |--------------------------|----------|---------|
 | Direct provider API calls | Never    | Always through BurnerPoint API |
 | Provider secret values    | Never    | Server-side only |
-| NEXT_PUBLIC_API_URL       | ✅       | —       |
-| NEXT_PUBLIC_PADDLE_CLIENT_TOKEN | ✅ | ✅     |
-| All other API keys        | ❌       | ✅ only |
-| Payment gateway URLs      | ❌       | ✅ only |
-| Paddle Price IDs          | ❌       | ✅ only |
-| Webhook secrets           | ❌       | ✅ only |
-| JWT secrets               | ❌       | ✅ only |
-| Database credentials      | ❌       | ✅ only |
-| Twilio credentials        | ❌       | ✅ only |
-| OpenAI API key            | ❌       | ✅ only |
+| NEXT_PUBLIC_API_URL       | âœ…       | â€”       |
+| NEXT_PUBLIC_PADDLE_CLIENT_TOKEN | âœ… | âœ…     |
+| All other API keys        | âŒ       | âœ… only |
+| Payment gateway URLs      | âŒ       | âœ… only |
+| Paddle Price IDs          | âŒ       | âœ… only |
+| Webhook secrets           | âŒ       | âœ… only |
+| JWT secrets               | âŒ       | âœ… only |
+| Database credentials      | âŒ       | âœ… only |
+| Twilio credentials        | âŒ       | âœ… only |
+| OpenAI API key            | âŒ       | âœ… only |
 
 The frontend never calls Twilio, OpenAI, Paystack, Flutterwave, Paddle, or
 NOWPayments directly. All calls route through the BurnerPoint backend.

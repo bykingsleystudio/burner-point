@@ -1,66 +1,80 @@
 # Burner Point
 
-Burner Point is a production-focused monorepo for privacy-first telecom, verification, rentals, eSIM, proxy access, secure tunnel sessions, billing, and support across web, API, and mobile clients.
+Burner Point is a production telecom and privacy platform built around Supabase, Next.js, NestJS, Railway, Vercel, and Expo.
 
-## Applications
+## Production surfaces
 
-- `apps/api` - NestJS API for auth exchange, provider orchestration, billing, webhooks, support tickets, and health checks
-- `apps/web` - Next.js customer-facing site and authenticated dashboard
-- `apps/mobile` - Expo / EAS mobile shell
-- `packages/shared` - shared types and cross-app utilities
+- Web: `https://burnerpoint.com`
+- API: `https://api.burnerpoint.com`
+- WebSocket: `wss://api.burnerpoint.com`
 
-## Core Stack
+## Stack
 
-- Auth: Clerk
-- Phone verification: Twilio Verify
-- Database: Neon Postgres
-- Web deploy: Vercel
-- API deploy: Railway
-- Mobile deploy: Expo / EAS
-- Monitoring: Sentry and PostHog
-- Email: Resend
-- Realtime / queue: Redis
+- Web: Next.js, React, TypeScript, Tailwind CSS
+- Mobile: React Native, Expo, EAS
+- API: NestJS on Railway
+- Core platform: Supabase Auth, Postgres, Realtime, Storage
+- Payments: Paystack, Flutterwave, Paddle, NOWPayments
+- Subscriptions: RevenueCat
+- Telecom: Twilio, Telnyx, Bandwidth, Tremil
+- Connectivity: Airalo, Oxylabs, Smartproxy, WireGuard
+- Monitoring: Sentry, PostHog
 
-## Local Commands
+## Workspace
 
-```bash
-# API
-cd apps/api
-npm run dev
-npm run build
-
-# Web
-cd apps/web
-npm run dev
-npx tsc --noEmit
-
-# Mobile
-cd apps/mobile
-npm run start
-npx tsc --noEmit
+```text
+apps/
+  api/
+  mobile/
+  web/
+docs/
+supabase/
+packages/
+scripts/
 ```
 
-## Production Checks
+## Local development
 
-- API health:
-  - `/health`
-  - `/health/db`
-  - `/health/queue`
-  - `/health/storage`
-- Run the app-local build and verification commands before release.
-- Add real values to `.env` or platform secret stores using `.env.example` as the key list.
+```bash
+npm install
+cp .env.example .env
+npm run build --prefix apps/api
+npm run build --prefix apps/web
+cd apps/mobile && npx tsc --noEmit
+```
 
-## Deployment Config
+Local URLs:
 
-- `apps/api/railway.toml`
-- `apps/web/vercel.json`
-- `apps/mobile/app.json`
-- `apps/mobile/eas.json`
+- Web: `http://localhost:3000`
+- API: `http://localhost:3001`
+- API docs: `http://localhost:3001/api/docs`
 
-## Operational Docs
+## Canonical docs
 
-- `DEPLOYMENT.md`
-- `ENVIRONMENT.md`
-- `TROUBLESHOOTING.md`
-- `POST_DEPLOYMENT_CHECKLIST.md`
-- `docs/NEON_RLS.sql`
+- [Environment](docs/environment.md)
+- [Deployment](docs/deployment.md)
+- [Security](docs/security.md)
+- [API](docs/api.md)
+- [Troubleshooting](docs/troubleshooting.md)
+- [Post-deployment checklist](docs/post-deployment-checklist.md)
+- [Detailed runbook](docs/DEPLOYMENT_RUNBOOK.md)
+- [Supabase and DBeaver](docs/supabase-dbeaver.md)
+
+## Verification commands
+
+```bash
+npm run security:scan
+npm run build --prefix apps/api
+npm run build --prefix apps/web
+cd apps/mobile && npx tsc --noEmit
+npm run test:e2e --prefix apps/web
+```
+
+## Support
+
+- Email: `info@burnerpoint.com`
+- Telegram: `https://t.me/burnerpoint`
+
+## License
+
+Proprietary. All rights reserved.

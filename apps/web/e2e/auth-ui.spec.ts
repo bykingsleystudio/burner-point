@@ -83,7 +83,7 @@ test.describe('Burner Point auth UI layout', () => {
 
     test('password reset screen renders without layout overlap', async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 });
-      await page.goto('/auth/reset-password', { waitUntil: 'domcontentloaded' });
+      await page.goto('/reset-password', { waitUntil: 'domcontentloaded' });
       await expect(page.getByRole('heading', { name: /Create a new password/i })).toBeVisible();
       await expect(page.getByText(/Open this page from the password reset link/i)).toBeVisible();
     });

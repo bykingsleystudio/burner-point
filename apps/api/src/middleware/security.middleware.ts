@@ -43,9 +43,7 @@ const AUTH_ROUTES = [
 
 const PAYMENT_ROUTES = [
   '/payments/initialize',
-  '/paddle/checkout',
   '/api/payments/initialize',
-  '/api/paddle/checkout',
 ];
 
 const WEBHOOK_ROUTES = [

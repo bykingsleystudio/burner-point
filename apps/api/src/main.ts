@@ -73,15 +73,17 @@ async function bootstrap() {
     .split(',')
     .map((o) => o.trim())
     .filter((origin) => Boolean(origin) && origin !== '*');
+  const allowVercelPreviews = process.env.CORS_ALLOW_VERCEL_PREVIEWS === 'true';
   const derivedOrigins = [
     process.env.NEXT_PUBLIC_APP_URL,
     process.env.WEB_URL,
     process.env.WEB_APP_URL,
     process.env.FRONTEND_URL,
-    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL.replace(/^https?:\/\//, '')}` : null,
+    allowVercelPreviews && process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL.replace(/^https?:\/\//, '')}`
+      : null,
   ].filter((origin): origin is string => Boolean(origin));
   const corsOrigins = Array.from(new Set([...allowedOrigins, ...derivedOrigins].map((origin) => origin.replace(/\/+$/, ''))));
-  const allowVercelPreviews = process.env.CORS_ALLOW_VERCEL_PREVIEWS === 'true';
 
   if (isProduction && !corsOrigins.length) {
     logger.warn(
@@ -137,7 +139,8 @@ async function bootstrap() {
     SwaggerModule.setup('api/docs', app, document, {
       swaggerOptions: { persistAuthorization: true },
     });
-    logger.log(`📚 Swagger: http://localhost:${process.env.PORT ?? process.env.APP_PORT ?? 3001}/api/docs`);
+    const docsOrigin = (process.env.API_URL || 'https://api.burnerpoint.com').replace(/\/+$/, '');
+    logger.log(`📚 Swagger: ${docsOrigin}/api/docs`);
   }
 
   const dataSource = app.get(DataSource);
@@ -163,20 +166,26 @@ async function bootstrap() {
     }
   });
 
-  httpAdapter.get('/health/queue', async (_req: unknown, res: { status: (code: number) => { json: (body: object) => void } }) => {
+  const redisHealthHandler = async (
+    _req: unknown,
+    res: { status: (code: number) => { json: (body: object) => void } },
+  ) => {
     try {
-      const probeKey = `health:queue:${Date.now()}`;
+      const probeKey = `health:redis:${Date.now()}`;
       await redisService.set(probeKey, '1', 30);
       const roundTrip = await redisService.get(probeKey);
       res.status(roundTrip === '1' ? 200 : 503).json({
         status: roundTrip === '1' ? 'ok' : 'error',
-        dependency: 'queue',
+        dependency: 'redis',
         ts: new Date().toISOString(),
       });
     } catch {
-      res.status(503).json({ status: 'error', dependency: 'queue', ts: new Date().toISOString() });
+      res.status(503).json({ status: 'error', dependency: 'redis', ts: new Date().toISOString() });
     }
-  });
+  };
+
+  httpAdapter.get('/health/redis', redisHealthHandler);
+  httpAdapter.get('/health/queue', redisHealthHandler);
 
   httpAdapter.get('/health/storage', (_req: unknown, res: { status: (code: number) => { json: (body: object) => void } }) => {
     const storageConfigured = Boolean(

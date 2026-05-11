@@ -209,11 +209,12 @@ Pre-release checks:
 
 1. Run `npm run build --prefix apps/web`.
 2. Confirm `/` renders.
-3. Confirm `/auth/login` and `/auth/signup` render.
-4. Confirm `/sitemap.xml` and `/robots.txt` render.
-5. Confirm `/opengraph-image` and `/twitter-image` render.
-6. Confirm dashboard routes are protected.
-7. Confirm no private env value appears in the web bundle.
+3. Confirm `/sign-in` and `/sign-up` render.
+4. Confirm `/forgot-password`, `/verify-phone`, and `/reset-password` render.
+5. Confirm `/sitemap.xml` and `/robots.txt` render.
+6. Confirm `/opengraph-image` and `/twitter-image` render.
+7. Confirm dashboard routes are protected.
+8. Confirm no private env value appears in the web bundle.
 
 Rollback:
 
@@ -277,7 +278,7 @@ Production setup:
 5. Add web redirects:
    - `https://burnerpoint.com/auth/callback`
    - `https://www.burnerpoint.com/auth/callback`
-   - `https://burnerpoint.com/auth/reset-password`
+  - `https://burnerpoint.com/reset-password`
 6. Add Expo/native redirect URLs for the Burner Point scheme:
    - `burnerpoint://redirect`
 7. Store `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` in Railway.
@@ -418,6 +419,7 @@ Minimum production monitoring:
 Release blocker signals:
 
 - API `/health` is failing.
+- API `/health/redis` is failing.
 - Sentry error rate spikes.
 - Payment webhooks fail signature checks or idempotency.
 - OTP send/check flow fails.

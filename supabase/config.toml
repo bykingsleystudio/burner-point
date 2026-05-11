@@ -158,9 +158,6 @@ site_url = "https://burnerpoint.com"
 additional_redirect_urls = [
   "https://burnerpoint.com/auth/callback",
   "https://www.burnerpoint.com/auth/callback",
-  "https://burnerpoint.vercel.app/auth/callback",
-  "http://127.0.0.1:3000/auth/callback",
-  "http://localhost:3000/auth/callback",
   "burnerpoint://redirect",
 ]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
@@ -357,12 +354,6 @@ enabled = false
 enabled = false
 # user_pool_id = "my-user-pool-id"
 # user_pool_region = "us-east-1"
-
-# Use Clerk as a third-party provider alongside Supabase Auth.
-[auth.third_party.clerk]
-enabled = false
-# Obtain from https://clerk.com/setup/supabase
-# domain = "example.clerk.accounts.dev"
 
 # OAuth server configuration
 [auth.oauth_server]

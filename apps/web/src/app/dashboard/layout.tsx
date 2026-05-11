@@ -116,6 +116,7 @@ const PAGE_META: Array<{ match: string; title: string; description: string }> = 
   { match: '/dashboard/settings', title: 'Settings', description: 'Profile, billing, support, and security controls.' },
   { match: '/dashboard/profile', title: 'Settings', description: 'Manage personal details and recovery information.' },
   { match: '/dashboard/billing', title: 'Billing & Subscription', description: 'Wallet movements, invoices, plans, and active subscriptions.' },
+  { match: '/dashboard/wallet', title: 'Wallet', description: 'Fund the wallet for verification, rentals, eSIM, proxies, and renewals.' },
   { match: '/dashboard/credits', title: 'Billing & Subscription', description: 'Fund the wallet for verification, rentals, eSIM, and proxies.' },
   { match: '/dashboard/api', title: 'Account Access', description: 'Request support-reviewed access and account controls.' },
   { match: '/dashboard/developer', title: 'Account Access', description: 'Request support-reviewed access and account controls.' },

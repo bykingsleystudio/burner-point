@@ -38,10 +38,8 @@ import { withWalletPresentation } from '../../config/money';
 import { resolveJwtRefreshSecret } from '../../config/runtime-env';
 import { createSupabaseFromConfig } from '../../config/supabase';
 
-const BCRYPT_ROUNDS = 12;
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
-const OTP_EXPIRY_SECONDS = 300; // 5 minutes
 
 @Injectable()
 export class SupabaseAuthService {
@@ -267,7 +265,7 @@ export class SupabaseAuthService {
     const { error } = await this.supabase.auth.resetPasswordForEmail(
       normalizedEmail,
       {
-        redirectTo: `${this.getWebUrl()}/auth/reset-password`,
+        redirectTo: `${this.getWebUrl()}/reset-password`,
       }
     );
 
@@ -283,7 +281,7 @@ export class SupabaseAuthService {
    * Reset password with token
    */
   async resetPassword(token: string, newPassword: string) {
-    const { data, error } = await this.supabase.auth.updateUser({
+    const { error } = await this.supabase.auth.updateUser({
       password: newPassword,
     });
 
@@ -514,7 +512,7 @@ export class SupabaseAuthService {
       }
 
       return this.generateTokens(user);
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }

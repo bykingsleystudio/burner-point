@@ -30,7 +30,7 @@ export class KorapayAdapter {
     try {
       const { data } = await axios.get(`${this.baseUrl}/charges/${reference}`, { headers: this.headers });
       return data.data?.status === 'success';
-    } catch (e) {
+    } catch {
       return false;
     }
   }

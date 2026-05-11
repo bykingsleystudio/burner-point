@@ -1,4 +1,4 @@
-# Burner Point Payment System Architecture
+﻿# Burner Point Payment System Architecture
 
 This document defines the production payment architecture for verification credits, number rentals, web checkout, and RevenueCat-managed mobile subscriptions.
 
@@ -69,7 +69,7 @@ RevenueCat does not fund the Burner Point wallet. Paystack, Flutterwave, Paddle,
 
 Web routes:
 
-- `/dashboard/credits`: credit packages and gateway selection.
+- `/dashboard/wallet`: credit packages and gateway selection.
 - `/dashboard/rentals`: rental duration, US/Canada country, optional selected number, and gateway selection.
 - `/dashboard/billing`: subscription plan selection and checkout.
 - `/dashboard/payments/success`: tells users webhook reconciliation is in progress.

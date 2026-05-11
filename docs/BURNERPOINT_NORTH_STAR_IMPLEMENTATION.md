@@ -1,4 +1,4 @@
-# Burner Point North-Star Implementation Document
+﻿# Burner Point North-Star Implementation Document
 
 Updated: 2026-04-17
 
@@ -130,11 +130,12 @@ Do not create microservices yet. Candidate future extractions are provider routi
 
 | Route | Purpose |
 | --- | --- |
-| `/auth/login` | Sign in with email, phone, OAuth, password, reset path |
-| `/auth/signup` | Create account |
-| `/auth/register` | Register alias route |
-| `/auth/phone-verify` | Phone verification client |
-| `/sso-callback` | OAuth callback |
+| `/sign-in` | Sign in with email, phone, OAuth, password, and recovery links |
+| `/sign-up` | Create account |
+| `/forgot-password` | Request a password reset |
+| `/verify-phone` | Phone verification client |
+| `/reset-password` | Complete password recovery |
+| `/auth/callback` | OAuth callback |
 | `/onboarding` | Post-auth onboarding |
 
 ### Dashboard IA
@@ -153,7 +154,7 @@ Do not create microservices yet. Candidate future extractions are provider routi
 | `/dashboard/esim` | eSIM plans and active eSIMs |
 | `/dashboard/proxies` | Proxy purchase and management |
 | `/dashboard/vpn` | Built-in VPN status and controls |
-| `/dashboard/credits` | Credits and wallet |
+| `/dashboard/wallet` | Credits and wallet |
 | `/dashboard/billing` | Billing overview |
 | `/dashboard/subscriptions` | Subscription management |
 | `/dashboard/support` | Support entry |
@@ -611,7 +612,7 @@ Supabase Auth is the primary authentication provider. Burner Point backend excha
 
 ### Create Account Flow
 
-1. User opens `/auth/signup`.
+1. User opens `/sign-up`.
 2. Burner Point logo routes to `/`.
 3. User enters first name, last name, email, phone, password.
 4. User accepts Terms and Privacy Policy separately.
@@ -623,7 +624,7 @@ Supabase Auth is the primary authentication provider. Burner Point backend excha
 
 ### Sign-In Flow
 
-1. User opens `/auth/login`.
+1. User opens `/sign-in`.
 2. Header says Welcome Back.
 3. Logo routes to `/`.
 4. Identifier supports email or phone.
@@ -805,8 +806,8 @@ Hierarchy:
 | Element | Route |
 | --- | --- |
 | Logo | `/` |
-| Sign In | `/auth/login` |
-| Get Started | `/auth/signup` |
+| Sign In | `/sign-in` |
+| Get Started | `/sign-up` |
 
 ### Main Navigation
 
@@ -826,7 +827,7 @@ Hierarchy:
 
 | CTA | Route |
 | --- | --- |
-| Get Started | `/auth/signup` |
+| Get Started | `/sign-up` |
 | Learn More | `/overview` |
 | View API Docs | `/api/docs` |
 | Get Verification | `/verifications` |
@@ -908,7 +909,7 @@ Hierarchy:
 | eSIM | `/dashboard/esim` |
 | Proxies | `/dashboard/proxies` |
 | VPN | `/dashboard/vpn` |
-| Credits | `/dashboard/credits` |
+| Wallet | `/dashboard/wallet` |
 | Billing | `/dashboard/billing` |
 | Subscriptions | `/dashboard/subscriptions` |
 | Support | `/dashboard/support` |
@@ -1370,7 +1371,7 @@ This runs:
 3. Test public pages, auth, dashboard, SEO.
 4. Set production env.
 5. Deploy production.
-6. Check `/`, `/sitemap.xml`, `/robots.txt`, `/opengraph-image`, `/auth/login`, `/dashboard`.
+6. Check `/`, `/sitemap.xml`, `/robots.txt`, `/opengraph-image`, `/sign-in`, `/dashboard`.
 
 ### Step 7: Supabase Auth
 

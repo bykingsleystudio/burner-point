@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import * as crypto from 'crypto';
 import { resolveApiUrl } from '../../../config/runtime-env';
 
 @Injectable()
@@ -24,14 +23,13 @@ export class OpayAdapter {
       userInfo: { userEmail: params.email },
       amount: { total: params.amountKobo / 100, currency: 'NGN' },
     };
-    const hash = crypto.createHmac('sha512', this.cfg.get('OPAY_PRIVATE_KEY')).update(JSON.stringify(payload)).digest('hex');
     const { data } = await axios.post(`${baseUrl}/api/v1/international/cashier/create`, payload, {
       headers: { Authorization: `Bearer ${this.cfg.get('OPAY_PUBLIC_KEY')}`, MerchantId: this.cfg.get('OPAY_MERCHANT_ID'), 'Content-Type': 'application/json' },
     });
     return { checkoutUrl: data.data?.cashierUrl, orderNo: data.data?.orderNo };
   }
 
-  async verify(reference: string): Promise<boolean> {
+  async verify(_reference: string): Promise<boolean> {
     return false; // Implemented via webhook in production
   }
 }

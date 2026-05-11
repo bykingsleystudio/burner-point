@@ -282,7 +282,7 @@ export class MessagingService {
       throw new Error('APP_URL must be configured before sending customer emails');
     }
 
-    return 'http://localhost:3000';
+    return 'https://burnerpoint.com';
   }
 
   private escapeHtml(value: string): string {

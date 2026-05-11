@@ -1,4 +1,4 @@
-# Burner Point SEO, Indexing, and Search Discovery
+﻿# Burner Point SEO, Indexing, and Search Discovery
 
 Date: 2026-04-17
 
@@ -127,7 +127,7 @@ Use these checks before launch:
 12. Submit the sitemap in Bing Webmaster Tools.
 13. Trigger IndexNow after launch.
 14. Test social previews for `/`, `/pricing`, `/verifications`, `/rentals`, `/blog`, `/faq`, `/help`, and `/contact`.
-15. Confirm `/dashboard`, `/auth/login`, `/auth/signup`, `/onboarding`, `/sso-callback`, and `/test` do not index.
+15. Confirm `/dashboard`, `/sign-in`, `/sign-up`, `/forgot-password`, `/verify-phone`, `/reset-password`, `/onboarding`, `/sso-callback`, and `/test` do not index.
 16. Confirm Terms and Privacy Policy resolve from footer links.
 17. Confirm support URLs resolve: `/support`, `/help`, `/contact`, `mailto:info@burnerpoint.com`, and Telegram links.
 
