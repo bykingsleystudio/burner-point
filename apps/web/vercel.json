@@ -1,8 +1,13 @@
 {
-  "version": 2,
-  "buildCommand": "npm install && npm run build",
-  "devCommand": "npm run dev",
+  "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "framework": "nextjs",
-  "regions": ["iad1"]
+  "regions": ["iad1"],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.burnerpoint.com" }],
+      "destination": "https://burnerpoint.com/:path*",
+      "permanent": true
+    }
+  ]
 }
