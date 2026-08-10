@@ -3,6 +3,7 @@
   "framework": "nextjs",
   "installCommand": "npm install",
   "buildCommand": "npm run build",
+  "ignoreCommand": null,
   "regions": ["iad1"],
   "redirects": [
     {
