@@ -9,11 +9,7 @@ function normalizeApiBaseUrl(url: string): string {
   return /\/api$/i.test(normalized) ? normalized : `${normalized}/api`;
 }
 
-const apiOrigin = process.env.NEXT_PUBLIC_API_URL;
-
-if (!apiOrigin) {
-  throw new Error('NEXT_PUBLIC_API_URL is required for Burner Point web runtime.');
-}
+const apiOrigin = process.env.NEXT_PUBLIC_API_URL || 'https://api.burnerpoint.com';
 
 const API_URL = normalizeApiBaseUrl(apiOrigin);
 
@@ -155,7 +151,7 @@ export const supportApi = {
 export const numbersApi = {
   search: (country: string, areaCode?: string, type?: 'burner' | 'rental' | 'verification' | 'enterprise') =>
     api.get('/numbers/search', { params: { country, areaCode, type } }),
-  provision: (data: { phoneNumber: string; type: string; countryCode: string }) =>
+  provision: (data: { phoneNumber: string; type: string; countryCode: string; durationDays?: number; idempotencyKey?: string }) =>
     api.post('/numbers/provision', data),
   list: () => api.get('/numbers'),
   get: (id: string) => api.get(`/numbers/${id}`),
@@ -178,7 +174,7 @@ export type PaymentGatewayId =
   | 'paddle'
   | 'nowpayments';
 
-export type PaymentType = 'credits' | 'rental' | 'subscription';
+export type PaymentType = 'wallet' | 'rental' | 'subscription' | 'credits';
 
 export interface InitPaymentParams {
   paymentType: PaymentType;
@@ -209,7 +205,28 @@ export const paymentsApi = {
   history: () => api.get('/payments/history'),
 };
 
+export const walletApi = {
+  balance: () => api.get('/wallet/balance'),
+  transactions: (page = 1, limit = 20) => api.get('/wallet/transactions', { params: { page, limit } }),
+};
+
+export const callCreditsApi = {
+  balance: () => api.get('/messenger/call-credits/balance'),
+  packages: () => api.get('/messenger/call-credits/packages'),
+  purchase: (data: { packageId: string; idempotencyKey: string }) => api.post('/messenger/call-credits/purchase', data),
+  transactions: (page = 1, limit = 20) => api.get('/messenger/call-credits/transactions', { params: { page, limit } }),
+  rates: () => api.get('/messenger/call-credits/rates'),
+};
+
+export const callsApi = {
+  start: (data: { to: string; fromNumberId?: string; preferredProvider?: string; idempotencyKey: string }) =>
+    api.post('/messenger/calls/start', data),
+  list: (page = 1, limit = 20) => api.get('/messenger/calls', { params: { page, limit } }),
+  get: (id: string) => api.get(`/messenger/calls/${id}`),
+};
+
 export const billingApi = {
+  overview: () => api.get('/billing/overview'),
   ledger: (page = 1, limit = 20) => api.get('/billing/ledger', { params: { page, limit } }),
   plans: () => api.get('/billing/plans'),
   subscription: () => api.get('/billing/subscription'),
@@ -313,10 +330,10 @@ export const integrationsApi = {
   catalog: () => api.get('/integrations/catalog'),
   esimPlans: (data: { countryCode: string; region?: string }) =>
     api.post('/integrations/esim/plans', data),
-  esimOrder: (data: { planId: string; countryCode: string; iccid?: string }) =>
+  esimOrder: (data: { planId: string; countryCode: string; iccid?: string; idempotencyKey?: string }) =>
     api.post('/integrations/esim/orders', data),
-  proxyOrder: (data: { region: string; type: 'residential' | 'mobile'; durationDays?: number }) =>
+  proxyOrder: (data: { region: string; type: 'residential' | 'mobile'; durationDays?: number; idempotencyKey?: string }) =>
     api.post('/integrations/proxies/orders', data),
-  vpnSession: (data: { deviceName: string; region?: string }) =>
+  vpnSession: (data: { deviceName: string; region?: string; idempotencyKey?: string }) =>
     api.post('/integrations/vpn/sessions', data),
 };

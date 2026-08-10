@@ -28,6 +28,15 @@ export class WebhooksController {
     res.send(twiml || '<Response/>');
   }
 
+  @Post('voice/twilio/answer')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Twilio outbound call answer TwiML' })
+  async twilioVoiceAnswer(@Req() req: Request, @Res() res: Response) {
+    this.service.assertTwilioRequest(req);
+    res.setHeader('Content-Type', 'text/xml');
+    res.send(this.service.handleTwilioOutboundAnswer());
+  }
+
   @Post('twilio/status')
   @HttpCode(200)
   @ApiOperation({ summary: 'Twilio delivery status callback' })
@@ -52,10 +61,29 @@ export class WebhooksController {
     return this.service.handleVerifyStatus(body);
   }
 
+  @Post('voice/twilio')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Twilio outbound voice status webhook' })
+  async twilioVoiceStatus(@Body() body: Record<string, string>, @Req() req: Request) {
+    this.service.assertTwilioRequest(req);
+    return this.service.handleTwilioVoiceStatusWebhook(body);
+  }
+
   @Post('telnyx')
   @HttpCode(200)
   @ApiOperation({ summary: 'Telnyx webhook receiver' })
   async telnyxWebhook(
+    @Body() body: Record<string, unknown>,
+    @Headers() headers: Record<string, string>,
+    @Req() req: RawBodyRequest<Request>,
+  ) {
+    return this.service.handleTelnyxWebhook(body, headers, req.rawBody);
+  }
+
+  @Post('voice/telnyx')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Telnyx outbound voice status webhook' })
+  async telnyxVoiceWebhook(
     @Body() body: Record<string, unknown>,
     @Headers() headers: Record<string, string>,
     @Req() req: RawBodyRequest<Request>,
@@ -86,6 +114,44 @@ export class WebhooksController {
     const bxml = await this.service.handleBandwidthVoiceWebhook(body, headers, req.rawBody);
     res.setHeader('Content-Type', 'application/xml; charset=utf-8');
     res.send(bxml);
+  }
+
+  @Post('voice/bandwidth/answer')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Bandwidth outbound call answer BXML' })
+  async bandwidthVoiceAnswer(
+    @Headers() headers: Record<string, string>,
+    @Req() req: RawBodyRequest<Request>,
+    @Res() res: Response,
+  ) {
+    this.service.assertBandwidthWebhookAuth(headers, req.rawBody);
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    res.send(this.service.handleBandwidthOutboundAnswer());
+  }
+
+  @Post('voice/bandwidth')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Bandwidth outbound voice status webhook' })
+  async bandwidthVoiceStatus(
+    @Body() body: Record<string, unknown>,
+    @Headers() headers: Record<string, string>,
+    @Req() req: RawBodyRequest<Request>,
+    @Res() res: Response,
+  ) {
+    const bxml = await this.service.handleBandwidthVoiceWebhook(body, headers, req.rawBody);
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    res.send(bxml);
+  }
+
+  @Post('voice/tremil')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Tremil outbound voice status webhook' })
+  async tremilVoiceWebhook(
+    @Body() body: Record<string, unknown>,
+    @Headers() headers: Record<string, string>,
+    @Req() req: RawBodyRequest<Request>,
+  ) {
+    return this.service.handleTremilVoiceWebhook(body, headers, req.rawBody);
   }
 
   @Post('airalo')

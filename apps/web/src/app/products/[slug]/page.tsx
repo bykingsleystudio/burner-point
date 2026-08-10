@@ -1,13 +1,9 @@
 import { notFound } from 'next/navigation';
 import { MarketingPage } from '@/components/marketing';
 import { buildMarketingMetadata, pageStructuredData } from '@/lib/seo';
-import { getProductPage, productPages } from '@/lib/product-pages';
+import { getProductPage } from '@/lib/product-pages';
 
 type ProductPageParams = Promise<{ slug: string }>;
-
-export function generateStaticParams() {
-  return Object.keys(productPages).map((slug) => ({ slug }));
-}
 
 export async function generateMetadata({ params }: { params: ProductPageParams }) {
   const { slug } = await params;

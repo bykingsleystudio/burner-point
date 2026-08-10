@@ -11,6 +11,7 @@ export const DEFAULT_REVENUECAT_OFFERINGS = {
   default: 'default',
   messenger: 'bp_messenger',
   vpn: 'bp_secure_tunnel',
+  premium: 'bp_premium',
 } as const;
 
 export type RevenueCatSyncSnapshot = {
@@ -29,6 +30,7 @@ export type RevenueCatSyncSnapshot = {
     default: string;
     messenger: string;
     vpn: string;
+    premium: string;
   };
   entitlements: Array<{
     identifier: string;

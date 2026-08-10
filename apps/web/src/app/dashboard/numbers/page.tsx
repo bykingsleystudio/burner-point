@@ -57,7 +57,12 @@ export default function NumbersPage() {
   const provision = async (phoneNumber: string) => {
     setProvisioning(phoneNumber);
     try {
-      const r = await numbersApi.provision({ phoneNumber, type, countryCode: country });
+      const r = await numbersApi.provision({
+        phoneNumber,
+        type,
+        countryCode: country,
+        idempotencyKey: crypto.randomUUID(),
+      });
       addNumber(r.data);
       setShowModal(false);
       toast.success(`Number ${phoneNumber} provisioned`);

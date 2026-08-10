@@ -26,7 +26,7 @@ function PaymentSuccessContent() {
         <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.2em] text-brand-green">Payment received</p>
         <h1 className="mt-2 text-2xl font-bold">Checkout complete</h1>
         <p className="mt-3 text-sm leading-6 text-white/64">
-          Burner Point will update your wallet, rental, or subscription as soon as the payment is confirmed.
+          Burner Point will update your wallet funding or subscription access as soon as the payment is confirmed server-side.
         </p>
 
         {reference ? (

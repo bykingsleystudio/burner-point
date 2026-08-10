@@ -20,7 +20,8 @@ import {
   UserPlus,
   Users,
 } from 'lucide-react';
-import { messagesApi, numbersApi } from '@/lib/api';
+import { callCreditsApi, messagesApi, numbersApi } from '@/lib/api';
+import { formatUsdCents } from '@/lib/money';
 import { BpEmptyState } from '@/components/design-system';
 import { MessengerTabs } from '@/components/dashboard/messenger-tabs';
 import { useNumbersStore } from '@/store';
@@ -51,6 +52,39 @@ type ConversationThread = {
   latestAt: string;
   unread: boolean;
   messages: MessageRecord[];
+};
+
+type CallCreditsBalance = {
+  wallet?: {
+    balanceUsdCents: number;
+  };
+  callCredits?: {
+    balance: number;
+    availableBalance: number;
+    equivalentUsdCents: number;
+  };
+};
+
+type CallCreditRate = {
+  id: string;
+  destinationCountry: string;
+  creditsPerMinute: number;
+};
+
+type CallCreditTransaction = {
+  id: string;
+  type: string;
+  creditsAmount: number;
+  description: string | null;
+  createdAt: string | null;
+};
+
+type CallCreditPackage = {
+  id: string;
+  name: string;
+  usdPriceCents: number;
+  totalCredits: number;
+  bonusCredits: number;
 };
 
 const MENU_ITEMS = [
@@ -120,6 +154,11 @@ export default function InboxPage() {
   const [composer, setComposer] = useState('');
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
+  const [callCreditsBalance, setCallCreditsBalance] = useState<CallCreditsBalance | null>(null);
+  const [callCreditRates, setCallCreditRates] = useState<CallCreditRate[]>([]);
+  const [callCreditHistory, setCallCreditHistory] = useState<CallCreditTransaction[]>([]);
+  const [callCreditPackages, setCallCreditPackages] = useState<CallCreditPackage[]>([]);
+  const [purchasingCallCreditPackage, setPurchasingCallCreditPackage] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -171,6 +210,32 @@ export default function InboxPage() {
       window.clearInterval(interval);
     };
   }, [selectedNumberId]);
+
+  const loadCallCreditData = async () => {
+    const results = await Promise.allSettled([
+      callCreditsApi.balance(),
+      callCreditsApi.rates(),
+      callCreditsApi.transactions(1, 4),
+      callCreditsApi.packages(),
+    ]);
+
+    if (results[0].status === 'fulfilled') {
+      setCallCreditsBalance(results[0].value.data);
+    }
+    if (results[1].status === 'fulfilled' && Array.isArray(results[1].value.data)) {
+      setCallCreditRates(results[1].value.data);
+    }
+    if (results[2].status === 'fulfilled') {
+      setCallCreditHistory(results[2].value.data?.transactions ?? []);
+    }
+    if (results[3].status === 'fulfilled' && Array.isArray(results[3].value.data)) {
+      setCallCreditPackages(results[3].value.data);
+    }
+  };
+
+  useEffect(() => {
+    void loadCallCreditData();
+  }, []);
 
   const selectedNumber = useMemo(() => {
     return (numbers as NumberRecord[]).find((item) => item.id === selectedNumberId) ?? null;
@@ -226,6 +291,23 @@ export default function InboxPage() {
     }
   };
 
+  const purchaseCallCredits = async (packageId: string) => {
+    setPurchasingCallCreditPackage(packageId);
+    try {
+      await callCreditsApi.purchase({
+        packageId,
+        idempotencyKey: crypto.randomUUID(),
+      });
+      await loadCallCreditData();
+      toast.success('Call Credits purchased from available balance.');
+    } catch (error: unknown) {
+      const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(message ?? 'Unable to purchase Call Credits right now.');
+    } finally {
+      setPurchasingCallCreditPackage(null);
+    }
+  };
+
   return (
     <div className="space-y-5">
       <section className="rounded-[1.7rem] border border-white/8 bg-brand-card p-5 md:p-6">
@@ -250,6 +332,91 @@ export default function InboxPage() {
         <div className="mt-5">
           <MessengerTabs active="/dashboard/messenger" />
         </div>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+        <article className="rounded-[1.5rem] border border-white/8 bg-brand-card p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Call Credits</p>
+              <h3 className="mt-2 text-xl font-semibold text-white">
+                {callCreditsBalance?.callCredits?.balance ?? 0} available
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-white/54">
+                Call Credits are used only for BP Messenger international calls and premium voice routes.
+              </p>
+            </div>
+            <Link
+              href="/dashboard/billing"
+              className="inline-flex min-h-11 items-center justify-center rounded-[0.95rem] border border-brand-green/20 bg-brand-green/[0.08] px-4 text-xs font-semibold uppercase tracking-[0.12em] text-brand-green transition hover:border-brand-green/30"
+            >
+              Manage Billing
+            </Link>
+          </div>
+
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            {[
+              { label: 'Available', value: `${callCreditsBalance?.callCredits?.availableBalance ?? 0}` },
+              { label: 'USD Value', value: formatUsdCents(callCreditsBalance?.callCredits?.equivalentUsdCents) },
+              { label: 'Wallet Balance', value: formatUsdCents(callCreditsBalance?.wallet?.balanceUsdCents) },
+            ].map((item) => (
+              <div key={item.label} className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4">
+                <p className="text-[11px] uppercase tracking-[0.12em] text-white/38">{item.label}</p>
+                <p className="mt-2 text-lg font-semibold text-white">{item.value}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            {callCreditPackages.slice(0, 3).map((pkg) => (
+              <div key={pkg.id} className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4">
+                <p className="text-sm font-semibold text-white">{pkg.name}</p>
+                <p className="mt-2 font-mono text-brand-green">{formatUsdCents(pkg.usdPriceCents)}</p>
+                <p className="mt-1 text-xs text-white/46">{pkg.totalCredits} call credits</p>
+                <button
+                  type="button"
+                  onClick={() => purchaseCallCredits(pkg.id)}
+                  disabled={Boolean(purchasingCallCreditPackage)}
+                  className="mt-4 inline-flex min-h-10 items-center justify-center rounded-[0.95rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.12em] text-black transition hover:bg-[#1cffac] disabled:opacity-50"
+                >
+                  {purchasingCallCreditPackage === pkg.id ? 'Processing...' : 'Buy Call Credits'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="rounded-[1.5rem] border border-white/8 bg-brand-card p-5">
+          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Calling Rates</p>
+          <div className="mt-4 space-y-3">
+            {callCreditRates.slice(0, 4).map((rate) => (
+              <div key={rate.id} className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4">
+                <p className="text-sm font-semibold text-white">{rate.destinationCountry}</p>
+                <p className="mt-2 text-sm text-brand-green">{rate.creditsPerMinute} credits / minute</p>
+              </div>
+            ))}
+            {!callCreditRates.length ? (
+              <div className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4 text-sm text-white/46">
+                Calling rates will appear here once active Messenger routes are configured.
+              </div>
+            ) : null}
+          </div>
+
+          <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Recent Call Credit Activity</p>
+          <div className="mt-4 space-y-3">
+            {callCreditHistory.slice(0, 3).map((item) => (
+              <div key={item.id} className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4">
+                <p className="text-sm font-semibold text-white">{item.description ?? item.type}</p>
+                <p className="mt-1 text-xs text-brand-green">{item.creditsAmount} call credits</p>
+              </div>
+            ))}
+            {!callCreditHistory.length ? (
+              <div className="rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4 text-sm text-white/46">
+                No call credit activity has been recorded yet.
+              </div>
+            ) : null}
+          </div>
+        </article>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[18rem_minmax(0,1fr)_18rem]">
@@ -322,7 +489,7 @@ export default function InboxPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <Link href="/dashboard/calls" className="flex min-h-11 items-center justify-center rounded-[0.95rem] border border-white/10 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-white/70 transition hover:border-brand-green/22 hover:text-brand-green">
+              <Link href={sendTo ? `/dashboard/calls?to=${encodeURIComponent(sendTo)}` : '/dashboard/calls'} className="flex min-h-11 items-center justify-center rounded-[0.95rem] border border-white/10 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-white/70 transition hover:border-brand-green/22 hover:text-brand-green">
                 <Phone className="mr-2 h-4 w-4" />
                 Call
               </Link>
@@ -461,7 +628,7 @@ export default function InboxPage() {
               </div>
 
               <div className="grid gap-2">
-                <Link href="/dashboard/calls" className="flex min-h-11 items-center justify-center rounded-[0.95rem] border border-white/10 text-sm font-semibold text-white/72 transition hover:border-brand-green/22 hover:text-brand-green">
+                <Link href={`/dashboard/calls?to=${encodeURIComponent(selectedThread.counterpart)}`} className="flex min-h-11 items-center justify-center rounded-[0.95rem] border border-white/10 text-sm font-semibold text-white/72 transition hover:border-brand-green/22 hover:text-brand-green">
                   Call
                 </Link>
                 <button

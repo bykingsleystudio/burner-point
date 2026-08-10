@@ -115,9 +115,9 @@ const PAGE_META: Array<{ match: string; title: string; description: string }> = 
   { match: '/dashboard/secure-tunnel', title: 'BP Secure Tunnel', description: 'Secure routing, server choice, and device setup guidance.' },
   { match: '/dashboard/settings', title: 'Settings', description: 'Profile, billing, support, and security controls.' },
   { match: '/dashboard/profile', title: 'Settings', description: 'Manage personal details and recovery information.' },
-  { match: '/dashboard/billing', title: 'Billing & Subscription', description: 'Wallet movements, invoices, plans, and active subscriptions.' },
+  { match: '/dashboard/billing', title: 'Billing & Subscription', description: 'Available balance, call credits, invoices, and active subscriptions.' },
   { match: '/dashboard/wallet', title: 'Wallet', description: 'Fund the wallet for verification, rentals, eSIM, proxies, and renewals.' },
-  { match: '/dashboard/credits', title: 'Billing & Subscription', description: 'Fund the wallet for verification, rentals, eSIM, and proxies.' },
+  { match: '/dashboard/credits', title: 'Billing & Subscription', description: 'Available balance, call credits, and active subscriptions.' },
   { match: '/dashboard/api', title: 'Account Access', description: 'Request support-reviewed access and account controls.' },
   { match: '/dashboard/developer', title: 'Account Access', description: 'Request support-reviewed access and account controls.' },
   { match: '/dashboard/support', title: 'Support', description: 'Tickets, Telegram, and account issue handling.' },
@@ -186,7 +186,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const [sessionUser, setSessionUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const { user: storedUser, clearAuth } = useAuthStore();
+  const { user: storedUser, clearAuth, updateUser } = useAuthStore();
   const { sidebarOpen, toggleSidebar, setSidebarOpen } = useUIStore();
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const currentUser = useMemo(() => storedUser ?? mapSupabaseUser(sessionUser), [sessionUser, storedUser]);
@@ -262,10 +262,37 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       toast.success(`Incoming call from ${data.from}`);
     });
 
+    socket.on('messenger.call.updated', (data) => {
+      window.dispatchEvent(new CustomEvent('bp:call-updated', { detail: data }));
+
+      if (data?.status === 'completed') {
+        toast.success(`Call completed • ${data.creditsSpent ?? 0} Call Credits used.`);
+        return;
+      }
+
+      if (['failed', 'busy', 'no-answer', 'canceled'].includes(data?.status)) {
+        toast.error(`Call ${String(data.status).replace(/-/g, ' ')}.`);
+      }
+    });
+
+    socket.on('billing.balance.updated', (data) => {
+      const wallet = data?.wallet;
+      if (wallet) {
+        updateUser({
+          walletBalanceKobo: Number(wallet.balanceUsdCents ?? 0),
+          walletBalanceUsdCents: Number(wallet.balanceUsdCents ?? 0),
+          walletBalanceUsd: Number(wallet.balanceUsdCents ?? 0) / 100,
+          walletDisplayCurrency: 'USD',
+          walletFxRateNgnPerUsd: Number(wallet.localDisplay?.fxRateNgnPerUsd ?? 0),
+        });
+      }
+      toast.success('Billing balance updated.');
+    });
+
     return () => {
       socket.disconnect();
     };
-  }, [accessToken]);
+  }, [accessToken, updateUser]);
 
   useEffect(() => {
     if (!pathname.startsWith('/dashboard')) return;

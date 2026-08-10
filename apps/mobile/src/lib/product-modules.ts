@@ -25,7 +25,7 @@ export const MOBILE_PRODUCT_MODULES = {
       'Choose a supported country and service, request a private number, and watch the code arrive inside Burner Point.',
     status: 'Live verification session',
     primaryAction: { label: 'Choose Number', href: '/numbers' },
-    secondaryAction: { label: 'Buy Credits', href: '/credits' },
+    secondaryAction: { label: 'Add Funds', href: '/billing' },
     stats: [
       { label: 'SMS', value: 'OTP' },
       { label: 'Voice', value: 'Where supported' },
@@ -46,7 +46,7 @@ export const MOBILE_PRODUCT_MODULES = {
       'Rent temporary or renewable numbers for repeated messages, recovery, and longer account workflows where supported.',
     status: 'Rental lifecycle',
     primaryAction: { label: 'Browse Numbers', href: '/numbers' },
-    secondaryAction: { label: 'Buy Credits', href: '/credits' },
+    secondaryAction: { label: 'Add Funds', href: '/billing' },
     stats: [
       { label: 'Temporary', value: '$5.99+' },
       { label: 'Monthly', value: '$15.99+' },
@@ -66,7 +66,7 @@ export const MOBILE_PRODUCT_MODULES = {
     description:
       'Buy country or regional eSIM data plans and keep activation details, usage status, and order history in one account.',
     status: 'Travel data catalog',
-    primaryAction: { label: 'Buy Credits', href: '/credits' },
+    primaryAction: { label: 'Open Billing', href: '/billing' },
     secondaryAction: { label: 'Support', href: '/support' },
     stats: [
       { label: 'Plans', value: 'Country' },
@@ -87,7 +87,7 @@ export const MOBILE_PRODUCT_MODULES = {
     description:
       'Choose residential, datacenter, or rotating proxy plans for business, testing, research, geo-checking, and approved routing needs.',
     status: 'Plan access and session health',
-    primaryAction: { label: 'Buy Credits', href: '/credits' },
+    primaryAction: { label: 'Open Billing', href: '/billing' },
     secondaryAction: { label: 'Support', href: '/support' },
     stats: [
       { label: 'Types', value: '3+' },

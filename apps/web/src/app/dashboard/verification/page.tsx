@@ -49,19 +49,19 @@ const TIERS: Array<{ id: TierId; label: string; note: string; priceBand: string 
     id: 'premium',
     label: 'Premium US/CA/UK Numbers',
     note: 'Highest deliverability on supported premium routes.',
-    priceBand: '$0.99 - $1.50',
+    priceBand: 'Backend-calculated USD pricing',
   },
   {
     id: 'standard',
     label: 'Global Standard Numbers',
     note: 'Balanced reach and cost for mainstream verification traffic.',
-    priceBand: '$0.20 - $0.80',
+    priceBand: 'Backend-calculated USD pricing',
   },
   {
     id: 'economy',
     label: 'Low-Cost Global Numbers',
     note: 'Economy routing for low-cost high-volume workflows.',
-    priceBand: '$0.05 - $0.30',
+    priceBand: 'Backend-calculated USD pricing',
   },
 ];
 
@@ -166,6 +166,7 @@ export default function VerificationPage() {
         phoneNumber,
         type: 'verification',
         countryCode: country,
+        idempotencyKey: crypto.randomUUID(),
       });
 
       setSelectedNumber(response.data);
@@ -203,7 +204,7 @@ export default function VerificationPage() {
         <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">BP Verify Hub</p>
         <h2 className="mt-3 text-3xl font-semibold text-white">Tiered verification routing with a live OTP feed.</h2>
         <p className="mt-3 max-w-3xl text-sm leading-7 text-white/54">
-          Choose a routing tier, select a supported service, request a number, and monitor inbound OTP or voice results in real time. Provider names stay hidden from the customer interface by design.
+          Choose a routing tier, select a supported service, request a number, and monitor inbound OTP or voice results in real time. Pricing is calculated server-side in USD and charged from available balance only when delivery succeeds.
         </p>
       </section>
 
@@ -258,7 +259,7 @@ export default function VerificationPage() {
           <div className="mt-4 rounded-[1.2rem] border border-brand-green/18 bg-brand-green/[0.05] p-4">
             <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-brand-green">{selectedTier.label}</p>
             <p className="mt-2 text-sm text-white/74">{selectedTier.note}</p>
-            <p className="mt-3 font-mono text-sm text-brand-green">Tier band {selectedTier.priceBand}</p>
+            <p className="mt-3 font-mono text-sm text-brand-green">{selectedTier.priceBand}</p>
           </div>
 
           {availableNumbers.length ? (

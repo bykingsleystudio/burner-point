@@ -3,19 +3,30 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
 import { User } from '../../database/entities/user.entity';
+import { Wallet } from '../../database/entities/financial-ledger.entity';
 import { buildWalletPresentation, withWalletPresentation } from '../../config/money';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private userRepo: Repository<User>,
+    @InjectRepository(Wallet) private walletRepo: Repository<Wallet>,
     private configService: ConfigService,
   ) {}
 
   async getProfile(userId: string) {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const [user, wallet] = await Promise.all([
+      this.userRepo.findOne({ where: { id: userId } }),
+      this.walletRepo.findOne({ where: { userId } }),
+    ]);
     if (!user) throw new NotFoundException('User not found');
-    return withWalletPresentation(user, this.configService);
+    return withWalletPresentation(
+      {
+        ...user,
+        walletBalanceKobo: Number(wallet?.balanceUsdCents ?? 0),
+      },
+      this.configService,
+    );
   }
 
   async updateProfile(userId: string, dto: Partial<{ firstName: string; lastName: string; timezone: string; country: string; preferences: Record<string, unknown> }>) {
@@ -24,9 +35,10 @@ export class UsersService {
   }
 
   async getWalletBalance(userId: string) {
-    const user = await this.userRepo.findOne({ where: { id: userId }, select: ['id', 'walletBalanceKobo'] });
+    const user = await this.userRepo.findOne({ where: { id: userId }, select: ['id'] });
     if (!user) throw new NotFoundException('User not found');
-    const wallet = buildWalletPresentation(Number(user.walletBalanceKobo), this.configService);
+    const walletRecord = await this.ensureWalletRecord(userId);
+    const wallet = buildWalletPresentation(Number(walletRecord.balanceUsdCents), this.configService);
     return {
       balanceKobo: wallet.walletBalanceKobo, // legacy (display)
       balanceNgn: wallet.walletBalanceNgn, // display
@@ -34,6 +46,7 @@ export class UsersService {
       balanceUsd: wallet.walletBalanceUsd,
       displayCurrency: wallet.walletDisplayCurrency,
       fxRateNgnPerUsd: wallet.walletFxRateNgnPerUsd,
+      lockedBalanceUsdCents: Number(walletRecord.lockedBalanceUsdCents ?? 0),
     };
   }
 
@@ -61,8 +74,11 @@ export class UsersService {
       });
       if (!user) throw new NotFoundException('User not found');
 
-      user.walletBalanceKobo = Number(user.walletBalanceKobo) + deltaUsdCents;
+      const wallet = await this.findOrCreateWalletWithManager(manager, userId);
+      wallet.balanceUsdCents = Number(wallet.balanceUsdCents) + deltaUsdCents;
+      user.walletBalanceKobo = Number(wallet.balanceUsdCents);
       // lifetimeSpend tracks debits only (spend), not credits.
+      await manager.save(wallet);
       return manager.save(user);
     });
   }
@@ -79,13 +95,43 @@ export class UsersService {
         lock: { mode: 'pessimistic_write' },
       });
       if (!user) throw new NotFoundException('User not found');
-      if (Number(user.walletBalanceKobo) < deltaUsdCents) {
+      const wallet = await this.findOrCreateWalletWithManager(manager, userId);
+      const availableBalance = Number(wallet.balanceUsdCents) - Number(wallet.lockedBalanceUsdCents ?? 0);
+      if (availableBalance < deltaUsdCents) {
         throw new BadRequestException('Insufficient wallet balance');
       }
 
-      user.walletBalanceKobo = Number(user.walletBalanceKobo) - deltaUsdCents;
+      wallet.balanceUsdCents = Number(wallet.balanceUsdCents) - deltaUsdCents;
+      user.walletBalanceKobo = Number(wallet.balanceUsdCents);
       user.lifetimeSpendKobo = Number(user.lifetimeSpendKobo) + deltaUsdCents;
+      await manager.save(wallet);
       return manager.save(user);
     });
+  }
+
+  private async ensureWalletRecord(userId: string) {
+    const existing = await this.walletRepo.findOne({ where: { userId } });
+    if (existing) return existing;
+
+    return this.walletRepo.save(this.walletRepo.create({
+      userId,
+      balanceUsdCents: 0,
+      lockedBalanceUsdCents: 0,
+    }));
+  }
+
+  private async findOrCreateWalletWithManager(manager: Repository<User>['manager'], userId: string) {
+    const existing = await manager.findOne(Wallet, {
+      where: { userId },
+      lock: { mode: 'pessimistic_write' },
+    });
+    if (existing) return existing;
+
+    const wallet = manager.create(Wallet, {
+      userId,
+      balanceUsdCents: 0,
+      lockedBalanceUsdCents: 0,
+    });
+    return manager.save(wallet);
   }
 }

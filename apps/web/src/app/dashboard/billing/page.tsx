@@ -1,101 +1,100 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { ArrowRight, CalendarDays, CreditCard, FileText, RefreshCw, ShieldCheck } from 'lucide-react';
-import { billingApi, paymentsApi, type PaymentGatewayId } from '@/lib/api';
-import { formatLegacyAmountPrimary, formatLegacyAmountSecondary, formatStoredKoboAsUsd } from '@/lib/money';
+import {
+  CreditCard,
+  PhoneCall,
+  RefreshCw,
+  ShieldCheck,
+  Wallet,
+} from 'lucide-react';
+import { billingApi } from '@/lib/api';
+import { formatNgnKobo, formatUsdCents } from '@/lib/money';
 
-type Plan = {
-  id: string;
-  slug: string;
-  name: string;
-  description?: string;
-  priceKoboMonthly?: number;
-  priceKoboYearly?: number;
-  features?: Record<string, unknown>;
+type BillingOverview = {
+  wallet: {
+    balanceUsdCents: number;
+    lockedBalanceUsdCents: number;
+    displayCurrency: 'USD';
+    localDisplay: {
+      currency: 'NGN';
+      amountKobo: number;
+      fxRateNgnPerUsd: number;
+    };
+    fundingMethods: Array<{
+      id: 'paystack' | 'flutterwave' | 'nowpayments';
+      label: string;
+      description: string;
+    }>;
+  };
+  callCredits: {
+    balance: number;
+    lockedBalance: number;
+    availableBalance: number;
+    equivalentUsdCents: number;
+    lifetimePurchased: number;
+    lifetimeSpent: number;
+  };
+  callCreditTransactions: Array<{
+    id: string;
+    type: string;
+    creditsAmount: number;
+    description: string | null;
+    relatedEntityId: string | null;
+    createdAt: string | null;
+  }>;
+  subscriptions: Array<{
+    id: string;
+    provider: string;
+    productId: string | null;
+    status: string;
+    willRenew: boolean;
+    renewsAt: string | null;
+  }>;
+  walletTransactions: Array<{
+    id: string;
+    type: string;
+    status: string;
+    amountUsdCents: number;
+    description: string | null;
+    gateway: string | null;
+    createdAt: string | null;
+  }>;
+  notes: {
+    mobileSubscriptions: string;
+    webSubscriptions: string;
+    walletSeparation: string;
+    callCreditsUsage: string;
+    subscriptionsSeparation: string;
+  };
 };
-
-type Subscription = {
-  id?: string;
-  status?: string;
-  billingCycle?: string;
-  currentPeriodEnd?: string;
-  plan?: Plan;
-};
-
-type LedgerItem = {
-  id: string;
-  type?: string;
-  status?: string;
-  amountKobo?: number;
-  balanceAfterKobo?: number;
-  description?: string;
-  gateway?: string;
-  referenceId?: string;
-  externalReference?: string;
-  createdAt?: string;
-};
-
-const SUBSCRIPTION_GATEWAYS: Array<{ id: PaymentGatewayId; label: string; text: string }> = [
-  { id: 'paddle', label: 'Paddle', text: 'International card and subscription checkout' },
-  { id: 'paystack', label: 'Paystack', text: 'Local card path where recurring support is enabled' },
-  { id: 'nowpayments', label: 'NOWPayments', text: 'Crypto checkout for supported plans' },
-];
 
 export default function BillingPage() {
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [ledger, setLedger] = useState<LedgerItem[]>([]);
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
-  const [gateway, setGateway] = useState<PaymentGatewayId>('paddle');
+  const [overview, setOverview] = useState<BillingOverview | null>(null);
   const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadOverview = async () => {
+    try {
+      const response = await billingApi.overview();
+      setOverview(response.data as BillingOverview);
+    } catch {
+      toast.error('Unable to load billing overview.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    let mounted = true;
-    Promise.allSettled([
-      billingApi.plans(),
-      billingApi.subscription(),
-      billingApi.ledger(1, 12),
-    ]).then((results) => {
-      if (!mounted) return;
-      const planData = results[0].status === 'fulfilled' ? results[0].value.data : [];
-      const subData = results[1].status === 'fulfilled' ? results[1].value.data : null;
-      const ledgerData = results[2].status === 'fulfilled' ? results[2].value.data?.transactions ?? [] : [];
-      setPlans(planData);
-      setSubscription(subData);
-      setLedger(ledgerData);
-      setSelectedPlanId(subData?.plan?.id ?? planData.find((plan: Plan) => plan.slug !== 'free')?.id ?? planData[0]?.id ?? null);
-    }).catch(() => toast.error('Unable to load billing state')).finally(() => {
-      if (mounted) setLoading(false);
-    });
-    return () => { mounted = false; };
+    void loadOverview();
   }, []);
 
-  const selectedPlan = useMemo(() => plans.find((plan) => plan.id === selectedPlanId) ?? null, [plans, selectedPlanId]);
-
-  const startSubscription = async () => {
-    setProcessing(true);
-    try {
-      const response = await paymentsApi.initialize({
-        paymentType: 'subscription',
-        gateway,
-        planId: selectedPlanId ?? undefined,
-        clientPlatform: 'web',
-      });
-      if (response.data.checkoutUrl) {
-        window.location.href = response.data.checkoutUrl;
-        return;
-      }
-      toast.success('Subscription checkout created.');
-    } catch (error: unknown) {
-      const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      toast.error(message ?? 'Unable to start subscription checkout');
-    } finally {
-      setProcessing(false);
-    }
+  const refreshOverview = async () => {
+    setRefreshing(true);
+    await loadOverview();
   };
 
   return (
@@ -103,167 +102,195 @@ export default function BillingPage() {
       <section className="rounded-bp-lg border border-brand-border bg-brand-card p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Credits and Billing</p>
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Billing Model</p>
             <h1 className="mt-2 text-3xl font-black uppercase leading-none text-white md:text-5xl">
-              Wallet, subscriptions, and payment history.
+              Subscriptions = access
+              <br />
+              Available Balance = purchases
+              <br />
+              Call Credits = Messenger calls
             </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-brand-muted">
-              Manage verification credits, rental purchases, monthly plans, receipts, and payment history from one controlled billing surface.
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-brand-muted">
+              {overview?.notes.walletSeparation ?? 'Your Burner Point wallet is stored in USD and is used for verifications, rentals, eSIMs, proxies, and pay-as-you-go purchases.'}
+            </p>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-white/54">
+              {overview?.notes.callCreditsUsage ?? 'Call Credits are used only for BP Messenger international calls and premium voice routes.'}
+            </p>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-white/54">
+              {overview?.notes.subscriptionsSeparation ?? 'Subscriptions are billed separately and are not paid from wallet balance or Call Credits.'}
             </p>
           </div>
-          <Link href="/dashboard/wallet" className="bp-primary-action inline-flex min-h-12 items-center justify-center gap-2 px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em]">
-            Buy Credits
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-[0.75fr_1.25fr]">
-        <div className="rounded-bp-lg border border-brand-green/16 bg-brand-green/[0.045] p-5">
-          <ShieldCheck className="h-6 w-6 text-brand-green" />
-          <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Current subscription</p>
-          <h2 className="mt-3 text-xl font-semibold uppercase text-white">
-            {subscription?.plan?.name ?? 'No active monthly plan'}
-          </h2>
-          <p className="mt-3 text-sm leading-6 text-white/62">
-            {subscription
-              ? `${subscription.status ?? 'active'} - ${subscription.billingCycle ?? 'monthly'}${subscription.currentPeriodEnd ? ` - renews ${new Date(subscription.currentPeriodEnd).toLocaleDateString()}` : ''}`
-              : 'Start a monthly plan when you need renewable number access, continuity, and account recovery support.'}
-          </p>
-          <div className="mt-5 grid grid-cols-2 gap-2">
-            <div className="rounded-bp border border-white/8 bg-[#020806]/20 p-3">
-              <p className="font-mono text-lg text-brand-green">$15.99</p>
-              <p className="text-[10px] uppercase text-white/38">monthly target</p>
-            </div>
-            <div className="rounded-bp border border-white/8 bg-[#020806]/20 p-3">
-              <p className="font-mono text-lg text-brand-green">Protected</p>
-              <p className="text-[10px] uppercase text-white/38">checkout</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-bp-lg border border-brand-border bg-brand-card p-5">
-          <div className="flex items-center gap-2">
-            <RefreshCw className="h-4 w-4 text-brand-green" />
-            <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-white">Subscription management</h2>
-          </div>
-          <p className="mt-3 text-sm leading-6 text-brand-muted">
-            Choose a plan, pick a payment option, and keep your monthly access, receipts, and renewal timing easy to track.
-          </p>
-
-          <div className="mt-5 grid gap-3 md:grid-cols-3">
-            {loading ? (
-              [1, 2, 3].map((item) => <div key={item} className="h-36 animate-pulse rounded-bp border border-brand-border bg-[#020806]/20" />)
-            ) : (
-              plans.map((plan) => {
-                const selected = selectedPlanId === plan.id;
-                return (
-                  <button
-                    key={plan.id}
-                    type="button"
-                    onClick={() => setSelectedPlanId(plan.id)}
-                    className={`rounded-bp-lg border p-4 text-left transition ${
-                      selected ? 'border-brand-green bg-brand-green/10' : 'border-brand-border bg-[#020806]/18 hover:border-brand-green/30'
-                    }`}
-                  >
-                    <p className="text-sm font-semibold uppercase text-white">{plan.name}</p>
-                    <p className="mt-2 font-mono text-2xl text-brand-green">{formatStoredKoboAsUsd(plan.priceKoboMonthly)}</p>
-                    <p className="mt-2 text-xs leading-5 text-brand-muted">{plan.description ?? 'Monthly privacy and telecom access plan.'}</p>
-                  </button>
-                );
-              })
-            )}
-          </div>
-
-          <div className="mt-5 grid gap-3 md:grid-cols-3">
-            {SUBSCRIPTION_GATEWAYS.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setGateway(item.id)}
-                className={`rounded-bp border p-3 text-left transition ${
-                  gateway === item.id ? 'border-brand-green bg-brand-green/10 text-brand-green' : 'border-white/10 text-white/62 hover:border-brand-green/30 hover:text-white'
-                }`}
-              >
-                <p className="text-xs font-semibold uppercase">{item.label}</p>
-                <p className="mt-1 text-[11px] leading-4 text-white/42">{item.text}</p>
-              </button>
-            ))}
-          </div>
-
           <button
             type="button"
-            onClick={startSubscription}
-            disabled={processing || !selectedPlan}
-            className="bp-primary-action mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 px-6 py-4 text-sm font-semibold uppercase tracking-[0.16em] disabled:opacity-50 md:w-auto"
+            onClick={refreshOverview}
+            disabled={refreshing}
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-bp border border-white/10 px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white/70 transition hover:border-brand-green/30 hover:text-brand-green disabled:opacity-50"
           >
-            {processing ? 'Opening checkout...' : 'Start Monthly Plan'}
-            <ArrowRight className="h-4 w-4" />
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh Billing
           </button>
         </div>
       </section>
 
-      <section className="rounded-bp-lg border border-brand-border bg-brand-card p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Transaction history</p>
-            <h2 className="mt-2 text-lg font-semibold uppercase text-white">Ledger and receipts</h2>
+      <section className="grid gap-4 xl:grid-cols-2">
+        <article className="rounded-bp-lg border border-brand-green/16 bg-brand-green/[0.045] p-5">
+          <div className="flex items-center justify-between">
+            <Wallet className="h-6 w-6 text-brand-green" />
+            <Link href="/dashboard/wallet" className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-green">
+              Add Funds
+            </Link>
           </div>
-          <Link href="/dashboard/support" className="inline-flex min-h-11 items-center justify-center rounded-bp border border-white/10 px-4 py-2 text-xs font-semibold uppercase text-white/70 transition hover:border-brand-green/30 hover:text-brand-green">
-            Billing Support
-          </Link>
-        </div>
+          <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Available Balance</p>
+          <h2 className="mt-2 font-mono text-4xl font-black text-white">
+            {loading ? '...' : formatUsdCents(overview?.wallet.balanceUsdCents)}
+          </h2>
+          <p className="mt-2 text-sm text-white/58">
+            {loading ? 'Loading local display...' : `${formatNgnKobo(overview?.wallet.localDisplay.amountKobo)} local estimate`}
+          </p>
+          <p className="mt-4 text-xs leading-6 text-white/46">
+            Locked: {loading ? '...' : formatUsdCents(overview?.wallet.lockedBalanceUsdCents)}
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link href="/dashboard/wallet" className="bp-primary-action inline-flex min-h-11 items-center gap-2 px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em]">
+              Add Funds
+            </Link>
+            <a href="#wallet-history" className="inline-flex min-h-11 items-center gap-2 rounded-bp border border-white/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white/70 transition hover:border-brand-green/30 hover:text-brand-green">
+              View Wallet History
+            </a>
+          </div>
+        </article>
 
-        <div className="mt-5 overflow-hidden rounded-bp-lg border border-white/8">
-          {loading ? (
-            <div className="space-y-2 p-4">
-              {[1, 2, 3].map((item) => <div key={item} className="h-14 animate-pulse rounded-bp bg-[#020806]/24" />)}
-            </div>
-          ) : ledger.length ? (
-            <div className="divide-y divide-white/7">
-              {ledger.map((item) => (
-                <div key={item.id} className="grid gap-3 p-4 md:grid-cols-[1fr_auto_auto] md:items-center">
-                  <div className="flex items-start gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-bp border border-brand-green/18 bg-brand-green/8">
-                      <FileText className="h-4 w-4 text-brand-green" />
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold uppercase text-white">{item.description ?? item.type ?? 'Wallet transaction'}</p>
-                      <p className="mt-1 font-mono text-[11px] text-white/40">{item.referenceId ?? item.externalReference ?? item.id}</p>
-                    </div>
-                  </div>
-                  <div className="text-sm text-white/62 md:text-right">
-                    <p className="font-mono text-brand-green">{formatLegacyAmountPrimary(item)}</p>
-                    <p className="mt-1 text-[11px] text-white/36">{formatLegacyAmountSecondary(item)}</p>
-                    <p className="text-[11px] uppercase">{item.gateway ?? 'ledger'} - {item.status ?? 'recorded'}</p>
-                  </div>
-                  <div className="text-xs text-white/40 md:text-right">
-                    {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Pending date'}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="p-10 text-center">
-              <CreditCard className="mx-auto h-8 w-8 text-brand-muted" />
-              <p className="mt-3 text-sm text-brand-muted">No billing history yet. Purchases and confirmed credits will appear here.</p>
-            </div>
-          )}
-        </div>
+        <article className="rounded-bp-lg border border-brand-border bg-brand-card p-5">
+          <div className="flex items-center justify-between">
+            <PhoneCall className="h-6 w-6 text-brand-green" />
+            <Link href="/dashboard/messenger" className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-green">
+              Open Messenger
+            </Link>
+          </div>
+          <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Call Credits</p>
+          <h2 className="mt-2 font-mono text-4xl font-black text-white">
+            {loading ? '...' : `${overview?.callCredits.balance ?? 0}`}
+          </h2>
+          <p className="mt-2 text-sm text-white/58">
+            {loading ? 'Loading call credit value...' : `${formatUsdCents(overview?.callCredits.equivalentUsdCents)} equivalent`}
+          </p>
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            {[
+              { label: 'Available', value: `${overview?.callCredits.availableBalance ?? 0}` },
+              { label: 'Locked', value: `${overview?.callCredits.lockedBalance ?? 0}` },
+              { label: 'Lifetime Spent', value: `${overview?.callCredits.lifetimeSpent ?? 0}` },
+            ].map((item) => (
+              <div key={item.label} className="rounded-bp border border-white/8 bg-[#020806]/20 p-4">
+                <p className="text-[11px] uppercase tracking-[0.12em] text-white/38">{item.label}</p>
+                <p className="mt-2 text-lg font-semibold text-white">{loading ? '...' : item.value}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-5 text-xs leading-6 text-white/46">
+            Buy and manage Call Credits inside BP Messenger when you need outbound international calling.
+          </p>
+        </article>
       </section>
 
-      <section className="grid gap-3 md:grid-cols-3">
-        {[
-          ['Credits', 'Wallet balance funds verifications, rentals, eSIM, proxies, and renewals across your account.'],
-          ['Rentals', 'Rental purchases stay visible with billing history, due dates, and support references.'],
-          ['Connectivity', 'eSIM, proxy, and secure-tunnel purchases are recorded with billing history and provider references once access is assigned.'],
-        ].map(([title, text]) => (
-          <article key={title} className="rounded-bp-lg border border-brand-border bg-brand-card p-5">
-            <CalendarDays className="h-5 w-5 text-brand-green" />
-            <h2 className="mt-4 text-sm font-semibold uppercase tracking-[0.12em] text-white">{title}</h2>
-            <p className="mt-3 text-sm leading-6 text-brand-muted">{text}</p>
-          </article>
-        ))}
+      <section id="wallet-history" className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+        <article className="rounded-bp-lg border border-brand-border bg-brand-card p-5">
+          <div className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5 text-brand-green" />
+            <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-white">Wallet History</h2>
+          </div>
+          <p className="mt-3 text-sm leading-6 text-brand-muted">
+            Wallet balance directly pays for BP Verify Hub, Rentals, eSIM, Proxy Store, dedicated VPN IP purchases, and renewals.
+          </p>
+          <div className="mt-5 space-y-3">
+            {(overview?.walletTransactions ?? []).slice(0, 10).map((item) => (
+              <div key={item.id} className="rounded-bp border border-white/8 bg-[#020806]/20 p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold uppercase text-white">{item.description ?? item.type}</p>
+                    <p className="mt-1 text-[11px] text-white/40">
+                      {item.gateway ?? 'wallet'} • {item.createdAt ? new Date(item.createdAt).toLocaleString() : 'Pending'}
+                    </p>
+                  </div>
+                  <p className="font-mono text-sm text-brand-green">{formatUsdCents(item.amountUsdCents)}</p>
+                </div>
+              </div>
+            ))}
+            {!overview?.walletTransactions?.length ? (
+              <div className="rounded-bp border border-white/8 bg-[#020806]/20 p-6 text-sm text-white/48">
+                No wallet activity has been recorded yet.
+              </div>
+            ) : null}
+          </div>
+        </article>
+
+        <article className="rounded-bp-lg border border-brand-border bg-brand-card p-5">
+          <div className="flex items-center gap-2">
+            <PhoneCall className="h-5 w-5 text-brand-green" />
+            <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-white">Call Credit Activity</h2>
+          </div>
+          <div className="mt-5 space-y-3">
+            {(overview?.callCreditTransactions ?? []).slice(0, 8).map((item) => (
+              <div key={item.id} className="rounded-bp border border-white/8 bg-[#020806]/20 p-4">
+                <p className="text-sm font-semibold uppercase text-white">{item.description ?? item.type}</p>
+                <p className="mt-2 font-mono text-sm text-brand-green">{item.creditsAmount} call credits</p>
+                <p className="mt-1 text-[11px] text-white/40">
+                  {item.createdAt ? new Date(item.createdAt).toLocaleString() : 'Pending'}
+                </p>
+              </div>
+            ))}
+            {!overview?.callCreditTransactions?.length ? (
+              <div className="rounded-bp border border-white/8 bg-[#020806]/20 p-6 text-sm text-white/48">
+                No call credit activity has been recorded yet.
+              </div>
+            ) : null}
+          </div>
+        </article>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+        <article className="rounded-bp-lg border border-brand-border bg-brand-card p-5">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-brand-green" />
+            <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-white">Subscriptions</h2>
+          </div>
+          <p className="mt-3 text-sm leading-6 text-brand-muted">
+            {overview?.notes.mobileSubscriptions ?? 'Subscriptions are billed separately through Apple App Store or Google Play.'}
+            {' '}
+            {overview?.notes.webSubscriptions ?? 'Subscriptions are billed separately through Paddle.'}
+          </p>
+          <div className="mt-5 space-y-3">
+            {(overview?.subscriptions ?? []).length ? (overview?.subscriptions ?? []).map((subscription) => (
+              <div key={subscription.id} className="rounded-bp border border-white/8 bg-[#020806]/20 p-4">
+                <p className="text-sm font-semibold uppercase text-white">{subscription.productId ?? 'Subscription'}</p>
+                <p className="mt-1 text-xs text-white/46">
+                  {subscription.provider} • {subscription.status} • {subscription.willRenew ? 'auto-renew on' : 'auto-renew off'}
+                </p>
+                <p className="mt-2 text-xs text-white/46">
+                  {subscription.renewsAt ? `Renews ${new Date(subscription.renewsAt).toLocaleDateString()}` : 'Renewal pending'}
+                </p>
+              </div>
+            )) : (
+              <div className="rounded-bp border border-white/8 bg-[#020806]/20 p-6 text-sm text-white/48">
+                No recurring subscription is active yet.
+              </div>
+            )}
+          </div>
+        </article>
+
+        <article className="rounded-bp-lg border border-brand-border bg-brand-card p-5">
+          <div className="flex items-center gap-2">
+            <Wallet className="h-5 w-5 text-brand-green" />
+            <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-white">Funding Methods</h2>
+          </div>
+          <div className="mt-5 grid gap-3">
+            {(overview?.wallet.fundingMethods ?? []).map((method) => (
+              <div key={method.id} className="rounded-bp border border-white/8 bg-[#020806]/20 p-4">
+                <p className="text-sm font-semibold uppercase text-white">{method.label}</p>
+                <p className="mt-2 text-sm leading-6 text-white/50">{method.description}</p>
+              </div>
+            ))}
+          </div>
+        </article>
       </section>
     </div>
   );

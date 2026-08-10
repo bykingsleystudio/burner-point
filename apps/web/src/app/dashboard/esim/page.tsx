@@ -171,7 +171,11 @@ export default function EsimPage() {
   const purchasePlan = async (planId: string) => {
     setOrderingPlanId(planId);
     try {
-      const response = await integrationsApi.esimOrder({ planId, countryCode });
+      const response = await integrationsApi.esimOrder({
+        planId,
+        countryCode,
+        idempotencyKey: crypto.randomUUID(),
+      });
       if (response.data?.status !== 'submitted') {
         toast.error('eSIM checkout is not available right now.');
         return;

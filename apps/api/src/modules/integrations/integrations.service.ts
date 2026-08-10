@@ -2,11 +2,10 @@ import { BadRequestException, Injectable, Logger, NotFoundException } from '@nes
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { createHash, randomBytes } from 'crypto';
-import { UsersService } from '../users/users.service';
-import { BillingService } from '../billing-v2/billing.service';
-import { TransactionType } from '../../database/entities/extended-entities';
 import { resolveConfiguredEnv } from '../../config/runtime-env';
+import { TransactionType } from '../../database/entities/extended-entities';
 import { RevenueCatService } from '../revenuecat/revenuecat.service';
+import { CreditsService } from '../credits/credits.service';
 import {
   BACKEND_INTEGRATION_CONTRACTS,
   BackendIntegrationContract,
@@ -35,17 +34,20 @@ export interface EsimOrderInput {
   planId: string;
   countryCode: string;
   iccid?: string;
+  idempotencyKey?: string;
 }
 
 export interface ProxyOrderInput {
   region: string;
   type: 'residential' | 'mobile';
   durationDays?: number;
+  idempotencyKey?: string;
 }
 
 export interface VpnSessionInput {
   deviceName: string;
   region?: string;
+  idempotencyKey?: string;
 }
 
 type ProviderOperation =
@@ -113,8 +115,7 @@ export class IntegrationsService {
 
   constructor(
     private readonly config: ConfigService,
-    private readonly usersService: UsersService,
-    private readonly billingService: BillingService,
+    private readonly creditsService: CreditsService,
     private readonly revenueCatService: RevenueCatService,
   ) {}
 
@@ -221,12 +222,14 @@ export class IntegrationsService {
       'airalo.order',
       input,
       this.resolveConfiguredUsdCents('ESIM_ORDER_PRICE_USD_CENTS', 'eSIM order'),
+      'esim_store',
       TransactionType.ESIM_PURCHASE,
       'BP eSIM order',
       {
         countryCode: input.countryCode,
         planId: input.planId,
       },
+      input.idempotencyKey,
     );
   }
 
@@ -236,8 +239,6 @@ export class IntegrationsService {
     const totalPriceUsdCents = unitPriceUsdCents * durationDays;
     const preferredOperations: ProviderOperation[] = ['oxylabs.proxyOrder', 'smartproxy.proxyOrder'];
     const missingByProvider: Array<{ integrationId: BackendIntegrationId; missingEnv: string[] }> = [];
-
-    await this.ensureWalletCoverage(userId, totalPriceUsdCents);
 
     for (const operation of preferredOperations) {
       const missingEnv = this.getMissingProviderEnv(operation);
@@ -255,6 +256,7 @@ export class IntegrationsService {
           operation,
           { ...input, durationDays },
           totalPriceUsdCents,
+          'proxy_store',
           TransactionType.PROXY_PURCHASE,
           `BP proxy order (${input.type})`,
           {
@@ -262,6 +264,7 @@ export class IntegrationsService {
             type: input.type,
             durationDays,
           },
+          input.idempotencyKey,
         );
       } catch (error) {
         this.logger.warn(`${operation} failed; falling back if another proxy provider is configured: ${error instanceof Error ? error.message : String(error)}`);
@@ -304,12 +307,14 @@ export class IntegrationsService {
       'wireguard.session',
       input,
       this.resolveConfiguredUsdCents('VPN_SESSION_PRICE_USD_CENTS', 'secure tunnel session'),
+      'secure_tunnel',
       TransactionType.VPN_PURCHASE,
       'BP Secure Tunnel session',
       {
         deviceName: input.deviceName,
         region: input.region ?? null,
       },
+      input.idempotencyKey,
     );
   }
 
@@ -318,38 +323,79 @@ export class IntegrationsService {
     operation: ProviderOperation,
     payload: object,
     amountUsdCents: number,
-    transactionType: TransactionType,
+    creditProduct: string,
+    walletTransactionType: TransactionType,
     description: string,
     metadata: Record<string, unknown>,
+    idempotencyKey?: string,
   ) {
-    await this.ensureWalletCoverage(userId, amountUsdCents);
+    const requestKey = idempotencyKey?.trim()
+      || `integration:${creditProduct}:${createHash('sha256').update(JSON.stringify(payload)).digest('hex').slice(0, 24)}`;
+    const quote = await this.creditsService.quote({
+      product: creditProduct,
+      basePriceUsdCents: amountUsdCents,
+      relatedEntityId: this.extractProviderReference(payload) ?? null,
+    }, userId);
 
-    const providerResult = await this.callConfiguredProvider(operation, userId, payload);
-    if (providerResult?.status !== 'submitted') {
-      return providerResult;
-    }
-
-    const updatedUser = await this.usersService.debitWallet(userId, amountUsdCents);
-    await this.billingService.recordWalletTransaction({
+    const lock = await this.creditsService.createWalletLock({
       userId,
-      type: transactionType,
-      amountKobo: -amountUsdCents,
-      balanceAfterKobo: Number(updatedUser.walletBalanceKobo),
-      description,
-      referenceId: this.extractProviderReference(providerResult.data),
+      amountUsdCents: quote.usdValueCents,
+      relatedProduct: creditProduct,
+      relatedEntityId: this.extractProviderReference(payload) ?? null,
+      reason: `${description} wallet hold`,
+      description: `Locked wallet balance for ${description}`,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      idempotencyKey: `integration-lock:${requestKey}`,
       metadata: {
         ...metadata,
-        integrationId: providerResult.integrationId,
-        operation: providerResult.operation,
-        providerStatus: providerResult.providerStatus,
+        operation,
       },
     });
 
-    return {
-      ...providerResult,
-      walletDebitedUsdCents: amountUsdCents,
-      walletChargeRecorded: true,
-    };
+    try {
+      const providerPayload = { ...(payload as Record<string, unknown>) };
+      delete providerPayload.idempotencyKey;
+      const providerResult = await this.callConfiguredProvider(operation, userId, providerPayload);
+      if (providerResult?.status !== 'submitted') {
+        await this.creditsService.releaseWalletLock({
+          userId,
+          lockId: lock.lock.id,
+          description: `Released wallet hold after ${description} was not accepted`,
+          idempotencyKey: `integration-release:${requestKey}:not-submitted`,
+        }).catch(() => null);
+        return providerResult;
+      }
+
+      await this.creditsService.spendWalletLock({
+        userId,
+        lockId: lock.lock.id,
+        type: walletTransactionType,
+        relatedProduct: creditProduct,
+        relatedEntityId: this.extractProviderReference(providerResult.data) ?? null,
+        description,
+        idempotencyKey: `integration-spend:${requestKey}`,
+        metadata: {
+          ...metadata,
+          integrationId: providerResult.integrationId,
+          operation: providerResult.operation,
+          providerStatus: providerResult.providerStatus,
+        },
+      });
+
+      return {
+        ...providerResult,
+        walletDebitedUsdCents: quote.usdValueCents,
+        walletChargeRecorded: true,
+      };
+    } catch (error) {
+      await this.creditsService.releaseWalletLock({
+        userId,
+        lockId: lock.lock.id,
+        description: `Released wallet hold after failed ${description}`,
+        idempotencyKey: `integration-release:${requestKey}:failed`,
+      }).catch(() => null);
+      throw error;
+    }
   }
 
   private async callConfiguredProvider(operation: ProviderOperation, userId: string, payload: object) {
@@ -430,13 +476,6 @@ export class IntegrationsService {
       }, {});
     };
     return redact(data);
-  }
-
-  private async ensureWalletCoverage(userId: string, amountUsdCents: number) {
-    const wallet = await this.usersService.getWalletBalance(userId);
-    if (wallet.balanceUsdCents < amountUsdCents) {
-      throw new BadRequestException('Insufficient wallet balance');
-    }
   }
 
   private resolveConfiguredUsdCents(envName: string, label: string) {

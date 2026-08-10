@@ -17,6 +17,11 @@ import {
   SubscriptionPlan,
   UserSubscription,
 } from '../../database/entities/extended-entities';
+import {
+  PaddleEvent,
+  SubscriptionEntitlement,
+  SubscriptionRecord,
+} from '../../database/entities/subscription.entity';
 import { User } from '../../database/entities/user.entity';
 import { UsersModule } from '../users/users.module';
 import { NumbersModule } from '../numbers/numbers.module';
@@ -30,6 +35,9 @@ import { NumbersModule } from '../numbers/numbers.module';
       WebhookDedup,
       SubscriptionPlan,
       UserSubscription,
+      SubscriptionRecord,
+      SubscriptionEntitlement,
+      PaddleEvent,
       User,
     ]),
     UsersModule,

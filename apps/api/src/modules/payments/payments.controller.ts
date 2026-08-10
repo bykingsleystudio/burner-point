@@ -2,9 +2,9 @@
  * apps/api/src/modules/payments/payments.controller.ts
  *
  * Burner Point Payment Controller
- * - Credits: $0.99 per verification
- * - Rental: $5.99 per rental (1-14 days)
- * - Subscription: $15.99/month
+ * - Wallet funding only for usage-based products
+ * - Web subscriptions via Paddle recurring checkout only
+ * - Mobile subscriptions via RevenueCat / store billing
  */
 import {
   Controller,
@@ -38,7 +38,7 @@ class InitPaymentDto {
   @IsOptional()
   @IsInt()
   @Min(1)
-  @Max(14)
+  @Max(365)
   rentalDays?: number; // Only for rental payments
 
   @IsOptional()
@@ -95,7 +95,7 @@ export class PaymentsController {
   }
 
   @Get('packages')
-  @ApiOperation({ summary: 'Get active credit packages' })
+  @ApiOperation({ summary: 'Get wallet funding options' })
   packages() {
     return this.service.getCreditPackages();
   }

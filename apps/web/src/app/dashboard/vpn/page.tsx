@@ -82,6 +82,7 @@ export default function VpnPage() {
       const response = await integrationsApi.vpnSession({
         deviceName: form.deviceName,
         region: form.region.trim() || undefined,
+        idempotencyKey: crypto.randomUUID(),
       });
 
       if (response.data?.status !== 'submitted') {

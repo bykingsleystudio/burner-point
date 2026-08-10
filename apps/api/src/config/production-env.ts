@@ -6,40 +6,20 @@ const REQUIRED_PRODUCTION_ENV = [
   'APP_URL',
   'API_URL',
   'NEXT_PUBLIC_APP_URL',
-  'DATABASE_URL',
   'SUPABASE_URL',
   'SUPABASE_ANON_KEY',
   'SUPABASE_SERVICE_ROLE_KEY',
-  'REDIS_URL',
   'JWT_SECRET',
   'JWT_REFRESH_SECRET',
   'ENCRYPTION_KEY',
   'CORS_ALLOWED_ORIGINS',
-  'TWILIO_ACCOUNT_SID',
-  'TWILIO_AUTH_TOKEN',
-  'TWILIO_VERIFY_SERVICE_SID',
-  'PAYSTACK_SECRET_KEY',
-  'PAYSTACK_PUBLIC_KEY',
-  'PAYSTACK_WEBHOOK_SECRET',
   'INTERNAL_API_KEY',
   'WEBHOOK_SIGNING_SECRET',
-  'REVENUECAT_SECRET_API_KEY',
-  'REVENUECAT_PROJECT_ID',
-  'REVENUECAT_WEBHOOK_AUTHORIZATION',
   'SUPABASE_STORAGE_USER_UPLOADS_BUCKET',
   'SUPABASE_STORAGE_MEDIA_BUCKET',
   'SUPABASE_STORAGE_VERIFICATION_ASSETS_BUCKET',
   'SUPABASE_STORAGE_DOCUMENTS_BUCKET',
 ];
-
-const LIVE_PREFIXES: Record<string, RegExp> = {
-  PAYSTACK_SECRET_KEY: /^sk_live_/,
-  PAYSTACK_PUBLIC_KEY: /^pk_live_/,
-  FLUTTERWAVE_SECRET_KEY: /^FLWSECK_LIVE-/,
-  FLUTTERWAVE_PUBLIC_KEY: /^FLWPUBK_LIVE-/,
-  PADDLE_API_KEY: /^pdl_live_apikey_/,
-  REVENUECAT_SECRET_API_KEY: /^sk_/,
-};
 
 const BLOCKED_VALUE_PATTERN =
   /(^|[_:/.\-])(test|sandbox|demo|example|placeholder|dummy|fake|changeme|xxx|replace_me)([_:/.\-]|$)|your_|localhost|127\.0\.0\.1/i;
@@ -58,23 +38,34 @@ export function validateProductionEnv(env: EnvMap) {
     if (BLOCKED_VALUE_PATTERN.test(value)) failures.push(`${name} is not a live production value`);
   }
 
-  for (const [name, pattern] of Object.entries(LIVE_PREFIXES)) {
-    const value = resolveConfiguredEnv(name, env)?.trim();
-    if (value && !pattern.test(value)) failures.push(`${name} must use a live key prefix`);
-  }
-
   const corsOrigins = (env.CORS_ALLOWED_ORIGINS || '')
     .split(',')
     .map((origin) => origin.trim().replace(/\/+$/, ''))
     .filter(Boolean);
+  const additionalAllowedOrigins = [
+    env.APP_URL,
+    env.NEXT_PUBLIC_APP_URL,
+    env.WEB_URL,
+    env.WEB_APP_URL,
+    env.FRONTEND_URL,
+  ]
+    .filter((origin): origin is string => Boolean(origin?.trim()))
+    .map((origin) => origin.trim().replace(/\/+$/, ''));
+  const allowVercelPreviews = (env.CORS_ALLOW_VERCEL_PREVIEWS || '').trim().toLowerCase() === 'true';
   if (!corsOrigins.includes('https://burnerpoint.com')) {
     failures.push('CORS_ALLOWED_ORIGINS must include https://burnerpoint.com');
   }
   if (!corsOrigins.includes('https://www.burnerpoint.com')) {
     failures.push('CORS_ALLOWED_ORIGINS should include https://www.burnerpoint.com');
   }
-  const allowedProductionOrigins = new Set(['https://burnerpoint.com', 'https://www.burnerpoint.com']);
-  const unexpectedOrigins = corsOrigins.filter((origin) => !allowedProductionOrigins.has(origin));
+  const allowedProductionOrigins = new Set([
+    'https://burnerpoint.com',
+    'https://www.burnerpoint.com',
+    ...additionalAllowedOrigins,
+  ]);
+  const unexpectedOrigins = corsOrigins.filter(
+    (origin) => !allowedProductionOrigins.has(origin) && !(allowVercelPreviews && isVercelPreviewOrigin(origin)),
+  );
   if (unexpectedOrigins.length) {
     failures.push(`CORS_ALLOWED_ORIGINS contains non-production origins: ${unexpectedOrigins.join(', ')}`);
   }
@@ -111,5 +102,14 @@ export function validateProductionEnv(env: EnvMap) {
 
   if (failures.length) {
     throw new Error(`Production environment validation failed:\n${failures.map((item) => `- ${item}`).join('\n')}`);
+  }
+}
+
+function isVercelPreviewOrigin(origin: string) {
+  try {
+    const { protocol, hostname } = new URL(origin);
+    return protocol === 'https:' && hostname.endsWith('.vercel.app');
+  } catch {
+    return false;
   }
 }

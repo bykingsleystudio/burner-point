@@ -11,6 +11,12 @@ import { User } from './user.entity';
 // ─── BILLING ────────────────────────────────────────────────────────────────
 
 export enum TransactionType {
+  DEPOSIT = 'deposit',
+  PRODUCT_PURCHASE = 'product_purchase',
+  PRODUCT_REFUND = 'product_refund',
+  WALLET_LOCK = 'wallet_lock',
+  WALLET_RELEASE = 'wallet_release',
+  CALL_CREDIT_PURCHASE = 'call_credit_purchase',
   CREDIT_PURCHASE = 'credit_purchase', NUMBER_PURCHASE = 'number_purchase',
   NUMBER_RENEWAL = 'number_renewal', SMS_SEND = 'sms_send',
   CALL_CHARGE = 'call_charge', REFERRAL_BONUS = 'referral_bonus',
@@ -300,7 +306,17 @@ export class VelocityCounter {
 
 // ─── CALLS ──────────────────────────────────────────────────────────────────
 
-export enum CallStatus { INITIATED = 'initiated', RINGING = 'ringing', IN_PROGRESS = 'in-progress', COMPLETED = 'completed', FAILED = 'failed', BUSY = 'busy', NO_ANSWER = 'no-answer' }
+export enum CallStatus {
+  INITIATED = 'initiated',
+  RINGING = 'ringing',
+  ANSWERED = 'answered',
+  IN_PROGRESS = 'in-progress',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  BUSY = 'busy',
+  NO_ANSWER = 'no-answer',
+  CANCELED = 'canceled',
+}
 export enum CallDirection { INBOUND = 'inbound', OUTBOUND = 'outbound' }
 
 @Entity('calls')
@@ -322,13 +338,35 @@ export class Call {
   status: CallStatus;
 
   @Column({ nullable: true })
-  providerCallSid: string;
+  provider: string;
+
+  @Column({ name: 'provider_call_id', nullable: true })
+  providerCallId: string;
 
   @Column({ type: 'int', default: 0 })
   durationSeconds: number;
 
   @Column({ type: 'int', default: 0 })
+  billableSeconds: number;
+
+  @Column({ type: 'int', default: 0 })
+  creditsLocked: number;
+
+  @Column({ type: 'int', default: 0 })
+  creditsSpent: number;
+
+  @Column({ type: 'int', default: 0 })
   priceKobo: number;
+
+  @Column({ nullable: true })
+  failureReason: string;
+
+  @Column({ name: 'destination_country', nullable: true })
+  destinationCountry: string;
+
+  @Column({ name: 'idempotency_key', nullable: true })
+  @Index()
+  idempotencyKey: string;
 
   @Column({ nullable: true })
   recordingUrl: string;
@@ -344,6 +382,15 @@ export class Call {
 
   @Column({ nullable: true })
   phoneNumberId: string;
+
+  @Column({ name: 'started_at', type: 'timestamp', nullable: true })
+  startedAt: Date;
+
+  @Column({ name: 'answered_at', type: 'timestamp', nullable: true })
+  answeredAt: Date;
+
+  @Column({ name: 'completed_at', type: 'timestamp', nullable: true })
+  completedAt: Date;
 
   @Column({ type: 'jsonb', default: {} })
   metadata: Record<string, unknown>;
@@ -702,23 +749,20 @@ export class CreditPackage {
   @Column()
   name: string;
 
-  @Column({ name: 'amount_kobo', type: 'bigint' })
-  amountKobo: number;
+  @Column({ name: 'usd_price_cents', type: 'bigint' })
+  usdPriceCents: number;
 
-  @Column({ name: 'bonus_kobo', type: 'bigint' })
-  bonusKobo: number;
+  @Column({ name: 'base_credits', type: 'bigint' })
+  baseCredits: number;
 
-  @Column({ name: 'price_kobo', type: 'bigint' })
-  priceKobo: number;
+  @Column({ name: 'bonus_credits', type: 'bigint', default: 0 })
+  bonusCredits: number;
 
-  @Column({ name: 'available_gateways', type: 'text', array: true, default: () => "'{}'" })
-  availableGateways: string[];
+  @Column({ name: 'total_credits', type: 'bigint' })
+  totalCredits: number;
 
   @Column({ name: 'is_active', default: true })
   isActive: boolean;
-
-  @Column({ name: 'is_featured', default: false })
-  isFeatured: boolean;
 
   @Column({ name: 'sort_order', default: 0 })
   sortOrder: number;

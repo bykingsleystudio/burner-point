@@ -11,8 +11,10 @@ import { PhoneNumber } from '../../database/entities/phone-number.entity';
 import { EventsGateway } from '../gateway/events.gateway';
 import { AiService } from '../ai/ai.service';
 import { resolveWebhookBaseUrl } from '../../config/runtime-env';
+import { CreditsService } from '../credits/credits.service';
+import { CallsService, NormalizedVoiceEvent } from '../calls/calls.service';
 
-type ProviderWebhookSource = 'airalo' | 'bandwidth' | 'oxylabs' | 'smartproxy' | 'wireguard';
+type ProviderWebhookSource = 'airalo' | 'bandwidth' | 'oxylabs' | 'smartproxy' | 'wireguard' | 'tremil';
 
 @Injectable()
 export class WebhooksService {
@@ -25,6 +27,8 @@ export class WebhooksService {
     @InjectRepository(WebhookDedup) private dedupRepo: Repository<WebhookDedup>,
     private eventsGateway: EventsGateway,
     private aiService: AiService,
+    private creditsService: CreditsService,
+    private callsService: CallsService,
     private configService: ConfigService,
   ) {}
 
@@ -105,6 +109,18 @@ export class WebhooksService {
       });
     }
 
+    if (phoneNum?.userId && phoneNum.type === 'verification') {
+      await this.creditsService.settleVerificationWalletDelivery({
+        userId: phoneNum.userId,
+        phoneNumberId: phoneNum.id,
+        deliveryChannel: 'sms',
+        messageId: saved.id,
+        idempotencyKey: `verify-delivery:sms:${saved.id}`,
+      }).catch((error) => {
+        this.logger.warn(`Verification wallet settlement failed for SMS ${saved.id}: ${error instanceof Error ? error.message : String(error)}`);
+      });
+    }
+
     return { success: true };
   }
 
@@ -124,7 +140,8 @@ export class WebhooksService {
       to,
       direction: CallDirection.INBOUND,
       status: CallStatus.RINGING,
-      providerCallSid: eventId,
+      provider: 'twilio',
+      providerCallId: eventId,
       phoneNumberId: phoneNum?.id,
       userId: phoneNum?.userId,
     });
@@ -139,12 +156,28 @@ export class WebhooksService {
       });
     }
 
+    if (phoneNum?.userId && phoneNum.type === 'verification') {
+      await this.creditsService.settleVerificationWalletDelivery({
+        userId: phoneNum.userId,
+        phoneNumberId: phoneNum.id,
+        deliveryChannel: 'voice',
+        idempotencyKey: `verify-delivery:voice:${saved.id}`,
+      }).catch((error) => {
+        this.logger.warn(`Verification wallet settlement failed for voice call ${saved.id}: ${error instanceof Error ? error.message : String(error)}`);
+      });
+    }
+
     // Return TwiML to handle the call (goes to voicemail by default)
     return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Say voice="Polly.Joanna">You have reached a BurnerPoint number. Please leave a message.</Say>
   <Record maxLength="60" recordingStatusCallback="${this.apiWebhookBaseUrl}/twilio/recording"/>
 </Response>`;
+  }
+
+  handleTwilioOutboundAnswer() {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<Response/>`;
   }
 
   async handleStatusUpdate(payload: Record<string, string>) {
@@ -160,8 +193,28 @@ export class WebhooksService {
       };
       const status = statusMap[payload.MessageStatus] || MessageStatus.SENT;
       await this.msgRepo.update({ providerMessageSid: sid }, { status });
+      return { success: true };
+    }
+
+    if (payload.CallSid) {
+      return this.handleTwilioVoiceStatusWebhook(payload);
     }
     return { success: true };
+  }
+
+  async handleTwilioVoiceStatusWebhook(payload: Record<string, string>) {
+    const voiceEvent = this.normalizeTwilioVoiceEvent(payload);
+    if (!voiceEvent) return { success: true, ignored: true };
+
+    const duplicate = await this.storeWebhookEvent(
+      `voice:${this.voiceEventKey(voiceEvent)}`,
+      'twilio',
+      `voice.${voiceEvent.status}`,
+      payload,
+    );
+    if (duplicate) return { success: true, duplicate: true };
+
+    return this.callsService.handleProviderVoiceEvent(voiceEvent);
   }
 
   async handleRecordingStatus(payload: Record<string, string>) {
@@ -169,7 +222,7 @@ export class WebhooksService {
     if (!callSid) return { success: true };
 
     await this.callRepo.update(
-      { providerCallSid: callSid },
+      { providerCallId: callSid },
       {
         recordingUrl: payload.RecordingUrl,
         voicemailUrl: payload.RecordingUrl,
@@ -217,6 +270,11 @@ export class WebhooksService {
       );
     }
 
+    const voiceEvent = this.normalizeTelnyxVoiceEvent(payload, headers);
+    if (voiceEvent) {
+      return this.callsService.handleProviderVoiceEvent(voiceEvent);
+    }
+
     this.logger.log(`Telnyx webhook received: ${String(payload.event_type ?? 'unknown')}`);
     return { success: true };
   }
@@ -234,6 +292,12 @@ export class WebhooksService {
       const eventType = this.getProviderEventType(event);
       const duplicate = await this.storeWebhookEvent(`bandwidth:${eventId}`, 'bandwidth', eventType, event);
       if (duplicate) continue;
+
+      const voiceEvent = this.normalizeBandwidthVoiceEvent(event, headers);
+      if (voiceEvent) {
+        await this.callsService.handleProviderVoiceEvent(voiceEvent);
+        continue;
+      }
 
       const message = event.message as Record<string, unknown> | undefined;
       const messageTo = message?.to;
@@ -268,6 +332,21 @@ export class WebhooksService {
     rawBody?: Buffer,
   ) {
     this.assertBandwidthWebhookAuth(headers, rawBody);
+    const voiceEvent = this.normalizeBandwidthVoiceEvent(payload, headers);
+    if (voiceEvent) {
+      const duplicate = await this.storeWebhookEvent(
+        `bandwidth-voice:${this.voiceEventKey(voiceEvent)}`,
+        'bandwidth',
+        `voice.${voiceEvent.status}`,
+        payload,
+      );
+      if (!duplicate) {
+        await this.callsService.handleProviderVoiceEvent(voiceEvent);
+      }
+      return `<?xml version="1.0" encoding="UTF-8"?>
+<Response/>`;
+    }
+
     await this.storeWebhookEvent(
       `bandwidth-voice:${this.getProviderEventId(payload, headers) || Date.now()}`,
       'bandwidth',
@@ -280,6 +359,39 @@ export class WebhooksService {
   <SpeakSentence voice="julie">You have reached a Burner Point number. Please leave a message.</SpeakSentence>
   <Record />
 </Response>`;
+  }
+
+  handleBandwidthOutboundAnswer() {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<Response/>`;
+  }
+
+  async handleTremilVoiceWebhook(
+    payload: Record<string, unknown>,
+    headers: Record<string, string>,
+    rawBody?: Buffer,
+  ) {
+    const secret = this.configuredSecret('TREMIL_WEBHOOK_SECRET');
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (!secret) {
+      this.logger.warn('Tremil voice webhook rejected because TREMIL_WEBHOOK_SECRET is not configured');
+      if (isProduction) throw new BadRequestException('Tremil webhook verification not configured');
+    } else {
+      this.verifyGenericSignature('tremil', headers, rawBody, secret);
+    }
+
+    const voiceEvent = this.normalizeTremilVoiceEvent(payload, headers);
+    if (!voiceEvent) return { success: true, ignored: true };
+
+    const duplicate = await this.storeWebhookEvent(
+      `tremil-voice:${this.voiceEventKey(voiceEvent)}`,
+      'tremil',
+      `voice.${voiceEvent.status}`,
+      payload,
+    );
+    if (duplicate) return { success: true, duplicate: true };
+
+    return this.callsService.handleProviderVoiceEvent(voiceEvent);
   }
 
   async handleProviderWebhook(
@@ -314,6 +426,146 @@ export class WebhooksService {
       duplicate,
       verified,
     };
+  }
+
+  private voiceEventKey(event: NormalizedVoiceEvent) {
+    return `${event.provider}:${event.providerCallId}:${event.status}:${event.eventId ?? event.eventTimestamp ?? 'unknown'}`;
+  }
+
+  private normalizeTwilioVoiceEvent(payload: Record<string, string>): NormalizedVoiceEvent | null {
+    const providerCallId = payload.CallSid?.trim();
+    if (!providerCallId) return null;
+
+    const status = this.normalizeVoiceStatus(payload.CallStatus || payload.CallStatusCallbackEvent || payload.CallStatusEvent || 'initiated');
+    const eventTimestamp = payload.Timestamp || new Date().toISOString();
+
+    return {
+      provider: 'twilio',
+      providerCallId,
+      status,
+      fromNumber: payload.From || '',
+      toNumber: payload.To || '',
+      durationSeconds: this.parseOptionalInt(payload.CallDuration ?? payload.Duration),
+      answeredAt: this.parseOptionalDate(payload.AnsweredAt),
+      completedAt: this.parseOptionalDate(payload.EndTime ?? payload.Timestamp),
+      eventId: `${providerCallId}:${status}:${payload.SequenceNumber || payload.Timestamp || payload.CallDuration || '0'}`,
+      eventTimestamp,
+      signatureValid: true,
+      failureReason: payload.ErrorMessage || null,
+      rawEvent: payload,
+    };
+  }
+
+  private normalizeTelnyxVoiceEvent(
+    payload: Record<string, unknown>,
+    headers: Record<string, string>,
+  ): NormalizedVoiceEvent | null {
+    const eventType = this.asString(payload.event_type);
+    const data = payload.data as Record<string, unknown> | undefined;
+    const eventPayload = (data?.payload as Record<string, unknown> | undefined) ?? data ?? payload;
+    const providerCallId =
+      this.asString(eventPayload.call_control_id)
+      || this.asString(eventPayload.call_leg_id)
+      || this.asString(eventPayload.call_session_id)
+      || this.asString(data?.id);
+
+    if (!providerCallId) return null;
+
+    return {
+      provider: 'telnyx',
+      providerCallId,
+      status: this.normalizeVoiceStatus(eventType || this.asString(eventPayload.call_status) || 'initiated'),
+      fromNumber: this.asString(eventPayload.from) || this.asString(eventPayload.from_number),
+      toNumber: this.asString(eventPayload.to) || this.asString(eventPayload.to_number),
+      durationSeconds: this.parseOptionalInt(
+        this.asString(eventPayload.call_duration_secs)
+        || this.asString(eventPayload.duration_secs)
+        || this.asString(eventPayload.bill_duration_secs),
+      ),
+      answeredAt: this.parseOptionalDate(this.asString(eventPayload.answered_at)),
+      completedAt: this.parseOptionalDate(this.asString(eventPayload.ended_at) || this.asString(eventPayload.occurred_at)),
+      eventId: this.headerValue(headers, 'telnyx-event-id') || this.asString(data?.id) || `${providerCallId}:${eventType || 'voice'}`,
+      eventTimestamp: this.headerValue(headers, 'telnyx-timestamp') || this.asString(eventPayload.occurred_at) || new Date().toISOString(),
+      signatureValid: true,
+      failureReason: this.asString(eventPayload.hangup_cause) || null,
+      rawEvent: payload,
+    };
+  }
+
+  private normalizeBandwidthVoiceEvent(
+    payload: Record<string, unknown>,
+    headers: Record<string, string>,
+  ): NormalizedVoiceEvent | null {
+    const eventType = this.getProviderEventType(payload);
+    const providerCallId =
+      this.asString(payload.callId)
+      || this.asString(payload.call_id)
+      || this.asString((payload.call as Record<string, unknown> | undefined)?.id);
+    if (!providerCallId) return null;
+
+    return {
+      provider: 'bandwidth',
+      providerCallId,
+      status: this.normalizeVoiceStatus(eventType || this.asString(payload.state) || 'initiated'),
+      fromNumber: this.asString(payload.from),
+      toNumber: this.asString(payload.to),
+      durationSeconds: this.parseOptionalInt(
+        this.asString(payload.durationSeconds)
+        || this.asString(payload.duration)
+        || this.asString(payload.callDuration),
+      ),
+      answeredAt: this.parseOptionalDate(this.asString(payload.answeredAt)),
+      completedAt: this.parseOptionalDate(this.asString(payload.completedAt) || this.asString(payload.eventTime)),
+      eventId: this.getProviderEventId(payload, headers) || `${providerCallId}:${eventType || 'voice'}`,
+      eventTimestamp: this.asString(payload.eventTime) || new Date().toISOString(),
+      signatureValid: true,
+      failureReason: this.asString(payload.reason) || null,
+      rawEvent: payload,
+    };
+  }
+
+  private normalizeTremilVoiceEvent(
+    payload: Record<string, unknown>,
+    headers: Record<string, string>,
+  ): NormalizedVoiceEvent | null {
+    const data = (payload.data as Record<string, unknown> | undefined) ?? payload;
+    const providerCallId =
+      this.asString(data.call_id)
+      || this.asString(data.id)
+      || this.asString((data.call as Record<string, unknown> | undefined)?.id);
+    if (!providerCallId) return null;
+
+    return {
+      provider: 'tremil',
+      providerCallId,
+      status: this.normalizeVoiceStatus(this.asString(data.status) || this.asString(payload.event_type) || 'initiated'),
+      fromNumber: this.asString(data.from) || this.asString(data.from_number),
+      toNumber: this.asString(data.to) || this.asString(data.to_number),
+      durationSeconds: this.parseOptionalInt(
+        this.asString(data.duration)
+        || this.asString(data.duration_seconds),
+      ),
+      answeredAt: this.parseOptionalDate(this.asString(data.answered_at)),
+      completedAt: this.parseOptionalDate(this.asString(data.completed_at) || this.asString(data.ended_at)),
+      eventId: this.getProviderEventId(payload, headers) || `${providerCallId}:${this.asString(data.status) || 'voice'}`,
+      eventTimestamp: this.asString(data.timestamp) || new Date().toISOString(),
+      signatureValid: true,
+      failureReason: this.asString(data.reason) || null,
+      rawEvent: payload,
+    };
+  }
+
+  private normalizeVoiceStatus(status: string) {
+    const normalized = String(status || '').trim().toLowerCase();
+    if (!normalized) return 'initiated';
+    if (normalized.includes('ring')) return 'ringing';
+    if (normalized.includes('answer')) return 'answered';
+    if (normalized.includes('busy')) return 'busy';
+    if (normalized.includes('no-answer') || normalized.includes('no_answer') || normalized.includes('unanswer')) return 'no-answer';
+    if (normalized.includes('cancel')) return 'canceled';
+    if (normalized.includes('complete') || normalized.includes('disconnect') || normalized.includes('hangup')) return 'completed';
+    if (normalized.includes('fail') || normalized.includes('error')) return 'failed';
+    return normalized;
   }
 
   private twilioRequestUrlCandidates(req: Request): string[] {
@@ -420,6 +672,18 @@ export class WebhooksService {
       });
     }
 
+    if (phoneNum?.userId && phoneNum.type === 'verification') {
+      await this.creditsService.settleVerificationWalletDelivery({
+        userId: phoneNum.userId,
+        phoneNumberId: phoneNum.id,
+        deliveryChannel: 'sms',
+        messageId: saved.id,
+        idempotencyKey: `verify-delivery:provider-sms:${saved.id}`,
+      }).catch((error) => {
+        this.logger.warn(`Verification wallet settlement failed for provider SMS ${saved.id}: ${error instanceof Error ? error.message : String(error)}`);
+      });
+    }
+
     this.logger.log(`${params.provider} inbound SMS stored: ${params.eventId}`);
   }
 
@@ -446,6 +710,7 @@ export class WebhooksService {
       oxylabs: 'OXYLABS_WEBHOOK_SECRET',
       smartproxy: 'SMARTPROXY_WEBHOOK_SECRET',
       wireguard: 'WIREGUARD_WEBHOOK_SECRET',
+      tremil: 'TREMIL_WEBHOOK_SECRET',
     };
     return env[source];
   }
@@ -458,7 +723,7 @@ export class WebhooksService {
     return value;
   }
 
-  private assertBandwidthWebhookAuth(headers: Record<string, string>, rawBody?: Buffer) {
+  assertBandwidthWebhookAuth(headers: Record<string, string>, rawBody?: Buffer) {
     const username = this.configService.get<string>('BANDWIDTH_WEBHOOK_USERNAME');
     const password = this.configService.get<string>('BANDWIDTH_WEBHOOK_PASSWORD');
     if (username && password) {
@@ -569,6 +834,21 @@ export class WebhooksService {
       this.asString(payload.status) ||
       'provider.webhook'
     );
+  }
+
+  private parseOptionalInt(value: string | number | undefined | null) {
+    if (typeof value === 'number' && Number.isFinite(value)) return Math.max(0, Math.round(value));
+    if (typeof value === 'string' && value.trim()) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? Math.max(0, Math.round(parsed)) : undefined;
+    }
+    return undefined;
+  }
+
+  private parseOptionalDate(value: string | undefined | null) {
+    if (!value) return null;
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
 
   private headerValue(headers: Record<string, string>, name: string): string {

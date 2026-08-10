@@ -12,11 +12,13 @@ import { User } from './user.entity';
 
 export enum SubscriptionProvider {
   REVENUECAT = 'revenuecat',
+  PADDLE = 'paddle',
 }
 
 export enum SubscriptionStatus {
   ACTIVE = 'active',
   TRIALING = 'trialing',
+  GRACE_PERIOD = 'grace_period',
   CANCELED = 'canceled',
   EXPIRED = 'expired',
   BILLING_ISSUE = 'billing_issue',
@@ -109,7 +111,7 @@ export class SubscriptionRecord {
 }
 
 @Entity('subscription_entitlements')
-@Index('idx_subscription_entitlements_user_identifier', ['userId', 'identifier'], { unique: true })
+@Index('idx_subscription_entitlements_user_provider_identifier', ['userId', 'provider', 'identifier'], { unique: true })
 export class SubscriptionEntitlement {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -209,6 +211,53 @@ export class RevenueCatEvent {
 
   @Column({ name: 'authorization_verified', default: false })
   authorizationVerified: boolean;
+
+  @Column({ default: false })
+  processed: boolean;
+
+  @Column({ name: 'processing_error', type: 'text', nullable: true })
+  processingError: string | null;
+
+  @Column({ name: 'occurred_at', type: 'timestamptz', nullable: true })
+  occurredAt: Date | null;
+
+  @Column({ name: 'processed_at', type: 'timestamptz', nullable: true })
+  processedAt: Date | null;
+
+  @Column({ type: 'jsonb', default: {} })
+  payload: Record<string, unknown>;
+
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
+  updatedAt: Date;
+}
+
+@Entity('paddle_events')
+export class PaddleEvent {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ name: 'event_id', unique: true })
+  @Index()
+  eventId: string;
+
+  @Column({ name: 'event_type' })
+  eventType: string;
+
+  @Column({ name: 'subscription_id', nullable: true })
+  subscriptionId: string | null;
+
+  @Column({ name: 'transaction_id', nullable: true })
+  transactionId: string | null;
+
+  @Column({ name: 'user_id', nullable: true })
+  @Index()
+  userId: string | null;
+
+  @Column({ name: 'provider_customer_id', nullable: true })
+  providerCustomerId: string | null;
 
   @Column({ default: false })
   processed: boolean;

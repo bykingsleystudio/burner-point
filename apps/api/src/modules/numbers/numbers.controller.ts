@@ -3,12 +3,20 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger'
 import { NumbersService } from './numbers.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { NumberType } from '../../database/entities/phone-number.entity';
-import { IsString, IsEnum, IsOptional } from 'class-validator';
+import { IsString, IsEnum, IsOptional, IsInt, Min, Max } from 'class-validator';
 
 class ProvisionDto {
   @IsString() phoneNumber: string;
   @IsEnum(NumberType) type: NumberType;
   @IsString() countryCode: string;
+  @IsOptional()
+  @IsString()
+  idempotencyKey?: string;
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(365)
+  durationDays?: number;
 }
 
 class SearchDto {
@@ -43,7 +51,7 @@ export class NumbersController {
   @Post('provision')
   @ApiOperation({ summary: 'Provision a phone number' })
   provision(@Body() dto: ProvisionDto, @Req() req) {
-    return this.service.provision(req.user.id, dto.phoneNumber, dto.type, dto.countryCode);
+    return this.service.provision(req.user.id, dto.phoneNumber, dto.type, dto.countryCode, dto.durationDays, dto.idempotencyKey);
   }
 
   @Get()

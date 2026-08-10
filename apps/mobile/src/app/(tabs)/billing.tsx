@@ -15,8 +15,8 @@ const HIT_SLOP = { top: 8, right: 8, bottom: 8, left: 8 };
 const billingModules = [
   {
     icon: CreditCard,
-    title: 'Wallet credits',
-    text: 'Fund verifications, rentals, eSIM, proxy, and one-time access with Burner Point web checkout.',
+    title: 'Available balance',
+    text: 'Fund verifications, rentals, eSIM, proxy, dedicated VPN IP purchases, and one-time access with Burner Point web checkout.',
     action: 'Open wallet billing',
   },
   {
@@ -68,6 +68,7 @@ export default function BillingScreen() {
     getOffering(offeringConfig.default),
     getOffering(offeringConfig.messenger),
     getOffering(offeringConfig.vpn),
+    getOffering(offeringConfig.premium),
   ].filter((offering, index, list): offering is PurchasesOffering => Boolean(offering) && list.indexOf(offering) === index);
 
   const activeEntitlements = snapshot?.entitlements.filter((item) => item.active) ?? [];
@@ -109,13 +110,13 @@ export default function BillingScreen() {
     <SafeAreaView style={s.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.content}>
         <View style={s.hero}>
-          <View style={s.heroTop}>
-            <Text style={s.kicker}>Credits and Billing</Text>
+        <View style={s.heroTop}>
+            <Text style={s.kicker}>Billing</Text>
             <ShieldCheck size={20} color={BRAND.colors.cyberGreen} />
           </View>
-          <Text accessibilityRole="header" style={s.title}>Wallet credits and store subscriptions.</Text>
+          <Text accessibilityRole="header" style={s.title}>Available balance and store subscriptions.</Text>
           <Text style={s.subtitle}>
-            Burner Point keeps wallet funding on secure web checkout and uses RevenueCat for App Store and Google Play subscription entitlements.
+            Burner Point keeps wallet funding on secure web checkout, reserves Call Credits for BP Messenger international calling, and uses RevenueCat for App Store and Google Play subscription entitlements.
           </Text>
           <View style={s.heroActions}>
             <TouchableOpacity
@@ -175,7 +176,7 @@ export default function BillingScreen() {
           <EntitlementGate
             eyebrow="RevenueCat"
             title="Store subscriptions require a native mobile build."
-            text="Use iOS or Android to buy or restore App Store / Google Play subscriptions. Wallet credits remain available on the secure web app."
+            text="Use iOS or Android to buy or restore App Store / Google Play subscriptions. Available balance remains available on the secure web app."
             bullets={[
               'Use a native Burner Point build for App Store or Google Play purchases.',
               'Wallet top-ups, receipts, and support stay available on burnerpoint.com.',
@@ -248,7 +249,7 @@ export default function BillingScreen() {
           <EntitlementGate
             eyebrow="RevenueCat"
             title="Store subscription keys are missing in this mobile build."
-            text="The native build does not have RevenueCat public SDK keys yet, so App Store and Google Play purchases cannot start from this screen. Wallet credits still use the secure web app."
+            text="The native build does not have RevenueCat public SDK keys yet, so App Store and Google Play purchases cannot start from this screen. Available balance still uses the secure web app."
             bullets={[
               'Add EXPO_PUBLIC_REVENUECAT_APPLE_API_KEY for iOS.',
               'Add EXPO_PUBLIC_REVENUECAT_GOOGLE_API_KEY for Android.',
@@ -287,7 +288,7 @@ export default function BillingScreen() {
         <View style={s.policyCard}>
           <Text style={s.policyTitle}>Production billing split</Text>
           <Text style={s.policyText}>
-            RevenueCat manages App Store and Google Play entitlements for BP Messenger Pro, BP Secure Tunnel, and BP Premium. Wallet top-ups and web payments stay on secure Burner Point checkout through Paystack, Paddle, NOWPayments, and approved gateways.
+            RevenueCat manages App Store and Google Play entitlements for BP Messenger Pro, BP Secure Tunnel, and BP Premium. Wallet top-ups stay on secure Burner Point checkout through Paystack, Flutterwave, and NOWPayments, Call Credits are scoped to BP Messenger international calling, and web subscriptions are managed through Paddle.
           </Text>
         </View>
       </ScrollView>
@@ -295,9 +296,10 @@ export default function BillingScreen() {
   );
 }
 
-function labelForOffering(identifier: string, offeringConfig: { default: string; messenger: string; vpn: string }) {
+function labelForOffering(identifier: string, offeringConfig: { default: string; messenger: string; vpn: string; premium: string }) {
   if (identifier === offeringConfig.messenger) return 'BP Messenger';
   if (identifier === offeringConfig.vpn) return 'BP Secure Tunnel';
+  if (identifier === offeringConfig.premium) return 'BP Premium';
   if (identifier === offeringConfig.default) return 'Default offering';
   return identifier;
 }

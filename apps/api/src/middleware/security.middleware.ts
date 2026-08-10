@@ -43,7 +43,15 @@ const AUTH_ROUTES = [
 
 const PAYMENT_ROUTES = [
   '/payments/initialize',
+  '/messenger/call-credits/purchase',
+  '/messenger/calls/start',
+  '/internal/messenger/call-credits',
+  '/internal/wallet',
   '/api/payments/initialize',
+  '/api/messenger/call-credits/purchase',
+  '/api/messenger/calls/start',
+  '/api/internal/messenger/call-credits',
+  '/api/internal/wallet',
 ];
 
 const WEBHOOK_ROUTES = [

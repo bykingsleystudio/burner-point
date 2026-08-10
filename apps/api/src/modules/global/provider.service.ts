@@ -69,6 +69,10 @@ export interface ProviderCallResult {
   routeLabel: string;
 }
 
+export interface ProviderCallOptions {
+  callId?: string;
+}
+
 export interface ProviderAvailabilityOptions {
   countryCode: string;
   areaCode?: string;
@@ -99,7 +103,7 @@ export interface MessengerProviderAdapter {
   buyNumber(options: ProviderPurchaseOptions): Promise<ProviderNumberPurchaseResult>;
   releaseNumber(options: ProviderReleaseOptions): Promise<void>;
   receiveWebhook(payload: Record<string, unknown>, headers?: Record<string, string>): Promise<{ success: true }>;
-  startCall(to: string, from: string): Promise<Omit<ProviderCallResult, 'provider' | 'routeLabel'>>;
+  startCall(to: string, from: string, options?: ProviderCallOptions): Promise<Omit<ProviderCallResult, 'provider' | 'routeLabel'>>;
   endCall(callSid: string): Promise<void>;
   lookupAvailability(options: ProviderAvailabilityOptions): Promise<ProviderNumberSearchResult[]>;
   getPricing(countryCode: string, product: RouteProduct): Promise<ProviderPricingResult>;
@@ -324,6 +328,7 @@ export class ProviderService {
     from: string,
     countryCode?: string,
     preferredProvider?: ProviderName,
+    options?: ProviderCallOptions,
   ): Promise<ProviderCallResult> {
     const route = this.selectConversationRoute(countryCode ?? this.inferCountryFromPhone(to), preferredProvider);
     const providersToTry = this.uniqueProviders([route.primaryProvider, ...route.fallbackProviders]);
@@ -334,7 +339,7 @@ export class ProviderService {
       if (!adapter) continue;
 
       try {
-        const result = await adapter.startCall(to, from);
+        const result = await adapter.startCall(to, from, options);
         return {
           ...result,
           provider,
@@ -392,7 +397,7 @@ export class ProviderService {
         buyNumber: ({ phoneNumber, countryCode }) => this.purchaseTwilioNumber(phoneNumber, countryCode),
         releaseNumber: ({ sid }) => this.releaseTwilioNumber(sid),
         receiveWebhook: async () => ({ success: true }),
-        startCall: (to, from) => this.startTwilioCall(to, from),
+        startCall: (to, from, options) => this.startTwilioCall(to, from, options),
         endCall: (callSid) => this.endTwilioCall(callSid),
         lookupAvailability: ({ countryCode, areaCode, smsEnabled }) => this.searchTwilioNumbers(countryCode, areaCode, smsEnabled ?? true),
         getPricing: async (countryCode, product) => ({
@@ -430,7 +435,7 @@ export class ProviderService {
         buyNumber: ({ phoneNumber }) => this.purchaseBandwidthNumber(phoneNumber),
         releaseNumber: ({ phoneNumber }) => this.releaseBandwidthNumber(phoneNumber),
         receiveWebhook: async () => ({ success: true }),
-        startCall: (to, from) => this.startBandwidthCall(to, from),
+        startCall: (to, from, options) => this.startBandwidthCall(to, from, options),
         endCall: (callSid) => this.endBandwidthCall(callSid),
         lookupAvailability: ({ countryCode, areaCode, smsEnabled }) => this.searchBandwidthNumbers(countryCode, areaCode, smsEnabled ?? true),
         getPricing: async (countryCode, product) => ({
@@ -840,15 +845,17 @@ export class ProviderService {
     );
   }
 
-  private async startTwilioCall(to: string, from: string) {
+  private async startTwilioCall(to: string, from: string, options?: ProviderCallOptions) {
     if (!this.twilioClient) throw new Error('Twilio not configured');
     const webhookBaseUrl = this.getWebhookBaseUrl();
+    const querySuffix = options?.callId ? `?callId=${encodeURIComponent(options.callId)}` : '';
 
     const call = await this.twilioClient.calls.create({
       to,
       from,
-      url: `${webhookBaseUrl}/webhooks/twilio/voice`,
-      statusCallback: `${webhookBaseUrl}/webhooks/twilio/status`,
+      url: `${webhookBaseUrl}/webhooks/voice/twilio/answer${querySuffix}`,
+      statusCallback: `${webhookBaseUrl}/webhooks/voice/twilio${querySuffix}`,
+      statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed'],
     });
 
     return {
@@ -862,9 +869,10 @@ export class ProviderService {
     await this.twilioClient.calls(callSid).update({ status: 'completed' });
   }
 
-  private async startBandwidthCall(to: string, from: string) {
+  private async startBandwidthCall(to: string, from: string, options?: ProviderCallOptions) {
     const { accountId, username, password, applicationId } = this.getBandwidthVoiceConfig();
     const webhookBaseUrl = this.getWebhookBaseUrl();
+    const querySuffix = options?.callId ? `?callId=${encodeURIComponent(options.callId)}` : '';
 
     const response = await axios.post(
       `https://voice.bandwidth.com/api/v2/accounts/${accountId}/calls`,
@@ -872,8 +880,8 @@ export class ProviderService {
         to,
         from,
         applicationId,
-        answerUrl: `${webhookBaseUrl}/webhooks/bandwidth/voice`,
-        disconnectUrl: `${webhookBaseUrl}/webhooks/bandwidth`,
+        answerUrl: `${webhookBaseUrl}/webhooks/voice/bandwidth/answer${querySuffix}`,
+        disconnectUrl: `${webhookBaseUrl}/webhooks/voice/bandwidth${querySuffix}`,
       },
       {
         auth: { username, password },

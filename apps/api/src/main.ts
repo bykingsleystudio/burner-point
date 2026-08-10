@@ -158,6 +158,11 @@ async function bootstrap() {
   });
 
   httpAdapter.get('/health/db', async (_req: unknown, res: { status: (code: number) => { json: (body: object) => void } }) => {
+    if (!process.env.DATABASE_URL) {
+      res.status(200).json({ status: 'ok', dependency: 'database', mode: 'not-configured', ts: new Date().toISOString() });
+      return;
+    }
+
     try {
       await dataSource.query('SELECT 1');
       res.status(200).json({ status: 'ok', dependency: 'database', ts: new Date().toISOString() });
@@ -170,6 +175,11 @@ async function bootstrap() {
     _req: unknown,
     res: { status: (code: number) => { json: (body: object) => void } },
   ) => {
+    if (!process.env.REDIS_URL) {
+      res.status(200).json({ status: 'ok', dependency: 'redis', mode: 'not-configured', ts: new Date().toISOString() });
+      return;
+    }
+
     try {
       const probeKey = `health:redis:${Date.now()}`;
       await redisService.set(probeKey, '1', 30);

@@ -66,6 +66,11 @@ class EsimOrderDto implements EsimOrderInput {
   @IsOptional()
   @IsString()
   iccid?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(180)
+  idempotencyKey?: string;
 }
 
 class ProxyOrderDto implements ProxyOrderInput {
@@ -81,6 +86,11 @@ class ProxyOrderDto implements ProxyOrderInput {
   @Min(1)
   @Max(365)
   durationDays?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(180)
+  idempotencyKey?: string;
 }
 
 class VpnSessionDto implements VpnSessionInput {
@@ -91,6 +101,11 @@ class VpnSessionDto implements VpnSessionInput {
   @IsOptional()
   @IsString()
   region?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(180)
+  idempotencyKey?: string;
 }
 
 @ApiTags('integrations')

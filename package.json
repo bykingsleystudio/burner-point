@@ -1,6 +1,11 @@
 {
-  "name": "@burner-point/api",
+  "name": "burner-point",
   "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "build": "nest build",
     "start": "node dist/main",
@@ -12,7 +17,8 @@
     "verify:web": "npm run build --prefix apps/web",
     "verify:web:e2e": "npm run test:e2e --prefix apps/web",
     "verify:mobile": "cd apps/mobile && npx tsc --noEmit",
-    "release:verify": "npm run security:scan && npm run verify:api && npm run verify:web && npm run verify:mobile",
+    "test:billing": "node -r ts-node/register/transpile-only --test apps/api/test/call-billing.test.cjs apps/api/test/credits-pricing.test.cjs",
+    "release:verify": "npm run security:scan && npm run verify:api && npm run verify:web && npm run verify:mobile && npm run test:billing",
     "test": "jest",
     "db:migrate": "ts-node -r tsconfig-paths/register src/database/data-source.ts",
     "typeorm": "ts-node -r tsconfig-paths/register node_modules/typeorm/cli"

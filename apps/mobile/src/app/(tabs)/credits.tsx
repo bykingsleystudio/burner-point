@@ -18,7 +18,7 @@ import { formatNgnKobo, formatStoredKoboAsUsd } from '../../lib/money';
 import { triggerHaptic } from '../../lib/native-ux';
 
 type GatewayId = 'paystack' | 'paddle' | 'nowpayments';
-type CreditPackage = {
+type FundingPackage = {
   id: string;
   name: string;
   amountKobo: number;
@@ -34,8 +34,8 @@ const GATEWAYS: Array<{ id: GatewayId; label: string; code: string; desc: string
 ];
 
 export default function CreditsScreen() {
-  const [packages, setPackages] = useState<CreditPackage[]>([]);
-  const [selectedPkg, setSelectedPkg] = useState<CreditPackage | null>(null);
+  const [packages, setPackages] = useState<FundingPackage[]>([]);
+  const [selectedPkg, setSelectedPkg] = useState<FundingPackage | null>(null);
   const [gateway, setGateway] = useState<GatewayId>('paystack');
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
@@ -56,7 +56,7 @@ export default function CreditsScreen() {
   const pay = async () => {
     triggerHaptic('impact');
     if (!selectedPkg) {
-      Alert.alert('Select Package', 'Please select a credit package first');
+      Alert.alert('Select Amount', 'Please select a funding amount first');
       return;
     }
 
@@ -90,10 +90,10 @@ export default function CreditsScreen() {
         ListHeaderComponent={
           <View>
             <View style={s.header}>
-              <Text style={s.title}>Buy Credits</Text>
+              <Text style={s.title}>Add Funds</Text>
               <Text style={s.subtitle}>Wallet funding is normalized to USD, with local checkout shown for convenience.</Text>
             </View>
-            <Text style={s.sectionLabel}>Select Package</Text>
+            <Text style={s.sectionLabel}>Select Amount</Text>
           </View>
         }
         renderItem={({ item: pkg }) => (
@@ -111,8 +111,7 @@ export default function CreditsScreen() {
             <Text style={s.pkgPrice}>{formatStoredKoboAsUsd(pkg.priceKobo)}</Text>
             <Text style={s.pkgLocal}>{formatNgnKobo(pkg.priceKobo)} local checkout</Text>
             <Text style={s.pkgCredits}>
-              {formatStoredKoboAsUsd(pkg.amountKobo)} wallet credits
-              {pkg.bonusKobo > 0 ? ` + ${formatStoredKoboAsUsd(pkg.bonusKobo)} bonus` : ''}
+              {formatStoredKoboAsUsd(pkg.amountKobo)} added to available balance
             </Text>
           </TouchableOpacity>
         )}

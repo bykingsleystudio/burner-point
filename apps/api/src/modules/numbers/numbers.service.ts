@@ -1,27 +1,16 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ConfigService } from '@nestjs/config';
+import { TransactionType } from '../../database/entities/extended-entities';
 import { PhoneNumber, NumberStatus, NumberType, NumberProvider } from '../../database/entities/phone-number.entity';
-import { WalletTransaction, TransactionType, TransactionStatus } from '../../database/entities/extended-entities';
-import { User } from '../../database/entities/user.entity';
 import { ProviderName, ProviderService } from '../global/provider.service';
-import { UsersService } from '../users/users.service';
-import { usdCentsToNgnKobo, ngnKoboToUsdCents } from '../../config/money';
-
-// Wallet is stored in USD cents. These base prices were originally NGN kobo and are now
-// derived to USD cents using the display FX rate for consistency.
-const NUMBER_PRICING_NGN_KOBO: Record<string, Record<string, number>> = {
-  US: { burner: 160000, rental: 480000, verification: 40000 },
-  GB: { burner: 200000, rental: 600000, verification: 48000 },
-  CA: { burner: 160000, rental: 480000, verification: 40000 },
-  NG: { burner: 80000, rental: 240000, verification: 20000 },
-  default: { burner: 160000, rental: 480000, verification: 40000 },
-};
-
-const NUMBER_DURATION_DAYS: Record<string, number> = {
-  burner: 1, rental: 30, verification: 0, // verification = no expiry, single use
-};
+import { CreditsService } from '../credits/credits.service';
+import {
+  defaultNumberDurationDays,
+  getNumberProductBasePriceUsdCents,
+  normalizeNumberDurationDays,
+  VERIFICATION_LOCK_TIMEOUT_MINUTES,
+} from '../credits/product-credit-pricing';
 
 @Injectable()
 export class NumbersService {
@@ -29,11 +18,8 @@ export class NumbersService {
 
   constructor(
     @InjectRepository(PhoneNumber) private numberRepo: Repository<PhoneNumber>,
-    @InjectRepository(WalletTransaction) private txRepo: Repository<WalletTransaction>,
-    @InjectRepository(User) private userRepo: Repository<User>,
     private providerService: ProviderService,
-    private usersService: UsersService,
-    private configService: ConfigService,
+    private creditsService: CreditsService,
   ) {}
 
   async searchAvailable(countryCode: string, areaCode?: string, type?: NumberType) {
@@ -44,62 +30,142 @@ export class NumbersService {
     return this.providerService.searchNumbers(country, areaCode);
   }
 
-  async provision(userId: string, phoneNumber: string, type: NumberType, countryCode: string) {
+  async provision(
+    userId: string,
+    phoneNumber: string,
+    type: NumberType,
+    countryCode: string,
+    durationDays?: number,
+    idempotencyKey?: string,
+  ) {
     const country = countryCode.toUpperCase();
     if (type !== NumberType.VERIFICATION && !['US', 'CA'].includes(country)) {
       throw new BadRequestException('Conversation rentals are available for US and Canada only');
     }
 
-    const pricing = NUMBER_PRICING_NGN_KOBO[country] || NUMBER_PRICING_NGN_KOBO.default;
-    const priceNgnKobo = pricing[type] || pricing.burner;
-    const priceUsdCents = ngnKoboToUsdCents(priceNgnKobo, this.configService);
+    const normalizedDurationDays = normalizeNumberDurationDays(type, durationDays);
+    const priceUsdCents = getNumberProductBasePriceUsdCents(country, type, normalizedDurationDays);
+    const relatedProduct = type === NumberType.VERIFICATION ? 'verify_hub' : 'rentals';
 
-    // Debit wallet
-    await this.usersService.debitWallet(userId, priceUsdCents);
-
-    // Purchase from provider
-    const { sid, number, provider } = await this.providerService.purchaseNumber(phoneNumber, country);
-
-    // Calculate expiry
-    const durationDays = NUMBER_DURATION_DAYS[type] || 1;
-    const expiresAt = durationDays > 0
-      ? new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000)
-      : null;
-
-    const num = this.numberRepo.create({
-      number,
-      status: NumberStatus.ACTIVE,
-      type,
-      provider: this.mapNumberProvider(provider),
-      providerNumberSid: sid,
+    const quote = await this.creditsService.quote({
+      product: relatedProduct,
       countryCode: country,
+      numberType: type,
+      durationDays: normalizedDurationDays,
+      basePriceUsdCents: priceUsdCents,
+      relatedEntityId: phoneNumber,
+    }, userId);
+
+    const requestKey = idempotencyKey?.trim()
+      || `number:${userId}:${type}:${country}:${phoneNumber}:${normalizedDurationDays}`;
+
+    const lock = await this.creditsService.createWalletLock({
       userId,
-      priceKobo: priceUsdCents,
-      renewalPriceKobo: priceUsdCents,
-      expiresAt,
-      capabilities: ['sms', 'mms', 'voice'],
+      amountUsdCents: quote.usdValueCents,
+      relatedProduct,
+      relatedEntityId: phoneNumber,
+      reason: type === NumberType.VERIFICATION
+        ? 'Verification session wallet hold'
+        : 'Rental assignment wallet hold',
+      description: type === NumberType.VERIFICATION
+        ? 'Locked wallet balance for verification routing'
+        : 'Locked wallet balance for rental assignment',
+      expiresAt: type === NumberType.VERIFICATION
+        ? new Date(Date.now() + VERIFICATION_LOCK_TIMEOUT_MINUTES * 60 * 1000)
+        : new Date(Date.now() + 15 * 60 * 1000),
+      idempotencyKey: `number-lock:${requestKey}`,
+      metadata: {
+        quote,
+        requestedNumber: phoneNumber,
+        requestedDurationDays: normalizedDurationDays,
+      },
     });
 
-    const saved = await this.numberRepo.save(num);
+    try {
+      const { sid, number, provider } = await this.providerService.purchaseNumber(phoneNumber, country);
+      const expiresAt = type === NumberType.VERIFICATION
+        ? new Date(Date.now() + VERIFICATION_LOCK_TIMEOUT_MINUTES * 60 * 1000)
+        : normalizedDurationDays > 0
+          ? new Date(Date.now() + normalizedDurationDays * 24 * 60 * 60 * 1000)
+          : null;
 
-    // Record wallet transaction
-    const user = await this.userRepo.findOne({ where: { id: userId } });
-    await this.txRepo.save(this.txRepo.create({
-      userId,
-      type: TransactionType.NUMBER_PURCHASE,
-      status: TransactionStatus.COMPLETED,
-      amountKobo: -priceUsdCents,
-      balanceBeforeKobo: Number(user.walletBalanceKobo) + priceUsdCents,
-      balanceAfterKobo: Number(user.walletBalanceKobo),
-      description: `Provisioned ${type} number ${number}`,
-      referenceId: saved.id,
-      metadata: {
-        chargeUsdCents: priceUsdCents,
-        displayNgnKobo: usdCentsToNgnKobo(priceUsdCents, this.configService),
-      },
-    }));
+      const num = this.numberRepo.create({
+        number,
+        status: NumberStatus.ACTIVE,
+        type,
+        provider: this.mapNumberProvider(provider),
+        providerNumberSid: sid,
+        countryCode: country,
+        userId,
+        assignedToUserId: userId,
+        priceKobo: quote.usdValueCents,
+        renewalPriceKobo: type === NumberType.VERIFICATION ? 0 : quote.usdValueCents,
+        expiresAt,
+        autoRenew: type === NumberType.RENTAL,
+        capabilities: ['sms', 'mms', 'voice'],
+        metadata: {
+          walletLockId: lock.lock.id,
+          quotedPriceUsdCents: quote.usdValueCents,
+          requestedDurationDays: normalizedDurationDays,
+          paymentMode: 'wallet',
+        },
+      });
 
-    return saved;
+      const saved = await this.numberRepo.save(num);
+      await this.creditsService.rebindWalletLockEntity(userId, lock.lock.id, saved.id, relatedProduct);
+      await this.numberRepo.update(saved.id, {
+        metadata: {
+          ...(saved.metadata ?? {}),
+          walletLockId: lock.lock.id,
+        },
+      });
+
+      if (type === NumberType.VERIFICATION) {
+        return {
+          ...saved,
+          pricing: {
+            walletAmountLockedUsdCents: quote.usdValueCents,
+            usdValueCents: quote.usdValueCents,
+            state: 'locked',
+          },
+        };
+      }
+
+      await this.creditsService.spendWalletLock({
+        userId,
+        lockId: lock.lock.id,
+        type: TransactionType.NUMBER_PURCHASE,
+        relatedProduct,
+        relatedEntityId: saved.id,
+        description: `Provisioned ${type} number ${number}`,
+        idempotencyKey: `number-spend:${requestKey}`,
+        metadata: {
+          countryCode: country,
+          requestedDurationDays: normalizedDurationDays,
+        },
+      });
+
+      return {
+        ...saved,
+        pricing: {
+          walletAmountSpentUsdCents: quote.usdValueCents,
+          usdValueCents: quote.usdValueCents,
+          state: 'spent',
+        },
+      };
+    } catch (error) {
+      await this.creditsService.releaseWalletLock({
+        userId,
+        lockId: lock.lock.id,
+        description: `Released wallet hold after failed ${type} provision`,
+        idempotencyKey: `number-release:${requestKey}`,
+        metadata: {
+          requestedNumber: phoneNumber,
+          countryCode: country,
+        },
+      }).catch(() => null);
+      throw error;
+    }
   }
 
   async assignPaidNumber(
@@ -120,7 +186,7 @@ export class NumbersService {
     }
 
     const { sid, number, provider } = await this.providerService.purchaseNumber(phoneNumber, country);
-    const durationDays = options.durationDays ?? NUMBER_DURATION_DAYS[type] ?? 1;
+    const durationDays = options.durationDays ?? defaultNumberDurationDays(type);
     const expiresAt = durationDays > 0
       ? new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000)
       : null;
@@ -145,27 +211,7 @@ export class NumbersService {
       },
     });
 
-    const saved = await this.numberRepo.save(paidNumber);
-    const user = await this.userRepo.findOne({ where: { id: userId } });
-    const balance = Number(user?.walletBalanceKobo ?? 0);
-
-    await this.txRepo.save(this.txRepo.create({
-      userId,
-      type: TransactionType.NUMBER_PURCHASE,
-      status: TransactionStatus.COMPLETED,
-      amountKobo: 0,
-      balanceBeforeKobo: balance,
-      balanceAfterKobo: balance,
-      description: `Assigned paid ${type} number ${number}`,
-      referenceId: saved.id,
-      externalReference: options.paymentReference,
-      metadata: {
-        chargeKobo: options.priceKobo,
-        paymentReference: options.paymentReference,
-      },
-    }));
-
-    return saved;
+    return this.numberRepo.save(paidNumber);
   }
 
   async getUserNumbers(userId: string) {
@@ -192,20 +238,77 @@ export class NumbersService {
     }
 
     await this.numberRepo.update(id, { status: NumberStatus.RELEASED });
+
+    if (num.type === NumberType.VERIFICATION) {
+      await this.creditsService.releaseExpiredVerificationWalletLock(id, userId, 'Verification session released by user').catch(() => null);
+    }
     return { success: true };
   }
 
   async renew(id: string, userId: string) {
     const num = await this.getNumber(id, userId);
-    await this.usersService.debitWallet(userId, num.renewalPriceKobo);
+    const quote = await this.creditsService.quote({
+      product: 'rentals',
+      countryCode: num.countryCode || 'US',
+      numberType: num.type,
+      durationDays: 30,
+      basePriceUsdCents: num.renewalPriceKobo,
+      relatedEntityId: num.id,
+    }, userId);
 
-    const newExpiry = new Date((num.expiresAt || new Date()).getTime() + 30 * 24 * 60 * 60 * 1000);
-    await this.numberRepo.update(id, {
-      expiresAt: newExpiry,
-      status: NumberStatus.ACTIVE,
+    const lock = await this.creditsService.createWalletLock({
+      userId,
+      amountUsdCents: quote.usdValueCents,
+      relatedProduct: 'rentals',
+      relatedEntityId: num.id,
+      reason: 'Rental renewal wallet hold',
+      description: `Locked wallet balance to renew ${num.number}`,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      idempotencyKey: `number-renew-lock:${num.id}:${num.expiresAt?.toISOString() || 'na'}`,
+      metadata: {
+        renewalPriceUsdCents: num.renewalPriceKobo,
+      },
     });
 
-    return this.numberRepo.findOne({ where: { id } });
+    try {
+      const newExpiry = new Date((num.expiresAt || new Date()).getTime() + 30 * 24 * 60 * 60 * 1000);
+      await this.numberRepo.update(id, {
+        expiresAt: newExpiry,
+        status: NumberStatus.ACTIVE,
+        metadata: {
+          ...(num.metadata ?? {}),
+          paymentStatus: 'paid',
+          renewedAt: new Date().toISOString(),
+        },
+      });
+
+      await this.creditsService.spendWalletLock({
+        userId,
+        lockId: lock.lock.id,
+        type: TransactionType.NUMBER_RENEWAL,
+        relatedProduct: 'rentals',
+        relatedEntityId: num.id,
+        description: `Renewed rental ${num.number}`,
+        idempotencyKey: `number-renew-spend:${num.id}:${newExpiry.toISOString()}`,
+      });
+
+      return this.numberRepo.findOne({ where: { id } });
+    } catch (error) {
+      await this.numberRepo.update(id, {
+        metadata: {
+          ...(num.metadata ?? {}),
+          paymentStatus: 'payment_failed',
+          paymentFailedAt: new Date().toISOString(),
+        },
+      });
+      await this.creditsService.releaseWalletLock({
+        userId,
+        lockId: lock.lock.id,
+        description: `Released renewal wallet hold for ${num.number}`,
+        idempotencyKey: `number-renew-release:${lock.lock.id}`,
+      }).catch(() => null);
+      throw error;
+    }
   }
 
   async expireNumbers(ids: string[]) {

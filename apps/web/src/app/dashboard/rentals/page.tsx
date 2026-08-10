@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { getCountryDataList, getEmojiFlag } from 'countries-list';
 import toast from 'react-hot-toast';
-import { CalendarClock, CreditCard, RadioTower, RefreshCcw, ShoppingBag } from 'lucide-react';
-import { numbersApi, paymentsApi, type PaymentGatewayId } from '@/lib/api';
+import { CalendarClock, RadioTower, RefreshCcw, ShoppingBag, Wallet } from 'lucide-react';
+import { numbersApi } from '@/lib/api';
 import { BpEmptyState } from '@/components/design-system';
 
 type SearchResult = {
@@ -26,9 +27,8 @@ const COUNTRIES = getCountryDataList()
   .sort((left, right) => left.name.localeCompare(right.name));
 
 const NUMBER_TYPES = [
-  { value: 'burner', label: 'SMS', price: '$5.99+', durationOptions: '1w / 1m / 1y' },
-  { value: 'rental', label: 'SMS / Voice', price: '$15.99+', durationOptions: '1w / 1m / 1y' },
-  { value: 'verification', label: 'Voice', price: '$0.99+', durationOptions: '1w / 1m / 1y' },
+  { value: 'burner', label: 'SMS', price: 'Backend-calculated USD', durationOptions: '1w / 1m / 1y' },
+  { value: 'rental', label: 'SMS / Voice', price: 'Backend-calculated USD', durationOptions: '1w / 1m / 1y' },
 ] as const;
 
 const DURATIONS = [
@@ -37,33 +37,26 @@ const DURATIONS = [
   { label: '1y', days: 365 },
 ] as const;
 
-const GATEWAYS: Array<{ id: PaymentGatewayId; label: string }> = [
-  { id: 'paystack', label: 'Paystack' },
-  { id: 'paddle', label: 'Paddle' },
-  { id: 'nowpayments', label: 'NOWPayments' },
-];
-
 export default function RentalsPage() {
   const [country, setCountry] = useState('US');
   const [numberType, setNumberType] = useState<(typeof NUMBER_TYPES)[number]['value']>('burner');
   const [durationDays, setDurationDays] = useState(30);
-  const [gateway, setGateway] = useState<PaymentGatewayId>('paystack');
   const [availableNumbers, setAvailableNumbers] = useState<SearchResult[]>([]);
   const [activeRentals, setActiveRentals] = useState<ActiveNumber[]>([]);
   const [loadingActive, setLoadingActive] = useState(true);
   const [searching, setSearching] = useState(false);
   const [processingNumber, setProcessingNumber] = useState<string | null>(null);
 
+  const refreshNumbers = async () => {
+    const response = await numbersApi.list();
+    const next = Array.isArray(response.data) ? response.data : [];
+    setActiveRentals(next.filter((item: ActiveNumber) => item.type === 'burner' || item.type === 'rental'));
+  };
+
   useEffect(() => {
     let mounted = true;
 
-    numbersApi
-      .list()
-      .then((response) => {
-        if (!mounted) return;
-        const next = Array.isArray(response.data) ? response.data : [];
-        setActiveRentals(next.filter((item: ActiveNumber) => item.type === 'burner' || item.type === 'rental'));
-      })
+    refreshNumbers()
       .catch(() => {
         if (mounted) toast.error('Unable to load active rentals.');
       })
@@ -92,28 +85,22 @@ export default function RentalsPage() {
     }
   };
 
-  const startRentalCheckout = async (phoneNumber: string) => {
+  const assignWalletRental = async (phoneNumber: string) => {
     setProcessingNumber(phoneNumber);
     try {
-      const response = await paymentsApi.initialize({
-        paymentType: 'rental',
-        gateway,
-        rentalDays: durationDays,
-        countryCode: country,
+      await numbersApi.provision({
         phoneNumber,
-        numberType,
-        clientPlatform: 'web',
+        type: numberType,
+        countryCode: country,
+        durationDays,
+        idempotencyKey: crypto.randomUUID(),
       });
-
-      if (response.data.checkoutUrl) {
-        window.location.href = response.data.checkoutUrl;
-        return;
-      }
-
-      toast.success('Rental checkout created.');
+      toast.success('Number assigned from wallet balance.');
+      setAvailableNumbers((current) => current.filter((item) => item.number !== phoneNumber));
+      await refreshNumbers();
     } catch (error: unknown) {
       const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      toast.error(message || 'Unable to start the rental checkout.');
+      toast.error(message || 'Unable to assign the wallet-backed rental.');
     } finally {
       setProcessingNumber(null);
     }
@@ -125,7 +112,7 @@ export default function RentalsPage() {
         <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">BP Number Rentals</p>
         <h2 className="mt-3 text-3xl font-semibold text-white">Available numbers and active rentals in one assignment view.</h2>
         <p className="mt-3 max-w-3xl text-sm leading-7 text-white/54">
-          Search by country, choose a number type, confirm rental duration, and send the order into checkout. Once a number is active it stays visible with renewal state, next billing timing, and release control.
+          Search by country, choose a number type, confirm rental duration, and assign directly from wallet balance. Once a number is active it stays visible with renewal state, next billing timing, and release control.
         </p>
       </section>
 
@@ -182,7 +169,7 @@ export default function RentalsPage() {
               <span>Country</span>
               <span>Type</span>
               <span>Price</span>
-              <span>Duration Options</span>
+              <span>Wallet Duration</span>
               <span>Action</span>
             </div>
 
@@ -197,11 +184,11 @@ export default function RentalsPage() {
                   <span>{selectedType.durationOptions}</span>
                   <button
                     type="button"
-                    onClick={() => startRentalCheckout(item.number)}
+                    onClick={() => assignWalletRental(item.number)}
                     disabled={Boolean(processingNumber)}
                     className="rounded-[0.95rem] bg-brand-green px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-black transition hover:bg-[#1cffac] disabled:opacity-50"
                   >
-                    {processingNumber === item.number ? 'Opening...' : 'Rent Now'}
+                    {processingNumber === item.number ? 'Assigning...' : 'Rent From Wallet'}
                   </button>
                 </div>
               ))
@@ -217,33 +204,29 @@ export default function RentalsPage() {
         </div>
 
         <aside className="rounded-[1.5rem] border border-white/8 bg-brand-card p-5">
-          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Checkout controls</p>
+          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Wallet-backed controls</p>
           <div className="mt-4 rounded-[1.2rem] border border-brand-green/18 bg-brand-green/[0.05] p-4">
             <p className="text-sm text-white/58">Current configuration</p>
             <p className="mt-2 text-lg font-semibold text-white">{selectedCountry?.flag} {selectedCountry?.name}</p>
             <p className="mt-1 text-sm text-white/52">{selectedType.label} • {selectedType.price}</p>
             <p className="mt-3 font-mono text-sm text-brand-green">
-              {DURATIONS.find((item) => item.days === durationDays)?.label} via {gateway}
+              {DURATIONS.find((item) => item.days === durationDays)?.label} from wallet balance
             </p>
           </div>
 
-          <div className="mt-4 space-y-2">
-            {GATEWAYS.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setGateway(item.id)}
-                className={`flex min-h-11 w-full items-center justify-between rounded-[0.95rem] border px-4 text-sm transition ${
-                  gateway === item.id
-                    ? 'border-brand-green/24 bg-brand-green/[0.08] text-brand-green'
-                    : 'border-white/8 bg-[#020806]/20 text-white/58 hover:border-brand-green/20 hover:text-white'
-                }`}
-              >
-                <span>{item.label}</span>
-                <CreditCard className="h-4 w-4" />
-              </button>
-            ))}
+          <div className="mt-4 rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4">
+            <p className="text-sm text-white/60">
+              BP Rentals no longer uses direct external rental checkout. Fund the wallet first, then assign the number from the selected inventory row.
+            </p>
           </div>
+
+          <Link
+            href="/dashboard/wallet"
+            className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[0.95rem] border border-brand-green/20 bg-brand-green/[0.08] px-4 text-sm font-semibold uppercase tracking-[0.12em] text-brand-green transition hover:border-brand-green/30"
+          >
+            <Wallet className="h-4 w-4" />
+            Add Wallet Funds
+          </Link>
         </aside>
       </section>
 
@@ -299,7 +282,7 @@ export default function RentalsPage() {
           <div className="mt-5">
             <BpEmptyState
               title="No active rentals"
-              text="As soon as a number is assigned through the rental checkout flow, it will appear here with status and renewal timing."
+              text="As soon as a number is assigned from wallet balance, it will appear here with status and renewal timing."
             />
           </div>
         )}
@@ -310,7 +293,7 @@ export default function RentalsPage() {
           {
             icon: CalendarClock,
             title: 'Duration logic',
-            text: 'Choose short-term or long-term access before starting checkout so the right lifecycle lands in billing.',
+            text: 'Choose short-term or long-term access before assigning the number so the right lifecycle lands in billing.',
           },
           {
             icon: RefreshCcw,
@@ -319,8 +302,8 @@ export default function RentalsPage() {
           },
           {
             icon: ShoppingBag,
-            title: 'Wallet-aware checkout',
-            text: 'Rental initiation routes through the existing payment service so fulfillment stays traceable end to end.',
+            title: 'Wallet-backed delivery',
+            text: 'Rental assignment debits the wallet directly so funding, provisioning, and support references stay server-side and traceable end to end.',
           },
         ].map((item) => {
           const Icon = item.icon;

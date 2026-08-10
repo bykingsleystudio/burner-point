@@ -84,7 +84,10 @@ export default function ProxiesPage() {
   const submitOrder = async () => {
     setSubmitting(true);
     try {
-      const response = await integrationsApi.proxyOrder(form);
+      const response = await integrationsApi.proxyOrder({
+        ...form,
+        idempotencyKey: crypto.randomUUID(),
+      });
       if (response.data?.status !== 'submitted') {
         toast.error('Proxy ordering is not available right now.');
         return;

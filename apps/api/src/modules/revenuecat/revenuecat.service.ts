@@ -52,6 +52,7 @@ type RevenueCatSyncSnapshot = {
     default: string;
     messenger: string;
     vpn: string;
+    premium: string;
   };
   entitlements: Array<{
     identifier: string;
@@ -129,6 +130,7 @@ export class RevenueCatService {
       default: this.readOptionalEnv('REVENUECAT_OFFERING_DEFAULT') ?? 'default',
       messenger: this.readOptionalEnv('REVENUECAT_OFFERING_MESSENGER') ?? 'bp_messenger',
       vpn: this.readOptionalEnv('REVENUECAT_OFFERING_VPN') ?? 'bp_secure_tunnel',
+      premium: this.readOptionalEnv('REVENUECAT_OFFERING_PREMIUM') ?? 'bp_premium',
     };
   }
 
@@ -223,12 +225,12 @@ export class RevenueCatService {
   async getEntitlementSnapshot(userId: string): Promise<RevenueCatSyncSnapshot> {
     const [subscriptions, entitlements] = await Promise.all([
       this.subscriptionRepo.find({
-        where: { userId, provider: SubscriptionProvider.REVENUECAT },
+        where: { userId },
         order: { updatedAt: 'DESC' },
       }),
       this.entitlementRepo.find({
-        where: { userId, provider: SubscriptionProvider.REVENUECAT },
-        order: { identifier: 'ASC' },
+        where: { userId },
+        order: { identifier: 'ASC', updatedAt: 'DESC' },
       }),
     ]);
 
@@ -241,7 +243,6 @@ export class RevenueCatService {
     const count = await this.entitlementRepo.count({
       where: {
         userId,
-        provider: SubscriptionProvider.REVENUECAT,
         identifier: In(identifiers),
         isActive: true,
       },
@@ -542,20 +543,26 @@ export class RevenueCatService {
       entitlementConfig.premium,
       ...entitlements.map((row) => row.identifier),
     ]);
-    const entitlementMap = new Map(entitlements.map((row) => [row.identifier, row]));
+    const entitlementMap = entitlements.reduce<Map<string, SubscriptionEntitlement[]>>((map, row) => {
+      const current = map.get(row.identifier) ?? [];
+      current.push(row);
+      map.set(row.identifier, current);
+      return map;
+    }, new Map());
     const activeEntitlements = Array.from(entitlementIds)
       .map((identifier) => {
-        const row = entitlementMap.get(identifier);
+        const rows = entitlementMap.get(identifier) ?? [];
+        const activeRow = rows.find((row) => row.isActive) ?? rows[0];
         return {
           identifier,
           displayName: this.displayNameForEntitlement(identifier),
-          active: Boolean(row?.isActive),
-          expiresAt: row?.expiresAt?.toISOString() ?? null,
-          productId: row?.productId ?? null,
-          offeringId: row?.offeringId ?? null,
-          store: row?.store ?? null,
-          environment: row?.environment ?? null,
-          lastUpdatedAt: row?.updatedAt?.toISOString() ?? null,
+          active: rows.some((row) => row.isActive),
+          expiresAt: activeRow?.expiresAt?.toISOString() ?? null,
+          productId: activeRow?.productId ?? null,
+          offeringId: activeRow?.offeringId ?? null,
+          store: activeRow?.store ?? null,
+          environment: activeRow?.environment ?? null,
+          lastUpdatedAt: activeRow?.updatedAt?.toISOString() ?? null,
         };
       })
       .sort((left, right) => left.identifier.localeCompare(right.identifier));
@@ -663,7 +670,7 @@ export class RevenueCatService {
 
     if (eventType === 'CANCELLATION') return SubscriptionStatus.CANCELED;
     if (eventType === 'EXPIRATION') return SubscriptionStatus.EXPIRED;
-    if (eventType === 'BILLING_ISSUE') return SubscriptionStatus.BILLING_ISSUE;
+    if (eventType === 'BILLING_ISSUE') return SubscriptionStatus.GRACE_PERIOD;
     if (eventType === 'SUBSCRIPTION_PAUSED') return SubscriptionStatus.PAUSED;
     if (eventType === 'TRANSFER') return SubscriptionStatus.TRANSFERRED;
     if (periodType === 'TRIAL') return SubscriptionStatus.TRIALING;

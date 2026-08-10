@@ -29,13 +29,22 @@ import {
   SubscriptionPlan,
   UserSubscription,
 } from '../../database/entities/extended-entities';
+import {
+  PaddleEvent,
+  SubscriptionEntitlement,
+  SubscriptionProvider,
+  SubscriptionRecord,
+  SubscriptionStatus,
+} from '../../database/entities/subscription.entity';
 import { User } from '../../database/entities/user.entity';
 import { NumberType } from '../../database/entities/phone-number.entity';
 import { UsersService } from '../users/users.service';
 import { NumbersService } from '../numbers/numbers.service';
 import { resolveApiUrl, resolveConfiguredEnv } from '../../config/runtime-env';
+import { BILLING_SUBSCRIPTION_PLANS, findBillingSubscriptionPlan } from '../billing-v2/billing-config';
 
 export enum PaymentType {
+  WALLET = 'wallet',
   CREDITS = 'credits',
   RENTAL = 'rental',
   SUBSCRIPTION = 'subscription',
@@ -90,12 +99,11 @@ const PADDLE_CONFIG = {
 
 const CORE_WEB_GATEWAYS = [
   PaymentGateway.PAYSTACK,
-  PaymentGateway.PADDLE,
+  PaymentGateway.FLUTTERWAVE,
   PaymentGateway.NOWPAYMENTS,
 ];
 
 const DEFERRED_GATEWAYS = [
-  PaymentGateway.FLUTTERWAVE,
   PaymentGateway.SQUAD,
   PaymentGateway.KORAPAY,
   PaymentGateway.OPAY,
@@ -104,32 +112,50 @@ const DEFERRED_GATEWAYS = [
 const DEFAULT_USD_TO_NGN_RATE = 1600;
 const PAYMENT_SESSION_TTL_MINUTES = 60;
 
-const DEFAULT_CREDIT_PACKAGES = [
+const DEFAULT_WALLET_FUNDING_OPTIONS = [
   {
-    id: 'starter',
-    name: 'Starter Credits',
-    amountKobo: 160000,
+    id: 'wallet-500',
+    name: 'Add $5.00',
+    amountKobo: 500,
     bonusKobo: 0,
-    priceKobo: 160000,
-    availableGateways: ['paystack', 'nowpayments'],
+    priceKobo: 500,
+    availableGateways: ['paystack', 'flutterwave', 'nowpayments'],
     isFeatured: false,
   },
   {
-    id: 'growth',
-    name: 'Growth Credits',
-    amountKobo: 800000,
-    bonusKobo: 80000,
-    priceKobo: 800000,
-    availableGateways: ['paystack', 'nowpayments'],
+    id: 'wallet-1000',
+    name: 'Add $10.00',
+    amountKobo: 1000,
+    bonusKobo: 0,
+    priceKobo: 1000,
+    availableGateways: ['paystack', 'flutterwave', 'nowpayments'],
     isFeatured: true,
   },
   {
-    id: 'scale',
-    name: 'Scale Credits',
-    amountKobo: 1600000,
-    bonusKobo: 240000,
-    priceKobo: 1600000,
-    availableGateways: ['paystack', 'nowpayments'],
+    id: 'wallet-2500',
+    name: 'Add $25.00',
+    amountKobo: 2500,
+    bonusKobo: 0,
+    priceKobo: 2500,
+    availableGateways: ['paystack', 'flutterwave', 'nowpayments'],
+    isFeatured: false,
+  },
+  {
+    id: 'wallet-5000',
+    name: 'Add $50.00',
+    amountKobo: 5000,
+    bonusKobo: 0,
+    priceKobo: 5000,
+    availableGateways: ['paystack', 'flutterwave', 'nowpayments'],
+    isFeatured: false,
+  },
+  {
+    id: 'wallet-10000',
+    name: 'Add $100.00',
+    amountKobo: 10000,
+    bonusKobo: 0,
+    priceKobo: 10000,
+    availableGateways: ['paystack', 'flutterwave', 'nowpayments'],
     isFeatured: false,
   },
 ];
@@ -151,6 +177,12 @@ export class PaymentsService {
     private planRepo: Repository<SubscriptionPlan>,
     @InjectRepository(UserSubscription)
     private subscriptionRepo: Repository<UserSubscription>,
+    @InjectRepository(SubscriptionRecord)
+    private readonly syncedSubscriptionRepo: Repository<SubscriptionRecord>,
+    @InjectRepository(SubscriptionEntitlement)
+    private readonly entitlementRepo: Repository<SubscriptionEntitlement>,
+    @InjectRepository(PaddleEvent)
+    private readonly paddleEventRepo: Repository<PaddleEvent>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
     private configService: ConfigService,
@@ -159,31 +191,29 @@ export class PaymentsService {
   ) {}
 
   async getCreditPackages() {
-    const packages = await this.packageRepo.find({
-      where: { isActive: true },
-      order: { sortOrder: 'ASC' },
-    });
-
-    return packages.length ? packages : DEFAULT_CREDIT_PACKAGES;
+    return DEFAULT_WALLET_FUNDING_OPTIONS;
   }
 
   async initializePayment(
     userId: string,
-    paymentType: PaymentType = PaymentType.CREDITS,
+    paymentType: PaymentType = PaymentType.WALLET,
     gateway: PaymentGateway = PaymentGateway.PAYSTACK,
     rentalDays?: number,
     packageId?: string,
     clientPlatform: ClientPlatform = 'web',
     options: InitializePaymentOptions = {},
   ) {
+    const normalizedPaymentType = paymentType === PaymentType.CREDITS
+      ? PaymentType.WALLET
+      : paymentType;
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    this.assertGatewayAllowed(gateway, clientPlatform);
-    this.assertPaymentInput(paymentType, rentalDays, options);
+    this.assertPaymentInput(normalizedPaymentType, rentalDays, options, clientPlatform);
+    this.assertGatewayAllowed(gateway, clientPlatform, normalizedPaymentType);
 
-    const pricing = await this.resolvePricing(paymentType, gateway, packageId, options.planId);
-    const reference = `BP-${paymentType.toUpperCase()}-${Date.now()}-${uuidv4().slice(0, 8).toUpperCase()}`;
+    const pricing = await this.resolvePricing(normalizedPaymentType, gateway, packageId, options.planId);
+    const reference = `BP-${normalizedPaymentType.toUpperCase()}-${Date.now()}-${uuidv4().slice(0, 8).toUpperCase()}`;
     const expiresAt = new Date(Date.now() + PAYMENT_SESSION_TTL_MINUTES * 60 * 1000);
     const session = await this.sessionRepo.save(
       this.sessionRepo.create({
@@ -195,7 +225,7 @@ export class PaymentsService {
         status: 'pending',
         expiresAt,
         metadata: {
-          paymentType,
+          paymentType: normalizedPaymentType,
           packageId: packageId || null,
           planId: options.planId || null,
           rentalDays: rentalDays || null,
@@ -220,7 +250,7 @@ export class PaymentsService {
         case PaymentGateway.PADDLE:
           ({ checkoutUrl, gatewayReference } = await this.initPaddlePayment(
             user,
-            paymentType,
+            normalizedPaymentType,
             reference,
             rentalDays,
             pricing,
@@ -229,7 +259,7 @@ export class PaymentsService {
           break;
         case PaymentGateway.NOWPAYMENTS:
           ({ checkoutUrl, gatewayReference } = await this.initNowPayments(
-            paymentType,
+            normalizedPaymentType,
             reference,
             rentalDays,
             pricing,
@@ -240,7 +270,7 @@ export class PaymentsService {
             user.email,
             pricing,
             reference,
-            paymentType,
+            normalizedPaymentType,
             options,
           ));
           break;
@@ -286,7 +316,7 @@ export class PaymentsService {
       amount: pricing.amountMinor,
       currency: pricing.currency,
       gateway,
-      paymentType,
+      paymentType: normalizedPaymentType,
       expiresAt: expiresAt.toISOString(),
     };
   }
@@ -307,29 +337,62 @@ export class PaymentsService {
     const payload = JSON.parse(rawBody.toString());
     const eventType = String(payload.event_type ?? 'unknown');
     const eventId = payload.event_id ?? `${eventType}:${payload.data?.id ?? Date.now()}`;
+    const existingEvent = await this.paddleEventRepo.findOne({ where: { eventId } });
+    if (existingEvent?.processed) {
+      return { received: true, duplicate: true };
+    }
+
+    const eventRecord = existingEvent
+      ?? await this.paddleEventRepo.save(
+        this.paddleEventRepo.create({
+          eventId,
+          eventType,
+          subscriptionId: this.asOptionalString(payload.data?.id),
+          transactionId: this.asOptionalString(payload.data?.transaction_id),
+          userId: this.asOptionalString(payload.data?.custom_data?.userId),
+          providerCustomerId: this.asOptionalString(payload.data?.customer_id),
+          occurredAt: this.parseDateValue(payload.occurred_at) ?? new Date(),
+          processed: false,
+          payload,
+        }),
+      );
+
     const isFresh = await this.recordWebhookOnce(`paddle:${eventId}`, 'paddle', eventType, payload);
     if (!isFresh) return { received: true, duplicate: true };
 
-    if (eventType === 'transaction.completed') {
-      const transaction = payload.data ?? {};
-      const reference = transaction.custom_data?.reference;
-      if (reference) {
-        await this.fulfillPayment(reference, transaction.id, transaction, {
-          amountMinor: this.extractPaddleAmountMinor(transaction),
-          currency: transaction.currency_code ?? transaction.details?.currency_code,
-        });
+    try {
+      if (eventType === 'transaction.completed') {
+        const transaction = payload.data ?? {};
+        const reference = transaction.custom_data?.reference;
+        if (reference) {
+          await this.fulfillPayment(reference, transaction.id, transaction, {
+            amountMinor: this.extractPaddleAmountMinor(transaction),
+            currency: transaction.currency_code ?? transaction.details?.currency_code,
+          });
+        }
       }
-    }
 
-    if (eventType === 'subscription.created' || eventType === 'subscription.updated') {
-      await this.syncSubscriptionEvent(payload.data ?? {});
-    }
+      if (eventType === 'subscription.created' || eventType === 'subscription.updated') {
+        await this.syncSubscriptionEvent(payload.data ?? {}, eventType);
+      }
 
-    if (eventType === 'subscription.canceled') {
-      await this.cancelSubscriptionEvent(payload.data ?? {});
-    }
+      if (eventType === 'subscription.canceled') {
+        await this.cancelSubscriptionEvent(payload.data ?? {});
+      }
 
-    return { received: true };
+      await this.paddleEventRepo.update(eventRecord.id, {
+        processed: true,
+        processedAt: new Date(),
+        processingError: null,
+      });
+
+      return { received: true };
+    } catch (error) {
+      await this.paddleEventRepo.update(eventRecord.id, {
+        processingError: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   }
 
   async handleNowPaymentsWebhook(
@@ -613,6 +676,7 @@ export class PaymentsService {
     const paymentType = session.metadata?.paymentType as PaymentType | undefined;
 
     switch (paymentType) {
+      case PaymentType.WALLET:
       case PaymentType.CREDITS:
         await this.fulfillCredits(session);
         break;
@@ -638,11 +702,11 @@ export class PaymentsService {
     await this.usersService.creditWallet(session.userId, walletCreditKobo);
 
     await this.recordTransaction(session, {
-      type: TransactionType.CREDIT_PURCHASE,
+      type: TransactionType.DEPOSIT,
       amountKobo: walletCreditKobo,
       balanceBeforeKobo: balanceBefore,
       balanceAfterKobo: balanceBefore + walletCreditKobo,
-      description: `Verification credits via ${session.gateway}`,
+      description: `Wallet funding via ${session.gateway}`,
     });
   }
 
@@ -682,47 +746,9 @@ export class PaymentsService {
   }
 
   private async fulfillSubscription(session: PaymentSession) {
-    const metadata = session.metadata || {};
-    const plan = await this.resolveSubscriptionPlan(String(metadata.planId || ''));
-    const now = new Date();
-    const periodEnd = new Date(now);
-    periodEnd.setMonth(periodEnd.getMonth() + 1);
-
-    const existing = await this.subscriptionRepo.findOne({
-      where: { userId: session.userId, status: 'active' },
-    });
-
-    const subscriptionPayload = {
-      userId: session.userId,
-      planId: plan.id,
-      status: 'active',
-      billingCycle: 'monthly',
-      currentPeriodStart: now,
-      currentPeriodEnd: periodEnd,
-      metadata: {
-        gateway: session.gateway,
-        paymentReference: session.reference,
-        gatewayReference: session.gatewayReference,
-        source: 'payment_webhook',
-      },
-    };
-
-    if (existing) await this.subscriptionRepo.update(existing.id, subscriptionPayload);
-    else await this.subscriptionRepo.save(this.subscriptionRepo.create(subscriptionPayload));
-
-    const user = await this.userRepo.findOne({ where: { id: session.userId } });
-    const balance = Number(user?.walletBalanceKobo ?? 0);
-    await this.recordTransaction(session, {
-      type: TransactionType.SUBSCRIPTION_PURCHASE,
-      amountKobo: Number(metadata.walletEquivalentKobo ?? 0),
-      balanceBeforeKobo: balance,
-      balanceAfterKobo: balance,
-      description: `${plan.name} monthly subscription activated`,
-      metadata: {
-        planId: plan.id,
-        currentPeriodEnd: periodEnd.toISOString(),
-      },
-    });
+    // Web subscriptions are activated only from verified Paddle subscription lifecycle
+    // events. The checkout transaction alone is not treated as proof of access.
+    this.logger.log(`Subscription payment confirmed for ${session.reference}; awaiting Paddle subscription sync.`);
   }
 
   private async recordTransaction(
@@ -768,9 +794,13 @@ export class PaymentsService {
     const currency = this.gatewayCurrency(gateway);
 
     if (paymentType === PaymentType.CREDITS) {
+      return this.resolvePricing(PaymentType.WALLET, gateway, packageId, planId);
+    }
+
+    if (paymentType === PaymentType.WALLET) {
       if (packageId) {
         if (gateway === PaymentGateway.PADDLE) {
-          throw new BadRequestException('Paddle credit packages need dedicated Paddle price IDs. Use Paystack or NOWPayments for package checkout.');
+          throw new BadRequestException('Paddle wallet top-ups need dedicated Paddle price IDs. Use Paystack, Flutterwave, or NOWPayments for wallet funding.');
         }
         const creditPackage = await this.findCreditPackage(packageId);
         const walletCreditKobo = Number(creditPackage.amountKobo) + Number(creditPackage.bonusKobo || 0);
@@ -781,62 +811,62 @@ export class PaymentsService {
           walletCreditKobo,
           walletEquivalentKobo: priceKobo,
           productLabel: creditPackage.name,
-          metadata: { creditPackageName: creditPackage.name },
+          metadata: { fundingOptionName: creditPackage.name },
         };
       }
 
-      const equivalentKobo = this.usdCentsToNgnKobo(USD_CENTS.verification);
+      const chargeAmountMinor = currency === 'NGN'
+        ? this.usdCentsToNgnKobo(500)
+        : 500;
       return {
-        amountMinor: currency === 'NGN' ? equivalentKobo : USD_CENTS.verification,
+        amountMinor: chargeAmountMinor,
         currency,
-        walletCreditKobo: equivalentKobo,
-        walletEquivalentKobo: equivalentKobo,
-        productLabel: 'Verification credit',
-        metadata: { unitPriceUsdCents: USD_CENTS.verification },
+        walletCreditKobo: 500,
+        walletEquivalentKobo: 500,
+        productLabel: 'Wallet funding',
+        metadata: { unitPriceUsdCents: 500 },
       };
     }
 
     if (paymentType === PaymentType.RENTAL) {
-      const equivalentKobo = this.usdCentsToNgnKobo(USD_CENTS.rental);
-      return {
-        amountMinor: currency === 'NGN' ? equivalentKobo : USD_CENTS.rental,
-        currency,
-        walletCreditKobo: 0,
-        walletEquivalentKobo: equivalentKobo,
-        productLabel: 'Non-renewable rental',
-        metadata: { unitPriceUsdCents: USD_CENTS.rental },
-      };
+      throw new BadRequestException('BP Rentals are wallet-only. Fund your wallet first, then rent from wallet balance.');
     }
 
     const plan = planId ? await this.resolveSubscriptionPlan(planId) : await this.resolveSubscriptionPlan('');
-    const equivalentKobo = Number(plan.priceKoboMonthly) || this.usdCentsToNgnKobo(USD_CENTS.subscription);
+    const priceUsdCents = this.subscriptionPlanPriceUsdCents(plan);
     return {
-      amountMinor: currency === 'NGN' ? equivalentKobo : this.ngnKoboToUsdCents(equivalentKobo),
+      amountMinor: currency === 'NGN' ? this.usdCentsToNgnKobo(priceUsdCents) : priceUsdCents,
       currency,
       walletCreditKobo: 0,
-      walletEquivalentKobo: equivalentKobo,
-      productLabel: `${plan.name} monthly subscription`,
+      walletEquivalentKobo: priceUsdCents,
+      productLabel: `${this.subscriptionPlanName(plan)} ${this.subscriptionPlanLabel(plan)}`,
       metadata: {
-        planId: plan.id,
-        planSlug: plan.slug,
-        unitPriceUsdCents: USD_CENTS.subscription,
+        planId: this.subscriptionPlanId(plan),
+        planSlug: this.subscriptionPlanSlug(plan),
+        unitPriceUsdCents: priceUsdCents,
+        product: this.subscriptionPlanProduct(plan),
+        productName: this.subscriptionPlanName(plan),
+        planName: this.subscriptionPlanLabel(plan),
+        paddlePriceEnv: this.subscriptionPlanPaddlePriceEnv(plan),
       },
     };
   }
 
   private async findCreditPackage(packageId: string) {
-    const creditPackage = await this.packageRepo.findOne({
-      where: { id: packageId, isActive: true },
-    });
-    if (creditPackage) return creditPackage;
-
-    const fallback = DEFAULT_CREDIT_PACKAGES.find((pkg) => pkg.id === packageId);
+    const fallback = DEFAULT_WALLET_FUNDING_OPTIONS.find((pkg) => pkg.id === packageId);
     if (fallback) return fallback;
 
     throw new NotFoundException('Credit package not found');
   }
 
   private async resolveSubscriptionPlan(planId: string) {
+    const configured = findBillingSubscriptionPlan(planId);
+    if (configured) return configured;
+
+    if (!planId) {
+      return findBillingSubscriptionPlan('bp-premium') ?? BILLING_SUBSCRIPTION_PLANS[0];
+    }
+
     if (planId) {
       const selected = await this.planRepo.findOne({ where: { id: planId, isActive: true } });
       if (selected) return selected;
@@ -851,25 +881,49 @@ export class PaymentsService {
     throw new NotFoundException('Subscription plan not found');
   }
 
-  private assertPaymentInput(paymentType: PaymentType, rentalDays?: number, options: InitializePaymentOptions = {}) {
-    if (paymentType !== PaymentType.RENTAL) return;
+  private assertPaymentInput(
+    paymentType: PaymentType,
+    rentalDays?: number,
+    options: InitializePaymentOptions = {},
+    clientPlatform: ClientPlatform = 'web',
+  ) {
+    if (paymentType === PaymentType.RENTAL) {
+      if (!rentalDays || rentalDays < 1 || rentalDays > 365) {
+        throw new BadRequestException('BP Rentals durations must be selected before a wallet-backed order is created.');
+      }
+      throw new BadRequestException('Direct rental checkout is disabled. Use wallet balance for BP Rentals.');
+    }
 
-    if (!rentalDays || rentalDays < 1 || rentalDays > 14) {
-      throw new BadRequestException('Rental days must be between 1 and 14');
-    }
-    if (options.phoneNumber && !/^\+[1-9]\d{6,14}$/.test(options.phoneNumber.trim())) {
-      throw new BadRequestException('Rental phoneNumber must be E.164, for example +14155550182');
-    }
-    if (options.countryCode && !['US', 'CA'].includes(options.countryCode.toUpperCase())) {
-      throw new BadRequestException('Paid conversation rental assignment is available for US and Canada numbers');
+    if (paymentType === PaymentType.SUBSCRIPTION) {
+      if (clientPlatform !== 'web') {
+        throw new BadRequestException('Mobile subscriptions must be managed through Apple App Store or Google Play.');
+      }
+      if (!options.planId?.trim()) {
+        throw new BadRequestException('A subscription plan selection is required.');
+      }
     }
   }
 
-  private assertGatewayAllowed(gateway: PaymentGateway, clientPlatform: ClientPlatform): void {
+  private assertGatewayAllowed(
+    gateway: PaymentGateway,
+    clientPlatform: ClientPlatform,
+    paymentType: PaymentType,
+  ): void {
     if (clientPlatform === 'mobile' && this.configService.get('MOBILE_EXTERNAL_PAYMENTS_ENABLED') !== 'true') {
       throw new BadRequestException(
         'Mobile external checkout is disabled for store-policy safety. Complete purchases on web.',
       );
+    }
+
+    if (paymentType === PaymentType.SUBSCRIPTION) {
+      if (gateway !== PaymentGateway.PADDLE) {
+        throw new BadRequestException('Web subscriptions are managed through Paddle only.');
+      }
+      return;
+    }
+
+    if (gateway === PaymentGateway.PADDLE) {
+      throw new BadRequestException('Paddle is reserved for web subscriptions. Use Paystack, Flutterwave, or NOWPayments to fund the wallet.');
     }
 
     if (CORE_WEB_GATEWAYS.includes(gateway)) return;
@@ -881,7 +935,7 @@ export class PaymentsService {
       return;
     }
 
-    throw new BadRequestException(`${gateway} is deferred until Paystack, Paddle, and NOWPayments are stable`);
+    throw new BadRequestException(`${gateway} is deferred until Paystack, Flutterwave, and NOWPayments are stable`);
   }
 
   private async initPaddlePayment(
@@ -897,7 +951,12 @@ export class PaymentsService {
     const baseUrl = isSandbox ? PADDLE_CONFIG.SANDBOX_API_URL : PADDLE_CONFIG.API_URL;
     if (!apiKey) throw new BadRequestException('Paddle is not configured');
 
-    const priceId = this.getPaddlePriceId(paymentType);
+    const configuredPriceEnv = typeof pricing.metadata?.paddlePriceEnv === 'string'
+      ? pricing.metadata.paddlePriceEnv
+      : undefined;
+    const priceId = configuredPriceEnv
+      ? this.configService.get<string>(configuredPriceEnv)
+      : this.getPaddlePriceId(paymentType);
     if (!priceId) throw new BadRequestException('Paddle price is not configured');
 
     const payload = {
@@ -913,6 +972,8 @@ export class PaymentsService {
         userId: user.id,
         planId: options.planId || null,
         productLabel: pricing.productLabel,
+        subscriptionProduct: pricing.metadata?.product ?? null,
+        subscriptionPlan: pricing.metadata?.planName ?? null,
       },
       checkout: {
         url: `${this.getWebUrl()}/dashboard/payments/success?ref=${reference}`,
@@ -1629,46 +1690,253 @@ export class PaymentsService {
     return amount === undefined ? undefined : Number(amount);
   }
 
-  private async syncSubscriptionEvent(subscription: any) {
-    const userId = subscription.custom_data?.userId;
+  private async syncSubscriptionEvent(subscription: any, eventType: string) {
+    const userId = this.asOptionalString(subscription?.custom_data?.userId);
     if (!userId) return;
 
-    const plan = await this.resolveSubscriptionPlan(String(subscription.custom_data?.planId || ''));
-    const nextBilledAt = subscription.next_billed_at ? new Date(subscription.next_billed_at) : null;
-    const now = new Date();
-    const periodEnd = nextBilledAt ?? new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
-    const existing = await this.subscriptionRepo.findOne({ where: { userId, status: 'active' } });
-    const payload = {
-      userId,
-      planId: plan.id,
-      status: subscription.status ?? 'active',
-      billingCycle: 'monthly',
-      currentPeriodStart: now,
-      currentPeriodEnd: periodEnd,
-      metadata: {
-        paddleSubscriptionId: subscription.id,
-        source: 'paddle_subscription_event',
-      },
-    };
+    const planId = this.asOptionalString(subscription?.custom_data?.planId);
+    const plan = await this.resolveSubscriptionPlan(planId ?? '');
+    const providerReference = this.asOptionalString(subscription?.id);
+    const periodStart =
+      this.parseDateValue(subscription?.current_billing_period?.starts_at)
+      ?? this.parseDateValue(subscription?.started_at)
+      ?? new Date();
+    const periodEnd =
+      this.parseDateValue(subscription?.next_billed_at)
+      ?? this.parseDateValue(subscription?.current_billing_period?.ends_at)
+      ?? this.parseDateValue(subscription?.scheduled_change?.effective_at)
+      ?? null;
+    const expiresAt = this.parseDateValue(subscription?.ends_at) ?? periodEnd;
+    const status = this.mapPaddleSubscriptionStatus(subscription?.status, eventType);
+    const existing = providerReference
+      ? await this.syncedSubscriptionRepo.findOne({
+          where: {
+            provider: SubscriptionProvider.PADDLE,
+            providerReference,
+          },
+        })
+      : null;
 
-    if (existing) await this.subscriptionRepo.update(existing.id, payload);
-    else await this.subscriptionRepo.save(this.subscriptionRepo.create(payload));
+    const saved = await this.syncedSubscriptionRepo.save(
+      this.syncedSubscriptionRepo.create({
+        ...existing,
+        userId,
+        provider: SubscriptionProvider.PADDLE,
+        providerCustomerId:
+          this.asOptionalString(subscription?.customer_id)
+          ?? this.asOptionalString(subscription?.customer?.id)
+          ?? userId,
+        providerReference,
+        providerEventId: `${eventType}:${providerReference ?? Date.now()}`,
+        originalAppUserId: null,
+        productId: this.subscriptionPlanProduct(plan),
+        offeringId: null,
+        store: 'paddle',
+        environment: this.configService.get('PADDLE_SANDBOX') === 'true' ? 'sandbox' : 'production',
+        status,
+        isActive: this.subscriptionStillActive(status, expiresAt),
+        willRenew: ![SubscriptionStatus.CANCELED, SubscriptionStatus.EXPIRED, SubscriptionStatus.PAUSED].includes(status),
+        purchasedAt: this.parseDateValue(subscription?.started_at) ?? existing?.purchasedAt ?? periodStart,
+        currentPeriodStart: periodStart,
+        currentPeriodEnd: periodEnd,
+        renewsAt: periodEnd,
+        cancelledAt:
+          status === SubscriptionStatus.CANCELED
+            ? (this.parseDateValue(subscription?.canceled_at) ?? existing?.cancelledAt ?? new Date())
+            : existing?.cancelledAt ?? null,
+        expiresAt,
+        lastSyncedAt: new Date(),
+        metadata: {
+          ...(existing?.metadata ?? {}),
+          source: 'paddle_subscription_event',
+          planId: this.subscriptionPlanId(plan),
+          planSlug: this.subscriptionPlanSlug(plan),
+          productName: this.subscriptionPlanName(plan),
+          planName: this.subscriptionPlanLabel(plan),
+          rawStatus: this.asOptionalString(subscription?.status),
+          customData: subscription?.custom_data ?? {},
+        },
+      }),
+    );
+
+    await this.rebuildPaddleEntitlements(userId, saved.id);
   }
 
   private async cancelSubscriptionEvent(subscription: any) {
-    const userId = subscription.custom_data?.userId;
-    if (!userId) return;
-    const existing = await this.subscriptionRepo.findOne({ where: { userId, status: 'active' } });
-    if (!existing) return;
-    await this.subscriptionRepo.update(existing.id, {
-      status: 'canceled',
-      cancelAt: new Date(),
-      metadata: {
-        ...(existing.metadata || {}),
-        paddleSubscriptionId: subscription.id,
-        canceledFromWebhook: true,
+    await this.syncSubscriptionEvent(subscription, 'subscription.canceled');
+  }
+
+  private async rebuildPaddleEntitlements(userId: string, latestSubscriptionId: string | null) {
+    const paddleSubscriptions = await this.syncedSubscriptionRepo.find({
+      where: {
+        userId,
+        provider: SubscriptionProvider.PADDLE,
       },
+      order: { updatedAt: 'DESC' },
     });
+    const existingRows = await this.entitlementRepo.find({
+      where: {
+        userId,
+        provider: SubscriptionProvider.PADDLE,
+      },
+      order: { updatedAt: 'DESC' },
+    });
+    const existingByIdentifier = new Map(existingRows.map((row) => [row.identifier, row]));
+    const configured = this.getEntitlementConfig();
+    const identifiers = [configured.messenger, configured.secureTunnel, configured.premium];
+
+    for (const identifier of identifiers) {
+      const grantingSubscription = paddleSubscriptions.find(
+        (subscription) => subscription.isActive && this.subscriptionGrantsEntitlement(subscription.productId, identifier),
+      );
+      const existing = existingByIdentifier.get(identifier);
+      const isActive = Boolean(grantingSubscription);
+
+      await this.entitlementRepo.save(
+        this.entitlementRepo.create({
+          ...existing,
+          userId,
+          subscriptionId: grantingSubscription?.id ?? latestSubscriptionId ?? existing?.subscriptionId ?? null,
+          provider: SubscriptionProvider.PADDLE,
+          identifier,
+          displayName: this.displayNameForEntitlement(identifier),
+          isActive,
+          productId: grantingSubscription?.productId ?? existing?.productId ?? null,
+          offeringId: null,
+          store: 'paddle',
+          environment: this.configService.get('PADDLE_SANDBOX') === 'true' ? 'sandbox' : 'production',
+          purchasedAt: grantingSubscription?.purchasedAt ?? existing?.purchasedAt ?? null,
+          expiresAt: grantingSubscription?.expiresAt ?? existing?.expiresAt ?? null,
+          revokedAt: isActive ? null : (existing?.revokedAt ?? new Date()),
+          lastEventId: grantingSubscription?.providerEventId ?? existing?.lastEventId ?? null,
+          metadata: {
+            ...(existing?.metadata ?? {}),
+            source: 'paddle_subscription_sync',
+          },
+        }),
+      );
+    }
+  }
+
+  private getEntitlementConfig() {
+    return {
+      messenger: this.configService.get<string>('REVENUECAT_ENTITLEMENT_BP_MESSENGER') || 'bp_messenger_pro',
+      secureTunnel: this.configService.get<string>('REVENUECAT_ENTITLEMENT_BP_SECURE_TUNNEL') || 'bp_secure_tunnel',
+      premium: this.configService.get<string>('REVENUECAT_ENTITLEMENT_BP_PREMIUM') || 'bp_premium',
+    };
+  }
+
+  private subscriptionGrantsEntitlement(productId: string | null | undefined, entitlementId: string) {
+    const configured = this.getEntitlementConfig();
+    if (!productId) return false;
+
+    if (productId === 'bp_premium') {
+      return [configured.messenger, configured.secureTunnel, configured.premium].includes(entitlementId);
+    }
+
+    if (productId === 'bp_messenger_pro') {
+      return entitlementId === configured.messenger;
+    }
+
+    if (productId === 'bp_secure_tunnel') {
+      return entitlementId === configured.secureTunnel;
+    }
+
+    return false;
+  }
+
+  private displayNameForEntitlement(identifier: string) {
+    const configured = this.getEntitlementConfig();
+    if (identifier === configured.messenger) return 'BP Messenger Pro';
+    if (identifier === configured.secureTunnel) return 'BP Secure Tunnel';
+    if (identifier === configured.premium) return 'BP Premium';
+    return identifier;
+  }
+
+  private mapPaddleSubscriptionStatus(rawStatus: unknown, eventType: string): SubscriptionStatus {
+    const status = this.asOptionalString(rawStatus)?.toLowerCase() ?? '';
+    const normalizedEvent = eventType.toLowerCase();
+
+    if (normalizedEvent === 'subscription.canceled') return SubscriptionStatus.CANCELED;
+    if (['active'].includes(status)) return SubscriptionStatus.ACTIVE;
+    if (['trialing', 'trial'].includes(status)) return SubscriptionStatus.TRIALING;
+    if (['past_due', 'past-due', 'paused_due'].includes(status)) return SubscriptionStatus.GRACE_PERIOD;
+    if (['paused'].includes(status)) return SubscriptionStatus.PAUSED;
+    if (['canceled', 'cancelled'].includes(status)) return SubscriptionStatus.CANCELED;
+    if (['expired', 'inactive', 'stopped'].includes(status)) return SubscriptionStatus.EXPIRED;
+    return SubscriptionStatus.UNKNOWN;
+  }
+
+  private subscriptionStillActive(status: SubscriptionStatus, expiresAt: Date | null) {
+    if ([SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING, SubscriptionStatus.GRACE_PERIOD].includes(status)) {
+      return true;
+    }
+
+    if (status === SubscriptionStatus.CANCELED) {
+      return Boolean(expiresAt && expiresAt.getTime() > Date.now());
+    }
+
+    return false;
+  }
+
+  private isCatalogPlan(plan: any): plan is {
+    id: string;
+    product: string;
+    productName: string;
+    planName: string;
+    priceUsdCents: number;
+    paddlePriceEnv: string;
+  } {
+    return Boolean(plan && typeof plan === 'object' && 'paddlePriceEnv' in plan);
+  }
+
+  private subscriptionPlanId(plan: any) {
+    return this.isCatalogPlan(plan) ? plan.id : plan.id;
+  }
+
+  private subscriptionPlanSlug(plan: any) {
+    return this.isCatalogPlan(plan) ? plan.id : plan.slug;
+  }
+
+  private subscriptionPlanProduct(plan: any) {
+    return this.isCatalogPlan(plan) ? plan.product : (plan.slug ?? 'subscription');
+  }
+
+  private subscriptionPlanName(plan: any) {
+    return this.isCatalogPlan(plan) ? plan.productName : plan.name;
+  }
+
+  private subscriptionPlanLabel(plan: any) {
+    return this.isCatalogPlan(plan) ? plan.planName : 'Monthly';
+  }
+
+  private subscriptionPlanPaddlePriceEnv(plan: any) {
+    return this.isCatalogPlan(plan) ? plan.paddlePriceEnv : null;
+  }
+
+  private subscriptionPlanPriceUsdCents(plan: any) {
+    if (this.isCatalogPlan(plan)) return Number(plan.priceUsdCents);
+    return this.ngnKoboToUsdCents(Number(plan.priceKoboMonthly ?? 0));
+  }
+
+  private parseDateValue(value: unknown) {
+    if (!value) return null;
+    if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      const parsed = new Date(value);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+    if (typeof value === 'string' && value.trim()) {
+      const parsed = new Date(value);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+    return null;
+  }
+
+  private asOptionalString(value: unknown) {
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    return trimmed ? trimmed : null;
   }
 
   private decimalToMinor(value: unknown): number | undefined {

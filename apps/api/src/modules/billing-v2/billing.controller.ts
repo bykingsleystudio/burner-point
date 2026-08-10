@@ -10,6 +10,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 export class BillingController {
   constructor(private service: BillingService) {}
 
+  @Get('overview')
+  overview(@Req() req) { return this.service.getOverview(req.user.id); }
+
   @Get('ledger')
   ledger(@Req() req, @Query('page') page = 1, @Query('limit') limit = 20) {
     return this.service.getLedger(req.user.id, +page, +limit);

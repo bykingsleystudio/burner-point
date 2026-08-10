@@ -20,6 +20,7 @@ import { LifecycleModule } from './modules/lifecycle/lifecycle.module';
 import { WebhooksModule } from './modules/webhooks/webhooks.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { BillingV2Module } from './modules/billing-v2/billing-v2.module';
+import { CreditsModule } from './modules/credits/credits.module';
 import { AbuseModule } from './modules/abuse/abuse.module';
 import { AiModule } from './modules/ai/ai.module';
 import { GatewayModule } from './modules/gateway/gateway.module';
@@ -35,6 +36,7 @@ import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { SecurityModule } from './modules/security/security.module';
 import { SupportModule } from './modules/support/support.module';
 import { RevenueCatModule } from './modules/revenuecat/revenuecat.module';
+import { CallsModule } from './modules/calls/calls.module';
 
 // ── Security middleware ───────────────────────────────────────────────────────
 import { SecurityMiddleware } from './middleware/security.middleware';
@@ -107,6 +109,7 @@ import { SecurityMiddleware } from './middleware/security.middleware';
     PlatformModule,        // Safe stack registry + readiness status
     IntegrationsModule,    // Backend-only provider contracts, analytics, storage, eSIM/proxy/VPN adapters
     RevenueCatModule,      // Mobile subscription entitlements + webhook sync
+    CallsModule,           // Outbound BP Messenger call billing + history
 
     // Feature modules — all 10 services connected
     AuthModule,
@@ -117,6 +120,7 @@ import { SecurityMiddleware } from './middleware/security.middleware';
     WebhooksModule,        // Twilio SMS/call event receiver
     PaymentsModule,        // Paystack, Paddle, NOWPayments core; secondary gateways gated
     BillingV2Module,       // Wallet ledger + subscription plans
+    CreditsModule,         // Wallet-ledger support plus Messenger call credit flows
     AbuseModule,           // Velocity limits + risk engine
     AiModule,              // OpenAI GPT-4o-mini (with kill switch)
     GatewayModule,         // Socket.IO real-time events

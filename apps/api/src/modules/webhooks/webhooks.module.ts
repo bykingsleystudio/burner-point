@@ -10,9 +10,11 @@ import { WebhookDedup } from '../../database/entities/extended-entities';
 import { GatewayModule } from '../gateway/gateway.module';
 import { AiModule } from '../ai/ai.module';
 import { PaymentsModule } from '../payments/payments.module';
+import { CreditsModule } from '../credits/credits.module';
+import { CallsModule } from '../calls/calls.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Message, Call, PhoneNumber, WebhookDedup]), GatewayModule, AiModule, PaymentsModule],
+  imports: [TypeOrmModule.forFeature([Message, Call, PhoneNumber, WebhookDedup]), GatewayModule, AiModule, PaymentsModule, CreditsModule, CallsModule],
   controllers: [WebhooksController, PaymentWebhookAliasesController],
   providers: [WebhooksService],
 })
