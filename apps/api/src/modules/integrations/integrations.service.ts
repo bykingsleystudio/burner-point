@@ -1,11 +1,14 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
 import { createHash, randomBytes } from 'crypto';
+import { Repository } from 'typeorm';
 import { resolveConfiguredEnv } from '../../config/runtime-env';
-import { TransactionType } from '../../database/entities/extended-entities';
+import { EsimOrder, ProxyOrder, TransactionType, VpnSession } from '../../database/entities/extended-entities';
 import { RevenueCatService } from '../revenuecat/revenuecat.service';
 import { CreditsService } from '../credits/credits.service';
+import { CredentialCipherService } from './credential-cipher.service';
 import {
   BACKEND_INTEGRATION_CONTRACTS,
   BackendIntegrationContract,
@@ -117,6 +120,10 @@ export class IntegrationsService {
     private readonly config: ConfigService,
     private readonly creditsService: CreditsService,
     private readonly revenueCatService: RevenueCatService,
+    @InjectRepository(EsimOrder) private readonly esimOrderRepo: Repository<EsimOrder>,
+    @InjectRepository(ProxyOrder) private readonly proxyOrderRepo: Repository<ProxyOrder>,
+    @InjectRepository(VpnSession) private readonly vpnSessionRepo: Repository<VpnSession>,
+    private readonly credentialCipher: CredentialCipherService,
   ) {}
 
   getCatalog() {
@@ -217,26 +224,68 @@ export class IntegrationsService {
   }
 
   async createEsimOrder(userId: string, input: EsimOrderInput) {
-    return this.purchaseIntegrationProduct(
+    const priceUsdCents = this.resolveConfiguredUsdCents('ESIM_ORDER_PRICE_USD_CENTS', 'eSIM order');
+    const idempotencyKey = this.integrationIdempotencyKey('esim', input, input.idempotencyKey);
+    const existing = await this.esimOrderRepo.findOne({ where: { userId, idempotencyKey } });
+    if (existing) return this.toPublicEsimOrder(existing);
+
+    const order = await this.esimOrderRepo.save(this.esimOrderRepo.create({
       userId,
-      'airalo.order',
-      input,
-      this.resolveConfiguredUsdCents('ESIM_ORDER_PRICE_USD_CENTS', 'eSIM order'),
-      'esim_store',
-      TransactionType.ESIM_PURCHASE,
-      'BP eSIM order',
-      {
-        countryCode: input.countryCode,
-        planId: input.planId,
-      },
-      input.idempotencyKey,
-    );
+      provider: 'airalo',
+      planId: input.planId,
+      country: input.countryCode,
+      priceUsdCents,
+      idempotencyKey,
+      status: 'pending',
+      metadata: {},
+    }));
+
+    try {
+      const result = await this.purchaseIntegrationProduct(
+        userId,
+        'airalo.order',
+        { ...input, idempotencyKey },
+        priceUsdCents,
+        'esim_store',
+        TransactionType.ESIM_PURCHASE,
+        'BP eSIM order',
+        { countryCode: input.countryCode, planId: input.planId, orderId: order.id },
+        idempotencyKey,
+        async (safeData, rawData) => this.persistEsimAcceptance(order, safeData, rawData),
+      );
+
+      if (result.status !== 'submitted') {
+        await this.esimOrderRepo.update(order.id, {
+          status: 'failed',
+          failureReason: 'Airalo order provider is not configured',
+        });
+      }
+    } catch (error) {
+      await this.markConnectivityFailure(this.esimOrderRepo, order.id, error);
+      throw error;
+    }
+
+    return this.toPublicEsimOrder(await this.esimOrderRepo.findOneByOrFail({ id: order.id }));
   }
 
   async createProxyOrder(userId: string, input: ProxyOrderInput) {
     const unitPriceUsdCents = this.resolveConfiguredUsdCents('PROXY_ORDER_DAILY_PRICE_USD_CENTS', 'proxy order');
     const durationDays = input.durationDays ?? 30;
     const totalPriceUsdCents = unitPriceUsdCents * durationDays;
+    const idempotencyKey = this.integrationIdempotencyKey('proxy', { ...input, durationDays }, input.idempotencyKey);
+    const existing = await this.proxyOrderRepo.findOne({ where: { userId, idempotencyKey } });
+    if (existing) return this.toPublicProxyOrder(existing);
+
+    const order = await this.proxyOrderRepo.save(this.proxyOrderRepo.create({
+      userId,
+      provider: 'pending',
+      planType: input.type,
+      location: input.region,
+      priceUsdCents: totalPriceUsdCents,
+      idempotencyKey,
+      status: 'pending',
+      metadata: { durationDays },
+    }));
     const preferredOperations: ProviderOperation[] = ['oxylabs.proxyOrder', 'smartproxy.proxyOrder'];
     const missingByProvider: Array<{ integrationId: BackendIntegrationId; missingEnv: string[] }> = [];
 
@@ -251,10 +300,10 @@ export class IntegrationsService {
       }
 
       try {
-        return await this.purchaseIntegrationProduct(
+        const result = await this.purchaseIntegrationProduct(
           userId,
           operation,
-          { ...input, durationDays },
+          { ...input, durationDays, idempotencyKey },
           totalPriceUsdCents,
           'proxy_store',
           TransactionType.PROXY_PURCHASE,
@@ -263,22 +312,25 @@ export class IntegrationsService {
             region: input.region,
             type: input.type,
             durationDays,
+            orderId: order.id,
           },
-          input.idempotencyKey,
+          idempotencyKey,
+          async (safeData, rawData) => this.persistProxyAcceptance(order, operation, safeData, rawData),
         );
+        if (result.status === 'submitted') {
+          return this.toPublicProxyOrder(await this.proxyOrderRepo.findOneByOrFail({ id: order.id }));
+        }
       } catch (error) {
         this.logger.warn(`${operation} failed; falling back if another proxy provider is configured: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
 
-    return {
-      status: 'not_configured',
-      integrationId: 'oxylabs',
-      operation: 'proxy.order',
-      requestAccepted: false,
-      fallbackChecked: ['oxylabs', 'smartproxy'],
-      missingEnvByProvider: missingByProvider,
-    };
+    await this.proxyOrderRepo.update(order.id, {
+      status: 'failed',
+      failureReason: 'No configured proxy provider accepted the order',
+      metadata: { durationDays, missingEnvByProvider: missingByProvider },
+    });
+    return this.toPublicProxyOrder(await this.proxyOrderRepo.findOneByOrFail({ id: order.id }));
   }
 
   async createVpnSession(userId: string, input: VpnSessionInput) {
@@ -287,35 +339,305 @@ export class IntegrationsService {
       entitlementConfig.secureTunnel,
       entitlementConfig.premium,
     ]);
+    const idempotencyKey = this.integrationIdempotencyKey('vpn', input, input.idempotencyKey);
+    const existing = await this.vpnSessionRepo.findOne({ where: { userId, idempotencyKey } });
+    if (existing) return this.toPublicVpnSession(existing);
 
-    if (hasSubscriptionAccess) {
-      const providerResult = await this.callConfiguredProvider('wireguard.session', userId, {
-        ...input,
-        subscriptionAccess: true,
-      });
+    const priceUsdCents = hasSubscriptionAccess
+      ? 0
+      : this.resolveConfiguredUsdCents('VPN_SESSION_PRICE_USD_CENTS', 'secure tunnel session');
+    const session = await this.vpnSessionRepo.save(this.vpnSessionRepo.create({
+      userId,
+      provider: 'wireguard',
+      deviceName: input.deviceName,
+      serverLocation: input.region ?? null,
+      priceUsdCents,
+      idempotencyKey,
+      status: 'pending',
+      metadata: { subscriptionAccess: hasSubscriptionAccess },
+    }));
 
-      return {
-        ...providerResult,
-        walletDebitedUsdCents: 0,
-        walletChargeRecorded: false,
-        entitlementAccess: entitlementConfig.secureTunnel,
-      };
+    try {
+      if (hasSubscriptionAccess) {
+        const providerResult = await this.callConfiguredProvider(
+          'wireguard.session',
+          userId,
+          { ...input, idempotencyKey, subscriptionAccess: true },
+          async (rawData) => this.persistVpnAcceptance(session, this.sanitizeProviderResponse(rawData), rawData),
+        );
+        if (providerResult.status !== 'submitted') {
+          await this.vpnSessionRepo.update(session.id, {
+            status: 'failed',
+            failureReason: 'WireGuard control-plane provider is not configured',
+          });
+        }
+      } else {
+        const result = await this.purchaseIntegrationProduct(
+          userId,
+          'wireguard.session',
+          { ...input, idempotencyKey },
+          priceUsdCents,
+          'secure_tunnel',
+          TransactionType.VPN_PURCHASE,
+          'BP Secure Tunnel session',
+          { deviceName: input.deviceName, region: input.region ?? null, sessionId: session.id },
+          idempotencyKey,
+          async (safeData, rawData) => this.persistVpnAcceptance(session, safeData, rawData),
+        );
+        if (result.status !== 'submitted') {
+          await this.vpnSessionRepo.update(session.id, {
+            status: 'failed',
+            failureReason: 'WireGuard control-plane provider is not configured',
+          });
+        }
+      }
+    } catch (error) {
+      await this.markConnectivityFailure(this.vpnSessionRepo, session.id, error);
+      throw error;
     }
 
-    return this.purchaseIntegrationProduct(
-      userId,
-      'wireguard.session',
-      input,
-      this.resolveConfiguredUsdCents('VPN_SESSION_PRICE_USD_CENTS', 'secure tunnel session'),
-      'secure_tunnel',
-      TransactionType.VPN_PURCHASE,
-      'BP Secure Tunnel session',
-      {
-        deviceName: input.deviceName,
-        region: input.region ?? null,
-      },
-      input.idempotencyKey,
-    );
+    return this.toPublicVpnSession(await this.vpnSessionRepo.findOneByOrFail({ id: session.id }));
+  }
+
+  async listEsimOrders(userId: string) {
+    return (await this.esimOrderRepo.find({ where: { userId }, order: { createdAt: 'DESC' } }))
+      .map((order) => this.toPublicEsimOrder(order));
+  }
+
+  async listProxyOrders(userId: string) {
+    return (await this.proxyOrderRepo.find({ where: { userId }, order: { createdAt: 'DESC' } }))
+      .map((order) => this.toPublicProxyOrder(order));
+  }
+
+  async listVpnSessions(userId: string) {
+    return (await this.vpnSessionRepo.find({ where: { userId }, order: { createdAt: 'DESC' } }))
+      .map((session) => this.toPublicVpnSession(session));
+  }
+
+  /** Applies a verified provider lifecycle webhook without exposing credentials. */
+  async applyProviderLifecycleEvent(
+    source: 'airalo' | 'oxylabs' | 'smartproxy' | 'wireguard',
+    payload: Record<string, unknown>,
+  ): Promise<boolean> {
+    const providerReference = this.extractProviderReference(payload);
+    if (!providerReference) return false;
+
+    const status = this.mapProviderLifecycleStatus(source, payload);
+    if (!status) return false;
+    const safePayload = this.sanitizeProviderResponse(payload);
+    const now = new Date();
+
+    if (source === 'airalo') {
+      const order = await this.esimOrderRepo.findOne({ where: { provider: source, providerOrderId: providerReference } });
+      if (!order) return false;
+      const activation = this.pickSensitiveProviderFields(payload, [
+        'activation_code', 'activationcode', 'qr_code', 'qrcode', 'smdp_address', 'matching_id',
+      ]);
+      await this.esimOrderRepo.update(order.id, {
+        status,
+        iccid: this.providerString(payload, ['iccid']) ?? order.iccid,
+        activationDataEncrypted: Object.keys(activation).length
+          ? this.credentialCipher.encrypt(activation)
+          : order.activationDataEncrypted,
+        failureReason: status === 'failed' ? this.providerString(payload, ['error', 'message', 'reason']) ?? 'Provider reported failure' : null,
+        activatedAt: ['active', 'completed'].includes(status) ? now : order.activatedAt,
+        metadata: { ...(order.metadata ?? {}), lastProviderEvent: safePayload },
+      });
+      return true;
+    }
+
+    if (source === 'wireguard') {
+      const session = await this.vpnSessionRepo.findOne({ where: { provider: source, providerSessionId: providerReference } });
+      if (!session) return false;
+      const config = this.pickSensitiveProviderFields(payload, ['config', 'config_content', 'wireguard_config']);
+      const privateKey = this.pickSensitiveProviderFields(payload, ['private_key', 'privatekey']);
+      await this.vpnSessionRepo.update(session.id, {
+        status,
+        configEncrypted: Object.keys(config).length ? this.credentialCipher.encrypt(config) : session.configEncrypted,
+        privateKeyEncrypted: Object.keys(privateKey).length ? this.credentialCipher.encrypt(privateKey) : session.privateKeyEncrypted,
+        connectedAt: status === 'active' ? now : session.connectedAt,
+        disconnectedAt: status === 'disconnected' ? now : session.disconnectedAt,
+        revokedAt: status === 'revoked' ? now : session.revokedAt,
+        metadata: { ...(session.metadata ?? {}), lastProviderEvent: safePayload },
+      });
+      return true;
+    }
+
+    const order = await this.proxyOrderRepo.findOne({ where: { provider: source, providerOrderId: providerReference } });
+    if (!order) return false;
+    const credentials = this.pickSensitiveProviderFields(payload, [
+      'username', 'password', 'proxy_endpoint', 'proxyendpoint', 'host', 'port', 'credential',
+    ]);
+    await this.proxyOrderRepo.update(order.id, {
+      status,
+      credentialsEncrypted: Object.keys(credentials).length ? this.credentialCipher.encrypt(credentials) : order.credentialsEncrypted,
+      failureReason: status === 'failed' ? this.providerString(payload, ['error', 'message', 'reason']) ?? 'Provider reported failure' : null,
+      activatedAt: status === 'active' ? now : order.activatedAt,
+      metadata: { ...(order.metadata ?? {}), lastProviderEvent: safePayload },
+    });
+    return true;
+  }
+
+  private async persistEsimAcceptance(order: EsimOrder, safeData: unknown, rawData: unknown) {
+    const sensitive = this.pickSensitiveProviderFields(rawData, [
+      'activation_code', 'activationcode', 'qr_code', 'qrcode', 'smdp_address', 'matching_id',
+    ]);
+    await this.esimOrderRepo.update(order.id, {
+      status: 'provisioning',
+      providerOrderId: this.extractProviderReference(rawData) ?? null,
+      iccid: this.providerString(rawData, ['iccid']) ?? null,
+      activationDataEncrypted: Object.keys(sensitive).length ? this.credentialCipher.encrypt(sensitive) : null,
+      metadata: { providerResponse: safeData },
+    });
+  }
+
+  private async persistProxyAcceptance(
+    order: ProxyOrder,
+    operation: ProviderOperation,
+    safeData: unknown,
+    rawData: unknown,
+  ) {
+    const sensitive = this.pickSensitiveProviderFields(rawData, [
+      'username', 'password', 'proxy_endpoint', 'proxyendpoint', 'host', 'port', 'credential',
+    ]);
+    await this.proxyOrderRepo.update(order.id, {
+      status: 'provisioning',
+      provider: PROVIDER_OPERATIONS[operation].integrationId,
+      providerOrderId: this.extractProviderReference(rawData) ?? null,
+      credentialsEncrypted: Object.keys(sensitive).length ? this.credentialCipher.encrypt(sensitive) : null,
+      metadata: { ...(order.metadata ?? {}), providerResponse: safeData },
+    });
+  }
+
+  private async persistVpnAcceptance(session: VpnSession, safeData: unknown, rawData: unknown) {
+    const config = this.pickSensitiveProviderFields(rawData, ['config', 'config_content', 'wireguard_config']);
+    const privateKey = this.pickSensitiveProviderFields(rawData, ['private_key', 'privatekey']);
+    await this.vpnSessionRepo.update(session.id, {
+      status: 'provisioning',
+      providerSessionId: this.extractProviderReference(rawData) ?? null,
+      serverId: this.providerString(rawData, ['server_id', 'serverid']) ?? null,
+      configEncrypted: Object.keys(config).length ? this.credentialCipher.encrypt(config) : null,
+      privateKeyEncrypted: Object.keys(privateKey).length ? this.credentialCipher.encrypt(privateKey) : null,
+      metadata: { ...(session.metadata ?? {}), providerResponse: safeData },
+    });
+  }
+
+  private async markConnectivityFailure(repo: Repository<any>, id: string, error: unknown) {
+    await repo.update(id, {
+      status: 'failed',
+      failureReason: error instanceof Error ? error.message.slice(0, 500) : String(error).slice(0, 500),
+    }).catch((updateError) => this.logger.error(`Unable to record connectivity failure: ${String(updateError)}`));
+  }
+
+  private integrationIdempotencyKey(prefix: string, payload: object, supplied?: string) {
+    const normalized = supplied?.trim();
+    if (normalized) return normalized.slice(0, 180);
+    return `${prefix}:${createHash('sha256').update(JSON.stringify(payload)).digest('hex').slice(0, 48)}`;
+  }
+
+  private pickSensitiveProviderFields(rawData: unknown, allowedKeys: string[]): Record<string, unknown> {
+    const allowed = new Set(allowedKeys.map((key) => key.toLowerCase()));
+    const output: Record<string, unknown> = {};
+    const visit = (value: unknown, path = '', depth = 0) => {
+      if (!value || typeof value !== 'object' || depth > 3) return;
+      for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+        const normalizedKey = key.toLowerCase();
+        const nextPath = path ? `${path}.${key}` : key;
+        if (allowed.has(normalizedKey) && (typeof nested === 'string' || typeof nested === 'number')) {
+          output[nextPath] = nested;
+        }
+        visit(nested, nextPath, depth + 1);
+      }
+    };
+    visit(rawData);
+    return output;
+  }
+
+  private providerString(rawData: unknown, names: string[]): string | undefined {
+    const wanted = new Set(names.map((name) => name.toLowerCase()));
+    const find = (value: unknown, depth = 0): string | undefined => {
+      if (!value || typeof value !== 'object' || depth > 3) return undefined;
+      for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+        if (wanted.has(key.toLowerCase()) && (typeof nested === 'string' || typeof nested === 'number')) {
+          return String(nested);
+        }
+        const nestedResult = find(nested, depth + 1);
+        if (nestedResult) return nestedResult;
+      }
+      return undefined;
+    };
+    return find(rawData);
+  }
+
+  private mapProviderLifecycleStatus(
+    source: 'airalo' | 'oxylabs' | 'smartproxy' | 'wireguard',
+    payload: Record<string, unknown>,
+  ): string | undefined {
+    const value = this.providerString(payload, ['status', 'state', 'event_type', 'eventtype', 'type'])?.toLowerCase() ?? '';
+    if (/(fail|error|reject)/.test(value)) return 'failed';
+    if (/(cancel)/.test(value)) return source === 'wireguard' ? 'revoked' : 'cancelled';
+    if (/(revoke)/.test(value)) return 'revoked';
+    if (/(expire)/.test(value)) return 'expired';
+    if (/(disconnect)/.test(value)) return 'disconnected';
+    if (/(suspend)/.test(value)) return 'suspended';
+    if (/(complete)/.test(value)) return source === 'airalo' ? 'completed' : 'active';
+    if (/(active|enable|provisioned|ready)/.test(value)) return 'active';
+    if (/(process|provision|pending|created|queued)/.test(value)) return 'provisioning';
+    return undefined;
+  }
+
+  private toPublicEsimOrder(order: EsimOrder) {
+    return {
+      id: order.id,
+      provider: order.provider,
+      providerOrderId: order.providerOrderId,
+      planId: order.planId,
+      planName: order.planName,
+      country: order.country,
+      dataAmountGb: order.dataAmountGb,
+      validityDays: order.validityDays,
+      iccid: order.iccid,
+      status: order.status,
+      priceUsdCents: Number(order.priceUsdCents ?? 0),
+      failureReason: order.failureReason,
+      activatedAt: order.activatedAt,
+      expiresAt: order.expiresAt,
+      createdAt: order.createdAt,
+    };
+  }
+
+  private toPublicProxyOrder(order: ProxyOrder) {
+    return {
+      id: order.id,
+      provider: order.provider,
+      providerOrderId: order.providerOrderId,
+      type: order.planType,
+      region: order.location,
+      status: order.status,
+      priceUsdCents: Number(order.priceUsdCents ?? 0),
+      renewalAt: order.renewalAt,
+      expiresAt: order.expiresAt,
+      failureReason: order.failureReason,
+      createdAt: order.createdAt,
+    };
+  }
+
+  private toPublicVpnSession(session: VpnSession) {
+    return {
+      id: session.id,
+      provider: session.provider,
+      providerSessionId: session.providerSessionId,
+      deviceName: session.deviceName,
+      serverId: session.serverId,
+      region: session.serverLocation,
+      status: session.status,
+      priceUsdCents: Number(session.priceUsdCents ?? 0),
+      connectedAt: session.connectedAt,
+      disconnectedAt: session.disconnectedAt,
+      expiresAt: session.expiresAt,
+      revokedAt: session.revokedAt,
+      createdAt: session.createdAt,
+    };
   }
 
   private async purchaseIntegrationProduct(
@@ -328,6 +650,7 @@ export class IntegrationsService {
     description: string,
     metadata: Record<string, unknown>,
     idempotencyKey?: string,
+    onProviderAccepted?: (safeData: unknown, rawData: unknown) => Promise<void>,
   ) {
     const requestKey = idempotencyKey?.trim()
       || `integration:${creditProduct}:${createHash('sha256').update(JSON.stringify(payload)).digest('hex').slice(0, 24)}`;
@@ -355,7 +678,13 @@ export class IntegrationsService {
     try {
       const providerPayload = { ...(payload as Record<string, unknown>) };
       delete providerPayload.idempotencyKey;
-      const providerResult = await this.callConfiguredProvider(operation, userId, providerPayload);
+      let rawProviderData: unknown;
+      const providerResult = await this.callConfiguredProvider(
+        operation,
+        userId,
+        providerPayload,
+        async (rawData) => { rawProviderData = rawData; },
+      );
       if (providerResult?.status !== 'submitted') {
         await this.creditsService.releaseWalletLock({
           userId,
@@ -364,6 +693,10 @@ export class IntegrationsService {
           idempotencyKey: `integration-release:${requestKey}:not-submitted`,
         }).catch(() => null);
         return providerResult;
+      }
+
+      if (onProviderAccepted) {
+        await onProviderAccepted(providerResult.data, rawProviderData);
       }
 
       await this.creditsService.spendWalletLock({
@@ -398,7 +731,12 @@ export class IntegrationsService {
     }
   }
 
-  private async callConfiguredProvider(operation: ProviderOperation, userId: string, payload: object) {
+  private async callConfiguredProvider(
+    operation: ProviderOperation,
+    userId: string,
+    payload: object,
+    onProviderAccepted?: (rawData: unknown) => Promise<void>,
+  ) {
     const cfg = PROVIDER_OPERATIONS[operation];
     const missingEnv = this.getMissingProviderEnv(operation);
     if (missingEnv.length) {
@@ -430,6 +768,8 @@ export class IntegrationsService {
         },
       },
     );
+
+    if (onProviderAccepted) await onProviderAccepted(response.data);
 
     this.logger.log(`${operation} completed for user ${userId}`);
     return {
@@ -466,7 +806,11 @@ export class IntegrationsService {
 
   private sanitizeProviderResponse(data: unknown) {
     if (!data || typeof data !== 'object') return data;
-    const blocked = ['token', 'secret', 'apiKey', 'api_key', 'password', 'privateKey', 'private_key'];
+    const blocked = [
+      'token', 'secret', 'apiKey', 'api_key', 'password', 'privateKey', 'private_key',
+      'activation_code', 'activationCode', 'qr_code', 'qrCode', 'config_content', 'config',
+      'credential', 'proxy_endpoint', 'proxyEndpoint', 'matching_id', 'matchingId',
+    ];
     const redact = (value: unknown): unknown => {
       if (Array.isArray(value)) return value.map(redact);
       if (!value || typeof value !== 'object') return value;
@@ -488,14 +832,11 @@ export class IntegrationsService {
   }
 
   private extractProviderReference(data: unknown): string | undefined {
-    if (!data || typeof data !== 'object' || Array.isArray(data)) return undefined;
-    const record = data as Record<string, unknown>;
-    for (const key of ['id', 'orderId', 'order_id', 'sessionId', 'session_id', 'reference']) {
-      const value = record[key];
-      if (typeof value === 'string' && value.trim()) return value.trim();
-      if (typeof value === 'number') return String(value);
-    }
-    return undefined;
+    return this.providerString(data, [
+      'provider_order_id', 'providerorderid', 'order_id', 'orderid',
+      'provider_session_id', 'providersessionid', 'session_id', 'sessionid',
+      'reference', 'id',
+    ]);
   }
 
   private hasEnv(name: string): boolean {

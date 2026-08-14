@@ -24,7 +24,7 @@ export interface User {
 // ─── Phone Number Types ──────────────────────────────────────────────────────
 export type NumberStatus = 'active' | 'expired' | 'released' | 'suspended';
 export type NumberType = 'burner' | 'rental' | 'verification' | 'enterprise';
-export type NumberProvider = 'twilio' | 'telnyx' | 'bandwidth' | 'tremil';
+export type NumberProvider = 'twilio' | 'telnyx' | 'bandwidth';
 
 export interface PhoneNumber {
   id: string;
@@ -65,7 +65,7 @@ export interface Message {
 }
 
 // ─── Payment Types ────────────────────────────────────────────────────────────
-export type PaymentGateway = 'flutterwave' | 'paystack' | 'squad' | 'korapay' | 'opay' | 'paddle' | 'nowpayments';
+export type PaymentGateway = 'flutterwave' | 'paystack' | 'korapay' | 'paddle' | 'nowpayments';
 
 export interface CreditPackage {
   id: string;

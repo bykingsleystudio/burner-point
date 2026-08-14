@@ -143,17 +143,6 @@ export class WebhooksController {
     res.send(bxml);
   }
 
-  @Post('voice/tremil')
-  @HttpCode(200)
-  @ApiOperation({ summary: 'Tremil outbound voice status webhook' })
-  async tremilVoiceWebhook(
-    @Body() body: Record<string, unknown>,
-    @Headers() headers: Record<string, string>,
-    @Req() req: RawBodyRequest<Request>,
-  ) {
-    return this.service.handleTremilVoiceWebhook(body, headers, req.rawBody);
-  }
-
   @Post('airalo')
   @HttpCode(200)
   @ApiOperation({ summary: 'Airalo webhook receiver' })

@@ -9,9 +9,6 @@ export enum ProviderName {
   TWILIO = 'twilio',
   TELNYX = 'telnyx',
   BANDWIDTH = 'bandwidth',
-  TREMIL = 'tremil',
-  PLIVO = 'plivo',
-  TERMII = 'termii',
 }
 
 export enum RouteProduct {
@@ -112,10 +109,10 @@ export interface MessengerProviderAdapter {
 const HEALTH_TTL_SECONDS = 300;
 
 const CONVERSATION_PROVIDER_PRIORITY: Record<string, ProviderName[]> = {
-  US: [ProviderName.BANDWIDTH, ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.TREMIL],
-  CA: [ProviderName.TELNYX, ProviderName.BANDWIDTH, ProviderName.TWILIO, ProviderName.TREMIL],
-  GB: [ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH, ProviderName.TREMIL],
-  default: [ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH, ProviderName.TREMIL],
+  US: [ProviderName.BANDWIDTH, ProviderName.TWILIO, ProviderName.TELNYX],
+  CA: [ProviderName.TELNYX, ProviderName.BANDWIDTH, ProviderName.TWILIO],
+  GB: [ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH],
+  default: [ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH],
 };
 
 @Injectable()
@@ -446,27 +443,6 @@ export class ProviderService {
           notes: 'Bandwidth pricing varies by North America inventory, messaging volume, and voice route.',
         }),
       },
-      [ProviderName.TREMIL]: {
-        provider: ProviderName.TREMIL,
-        sendSMS: (to, from, body) => this.sendTremilSms(to, from, body),
-        buyNumber: async () => {
-          throw new Error('Tremil number inventory is not active in this release');
-        },
-        releaseNumber: async () => {},
-        receiveWebhook: async () => ({ success: true }),
-        startCall: async () => {
-          throw new Error('Tremil voice is not active in this release');
-        },
-        endCall: async () => {},
-        lookupAvailability: async () => [],
-        getPricing: async (countryCode, product) => ({
-          provider: ProviderName.TREMIL,
-          product,
-          countryCode: this.normalizeCountry(countryCode),
-          currency: 'USD',
-          notes: 'Tremil is configured as an economy overflow route.',
-        }),
-      },
     };
   }
 
@@ -488,15 +464,15 @@ export class ProviderService {
   private getVerificationProviderChain(countryCode: string, serviceCode?: string): ProviderName[] {
     const service = (serviceCode ?? '').toLowerCase();
     if (['US', 'CA', 'GB'].includes(countryCode)) {
-      return [ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH, ProviderName.TREMIL];
+      return [ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH];
     }
     if (['DE', 'FR', 'ES', 'IT', 'NL', 'SE', 'NO', 'FI'].includes(countryCode)) {
-      return [ProviderName.TELNYX, ProviderName.TWILIO, ProviderName.BANDWIDTH, ProviderName.TREMIL];
+      return [ProviderName.TELNYX, ProviderName.TWILIO, ProviderName.BANDWIDTH];
     }
     if (service.includes('high-risk')) {
-      return [ProviderName.TELNYX, ProviderName.TWILIO, ProviderName.BANDWIDTH, ProviderName.TREMIL];
+      return [ProviderName.TELNYX, ProviderName.TWILIO, ProviderName.BANDWIDTH];
     }
-    return [ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH, ProviderName.TREMIL];
+    return [ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH];
   }
 
   private getVerificationRouteLabel(provider: ProviderName): string {
@@ -507,12 +483,6 @@ export class ProviderService {
         return 'BP Standard Route';
       case ProviderName.BANDWIDTH:
         return 'BP Carrier Route';
-      case ProviderName.TREMIL:
-        return 'BP Economy Route';
-      case ProviderName.PLIVO:
-        return 'BP Budget Route';
-      case ProviderName.TERMII:
-        return 'BP Nigeria Local Route';
       default:
         return 'BP Deferred Route';
     }
@@ -575,33 +545,6 @@ export class ProviderService {
     return {
       sid: String(message.id ?? `bandwidth-${Date.now()}`),
       status: 'accepted',
-    };
-  }
-
-  private async sendTremilSms(to: string, from: string, body: string) {
-    const baseUrl = this.configService.get<string>('TREMIL_BASE_URL');
-    const apiKey = this.configService.get<string>('TREMIL_API_KEY');
-    const apiSecret =
-      this.configService.get<string>('TREMIL_API_SECRET') ||
-      this.configService.get<string>('TREMIL_SECRET');
-    if (!baseUrl || !apiKey) throw new Error('Tremil not configured');
-
-    const response = await axios.post(
-      `${baseUrl.replace(/\/$/, '')}/messages`,
-      { from, to, text: body },
-      {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          ...(apiSecret ? { 'X-API-Secret': apiSecret } : {}),
-          'Content-Type': 'application/json',
-        },
-      },
-    );
-
-    const message = response.data?.data ?? response.data ?? {};
-    return {
-      sid: message.id ?? message.messageId ?? `tremil-${Date.now()}`,
-      status: message.status ?? 'queued',
     };
   }
 
@@ -934,8 +877,6 @@ export class ProviderService {
           this.configService.get('BANDWIDTH_USERNAME') &&
           this.configService.get('BANDWIDTH_PASSWORD'),
         );
-      case ProviderName.TREMIL:
-        return Boolean(this.configService.get('TREMIL_API_KEY') && this.configService.get('TREMIL_BASE_URL'));
       default:
         return false;
     }

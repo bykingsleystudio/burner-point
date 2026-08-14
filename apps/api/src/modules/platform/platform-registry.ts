@@ -43,9 +43,7 @@ export const CORE_PAYMENT_GATEWAYS = ['paystack', 'paddle', 'nowpayments'] as co
 
 export const SECONDARY_PAYMENT_GATEWAYS = [
   'flutterwave',
-  'squad',
   'korapay',
-  'opay',
 ] as const;
 
 export const STACK_REGISTRY: StackIntegrationDefinition[] = [
@@ -352,18 +350,6 @@ export const STACK_REGISTRY: StackIntegrationDefinition[] = [
     deferredUnlessEnv: 'SECONDARY_GATEWAYS_ENABLED',
   },
   {
-    id: 'squad',
-    name: 'Squad by GTCO',
-    category: 'payments',
-    priority: 'secondary',
-    exposure: 'server-only',
-    role: 'Secondary local payment gateway after core revenue stabilizes',
-    productSurface: 'Deferred checkout path',
-    requiredEnv: ['SQUAD_SECRET_KEY'],
-    optionalEnv: ['SQUAD_WEBHOOK_SECRET'],
-    deferredUnlessEnv: 'SECONDARY_GATEWAYS_ENABLED',
-  },
-  {
     id: 'korapay',
     name: 'Korapay',
     category: 'payments',
@@ -373,18 +359,6 @@ export const STACK_REGISTRY: StackIntegrationDefinition[] = [
     productSurface: 'Deferred checkout path',
     requiredEnv: ['KORAPAY_SECRET_KEY'],
     optionalEnv: ['KORAPAY_WEBHOOK_SECRET'],
-    deferredUnlessEnv: 'SECONDARY_GATEWAYS_ENABLED',
-  },
-  {
-    id: 'opay',
-    name: 'OPay',
-    category: 'payments',
-    priority: 'secondary',
-    exposure: 'server-only',
-    role: 'Secondary wallet/USSD payment gateway after core revenue stabilizes',
-    productSurface: 'Deferred checkout path',
-    requiredEnv: ['OPAY_MERCHANT_ID', 'OPAY_PRIVATE_KEY'],
-    optionalEnv: ['OPAY_WEBHOOK_SECRET'],
     deferredUnlessEnv: 'SECONDARY_GATEWAYS_ENABLED',
   },
   {
@@ -423,17 +397,6 @@ export const STACK_REGISTRY: StackIntegrationDefinition[] = [
     statusWhenNoEnv: 'planned',
   },
   {
-    id: 'tremil-conversation',
-    name: 'Tremil',
-    category: 'telecom',
-    priority: 'fallback',
-    exposure: 'server-only',
-    role: 'Economy routing for low-priority conversation traffic',
-    productSurface: 'SMS backup routing',
-    requiredEnv: ['TREMIL_API_KEY'],
-    optionalEnv: ['TREMIL_BASE_URL', 'TREMIL_SECRET', 'TREMIL_WEBHOOK_SECRET'],
-  },
-  {
     id: 'twilio-verify',
     name: 'Twilio Verify',
     category: 'telecom',
@@ -465,17 +428,6 @@ export const STACK_REGISTRY: StackIntegrationDefinition[] = [
     requiredEnv: ['BANDWIDTH_ACCOUNT_ID', 'BANDWIDTH_USERNAME', 'BANDWIDTH_PASSWORD'],
     optionalEnv: ['BANDWIDTH_MESSAGING_APPLICATION_ID', 'BANDWIDTH_WEBHOOK_SECRET'],
     statusWhenNoEnv: 'planned',
-  },
-  {
-    id: 'tremil-verify',
-    name: 'Tremil Verify / SMS',
-    category: 'telecom',
-    priority: 'fallback',
-    exposure: 'server-only',
-    role: 'Verification economy route and final fallback',
-    productSurface: 'Global verification route chain',
-    requiredEnv: ['TREMIL_API_KEY'],
-    optionalEnv: ['TREMIL_BASE_URL', 'TREMIL_SECRET', 'TREMIL_WEBHOOK_SECRET'],
   },
   {
     id: 'airalo',

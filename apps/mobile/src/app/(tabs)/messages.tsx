@@ -30,7 +30,7 @@ export default function MessagesScreen() {
     const token = await getApiAccessToken(undefined, session);
     const headers = { Authorization: `Bearer ${token}` };
     const msgRes = await axios.get(`${API_BASE_URL}/messages?phoneNumberId=${phoneNumberId}`, { headers });
-    setMessages(msgRes.data);
+    setMessages(msgRes.data.data);
   };
 
   useEffect(() => {

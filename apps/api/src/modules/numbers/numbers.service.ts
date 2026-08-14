@@ -331,12 +331,6 @@ export class NumbersService {
         return NumberProvider.TELNYX;
       case ProviderName.BANDWIDTH:
         return NumberProvider.BANDWIDTH;
-      case ProviderName.TREMIL:
-        return NumberProvider.TREMIL;
-      case ProviderName.PLIVO:
-        return NumberProvider.PLIVO;
-      case ProviderName.TERMII:
-        return NumberProvider.TERMII;
       case ProviderName.TWILIO:
       default:
         return NumberProvider.TWILIO;

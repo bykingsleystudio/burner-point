@@ -5,7 +5,7 @@ import { createHmac, createPublicKey, timingSafeEqual, verify as verifySignature
 import { Repository } from 'typeorm';
 import twilio from 'twilio';
 import { Request } from 'express';
-import { Message, MessageDirection, MessageStatus, MessageType } from '../../database/entities/message.entity';
+import { Message } from '../../database/entities/message.entity';
 import { Call, CallDirection, CallStatus, WebhookDedup } from '../../database/entities/extended-entities';
 import { PhoneNumber } from '../../database/entities/phone-number.entity';
 import { EventsGateway } from '../gateway/events.gateway';
@@ -13,8 +13,11 @@ import { AiService } from '../ai/ai.service';
 import { resolveWebhookBaseUrl } from '../../config/runtime-env';
 import { CreditsService } from '../credits/credits.service';
 import { CallsService, NormalizedVoiceEvent } from '../calls/calls.service';
+import { MessagesService } from '../messages/messages.service';
+import { ProviderName } from '../global/provider.service';
+import { IntegrationsService } from '../integrations/integrations.service';
 
-type ProviderWebhookSource = 'airalo' | 'bandwidth' | 'oxylabs' | 'smartproxy' | 'wireguard' | 'tremil';
+type ProviderWebhookSource = 'airalo' | 'bandwidth' | 'oxylabs' | 'smartproxy' | 'wireguard';
 
 @Injectable()
 export class WebhooksService {
@@ -29,6 +32,8 @@ export class WebhooksService {
     private aiService: AiService,
     private creditsService: CreditsService,
     private callsService: CallsService,
+    private messagesService: MessagesService,
+    private integrationsService: IntegrationsService,
     private configService: ConfigService,
   ) {}
 
@@ -72,40 +77,21 @@ export class WebhooksService {
     // Run AI classification asynchronously
     const aiResult = await this.aiService.classifyMessage(body).catch(() => null);
 
-    const msg = this.msgRepo.create({
+    const saved = await this.messagesService.recordInbound({
+      provider: ProviderName.TWILIO,
+      providerMessageId: eventId,
       from,
       to,
       body,
-      direction: MessageDirection.INBOUND,
-      status: MessageStatus.RECEIVED,
-      type: payload.NumMedia > '0' ? MessageType.MMS : MessageType.SMS,
-      providerMessageSid: eventId,
-      numSegments: parseInt(payload.NumSegments || '1'),
-      phoneNumberId: phoneNum?.id,
-      userId: phoneNum?.userId,
-      aiClassification: aiResult?.classification,
-      extractedOtp: aiResult?.otp,
-      spamScore: aiResult?.spamScore || 0,
-      isSpam: (aiResult?.spamScore || 0) > 0.7,
+      numSegments: parseInt(payload.NumSegments || '1', 10),
     });
-
-    const saved = await this.msgRepo.save(msg);
-
-    // Update number stats
-    if (phoneNum) {
-      await this.numRepo.increment({ id: phoneNum.id }, 'smsReceived', 1);
-    }
-
-    // Broadcast real-time event
-    if (phoneNum?.userId) {
-      this.eventsGateway.emitToUser(phoneNum.userId, 'message.received', {
-        messageId: saved.id,
-        from,
-        to,
-        body: msg.isSpam ? '[Spam filtered]' : body,
-        otp: aiResult?.otp,
-        classification: aiResult?.classification,
-        receivedAt: saved.createdAt,
+    if (!saved) return { success: true };
+    if (aiResult) {
+      await this.msgRepo.update(saved.id, {
+        aiClassification: aiResult.classification,
+        extractedOtp: aiResult.otp,
+        spamScore: aiResult.spamScore || 0,
+        isSpam: (aiResult.spamScore || 0) > 0.7,
       });
     }
 
@@ -185,14 +171,7 @@ export class WebhooksService {
     if (!sid) return;
 
     if (payload.MessageSid) {
-      const statusMap: Record<string, MessageStatus> = {
-        queued: MessageStatus.QUEUED,
-        sent: MessageStatus.SENT,
-        delivered: MessageStatus.DELIVERED,
-        failed: MessageStatus.FAILED,
-      };
-      const status = statusMap[payload.MessageStatus] || MessageStatus.SENT;
-      await this.msgRepo.update({ providerMessageSid: sid }, { status });
+      await this.messagesService.updateDeliveryStatus(sid, payload.MessageStatus || 'sent');
       return { success: true };
     }
 
@@ -366,34 +345,6 @@ export class WebhooksService {
 <Response/>`;
   }
 
-  async handleTremilVoiceWebhook(
-    payload: Record<string, unknown>,
-    headers: Record<string, string>,
-    rawBody?: Buffer,
-  ) {
-    const secret = this.configuredSecret('TREMIL_WEBHOOK_SECRET');
-    const isProduction = process.env.NODE_ENV === 'production';
-    if (!secret) {
-      this.logger.warn('Tremil voice webhook rejected because TREMIL_WEBHOOK_SECRET is not configured');
-      if (isProduction) throw new BadRequestException('Tremil webhook verification not configured');
-    } else {
-      this.verifyGenericSignature('tremil', headers, rawBody, secret);
-    }
-
-    const voiceEvent = this.normalizeTremilVoiceEvent(payload, headers);
-    if (!voiceEvent) return { success: true, ignored: true };
-
-    const duplicate = await this.storeWebhookEvent(
-      `tremil-voice:${this.voiceEventKey(voiceEvent)}`,
-      'tremil',
-      `voice.${voiceEvent.status}`,
-      payload,
-    );
-    if (duplicate) return { success: true, duplicate: true };
-
-    return this.callsService.handleProviderVoiceEvent(voiceEvent);
-  }
-
   async handleProviderWebhook(
     source: ProviderWebhookSource,
     payload: Record<string, unknown>,
@@ -417,6 +368,10 @@ export class WebhooksService {
       verified,
     });
 
+    const lifecycleUpdated = !duplicate && source !== 'bandwidth'
+      ? await this.integrationsService.applyProviderLifecycleEvent(source, payload)
+      : false;
+
     this.logger.log(`${source} webhook ${duplicate ? 'deduplicated' : 'stored'}: ${eventType}`);
     return {
       success: true,
@@ -425,6 +380,7 @@ export class WebhooksService {
       eventType,
       duplicate,
       verified,
+      lifecycleUpdated,
     };
   }
 
@@ -524,37 +480,6 @@ export class WebhooksService {
     };
   }
 
-  private normalizeTremilVoiceEvent(
-    payload: Record<string, unknown>,
-    headers: Record<string, string>,
-  ): NormalizedVoiceEvent | null {
-    const data = (payload.data as Record<string, unknown> | undefined) ?? payload;
-    const providerCallId =
-      this.asString(data.call_id)
-      || this.asString(data.id)
-      || this.asString((data.call as Record<string, unknown> | undefined)?.id);
-    if (!providerCallId) return null;
-
-    return {
-      provider: 'tremil',
-      providerCallId,
-      status: this.normalizeVoiceStatus(this.asString(data.status) || this.asString(payload.event_type) || 'initiated'),
-      fromNumber: this.asString(data.from) || this.asString(data.from_number),
-      toNumber: this.asString(data.to) || this.asString(data.to_number),
-      durationSeconds: this.parseOptionalInt(
-        this.asString(data.duration)
-        || this.asString(data.duration_seconds),
-      ),
-      answeredAt: this.parseOptionalDate(this.asString(data.answered_at)),
-      completedAt: this.parseOptionalDate(this.asString(data.completed_at) || this.asString(data.ended_at)),
-      eventId: this.getProviderEventId(payload, headers) || `${providerCallId}:${this.asString(data.status) || 'voice'}`,
-      eventTimestamp: this.asString(data.timestamp) || new Date().toISOString(),
-      signatureValid: true,
-      failureReason: this.asString(data.reason) || null,
-      rawEvent: payload,
-    };
-  }
-
   private normalizeVoiceStatus(status: string) {
     const normalized = String(status || '').trim().toLowerCase();
     if (!normalized) return 'initiated';
@@ -632,45 +557,25 @@ export class WebhooksService {
     body: string;
     payload: Record<string, unknown>;
   }) {
-    const phoneNum = await this.numRepo.findOne({ where: { number: params.to } });
     const aiResult = await this.aiService.classifyMessage(params.body).catch(() => null);
-
-    const msg = this.msgRepo.create({
+    const saved = await this.messagesService.recordInbound({
+      provider: params.provider as ProviderName,
+      providerMessageId: params.eventId,
       from: params.from,
       to: params.to,
       body: params.body,
-      direction: MessageDirection.INBOUND,
-      status: MessageStatus.RECEIVED,
-      type: MessageType.SMS,
-      providerMessageSid: params.eventId,
-      numSegments: 1,
-      phoneNumberId: phoneNum?.id,
-      userId: phoneNum?.userId,
-      aiClassification: aiResult?.classification,
-      extractedOtp: aiResult?.otp,
-      spamScore: aiResult?.spamScore || 0,
-      isSpam: (aiResult?.spamScore || 0) > 0.7,
-      metadata: { provider: params.provider, raw: params.payload },
     });
-
-    const saved = await this.msgRepo.save(msg);
-
-    if (phoneNum) {
-      await this.numRepo.increment({ id: phoneNum.id }, 'smsReceived', 1);
-    }
-
-    if (phoneNum?.userId) {
-      this.eventsGateway.emitToUser(phoneNum.userId, 'message.received', {
-        messageId: saved.id,
-        provider: params.provider,
-        from: params.from,
-        to: params.to,
-        body: msg.isSpam ? '[Spam filtered]' : params.body,
-        otp: aiResult?.otp,
-        classification: aiResult?.classification,
-        receivedAt: saved.createdAt,
+    if (!saved) return;
+    if (aiResult) {
+      await this.msgRepo.update(saved.id, {
+        aiClassification: aiResult.classification,
+        extractedOtp: aiResult.otp,
+        spamScore: aiResult.spamScore || 0,
+        isSpam: (aiResult.spamScore || 0) > 0.7,
       });
     }
+
+    const phoneNum = await this.numRepo.findOne({ where: { id: saved.phoneNumberId } });
 
     if (phoneNum?.userId && phoneNum.type === 'verification') {
       await this.creditsService.settleVerificationWalletDelivery({
@@ -710,7 +615,6 @@ export class WebhooksService {
       oxylabs: 'OXYLABS_WEBHOOK_SECRET',
       smartproxy: 'SMARTPROXY_WEBHOOK_SECRET',
       wireguard: 'WIREGUARD_WEBHOOK_SECRET',
-      tremil: 'TREMIL_WEBHOOK_SECRET',
     };
     return env[source];
   }

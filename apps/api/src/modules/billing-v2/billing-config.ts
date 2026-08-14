@@ -61,7 +61,7 @@ export const BILLING_SUBSCRIPTION_PLANS: BillingSubscriptionPlan[] = [
     ],
     metadata: {
       country: 'US',
-      providerChain: ['twilio', 'telnyx', 'bandwidth', 'tremil'],
+      providerChain: ['twilio', 'telnyx', 'bandwidth'],
       walletNote: 'International calls and high-cost routes use Call Credits.',
     },
   },
@@ -84,7 +84,7 @@ export const BILLING_SUBSCRIPTION_PLANS: BillingSubscriptionPlan[] = [
     ],
     metadata: {
       country: 'CA',
-      providerChain: ['twilio', 'telnyx', 'bandwidth', 'tremil'],
+      providerChain: ['twilio', 'telnyx', 'bandwidth'],
       walletNote: 'International calls and high-cost routes use Call Credits.',
     },
   },
@@ -107,7 +107,7 @@ export const BILLING_SUBSCRIPTION_PLANS: BillingSubscriptionPlan[] = [
     ],
     metadata: {
       country: 'UK',
-      providerChain: ['twilio', 'telnyx', 'bandwidth', 'tremil'],
+      providerChain: ['twilio', 'telnyx', 'bandwidth'],
       walletNote: 'International calls and high-cost routes use Call Credits.',
     },
   },

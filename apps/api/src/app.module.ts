@@ -31,6 +31,7 @@ import { GrowthModule } from './modules/growth/growth.module';
 import { GlobalModule } from './modules/global/global.module';
 import { SeoModule } from './modules/seo/seo.module';
 import { MessagingModule } from './modules/messaging/messaging.module';
+import { MessagesModule } from './modules/messages/messages.module';
 import { PlatformModule } from './modules/platform/platform.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { SecurityModule } from './modules/security/security.module';
@@ -130,6 +131,7 @@ import { SecurityMiddleware } from './middleware/security.middleware';
     GrowthModule,          // Referrals + rewards
     SeoModule,             // SEO: sitemap, robots.txt, structured data
     MessagingModule,       // Email: Resend API with SMTP fallback (welcome, payment, OTP)
+    MessagesModule,        // Canonical BP Messenger conversations, status, unread state
     SupportModule,         // Authenticated support ticket intake and history
   ],
 })

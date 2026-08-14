@@ -48,7 +48,7 @@ export default function ContactsPage() {
             const response = await messagesApi.list(number.id);
             return {
               number,
-              messages: Array.isArray(response.data) ? response.data : [],
+              messages: Array.isArray(response.data.data) ? response.data.data : [],
             };
           }),
         );

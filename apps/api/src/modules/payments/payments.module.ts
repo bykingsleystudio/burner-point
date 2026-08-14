@@ -2,7 +2,7 @@
  * apps/api/src/modules/payments/payments.module.ts
  *
  * COMPLETE REPLACEMENT FILE
- * - Removed: Stripe import (no longer a dependency)
+ * Payment providers are server-side and registered through PaymentsService.
  * - Paddle and NOWPayments use plain axios — no SDK needed
  */
 import { Module } from '@nestjs/common';

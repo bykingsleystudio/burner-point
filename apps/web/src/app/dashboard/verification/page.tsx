@@ -115,7 +115,7 @@ export default function VerificationPage() {
       try {
         const response = await messagesApi.list(numberId);
         if (!mounted) return;
-        setMessages(response.data);
+        setMessages(response.data.data);
       } catch {
         if (mounted) toast.error('Unable to refresh the live OTP feed.');
       }

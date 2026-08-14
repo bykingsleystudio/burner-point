@@ -7,6 +7,8 @@ import { Response } from 'express';
 import { SeoService } from './seo.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../../database/entities/user.entity';
 
 @ApiTags('seo')
 @Controller()
@@ -38,6 +40,7 @@ export class SeoController {
   @Post('admin/indexnow/ping')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Admin: Trigger IndexNow ping for specific URLs' })
   async pingIndexNow(@Body() body: { urls?: string[] }) {
     await this.seoService.pingIndexNow(body.urls);

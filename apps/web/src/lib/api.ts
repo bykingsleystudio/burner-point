@@ -160,17 +160,41 @@ export const numbersApi = {
 };
 
 export const messagesApi = {
-  list: (phoneNumberId: string) => api.get('/messages', { params: { phoneNumberId } }),
+  list: (phoneNumberId: string, page = 1, limit = 50) =>
+    api.get<MessageListResponse>('/messages', { params: { phoneNumberId, page, limit } }),
+  conversation: (phoneNumberId: string, counterpart: string, page = 1, limit = 50) =>
+    api.get<MessageListResponse>(`/messages/conversations/${phoneNumberId}/${encodeURIComponent(counterpart)}`, { params: { page, limit } }),
   send: (data: { to: string; from: string; body: string }) => api.post('/messages', data),
   markRead: (id: string) => api.patch(`/messages/${id}/read`),
 };
 
+export interface MessageRecord {
+  id: string;
+  from: string;
+  to: string;
+  body: string;
+  direction: 'inbound' | 'outbound';
+  status: 'pending' | 'queued' | 'sent' | 'delivered' | 'failed' | 'received' | 'read';
+  providerMessageSid?: string;
+  phoneNumberId?: string;
+  userId?: string;
+  readAt?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+  extractedOtp?: string;
+  isSpam?: boolean;
+}
+
+export interface MessageListResponse {
+  data: MessageRecord[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+  unreadCount: number;
+}
+
 export type PaymentGatewayId =
   | 'flutterwave'
   | 'paystack'
-  | 'squad'
   | 'korapay'
-  | 'opay'
   | 'paddle'
   | 'nowpayments';
 

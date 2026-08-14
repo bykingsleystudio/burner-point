@@ -11,9 +11,6 @@ export enum NumberProvider {
   TWILIO = 'twilio',
   TELNYX = 'telnyx',
   BANDWIDTH = 'bandwidth',
-  TREMIL = 'tremil',
-  PLIVO = 'plivo',
-  TERMII = 'termii',
 }
 
 @Entity('phone_numbers')
@@ -21,7 +18,7 @@ export class PhoneNumber {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
+  @Column({ name: 'phone_number', unique: true })
   @Index()
   number: string;
 
@@ -38,10 +35,10 @@ export class PhoneNumber {
   @Column({ type: 'enum', enum: NumberProvider, default: NumberProvider.TWILIO })
   provider: NumberProvider;
 
-  @Column({ name: 'provider_number_sid', nullable: true })
+  @Column({ name: 'provider_id', nullable: true })
   providerNumberSid: string;
 
-  @Column({ type: 'text', array: true, default: () => "'{sms}'" })
+  @Column({ type: 'jsonb', default: () => "'[\"sms\"]'::jsonb" })
   capabilities: string[];
 
   @Column({ name: 'country_code', nullable: true })

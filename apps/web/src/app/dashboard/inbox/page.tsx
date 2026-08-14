@@ -192,7 +192,7 @@ export default function InboxPage() {
       try {
         const response = await messagesApi.list(activeNumberId);
         if (!mounted) return;
-        setMessages(response.data);
+        setMessages(response.data.data);
       } catch {
         if (mounted) toast.error('Unable to load BP Messenger threads for this number.');
       } finally {

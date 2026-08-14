@@ -14,13 +14,13 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { IoAdapter } from '@nestjs/platform-socket.io';
 import { DataSource } from 'typeorm';
 import helmet from 'helmet';
 import * as express from 'express';
 import { validateProductionEnv } from './config/production-env';
 import { hasConfiguredEnv } from './config/runtime-env';
 import { RedisService } from './modules/global/redis.service';
+import { RedisIoAdapter } from './modules/gateway/redis-io.adapter';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -122,7 +122,8 @@ async function bootstrap() {
   );
 
   // ── WebSocket ────────────────────────────────────────────────────────────
-  app.useWebSocketAdapter(new IoAdapter(app));
+  const redisService = app.get(RedisService);
+  app.useWebSocketAdapter(new RedisIoAdapter(app, redisService));
 
   // Global prefix — keep /health outside prefixed routes for Railway checks
   app.setGlobalPrefix('api', { exclude: ['health'] });
@@ -144,7 +145,6 @@ async function bootstrap() {
   }
 
   const dataSource = app.get(DataSource);
-  const redisService = app.get(RedisService);
 
   // Railway healthcheck (railway.toml healthcheckPath = "/health")
   const httpAdapter = app.getHttpAdapter();

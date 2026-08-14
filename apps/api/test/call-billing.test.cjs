@@ -1,3 +1,4 @@
+require('ts-node/register/transpile-only');
 require('reflect-metadata');
 
 const test = require('node:test');
@@ -471,6 +472,8 @@ test('invalid webhook signatures are rejected before voice events are processed'
     { classifyMessage: async () => null },
     { settleVerificationWalletDelivery: async () => null },
     { handleProviderVoiceEvent: async () => ({ success: true }) },
+    { recordInbound: async () => null, updateProviderStatus: async () => null },
+    { applyProviderLifecycleEvent: async () => false },
     config,
   );
 

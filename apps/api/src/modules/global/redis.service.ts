@@ -103,6 +103,16 @@ export class RedisService implements OnModuleDestroy {
     try { return await this.client.keys(pattern); } catch { return []; }
   }
 
+  createSocketIoClients(): { pubClient: Redis; subClient: Redis } | null {
+    if (!this.client) return null;
+
+    const pubClient = this.client.duplicate();
+    const subClient = this.client.duplicate();
+    pubClient.on('error', (err) => this.logger.error(`Socket.IO Redis publisher error: ${err.message}`));
+    subClient.on('error', (err) => this.logger.error(`Socket.IO Redis subscriber error: ${err.message}`));
+    return { pubClient, subClient };
+  }
+
   onModuleDestroy() {
     this.client?.disconnect();
   }

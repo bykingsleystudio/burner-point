@@ -16,7 +16,8 @@
     "strictNullChecks": false,
     "noImplicitAny": false,
     "useDefineForClassFields": false,
-    "moduleResolution": "node16"
+    "moduleResolution": "node16",
+    "types": ["node"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "test"]

@@ -4,6 +4,7 @@ const path = require('path');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  output: 'standalone',
   // Keep file tracing rooted at the monorepo so Vercel can package App Router routes correctly.
   outputFileTracingRoot: path.join(__dirname, '../..'),
   transpilePackages: ['@burner-point/shared'],

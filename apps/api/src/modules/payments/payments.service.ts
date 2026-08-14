@@ -104,9 +104,7 @@ const CORE_WEB_GATEWAYS = [
 ];
 
 const DEFERRED_GATEWAYS = [
-  PaymentGateway.SQUAD,
   PaymentGateway.KORAPAY,
-  PaymentGateway.OPAY,
 ];
 
 const DEFAULT_USD_TO_NGN_RATE = 1600;
@@ -277,14 +275,8 @@ export class PaymentsService {
         case PaymentGateway.FLUTTERWAVE:
           ({ checkoutUrl, gatewayReference } = await this.initFlutterwave(user, pricing.amountMinor, reference));
           break;
-        case PaymentGateway.SQUAD:
-          ({ checkoutUrl, gatewayReference } = await this.initSquad(user.email, pricing.amountMinor, reference));
-          break;
         case PaymentGateway.KORAPAY:
           ({ checkoutUrl, gatewayReference } = await this.initKorapay(user.email, pricing.amountMinor, reference));
-          break;
-        case PaymentGateway.OPAY:
-          ({ checkoutUrl, gatewayReference } = await this.initOpay(user.email, pricing.amountMinor, reference));
           break;
         default:
           throw new BadRequestException(`Gateway ${gateway} is not implemented`);
@@ -472,18 +464,6 @@ export class PaymentsService {
         reconciliation = { amountMinor: this.decimalToMinor(event.data.amount), currency: event.data.currency };
         break;
       }
-      case PaymentGateway.SQUAD: {
-        this.assertSquadSignature(body, headers, rawBody);
-        const event = body as { Event: string; Body: { transaction_ref: string; transaction_status?: string; amount?: number; currency?: string } };
-        eventType = event.Event;
-        eventId = `${gateway}:${event.Event}:${event.Body?.transaction_ref}`;
-        reference = event.Body.transaction_ref;
-        gatewayReference = reference;
-        providerStatus = event.Body.transaction_status ?? event.Event;
-        isSuccess = event.Event === 'charge_successful' && String(event.Body.transaction_status ?? '').toLowerCase() === 'success';
-        reconciliation = { amountMinor: Number(event.Body.amount), currency: event.Body.currency ?? 'NGN' };
-        break;
-      }
       case PaymentGateway.KORAPAY: {
         this.assertKorapaySignature(body, headers, rawBody);
         const event = body as { event: string; data: { reference: string; status: string; amount?: number; currency?: string } };
@@ -494,42 +474,6 @@ export class PaymentsService {
         providerStatus = event.data.status;
         isSuccess = event.event === 'charge.success' && event.data.status === 'success';
         reconciliation = { amountMinor: this.decimalToMinor(event.data.amount), currency: event.data.currency };
-        break;
-      }
-      case PaymentGateway.OPAY: {
-        this.assertOpaySignature(body, headers, rawBody);
-        const event = body as {
-          eventType?: string;
-          type?: string;
-          status?: string;
-          sha512?: string;
-          outOrderNo?: string;
-          orderNo?: string;
-          payload?: {
-            reference?: string;
-            transactionId?: string;
-            token?: string;
-            status?: string;
-            amount?: number | string;
-            currency?: string;
-          };
-          data?: { reference?: string; status?: string; amount?: { total?: number } | number; currency?: string; orderNo?: string };
-        };
-        const payload = event.payload;
-        eventType = event.type ?? event.eventType ?? event.status ?? 'opay.webhook';
-        reference = payload?.reference ?? event.data?.reference ?? event.outOrderNo ?? event.orderNo ?? '';
-        gatewayReference = payload?.transactionId ?? payload?.token ?? event.data?.orderNo ?? event.orderNo ?? reference;
-        eventId = `${gateway}:${eventType}:${gatewayReference || reference}`;
-        providerStatus = payload?.status ?? event.data?.status ?? event.status ?? '';
-        isSuccess = ['successful', 'success'].includes(providerStatus.toLowerCase());
-        reconciliation = {
-          amountMinor: payload?.amount !== undefined
-            ? Number(payload.amount)
-            : typeof event.data?.amount === 'object'
-              ? Number(event.data.amount?.total)
-              : Number(event.data?.amount),
-          currency: payload?.currency ?? event.data?.currency,
-        };
         break;
       }
       default:
@@ -1099,30 +1043,6 @@ export class PaymentsService {
     return { checkoutUrl: res.data.data.link as string, gatewayReference: reference };
   }
 
-  private async initSquad(email: string, amountKobo: number, reference: string) {
-    const secret = this.configService.get('SQUAD_SECRET_KEY');
-    const baseUrl = this.configService.get('SQUAD_BASE_URL');
-    if (!secret || !baseUrl) throw new BadRequestException('Squad is not configured');
-
-    const res = await axios.post(
-      `${baseUrl}/transaction/initiate`,
-      {
-        email,
-        amount: amountKobo,
-        currency: 'NGN',
-        transaction_ref: reference,
-        pass_charge: false,
-        callback_url: `${this.getWebUrl()}/dashboard/payments/success?ref=${reference}`,
-      },
-      { headers: { Authorization: `Bearer ${secret}` } },
-    );
-
-    return {
-      checkoutUrl: res.data.data.checkout_url as string,
-      gatewayReference: res.data.data.transaction_ref as string,
-    };
-  }
-
   private async initKorapay(email: string, amountKobo: number, reference: string) {
     const secret = this.configService.get('KORAPAY_SECRET_KEY');
     if (!secret) throw new BadRequestException('Korapay is not configured');
@@ -1143,54 +1063,6 @@ export class PaymentsService {
     return {
       checkoutUrl: res.data.data.checkout_url as string,
       gatewayReference: res.data.data.reference as string,
-    };
-  }
-
-  private async initOpay(email: string, amountKobo: number, reference: string) {
-    const publicKey = this.configService.get('OPAY_PUBLIC_KEY');
-    const secretKey = resolveConfiguredEnv('OPAY_SECRET_KEY', this.configService);
-    const merchantId = this.configService.get('OPAY_MERCHANT_ID');
-    if (!publicKey || !secretKey || !merchantId) throw new BadRequestException('OPay is not configured');
-
-    const returnUrl = `${this.getWebUrl()}/dashboard/payments/success?ref=${reference}`;
-    const res = await axios.post(
-      `${this.getOpayBaseUrl()}/api/v1/international/cashier/create`,
-      {
-        country: 'NG',
-        reference,
-        amount: {
-          total: amountKobo,
-          currency: 'NGN',
-        },
-        returnUrl,
-        cancelUrl: `${this.getWebUrl()}/dashboard/payments/cancel?ref=${reference}`,
-        callbackUrl: `${this.getApiUrl()}/payments/webhook/opay`,
-        customerVisitSource: 'BROWSER',
-        expireAt: PAYMENT_SESSION_TTL_MINUTES,
-        userInfo: { userEmail: email },
-        product: {
-          name: 'Burner Point',
-          description: 'Burner Point privacy telecom purchase',
-        },
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${publicKey}`,
-          MerchantId: merchantId,
-          'Content-Type': 'application/json',
-        },
-      },
-    );
-
-    const data = res.data?.data ?? {};
-    const checkoutUrl = data.cashierUrl ?? data.webUrl ?? data.url;
-    if (!checkoutUrl) {
-      throw new BadRequestException('OPay did not return a checkout URL');
-    }
-
-    return {
-      checkoutUrl: checkoutUrl as string,
-      gatewayReference: (data.reference ?? data.orderNo ?? reference) as string,
     };
   }
 
@@ -1248,12 +1120,8 @@ export class PaymentsService {
           return await this.verifyPaddlePayment(gatewayReference || session.gatewayReference);
         case PaymentGateway.NOWPAYMENTS:
           return await this.verifyNowPaymentsPayment(gatewayReference || this.asString(gatewayResponse.payment_id));
-        case PaymentGateway.SQUAD:
-          return await this.verifySquadPayment(session.reference);
         case PaymentGateway.KORAPAY:
           return await this.verifyKorapayPayment(session.reference);
-        case PaymentGateway.OPAY:
-          return await this.verifyOpayPayment(session.reference);
         default:
           return { verified: false, reason: `Unsupported payment gateway ${session.gateway}` };
       }
@@ -1348,27 +1216,6 @@ export class PaymentsService {
     };
   }
 
-  private async verifySquadPayment(reference: string): Promise<ProviderVerificationResult> {
-    const secretKey = this.configService.get<string>('SQUAD_SECRET_KEY');
-    const baseUrl = this.configService.get<string>('SQUAD_BASE_URL');
-    if (!secretKey || !baseUrl) return { verified: false, reason: 'Squad verification is not configured' };
-
-    const response = await axios.get(`${baseUrl.replace(/\/+$/, '')}/transaction/verify/${encodeURIComponent(reference)}`, {
-      headers: { Authorization: `Bearer ${secretKey}` },
-    });
-    const data = response.data?.data ?? {};
-    const status = String(data.transaction_status ?? data.status ?? '').toLowerCase();
-    return {
-      verified: status === 'success' || status === 'successful',
-      reason: status === 'success' || status === 'successful' ? undefined : `Squad status ${status || 'unknown'}`,
-      providerResponse: response.data,
-      reconciliation: {
-        amountMinor: Number(data.amount ?? data.merchant_amount),
-        currency: data.currency ?? 'NGN',
-      },
-    };
-  }
-
   private async verifyKorapayPayment(reference: string): Promise<ProviderVerificationResult> {
     const secretKey = this.configService.get<string>('KORAPAY_SECRET_KEY');
     if (!secretKey) return { verified: false, reason: 'KORAPAY_SECRET_KEY is not configured' };
@@ -1385,42 +1232,6 @@ export class PaymentsService {
       reconciliation: {
         amountMinor: this.decimalToMinor(data.amount),
         currency: data.currency,
-      },
-    };
-  }
-
-  private async verifyOpayPayment(reference: string): Promise<ProviderVerificationResult> {
-    const secretKey = resolveConfiguredEnv('OPAY_SECRET_KEY', this.configService);
-    const merchantId = this.configService.get<string>('OPAY_MERCHANT_ID');
-    if (!secretKey || !merchantId) return { verified: false, reason: 'OPay verification is not configured' };
-
-    const payload = { country: 'NG', reference };
-    const serialized = JSON.stringify(payload);
-    const signature = createHmac('sha512', secretKey).update(serialized).digest('hex');
-    const response = await axios.post(
-      `${this.getOpayBaseUrl()}/api/v1/international/cashier/status`,
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${signature}`,
-          MerchantId: merchantId,
-          'Content-Type': 'application/json',
-        },
-      },
-    );
-    const data = response.data?.data ?? {};
-    const status = String(data.status ?? '').toUpperCase();
-    const amount = data.amount as { total?: unknown; currency?: unknown } | undefined;
-
-    return {
-      verified: status === 'SUCCESS' && data.reference === reference,
-      reason: status === 'SUCCESS' ? undefined : `OPay status ${status || 'unknown'}`,
-      providerResponse: response.data,
-      reconciliation: {
-        reference: data.reference,
-        providerStatus: status,
-        amountMinor: Number(amount?.total),
-        currency: this.asString(amount?.currency),
       },
     };
   }
@@ -1538,29 +1349,6 @@ export class PaymentsService {
     throw new BadRequestException('Invalid Flutterwave signature');
   }
 
-  private assertSquadSignature(
-    body: Record<string, unknown>,
-    headers: Record<string, string>,
-    rawBody?: Buffer,
-  ) {
-    const secret = this.configService.get('SQUAD_WEBHOOK_SECRET') || this.configService.get('SQUAD_SECRET_KEY');
-    const received =
-      this.headerValue(headers, 'x-squad-encrypted-body') ||
-      this.headerValue(headers, 'x-squad-signature') ||
-      this.headerValue(headers, 'x-webhook-signature') ||
-      this.headerValue(headers, 'signature');
-    if (!secret || !received) throw new BadRequestException('Invalid Squad signature');
-
-    const payload = rawBody?.toString('utf8') ?? JSON.stringify(body);
-    const expectedHex = createHmac('sha512', secret).update(payload).digest('hex').toUpperCase();
-    const expectedBase64 = createHmac('sha512', secret).update(payload).digest('base64');
-    const verified =
-      this.safeCompare(received.toUpperCase(), expectedHex)
-      || this.safeCompare(received, expectedBase64);
-
-    if (!verified) throw new BadRequestException('Invalid Squad signature');
-  }
-
   private assertKorapaySignature(
     body: Record<string, unknown>,
     headers: Record<string, string>,
@@ -1584,61 +1372,6 @@ export class PaymentsService {
       || this.safeCompare(received, expectedDataBase64);
 
     if (!verified) throw new BadRequestException('Invalid Korapay signature');
-  }
-
-  private assertOpaySignature(
-    body: Record<string, unknown>,
-    headers: Record<string, string>,
-    rawBody?: Buffer,
-  ) {
-    const secret =
-      this.configService.get('OPAY_WEBHOOK_SECRET') ||
-      resolveConfiguredEnv('OPAY_SECRET_KEY', this.configService);
-    if (!secret) throw new BadRequestException('Invalid OPay signature');
-
-    const callbackPayload = body.payload && typeof body.payload === 'object'
-      ? body.payload as Record<string, unknown>
-      : undefined;
-    const callbackSignature = this.asString(body.sha512);
-    if (callbackPayload && callbackSignature) {
-      const refunded = callbackPayload.refunded === true ? 't' : 'f';
-      const signatureFields: Array<[string, string, boolean?]> = [
-        ['Amount', this.asString(callbackPayload.amount)],
-        ['Currency', this.asString(callbackPayload.currency)],
-        ['Reference', this.asString(callbackPayload.reference)],
-        ['Refunded', refunded, true],
-        ['Status', this.asString(callbackPayload.status)],
-        ['Timestamp', this.asString(callbackPayload.timestamp)],
-        ['To' + 'ken', this.asString(callbackPayload.token)],
-        ['TransactionID', this.asString(callbackPayload.transactionId)],
-      ];
-      const signaturePayload = `{${signatureFields
-        .map(([name, value, raw]) => `${name}:${raw ? value : `"${value}"`}`)
-        .join(',')}}`;
-      const expected = createHmac('sha3-512', secret).update(signaturePayload).digest('hex');
-      if (this.safeCompare(callbackSignature.toLowerCase(), expected)) return;
-    }
-
-    const received =
-      this.headerValue(headers, 'signature') ||
-      this.headerValue(headers, 'x-opay-signature') ||
-      this.headerValue(headers, 'x-signature') ||
-      callbackSignature;
-    if (!received) throw new BadRequestException('Invalid OPay signature');
-
-    const payload = rawBody?.toString('utf8') ?? JSON.stringify(body);
-    const timestamp = this.headerValue(headers, 'requesttimestamp') || this.headerValue(headers, 'request-timestamp');
-    const candidates = [
-      payload,
-      timestamp ? `${timestamp}${payload}` : '',
-    ].filter(Boolean);
-    const verified = candidates.some((candidate) => {
-      const expectedHex = createHmac('sha512', secret).update(candidate).digest('hex');
-      const expectedBase64 = createHmac('sha512', secret).update(candidate).digest('base64');
-      return this.safeCompare(received, expectedHex) || this.safeCompare(received, expectedBase64);
-    });
-
-    if (!verified) throw new BadRequestException('Invalid OPay signature');
   }
 
   private isReconciled(session: PaymentSession, reconciliation: ReconciliationCheck): boolean {
@@ -1966,14 +1699,6 @@ export class PaymentsService {
     }
 
     return 'https://burnerpoint.com';
-  }
-
-  private getOpayBaseUrl(): string {
-    const configured = this.configService.get<string>('OPAY_BASE_URL');
-    if (configured) return configured.replace(/\/+$/, '');
-    return this.configService.get<string>('OPAY_SANDBOX') === 'true'
-      ? 'https://testapi.opaycheckout.com'
-      : 'https://liveapi.opaycheckout.com';
   }
 
   private getApiUrl(): string {

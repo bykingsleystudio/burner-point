@@ -19,8 +19,6 @@ const baseOptions = {
   synchronize: false,
   logging: process.env.DB_LOGGING === 'true',
   entities: [path.join(__dirname, '/entities/**/*.{ts,js}')],
-  migrations: [path.join(__dirname, '/migrations/**/*.{ts,js}')],
-  migrationsTableName: 'migrations',
   ssl: requiresSsl
     ? { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true' }
     : false,

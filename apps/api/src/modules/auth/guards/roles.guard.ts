@@ -1,17 +1,20 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserRole } from '../../../database/entities/user.entity';
+import { ROLES_METADATA_KEY } from '../decorators/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>('roles', [
+    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_METADATA_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
-    if (!requiredRoles) return true;
+    if (!requiredRoles?.length) {
+      throw new ForbiddenException('Route role policy is not configured');
+    }
     const { user } = context.switchToHttp().getRequest();
     if (!requiredRoles.includes(user?.role)) {
       throw new ForbiddenException('Insufficient permissions');

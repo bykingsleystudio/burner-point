@@ -87,13 +87,27 @@ class _MessagesClient:
     def __init__(self, client: "BurnerPoint"):
         self._c = client
 
-    def list(self, phone_number_id: str) -> List[Dict]:
-        """List messages for a phone number."""
-        return self._c._request("GET", "/messages", params={"phoneNumberId": phone_number_id})
+    def list(self, phone_number_id: str, page: int = 1, limit: int = 50) -> Dict:
+        """List owned-number messages with pagination and unread state."""
+        return self._c._request("GET", "/messages", params={
+            "phoneNumberId": phone_number_id, "page": page, "limit": limit,
+        })
+
+    def conversation(self, phone_number_id: str, counterpart: str, page: int = 1, limit: int = 50) -> Dict:
+        """Retrieve one owned-number conversation."""
+        return self._c._request(
+            "GET",
+            f"/messages/conversations/{phone_number_id}/{counterpart}",
+            params={"page": page, "limit": limit},
+        )
 
     def send(self, to: str, from_: str, body: str) -> Dict:
         """Send an SMS message."""
         return self._c._request("POST", "/messages", json={"to": to, "from": from_, "body": body})
+
+    def mark_read(self, message_id: str) -> Dict:
+        """Mark one owned inbound message as read."""
+        return self._c._request("PATCH", f"/messages/{message_id}/read")
 
 
 class _PaymentsClient:

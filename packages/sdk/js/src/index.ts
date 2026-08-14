@@ -10,6 +10,12 @@ export interface BurnerPointConfig {
   timeout?: number;
 }
 
+export interface MessagePage<TMessage = Message> {
+  data: TMessage[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+  unreadCount: number;
+}
+
 function normalizeBaseUrl(baseUrl: string): string {
   const normalized = baseUrl.replace(/\/+$/, '');
   return /\/api$/i.test(normalized) ? normalized : `${normalized}/api`;
@@ -82,12 +88,19 @@ export class BurnerPoint {
   /** Messages API */
   messages = {
     /** List messages for a number */
-    list: (phoneNumberId: string) =>
-      this.request<Message[]>('GET', `/messages?phoneNumberId=${phoneNumberId}`),
+    list: (phoneNumberId: string, page = 1, limit = 50) =>
+      this.request<MessagePage>('GET', `/messages?phoneNumberId=${encodeURIComponent(phoneNumberId)}&page=${page}&limit=${limit}`),
+
+    /** Retrieve one conversation for an owned number. */
+    conversation: (phoneNumberId: string, counterpart: string, page = 1, limit = 50) =>
+      this.request<MessagePage>('GET', `/messages/conversations/${encodeURIComponent(phoneNumberId)}/${encodeURIComponent(counterpart)}?page=${page}&limit=${limit}`),
 
     /** Send an SMS */
     send: (to: string, from: string, body: string) =>
       this.request<Message>('POST', '/messages', { to, from, body }),
+
+    /** Mark an inbound message as read. */
+    markRead: (id: string) => this.request<Message>('PATCH', `/messages/${encodeURIComponent(id)}/read`),
   };
 
   /** Payments API */

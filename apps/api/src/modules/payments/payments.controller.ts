@@ -157,17 +157,6 @@ export class PaymentsController {
     return this.service.handleWebhook(PaymentGateway.PAYSTACK, body, headers, req.rawBody);
   }
 
-  @Post('webhook/squad')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Squad by GTCO payment webhook' })
-  webhookSquad(
-    @Body() body: Record<string, unknown>,
-    @Headers() headers: Record<string, string>,
-    @Req() req: RawBodyRequest<Request>,
-  ) {
-    return this.service.handleWebhook(PaymentGateway.SQUAD, body, headers, req.rawBody);
-  }
-
   @Post('webhook/korapay')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Korapay payment webhook' })
@@ -179,14 +168,4 @@ export class PaymentsController {
     return this.service.handleWebhook(PaymentGateway.KORAPAY, body, headers, req.rawBody);
   }
 
-  @Post('webhook/opay')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'OPay payment webhook' })
-  webhookOpay(
-    @Body() body: Record<string, unknown>,
-    @Headers() headers: Record<string, string>,
-    @Req() req: RawBodyRequest<Request>,
-  ) {
-    return this.service.handleWebhook(PaymentGateway.OPAY, body, headers, req.rawBody);
-  }
 }

@@ -15,6 +15,7 @@ const REQUIRED_PRODUCTION_ENV = [
   'CORS_ALLOWED_ORIGINS',
   'INTERNAL_API_KEY',
   'WEBHOOK_SIGNING_SECRET',
+  'REDIS_URL',
   'SUPABASE_STORAGE_USER_UPLOADS_BUCKET',
   'SUPABASE_STORAGE_MEDIA_BUCKET',
   'SUPABASE_STORAGE_VERIFICATION_ASSETS_BUCKET',
@@ -70,7 +71,7 @@ export function validateProductionEnv(env: EnvMap) {
     failures.push(`CORS_ALLOWED_ORIGINS contains non-production origins: ${unexpectedOrigins.join(', ')}`);
   }
 
-  for (const name of ['PADDLE_SANDBOX', 'OPAY_SANDBOX', 'NOWPAYMENTS_SANDBOX', 'SECONDARY_GATEWAYS_SANDBOX']) {
+  for (const name of ['PADDLE_SANDBOX', 'NOWPAYMENTS_SANDBOX', 'SECONDARY_GATEWAYS_SANDBOX']) {
     if ((env[name] || '').trim().toLowerCase() === 'true') {
       failures.push(`${name} must be false or unset in production`);
     }

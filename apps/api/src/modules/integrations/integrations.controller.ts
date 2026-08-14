@@ -151,6 +151,12 @@ export class IntegrationsController {
     return this.integrationsService.requestEsimPlans(req.user.id, dto);
   }
 
+  @Get('esim/orders')
+  @ApiOperation({ summary: 'List the caller’s durable eSIM fulfillment records' })
+  esimOrders(@Req() req: { user: { id: string } }) {
+    return this.integrationsService.listEsimOrders(req.user.id);
+  }
+
   @Post('esim/orders')
   @ApiOperation({ summary: 'Create configured Airalo eSIM order through the backend' })
   esimOrder(@Req() req: { user: { id: string } }, @Body() dto: EsimOrderDto) {
@@ -163,9 +169,21 @@ export class IntegrationsController {
     return this.integrationsService.createProxyOrder(req.user.id, dto);
   }
 
+  @Get('proxies/orders')
+  @ApiOperation({ summary: 'List the caller’s durable proxy fulfillment records' })
+  proxyOrders(@Req() req: { user: { id: string } }) {
+    return this.integrationsService.listProxyOrders(req.user.id);
+  }
+
   @Post('vpn/sessions')
   @ApiOperation({ summary: 'Create configured WireGuard VPN session through the backend' })
   vpnSession(@Req() req: { user: { id: string } }, @Body() dto: VpnSessionDto) {
     return this.integrationsService.createVpnSession(req.user.id, dto);
+  }
+
+  @Get('vpn/sessions')
+  @ApiOperation({ summary: 'List the caller’s durable VPN session records' })
+  vpnSessions(@Req() req: { user: { id: string } }) {
+    return this.integrationsService.listVpnSessions(req.user.id);
   }
 }

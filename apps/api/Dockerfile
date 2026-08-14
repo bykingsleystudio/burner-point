@@ -1,27 +1,31 @@
-FROM node:20-alpine
+FROM node:20-alpine AS dependencies
 
 WORKDIR /app
 
-# Install system dependencies
 RUN apk add --no-cache python3 make g++
 
-# Install dependencies
-COPY package*.json ./
-
+COPY apps/api/package*.json ./
 RUN npm ci
 
-# Copy source code
-COPY . .
+FROM dependencies AS build
 
-# Build the application
+WORKDIR /app
+COPY apps/api/ ./
 RUN npm run build
+RUN npm prune --omit=dev
 
-# Expose port
+FROM node:20-alpine AS runtime
+
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+
 EXPOSE 3001
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
   CMD node -e "const port = process.env.PORT || 3001; require('http').get(`http://127.0.0.1:${port}/health`, (r) => { process.exit(r.statusCode === 200 ? 0 : 1); }).on('error', () => process.exit(1));"
 
-# Start the application
+USER node
 CMD ["node", "dist/main.js"]

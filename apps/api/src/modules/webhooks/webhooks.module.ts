@@ -12,9 +12,11 @@ import { AiModule } from '../ai/ai.module';
 import { PaymentsModule } from '../payments/payments.module';
 import { CreditsModule } from '../credits/credits.module';
 import { CallsModule } from '../calls/calls.module';
+import { MessagesModule } from '../messages/messages.module';
+import { IntegrationsModule } from '../integrations/integrations.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Message, Call, PhoneNumber, WebhookDedup]), GatewayModule, AiModule, PaymentsModule, CreditsModule, CallsModule],
+  imports: [TypeOrmModule.forFeature([Message, Call, PhoneNumber, WebhookDedup]), GatewayModule, AiModule, PaymentsModule, CreditsModule, CallsModule, MessagesModule, IntegrationsModule],
   controllers: [WebhooksController, PaymentWebhookAliasesController],
   providers: [WebhooksService],
 })

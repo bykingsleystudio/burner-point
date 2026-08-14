@@ -14,11 +14,11 @@ export class Message {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ name: 'from_number' })
   @Index()
   from: string;
 
-  @Column()
+  @Column({ name: 'to_number' })
   @Index()
   to: string;
 
@@ -34,13 +34,13 @@ export class Message {
   @Column({ type: 'enum', enum: MessageType, default: MessageType.SMS })
   type: MessageType;
 
-  @Column({ nullable: true })
+  @Column({ name: 'provider_message_id', nullable: true })
   providerMessageSid: string;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ name: 'num_segments', type: 'int', default: 0 })
   numSegments: number;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ name: 'price_usd_cents', type: 'int', default: 0 })
   priceKobo: number;
 
   @Column({ nullable: true })
@@ -65,22 +65,22 @@ export class Message {
   readAt: Date;
 
   @ManyToOne(() => User, (u) => u.messages, { onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'userId' })
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ nullable: true })
+  @Column({ name: 'user_id', nullable: true })
   userId: string;
 
   @ManyToOne(() => PhoneNumber, (pn) => pn.messages, { onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'phoneNumberId' })
+  @JoinColumn({ name: 'phone_number_id' })
   phoneNumber: PhoneNumber;
 
-  @Column({ nullable: true })
+  @Column({ name: 'phone_number_id', nullable: true })
   phoneNumberId: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }

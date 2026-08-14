@@ -3,7 +3,6 @@ export type BackendIntegrationId =
   | 'twilio'
   | 'telnyx'
   | 'bandwidth'
-  | 'tremil'
   | 'openai'
   | 'airalo'
   | 'oxylabs'
@@ -11,9 +10,7 @@ export type BackendIntegrationId =
   | 'wireguard'
   | 'paystack'
   | 'flutterwave'
-  | 'squad'
   | 'korapay'
-  | 'opay'
   | 'paddle'
   | 'nowpayments'
   | 'resend'
@@ -130,19 +127,6 @@ export const BACKEND_INTEGRATION_CONTRACTS: BackendIntegrationContract[] = [
     ],
   },
   {
-    id: 'tremil',
-    name: 'Tremil',
-    category: 'telecom',
-    backendOnly: true,
-    secretEnv: ['TREMIL_API_KEY'],
-    optionalEnv: ['TREMIL_BASE_URL', 'TREMIL_SECRET', 'TREMIL_WEBHOOK_SECRET'],
-    publicClientEnv: [],
-    frontendRule: 'Use Burner Point messaging and verification routes; Tremil remains a server-side economy route.',
-    endpoints: [
-      { method: 'POST', path: '/messaging/sms/send', auth: 'user', purpose: 'Send routed SMS through Tremil when economy routing is selected' },
-    ],
-  },
-  {
     id: 'openai',
     name: 'OpenAI',
     category: 'ai',
@@ -244,21 +228,6 @@ export const BACKEND_INTEGRATION_CONTRACTS: BackendIntegrationContract[] = [
     ],
   },
   {
-    id: 'squad',
-    name: 'Squad by GTCO',
-    category: 'payments',
-    backendOnly: true,
-    secretEnv: ['SQUAD_SECRET_KEY'],
-    optionalEnv: ['SQUAD_BASE_URL', 'SQUAD_WEBHOOK_SECRET', 'SECONDARY_GATEWAYS_ENABLED'],
-    publicClientEnv: [],
-    frontendRule: 'Deferred gateway; enable only after core revenue flow is stable.',
-    endpoints: [
-      { method: 'POST', path: '/payments/initialize', auth: 'user', purpose: 'Create Squad checkout when secondary gateways are enabled' },
-      { method: 'POST', path: '/webhooks/squad', auth: 'provider-signature', purpose: 'Recommended Squad webhook alias for provider dashboards' },
-      { method: 'POST', path: '/payments/webhook/squad', auth: 'provider-signature', purpose: 'Confirm payment and fulfill product' },
-    ],
-  },
-  {
     id: 'korapay',
     name: 'Korapay',
     category: 'payments',
@@ -271,21 +240,6 @@ export const BACKEND_INTEGRATION_CONTRACTS: BackendIntegrationContract[] = [
       { method: 'POST', path: '/payments/initialize', auth: 'user', purpose: 'Create Korapay checkout when secondary gateways are enabled' },
       { method: 'POST', path: '/webhooks/korapay', auth: 'provider-signature', purpose: 'Recommended Korapay webhook alias for provider dashboards' },
       { method: 'POST', path: '/payments/webhook/korapay', auth: 'provider-signature', purpose: 'Confirm payment and fulfill product' },
-    ],
-  },
-  {
-    id: 'opay',
-    name: 'OPay',
-    category: 'payments',
-    backendOnly: true,
-    secretEnv: ['OPAY_MERCHANT_ID', 'OPAY_PRIVATE_KEY'],
-    optionalEnv: ['OPAY_PUBLIC_KEY', 'OPAY_WEBHOOK_SECRET', 'SECONDARY_GATEWAYS_ENABLED'],
-    publicClientEnv: [],
-    frontendRule: 'Deferred gateway; enable only after core revenue flow is stable.',
-    endpoints: [
-      { method: 'POST', path: '/payments/initialize', auth: 'user', purpose: 'Create OPay checkout when secondary gateways are enabled' },
-      { method: 'POST', path: '/webhooks/opay', auth: 'provider-signature', purpose: 'Recommended OPay webhook alias for provider dashboards' },
-      { method: 'POST', path: '/payments/webhook/opay', auth: 'provider-signature', purpose: 'Confirm payment and fulfill product' },
     ],
   },
   {

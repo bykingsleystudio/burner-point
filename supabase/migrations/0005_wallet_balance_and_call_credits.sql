@@ -206,7 +206,25 @@ ALTER TABLE public.credit_packages ADD COLUMN IF NOT EXISTS base_credits BIGINT 
 ALTER TABLE public.credit_packages ADD COLUMN IF NOT EXISTS bonus_credits BIGINT NOT NULL DEFAULT 0;
 ALTER TABLE public.credit_packages ADD COLUMN IF NOT EXISTS total_credits BIGINT NOT NULL DEFAULT 0;
 ALTER TABLE public.credit_packages ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;
-ALTER TABLE public.credit_packages ADD COLUMN IF NOT EXISTS sort_order INT NOT NULL DEFAULT 0;
+ALTER TABLE public.credit_packages
+  ADD COLUMN IF NOT EXISTS sort_order INT NOT NULL DEFAULT 0;
+
+-- Reconcile legacy credit_packages columns from 0001.
+-- The table already exists from 0001, so its NOT NULL legacy
+-- columns must be populated before inserting new package rows.
+UPDATE public.credit_packages
+SET
+  usd_price_cents = COALESCE(usd_price_cents, price_usd_cents, 0),
+  base_credits = COALESCE(base_credits, credits, 0),
+  total_credits = COALESCE(total_credits, base_credits, credits, 0),
+  bonus_credits = COALESCE(bonus_credits, 0),
+  is_active = COALESCE(is_active, TRUE),
+  sort_order = COALESCE(sort_order, 0)
+WHERE usd_price_cents IS NULL
+   OR base_credits IS NULL
+   OR total_credits IS NULL
+   OR is_active IS NULL
+   OR sort_order IS NULL;
 
 DO $$
 BEGIN
@@ -245,8 +263,35 @@ UPDATE public.credit_packages
 SET total_credits = COALESCE(base_credits, 0) + COALESCE(bonus_credits, 0)
 WHERE total_credits = 0;
 
-INSERT INTO public.credit_packages (name, usd_price_cents, base_credits, bonus_credits, total_credits, is_active, sort_order)
-SELECT *
+INSERT INTO public.credit_packages (
+  name,
+  description,
+  credits,
+  price_usd_cents,
+  price_ngn_cents,
+  bonus_percentage,
+  metadata,
+  usd_price_cents,
+  base_credits,
+  bonus_credits,
+  total_credits,
+  is_active,
+  sort_order
+)
+SELECT
+  seed.name,
+  seed.name,
+  seed.total_credits,
+  seed.usd_price_cents,
+  NULL,
+  0,
+  '{}'::jsonb,
+  seed.usd_price_cents,
+  seed.base_credits,
+  seed.bonus_credits,
+  seed.total_credits,
+  seed.is_active,
+  seed.sort_order
 FROM (
   VALUES
     ('Starter Call Credits', 500, 500, 0, 500, TRUE, 1),
@@ -254,7 +299,15 @@ FROM (
     ('Power Call Credits', 2500, 2500, 0, 2500, TRUE, 3),
     ('Business Call Credits', 5000, 5000, 0, 5000, TRUE, 4),
     ('Enterprise Call Credits', 10000, 10000, 0, 10000, TRUE, 5)
-) AS seed(name, usd_price_cents, base_credits, bonus_credits, total_credits, is_active, sort_order)
+) AS seed(
+  name,
+  usd_price_cents,
+  base_credits,
+  bonus_credits,
+  total_credits,
+  is_active,
+  sort_order
+)
 WHERE NOT EXISTS (
   SELECT 1
   FROM public.credit_packages existing

@@ -11,13 +11,16 @@ build/
 
 # Environment files
 .env
+.env.*
+!.env.example
+.env.backup
+.env.supabase-backup
 .env.production
 .env.staging
 .env.development
 .env.test
 .env.local
 .env.*.local
-!.env.example
 
 # Logs
 *.log
@@ -29,6 +32,9 @@ Thumbs.db
 
 # TypeScript
 *.tsbuildinfo
+
+# Database/Schema dumps (local only)
+production-schema.sql
 
 # Expo / React Native
 .expo/

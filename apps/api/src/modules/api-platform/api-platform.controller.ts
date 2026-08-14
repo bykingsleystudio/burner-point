@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Delete, Param, Body, Req, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { ArrayMaxSize, IsArray, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsDateString, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
 import { ApiPlatformService } from './api-platform.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -14,6 +14,10 @@ class CreateApiKeyDto {
   @ArrayMaxSize(12)
   @IsString({ each: true })
   scopes?: string[];
+
+  @IsOptional()
+  @IsDateString()
+  expiresAt?: string;
 }
 
 class CreateDeveloperWebhookDto {
@@ -40,7 +44,7 @@ export class ApiPlatformController {
 
   @Post('keys')
   createKey(@Body() dto: CreateApiKeyDto, @Req() req) {
-    return this.service.createApiKey(req.user.id, dto.name, dto.scopes || ['read']);
+    return this.service.createApiKey(req.user.id, dto.name, dto.scopes || ['read'], dto.expiresAt ? new Date(dto.expiresAt) : null);
   }
 
   @Get('keys')
@@ -51,6 +55,11 @@ export class ApiPlatformController {
     return this.service.revokeApiKey(id, req.user.id);
   }
 
+  @Post('keys/:id/rotate')
+  rotateKey(@Param('id') id: string, @Req() req) {
+    return this.service.rotateApiKey(id, req.user.id);
+  }
+
   @Post('webhooks')
   createWebhook(@Body() dto: CreateDeveloperWebhookDto, @Req() req) {
     return this.service.createWebhook(req.user.id, dto.name, dto.url, dto.events);
@@ -58,6 +67,11 @@ export class ApiPlatformController {
 
   @Get('webhooks')
   listWebhooks(@Req() req) { return this.service.listWebhooks(req.user.id); }
+
+  @Get('webhooks/:id/deliveries')
+  listWebhookDeliveries(@Param('id') id: string, @Req() req) {
+    return this.service.listWebhookDeliveries(req.user.id, id);
+  }
 
   @Delete('webhooks/:id')
   deleteWebhook(@Param('id') id: string, @Req() req) {

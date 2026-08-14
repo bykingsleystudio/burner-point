@@ -26,7 +26,7 @@ export enum TransactionType {
   VPN_PURCHASE = 'vpn_purchase',
 }
 export enum TransactionStatus { PENDING = 'pending', COMPLETED = 'completed', FAILED = 'failed', REVERSED = 'reversed' }
-export enum PaymentGateway { FLUTTERWAVE = 'flutterwave', PAYSTACK = 'paystack', SQUAD = 'squad', KORAPAY = 'korapay', OPAY = 'opay', PADDLE = 'paddle', NOWPAYMENTS = 'nowpayments' }
+export enum PaymentGateway { FLUTTERWAVE = 'flutterwave', PAYSTACK = 'paystack', KORAPAY = 'korapay', PADDLE = 'paddle', NOWPAYMENTS = 'nowpayments' }
 
 @Entity('wallet_transactions')
 export class WalletTransaction {
@@ -324,11 +324,11 @@ export class Call {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ name: 'from_number' })
   @Index()
   from: string;
 
-  @Column()
+  @Column({ name: 'to_number' })
   to: string;
 
   @Column({ type: 'enum', enum: CallDirection })
@@ -343,22 +343,22 @@ export class Call {
   @Column({ name: 'provider_call_id', nullable: true })
   providerCallId: string;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ name: 'duration_seconds', type: 'int', default: 0 })
   durationSeconds: number;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ name: 'billable_seconds', type: 'int', default: 0 })
   billableSeconds: number;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ name: 'credits_locked', type: 'int', default: 0 })
   creditsLocked: number;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ name: 'credits_spent', type: 'int', default: 0 })
   creditsSpent: number;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ name: 'price_usd_cents', type: 'int', default: 0 })
   priceKobo: number;
 
-  @Column({ nullable: true })
+  @Column({ name: 'failure_reason', nullable: true })
   failureReason: string;
 
   @Column({ name: 'destination_country', nullable: true })
@@ -368,19 +368,19 @@ export class Call {
   @Index()
   idempotencyKey: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'recording_url', nullable: true })
   recordingUrl: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'voicemail_url', nullable: true })
   voicemailUrl: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'recording_transcription', nullable: true })
   transcription: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'user_id', nullable: true })
   userId: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'phone_number_id', nullable: true })
   phoneNumberId: string;
 
   @Column({ name: 'started_at', type: 'timestamp', nullable: true })
@@ -395,10 +395,10 @@ export class Call {
   @Column({ type: 'jsonb', default: {} })
   metadata: Record<string, unknown>;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }
 
@@ -580,44 +580,44 @@ export class ApiKey {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ name: 'user_id' })
   userId: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'workspace_id', nullable: true })
   workspaceId: string;
 
   @Column()
   name: string;
 
-  @Column({ unique: true, select: false })
+  @Column({ name: 'key_hash', unique: true, select: false })
   @Index()
   keyHash: string;
 
-  @Column()
+  @Column({ name: 'key_prefix' })
   keyPrefix: string; // First 8 chars for display
 
-  @Column({ type: 'simple-array', default: 'read' })
+  @Column({ type: 'jsonb', default: () => "'[\"read\"]'::jsonb" })
   scopes: string[];
 
-  @Column({ nullable: true, type: 'timestamp' })
+  @Column({ name: 'expires_at', nullable: true, type: 'timestamp' })
   expiresAt: Date;
 
-  @Column({ default: 0 })
+  @Column({ name: 'usage_count', default: 0 })
   usageCount: number;
 
-  @Column({ nullable: true, type: 'timestamp' })
+  @Column({ name: 'last_used_at', nullable: true, type: 'timestamp' })
   lastUsedAt: Date;
 
-  @Column({ default: true })
+  @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
-  @Column({ type: 'jsonb', default: {} })
+  @Column({ name: 'rate_limit', type: 'jsonb', default: {} })
   rateLimit: Record<string, unknown>;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }
 
@@ -626,10 +626,10 @@ export class DeveloperWebhook {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ name: 'user_id' })
   userId: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'workspace_id', nullable: true })
   workspaceId: string;
 
   @Column()
@@ -638,29 +638,404 @@ export class DeveloperWebhook {
   @Column()
   url: string;
 
-  @Column({ type: 'simple-array' })
+  @Column({ type: 'jsonb' })
   events: string[];
 
-  @Column({ nullable: true, select: false })
+  @Column({ name: 'signing_secret', nullable: true, select: false })
   signingSecret: string;
 
-  @Column({ default: true })
+  @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
-  @Column({ default: 0 })
+  @Column({ name: 'delivery_success_count', default: 0 })
   deliverySuccessCount: number;
 
-  @Column({ default: 0 })
+  @Column({ name: 'delivery_failure_count', default: 0 })
   deliveryFailureCount: number;
 
-  @Column({ nullable: true, type: 'timestamp' })
+  @Column({ name: 'last_delivery_at', nullable: true, type: 'timestamp' })
   lastDeliveryAt: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+}
+
+/** Retryable outbound developer webhook delivery record. */
+@Entity('developer_webhook_deliveries')
+export class DeveloperWebhookDelivery {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ name: 'webhook_id' })
+  @Index()
+  webhookId: string;
+
+  @Column({ name: 'event_id' })
+  eventId: string;
+
+  @Column({ name: 'event_type' })
+  @Index()
+  eventType: string;
+
+  @Column({ type: 'jsonb', default: {} })
+  payload: Record<string, unknown>;
+
+  @Column({ name: 'idempotency_key' })
+  @Index()
+  idempotencyKey: string;
+
+  @Column({ name: 'attempt_count', default: 0 })
+  attemptCount: number;
+
+  @Column({ default: 'pending' })
+  @Index()
+  status: string;
+
+  @Column({ name: 'response_status', type: 'int', nullable: true })
+  responseStatus: number;
+
+  @Column({ name: 'response_body', type: 'text', nullable: true })
+  responseBody: string;
+
+  @Column({ name: 'last_error', type: 'text', nullable: true })
+  lastError: string;
+
+  @Column({ name: 'next_attempt_at', type: 'timestamp', nullable: true })
+  nextAttemptAt: Date;
+
+  @Column({ name: 'delivered_at', type: 'timestamp', nullable: true })
+  deliveredAt: Date;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+}
+
+/** Operator-configured service supported by the durable BP Verify Hub. */
+@Entity('verification_services')
+export class VerificationService {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ name: 'service_code', unique: true })
+  @Index()
+  serviceCode: string;
+
+  @Column({ name: 'display_name' })
+  displayName: string;
+
+  @Column({ type: 'text', array: true, default: () => "'{}'::text[]" })
+  countries: string[];
+
+  @Column({ name: 'supported_providers', type: 'text', array: true, default: () => "'{}'::text[]" })
+  supportedProviders: string[];
+
+  @Column({ name: 'base_price_usd_cents', type: 'bigint' })
+  basePriceUsdCents: number;
+
+  @Column({ name: 'margin_usd_cents', type: 'bigint', default: 0 })
+  marginUsdCents: number;
+
+  @Column({ name: 'is_active', default: true })
+  @Index()
+  isActive: boolean;
+
+  @Column({ type: 'jsonb', default: {} })
+  metadata: Record<string, unknown>;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+}
+
+/** User-owned verification lifecycle and wallet-lock association. */
+@Entity('verification_orders')
+export class VerificationOrder {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ name: 'user_id' })
+  @Index()
+  userId: string;
+
+  @Column({ name: 'service_id' })
+  @Index()
+  serviceId: string;
+
+  @Column({ name: 'phone_number_id', nullable: true })
+  @Index()
+  phoneNumberId: string;
+
+  @Column()
+  provider: string;
+
+  @Column({ name: 'provider_order_id', nullable: true })
+  @Index()
+  providerOrderId: string;
+
+  @Column({ name: 'country_code' })
+  countryCode: string;
+
+  @Column({ name: 'phone_number', nullable: true })
+  phoneNumber: string;
+
+  @Column({ name: 'price_usd_cents', type: 'bigint' })
+  priceUsdCents: number;
+
+  @Column({ name: 'wallet_lock_id', nullable: true })
+  walletLockId: string;
+
+  @Column({ default: 'pending' })
+  @Index()
+  status: string;
+
+  @Column({ name: 'otp_code', nullable: true, select: false })
+  otpCode: string;
+
+  @Column({ name: 'failure_reason', nullable: true })
+  failureReason: string;
+
+  @Column({ name: 'idempotency_key', nullable: true })
+  @Index()
+  idempotencyKey: string;
+
+  @Column({ name: 'expires_at', type: 'timestamp', nullable: true })
+  expiresAt: Date;
+
+  @Column({ name: 'cancelled_at', type: 'timestamp', nullable: true })
+  cancelledAt: Date;
+
+  @Column({ name: 'completed_at', type: 'timestamp', nullable: true })
+  completedAt: Date;
+
+  @Column({ name: 'refunded_at', type: 'timestamp', nullable: true })
+  refundedAt: Date;
+
+  @Column({ type: 'jsonb', default: {} })
+  metadata: Record<string, unknown>;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+}
+
+/** Durable eSIM fulfillment record. Activation material is encrypted at rest. */
+@Entity('esim_orders')
+export class EsimOrder {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ name: 'user_id' })
+  @Index()
+  userId: string;
+
+  @Column({ default: 'airalo' })
+  provider: string;
+
+  @Column({ name: 'provider_order_id', nullable: true })
+  @Index()
+  providerOrderId: string;
+
+  @Column({ name: 'plan_id', nullable: true })
+  planId: string;
+
+  @Column({ name: 'plan_name', nullable: true })
+  planName: string;
+
+  @Column({ nullable: true })
+  country: string;
+
+  @Column({ name: 'data_amount_gb', nullable: true })
+  dataAmountGb: number;
+
+  @Column({ name: 'validity_days', nullable: true })
+  validityDays: number;
+
+  @Column({ nullable: true })
+  iccid: string;
+
+  @Column({ name: 'activation_data_encrypted', nullable: true, select: false })
+  activationDataEncrypted: string;
+
+  @Column({ default: 'pending' })
+  @Index()
+  status: string;
+
+  @Column({ name: 'price_usd_cents', type: 'bigint', nullable: true })
+  priceUsdCents: number;
+
+  @Column({ name: 'failure_reason', nullable: true })
+  failureReason: string;
+
+  @Column({ name: 'idempotency_key', nullable: true })
+  @Index()
+  idempotencyKey: string;
+
+  @Column({ type: 'jsonb', default: {} })
+  metadata: Record<string, unknown>;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+
+  @Column({ name: 'activated_at', nullable: true, type: 'timestamp' })
+  activatedAt: Date;
+
+  @Column({ name: 'expires_at', nullable: true, type: 'timestamp' })
+  expiresAt: Date;
+
+  @Column({ name: 'cancelled_at', nullable: true, type: 'timestamp' })
+  cancelledAt: Date;
+
+  @Column({ name: 'refunded_at', nullable: true, type: 'timestamp' })
+  refundedAt: Date;
+}
+
+/** Durable proxy fulfillment record. Provider credentials are encrypted at rest. */
+@Entity('proxy_orders')
+export class ProxyOrder {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ name: 'user_id' })
+  @Index()
+  userId: string;
+
+  @Column()
+  provider: string;
+
+  @Column({ name: 'provider_order_id', nullable: true })
+  @Index()
+  providerOrderId: string;
+
+  @Column({ name: 'plan_type', nullable: true })
+  planType: string;
+
+  @Column({ nullable: true })
+  location: string;
+
+  @Column({ name: 'ip_count', nullable: true })
+  ipCount: number;
+
+  @Column({ name: 'bandwidth_gb', nullable: true })
+  bandwidthGb: number;
+
+  @Column({ name: 'credentials_encrypted', nullable: true, select: false })
+  credentialsEncrypted: string;
+
+  @Column({ default: 'pending' })
+  @Index()
+  status: string;
+
+  @Column({ name: 'price_usd_cents', type: 'bigint', nullable: true })
+  priceUsdCents: number;
+
+  @Column({ name: 'renewal_at', nullable: true, type: 'timestamp' })
+  renewalAt: Date;
+
+  @Column({ name: 'expires_at', nullable: true, type: 'timestamp' })
+  expiresAt: Date;
+
+  @Column({ name: 'cancelled_at', nullable: true, type: 'timestamp' })
+  cancelledAt: Date;
+
+  @Column({ name: 'failure_reason', nullable: true })
+  failureReason: string;
+
+  @Column({ name: 'idempotency_key', nullable: true })
+  @Index()
+  idempotencyKey: string;
+
+  @Column({ type: 'jsonb', default: {} })
+  metadata: Record<string, unknown>;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+
+  @Column({ name: 'activated_at', nullable: true, type: 'timestamp' })
+  activatedAt: Date;
+}
+
+/** Durable WireGuard session. Configuration and private key are encrypted at rest. */
+@Entity('vpn_sessions')
+export class VpnSession {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ name: 'user_id' })
+  @Index()
+  userId: string;
+
+  @Column({ default: 'wireguard' })
+  provider: string;
+
+  @Column({ name: 'provider_session_id', nullable: true })
+  @Index()
+  providerSessionId: string;
+
+  @Column({ name: 'device_name', nullable: true })
+  deviceName: string;
+
+  @Column({ name: 'server_id', nullable: true })
+  serverId: string;
+
+  @Column({ name: 'server_location', nullable: true })
+  serverLocation: string;
+
+  @Column({ name: 'config_encrypted', nullable: true, select: false })
+  configEncrypted: string;
+
+  @Column({ name: 'private_key_encrypted', nullable: true, select: false })
+  privateKeyEncrypted: string;
+
+  @Column({ default: 'pending' })
+  @Index()
+  status: string;
+
+  @Column({ name: 'price_usd_cents', type: 'bigint', nullable: true })
+  priceUsdCents: number;
+
+  @Column({ name: 'failure_reason', nullable: true })
+  failureReason: string;
+
+  @Column({ name: 'idempotency_key', nullable: true })
+  @Index()
+  idempotencyKey: string;
+
+  @Column({ type: 'jsonb', default: {} })
+  metadata: Record<string, unknown>;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+
+  @Column({ name: 'connected_at', nullable: true, type: 'timestamp' })
+  connectedAt: Date;
+
+  @Column({ name: 'disconnected_at', nullable: true, type: 'timestamp' })
+  disconnectedAt: Date;
+
+  @Column({ name: 'expires_at', nullable: true, type: 'timestamp' })
+  expiresAt: Date;
+
+  @Column({ name: 'revoked_at', nullable: true, type: 'timestamp' })
+  revokedAt: Date;
 }
 
 // ─── GROWTH / REFERRAL ──────────────────────────────────────────────────────

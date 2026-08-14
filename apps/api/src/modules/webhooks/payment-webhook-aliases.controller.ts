@@ -40,17 +40,6 @@ export class PaymentWebhookAliasesController {
     return this.paymentsService.handleWebhook(PaymentGateway.FLUTTERWAVE, body, headers, req.rawBody);
   }
 
-  @Post('squad')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Squad payment webhook alias' })
-  squad(
-    @Body() body: Record<string, unknown>,
-    @Headers() headers: Record<string, string>,
-    @Req() req: RawBodyRequest<Request>,
-  ) {
-    return this.paymentsService.handleWebhook(PaymentGateway.SQUAD, body, headers, req.rawBody);
-  }
-
   @Post('korapay')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Korapay payment webhook alias' })
@@ -60,17 +49,6 @@ export class PaymentWebhookAliasesController {
     @Req() req: RawBodyRequest<Request>,
   ) {
     return this.paymentsService.handleWebhook(PaymentGateway.KORAPAY, body, headers, req.rawBody);
-  }
-
-  @Post('opay')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'OPay payment webhook alias' })
-  opay(
-    @Body() body: Record<string, unknown>,
-    @Headers() headers: Record<string, string>,
-    @Req() req: RawBodyRequest<Request>,
-  ) {
-    return this.paymentsService.handleWebhook(PaymentGateway.OPAY, body, headers, req.rawBody);
   }
 
   @Post('paddle')
