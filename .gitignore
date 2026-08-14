@@ -62,3 +62,6 @@ apps/web/playwright-report/
 .env.sentry-build-plugin
 
 .vercel
+
+.vercel
+.env*
