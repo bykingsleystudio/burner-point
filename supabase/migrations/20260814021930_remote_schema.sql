@@ -1,262 +1,73 @@
-drop extension if exists "pg_net";
+-- ================================================================
+-- Legacy remote schema snapshot was intentionally neutralized.
+-- ================================================================
+-- The original generated schema diff contained destructive statements that
+-- dropped the financial ledger tables and related access controls. That was
+-- never part of the canonical Burner Point schema. This migration is kept as a
+-- safety guard: it is intentionally non-destructive and idempotent.
+--
+-- Canonical source of truth:
+--   - supabase/migrations/0005_wallet_balance_and_call_credits.sql
+--   - supabase/migrations/0007_production_schema_reconciliation.sql
+--   - apps/api/src/database/entities/financial-ledger.entity.ts
+--
+-- Safety rule: never drop/revoke/alter the wallet or credit ledger in a
+-- production migration. Only add missing structures, never remove existing data.
+
+DO $$
+BEGIN
+  RAISE NOTICE 'Neutralized legacy remote schema snapshot: destructive wallet/credit ledger operations intentionally omitted.';
+END $$;
+
+CREATE TABLE IF NOT EXISTS public.wallet_locks (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  amount_usd_cents BIGINT NOT NULL,
+  reason TEXT NOT NULL,
+  related_product TEXT,
+  related_entity_id TEXT,
+  expires_at TIMESTAMPTZ,
+  status TEXT NOT NULL DEFAULT 'active',
+  idempotency_key TEXT UNIQUE,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  released_at TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS public.credit_locks (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  credits_amount BIGINT NOT NULL,
+  reason TEXT NOT NULL,
+  related_product TEXT,
+  related_entity_id TEXT,
+  expires_at TIMESTAMPTZ,
+  status TEXT NOT NULL DEFAULT 'active',
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  released_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_wallet_locks_user_id
+  ON public.wallet_locks(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_wallet_locks_status
+  ON public.wallet_locks(status, expires_at);
+CREATE INDEX IF NOT EXISTS idx_wallet_locks_related_product
+  ON public.wallet_locks(related_product, related_entity_id);
+
+CREATE INDEX IF NOT EXISTS idx_credit_locks_user_id
+  ON public.credit_locks(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_credit_locks_status
+  ON public.credit_locks(status, expires_at);
+
+ALTER TABLE public.wallet_locks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.credit_locks ENABLE ROW LEVEL SECURITY;
+
+-- If a partially initialized database is missing the ledger tables, this guard
+-- recreates them without destroying any user data. The canonical billing schema
+-- remains the source of truth and will be reconciled by the earlier additive
+-- migrations in this repository.
 
-drop trigger if exists "set_updated_at_contacts" on "public"."contacts";
-
-drop trigger if exists "set_updated_at_developer_webhook_deliveries" on "public"."developer_webhook_deliveries";
-
-drop trigger if exists "set_updated_at_paddle_events" on "public"."paddle_events";
-
-drop trigger if exists "set_updated_at_payment_transactions" on "public"."payment_transactions";
-
-drop trigger if exists "set_updated_at_rentals" on "public"."rentals";
-
-drop trigger if exists "set_updated_at_verification_orders" on "public"."verification_orders";
-
-drop trigger if exists "set_updated_at_verification_services" on "public"."verification_services";
-
-drop policy "Service role has full access to contacts" on "public"."contacts";
-
-drop policy "Users can view own contacts" on "public"."contacts";
-
-drop policy "Service role has full access to credit accounts" on "public"."credit_accounts";
-
-drop policy "Users can view own credit account" on "public"."credit_accounts";
-
-drop policy "Service role has full access to credit locks" on "public"."credit_locks";
-
-drop policy "Users can view own credit locks" on "public"."credit_locks";
-
-drop policy "Service role has full access to credit transactions" on "public"."credit_transactions";
-
-drop policy "Users can view own credit transactions" on "public"."credit_transactions";
-
-drop policy "Service role has full access to developer webhook deliveries" on "public"."developer_webhook_deliveries";
-
-drop policy "Service role has full access to paddle events" on "public"."paddle_events";
-
-drop policy "Service role has full access to payment transactions" on "public"."payment_transactions";
-
-drop policy "Users can view own payment transactions" on "public"."payment_transactions";
-
-drop policy "Service role has full access to rentals" on "public"."rentals";
-
-drop policy "Users can insert own rentals" on "public"."rentals";
-
-drop policy "Users can update own rentals" on "public"."rentals";
-
-drop policy "Users can view own rentals" on "public"."rentals";
-
-drop policy "Service role has full access to verification orders" on "public"."verification_orders";
-
-drop policy "Users can view own verification orders" on "public"."verification_orders";
-
-drop policy "Anyone can view active verification services" on "public"."verification_services";
-
-drop policy "Service role has full access to verification services" on "public"."verification_services";
-
-drop policy "Service role has full access to wallet locks" on "public"."wallet_locks";
-
-drop policy "Users can view own wallet locks" on "public"."wallet_locks";
-
-revoke references on table "public"."contacts" from "anon";
-
-revoke trigger on table "public"."contacts" from "anon";
-
-revoke truncate on table "public"."contacts" from "anon";
-
-revoke references on table "public"."contacts" from "authenticated";
-
-revoke trigger on table "public"."contacts" from "authenticated";
-
-revoke truncate on table "public"."contacts" from "authenticated";
-
-revoke references on table "public"."contacts" from "service_role";
-
-revoke trigger on table "public"."contacts" from "service_role";
-
-revoke truncate on table "public"."contacts" from "service_role";
-
-revoke references on table "public"."credit_accounts" from "anon";
-
-revoke trigger on table "public"."credit_accounts" from "anon";
-
-revoke truncate on table "public"."credit_accounts" from "anon";
-
-revoke references on table "public"."credit_accounts" from "authenticated";
-
-revoke trigger on table "public"."credit_accounts" from "authenticated";
-
-revoke truncate on table "public"."credit_accounts" from "authenticated";
-
-revoke references on table "public"."credit_accounts" from "service_role";
-
-revoke trigger on table "public"."credit_accounts" from "service_role";
-
-revoke truncate on table "public"."credit_accounts" from "service_role";
-
-revoke references on table "public"."credit_locks" from "anon";
-
-revoke trigger on table "public"."credit_locks" from "anon";
-
-revoke truncate on table "public"."credit_locks" from "anon";
-
-revoke references on table "public"."credit_locks" from "authenticated";
-
-revoke trigger on table "public"."credit_locks" from "authenticated";
-
-revoke truncate on table "public"."credit_locks" from "authenticated";
-
-revoke references on table "public"."credit_locks" from "service_role";
-
-revoke trigger on table "public"."credit_locks" from "service_role";
-
-revoke truncate on table "public"."credit_locks" from "service_role";
-
-revoke references on table "public"."credit_pricing_logs" from "anon";
-
-revoke trigger on table "public"."credit_pricing_logs" from "anon";
-
-revoke truncate on table "public"."credit_pricing_logs" from "anon";
-
-revoke references on table "public"."credit_pricing_logs" from "authenticated";
-
-revoke trigger on table "public"."credit_pricing_logs" from "authenticated";
-
-revoke truncate on table "public"."credit_pricing_logs" from "authenticated";
-
-revoke references on table "public"."credit_pricing_logs" from "service_role";
-
-revoke trigger on table "public"."credit_pricing_logs" from "service_role";
-
-revoke truncate on table "public"."credit_pricing_logs" from "service_role";
-
-revoke references on table "public"."credit_pricing_rules" from "anon";
-
-revoke trigger on table "public"."credit_pricing_rules" from "anon";
-
-revoke truncate on table "public"."credit_pricing_rules" from "anon";
-
-revoke references on table "public"."credit_pricing_rules" from "authenticated";
-
-revoke trigger on table "public"."credit_pricing_rules" from "authenticated";
-
-revoke truncate on table "public"."credit_pricing_rules" from "authenticated";
-
-revoke references on table "public"."credit_pricing_rules" from "service_role";
-
-revoke trigger on table "public"."credit_pricing_rules" from "service_role";
-
-revoke truncate on table "public"."credit_pricing_rules" from "service_role";
-
-revoke references on table "public"."credit_transactions" from "anon";
-
-revoke trigger on table "public"."credit_transactions" from "anon";
-
-revoke truncate on table "public"."credit_transactions" from "anon";
-
-revoke references on table "public"."credit_transactions" from "authenticated";
-
-revoke trigger on table "public"."credit_transactions" from "authenticated";
-
-revoke truncate on table "public"."credit_transactions" from "authenticated";
-
-revoke references on table "public"."credit_transactions" from "service_role";
-
-revoke trigger on table "public"."credit_transactions" from "service_role";
-
-revoke truncate on table "public"."credit_transactions" from "service_role";
-
-revoke references on table "public"."developer_webhook_deliveries" from "anon";
-
-revoke trigger on table "public"."developer_webhook_deliveries" from "anon";
-
-revoke truncate on table "public"."developer_webhook_deliveries" from "anon";
-
-revoke references on table "public"."developer_webhook_deliveries" from "authenticated";
-
-revoke trigger on table "public"."developer_webhook_deliveries" from "authenticated";
-
-revoke truncate on table "public"."developer_webhook_deliveries" from "authenticated";
-
-revoke references on table "public"."developer_webhook_deliveries" from "service_role";
-
-revoke trigger on table "public"."developer_webhook_deliveries" from "service_role";
-
-revoke truncate on table "public"."developer_webhook_deliveries" from "service_role";
-
-revoke references on table "public"."paddle_events" from "anon";
-
-revoke trigger on table "public"."paddle_events" from "anon";
-
-revoke truncate on table "public"."paddle_events" from "anon";
-
-revoke references on table "public"."paddle_events" from "authenticated";
-
-revoke trigger on table "public"."paddle_events" from "authenticated";
-
-revoke truncate on table "public"."paddle_events" from "authenticated";
-
-revoke references on table "public"."paddle_events" from "service_role";
-
-revoke trigger on table "public"."paddle_events" from "service_role";
-
-revoke truncate on table "public"."paddle_events" from "service_role";
-
-revoke references on table "public"."payment_transactions" from "anon";
-
-revoke trigger on table "public"."payment_transactions" from "anon";
-
-revoke truncate on table "public"."payment_transactions" from "anon";
-
-revoke references on table "public"."payment_transactions" from "authenticated";
-
-revoke trigger on table "public"."payment_transactions" from "authenticated";
-
-revoke truncate on table "public"."payment_transactions" from "authenticated";
-
-revoke references on table "public"."payment_transactions" from "service_role";
-
-revoke trigger on table "public"."payment_transactions" from "service_role";
-
-revoke truncate on table "public"."payment_transactions" from "service_role";
-
-revoke references on table "public"."rentals" from "anon";
-
-revoke trigger on table "public"."rentals" from "anon";
-
-revoke truncate on table "public"."rentals" from "anon";
-
-revoke references on table "public"."rentals" from "authenticated";
-
-revoke trigger on table "public"."rentals" from "authenticated";
-
-revoke truncate on table "public"."rentals" from "authenticated";
-
-revoke references on table "public"."rentals" from "service_role";
-
-revoke trigger on table "public"."rentals" from "service_role";
-
-revoke truncate on table "public"."rentals" from "service_role";
-
-revoke references on table "public"."verification_orders" from "anon";
-
-revoke trigger on table "public"."verification_orders" from "anon";
-
-revoke truncate on table "public"."verification_orders" from "anon";
-
-revoke references on table "public"."verification_orders" from "authenticated";
-
-revoke trigger on table "public"."verification_orders" from "authenticated";
-
-revoke truncate on table "public"."verification_orders" from "authenticated";
-
-revoke references on table "public"."verification_orders" from "service_role";
-
-revoke trigger on table "public"."verification_orders" from "service_role";
-
-revoke truncate on table "public"."verification_orders" from "service_role";
-
-revoke references on table "public"."verification_services" from "anon";
 
 revoke trigger on table "public"."verification_services" from "anon";
 
