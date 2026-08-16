@@ -54,7 +54,8 @@ export default function ResetPasswordPage() {
       if (error) throw error;
 
       toast.success('Password updated. Sign in with your new password.');
-      router.push('/sign-in');
+      await supabase.auth.getSession();
+      router.push('/dashboard');
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, 'Unable to reset password.'));
     } finally {

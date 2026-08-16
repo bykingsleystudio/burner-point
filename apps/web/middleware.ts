@@ -9,31 +9,39 @@ export async function middleware(request: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession();
 
-  // Protected routes (require authentication)
+  const pathname = request.nextUrl.pathname;
+
   const protectedRoutes = ['/dashboard', '/settings', '/profile', '/verify-phone', '/onboarding'];
-  const isProtectedRoute = protectedRoutes.some(route => 
-    request.nextUrl.pathname.startsWith(route)
-  );
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
-  // Auth routes (redirect authenticated users to dashboard)
-  // Note: /auth/callback, /auth/verify, etc. should NOT redirect authenticated users
-  // because they handle their own routing based on session state
-  const authRoutes = ['/sign-in', '/sign-up', '/auth/login', '/auth/register', '/forgot-password', '/reset-password'];
-  const isAuthRoute = authRoutes.some(route => 
-    request.nextUrl.pathname.startsWith(route)
-  );
+  const authRoutes = [
+    '/login',
+    '/register',
+    '/sign-in',
+    '/sign-up',
+    '/forgot-password',
+    '/reset-password',
+    '/auth/login',
+    '/auth/register',
+    '/auth/callback',
+    '/auth/update-password',
+    '/update-password',
+  ];
+  const isAuthRoute = authRoutes.some(route => pathname === route || pathname.startsWith(`${route}/`));
+  const isCallbackRoute = pathname === '/auth/callback' || pathname.startsWith('/auth/callback/');
 
-  // If user is not authenticated and trying to access protected route, redirect to sign-in
   if (isProtectedRoute && !session) {
     const loginUrl = new URL('/sign-in', request.url);
     loginUrl.searchParams.set('redirect', request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // If user is authenticated and trying to access auth routes, redirect to dashboard
-  // This prevents them from re-entering the auth flow
-  if (isAuthRoute && session) {
+  if (isAuthRoute && session && !isCallbackRoute) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  if (isCallbackRoute) {
+    return response;
   }
 
   return response;

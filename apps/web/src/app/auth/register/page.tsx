@@ -61,12 +61,12 @@ export default function RegisterPage() {
       toast.error('Enter your email address.');
       return;
     }
-    if (!phoneNumber) {
-      toast.error('Enter your phone number.');
+    if (formData.phone && !isValidInternationalPhone(formData.phone)) {
+      toast.error(INTERNATIONAL_PHONE_ERROR);
       return;
     }
-    if (!isValidInternationalPhone(formData.phone)) {
-      toast.error(INTERNATIONAL_PHONE_ERROR);
+    if (!phoneNumber && !email) {
+      toast.error('Enter either a valid email or phone number.');
       return;
     }
     if (formData.password.length < 8) {
