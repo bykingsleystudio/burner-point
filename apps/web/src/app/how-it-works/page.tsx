@@ -15,7 +15,7 @@ const page: MarketingPageContent = {
     {
       meta: '01',
       title: 'Create your account',
-      text: 'Sign up with your name, email, phone number, and password, or continue with Google, Apple, or Microsoft.',
+      text: 'Sign up with your name, email, phone number, and password, or continue with Google to get into your account faster.',
       items: ['Sign in with email, phone, or a trusted sign-in provider', 'Your account opens directly into onboarding or the dashboard'],
     },
     {

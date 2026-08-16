@@ -14,11 +14,12 @@ export async function GET(request: Request) {
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    
+
     if (error) {
       return NextResponse.redirect(`${origin}/sign-in?error=${encodeURIComponent(error.message)}`);
     }
   }
 
-  return NextResponse.redirect(`${origin}${nextPath}`);
+  const cleanUrl = new URL(`${origin}${nextPath}`);
+  return NextResponse.redirect(cleanUrl.toString());
 }

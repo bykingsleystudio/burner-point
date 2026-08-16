@@ -16,13 +16,7 @@ import {
 } from '@/lib/phone';
 import { supabase } from '@/lib/supabase';
 
-const oauthProviders: Array<{ label: 'Google' | 'Apple' | 'Microsoft'; provider: 'google' | 'apple' | 'microsoft' }> = [
-  { label: 'Google', provider: 'google' },
-  { label: 'Apple', provider: 'apple' },
-  { label: 'Microsoft', provider: 'microsoft' },
-];
-
-const productChips = ['BP Messenger', 'Secure Tunnel', 'Wallet Funding'];
+const productChips = ['Private access', 'Secure account'];
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -127,11 +121,10 @@ export default function RegisterPage() {
     }
   };
 
-  const handleOAuthRegister = async (provider: 'google' | 'apple' | 'microsoft') => {
+  const handleOAuthRegister = async () => {
     try {
-      const oauthProvider = provider === 'microsoft' ? 'azure' : provider;
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: oauthProvider,
+        provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirectTo)}`,
         },
@@ -148,21 +141,15 @@ export default function RegisterPage() {
 
   return (
     <SignInPage
-      title="Create your Burner Point account"
-      description="Start with one secure account for Burner Point messaging, connectivity, wallet, and identity products."
+      title="Create your account"
+      description="Access Burner Point with one account."
       chips={productChips}
       socialAuth={
-        <div className="grid gap-3 sm:grid-cols-2">
-          {oauthProviders.map((provider, index) => (
-            <AuthProviderButton
-              key={provider.label}
-              provider={provider.label}
-              onClick={() => handleOAuthRegister(provider.provider)}
-              disabled={loading}
-              className={index === oauthProviders.length - 1 ? 'sm:col-span-2' : undefined}
-            />
-          ))}
-        </div>
+        <AuthProviderButton
+          provider="Google"
+          onClick={handleOAuthRegister}
+          disabled={loading}
+        />
       }
       footerContent={
         <div className="flex flex-col gap-3">

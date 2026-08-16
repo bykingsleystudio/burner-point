@@ -9,6 +9,7 @@ import {
   siteName,
   siteUrl,
 } from '@/lib/seo';
+import { AuthSessionRouter } from '@/components/auth-session-router';
 import { PostHogProvider } from '@/components/posthog-provider';
 import './globals.css';
 
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body className="min-h-screen bg-brand-black font-sans antialiased text-white">
         <PostHogProvider>
+          <AuthSessionRouter />
           <script
             type="application/ld+json"
             suppressHydrationWarning

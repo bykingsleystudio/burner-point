@@ -17,16 +17,7 @@ import {
   normalizeAuthIdentifier,
 } from '@/lib/phone';
 
-type OAuthProvider = 'google' | 'apple' | 'microsoft';
-type OAuthProviderLabel = 'Google' | 'Apple' | 'Microsoft';
-
-const oauthProviders: Array<{ label: OAuthProviderLabel; provider: OAuthProvider }> = [
-  { label: 'Google', provider: 'google' },
-  { label: 'Apple', provider: 'apple' },
-  { label: 'Microsoft', provider: 'microsoft' },
-];
-
-const productChips = ['BP Messenger', 'Secure Tunnel', 'Wallet Access'];
+const productChips = ['Private access', 'Secure account'];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -83,11 +74,10 @@ export default function LoginPage() {
     }
   };
 
-  const startOAuth = async (provider: OAuthProvider) => {
+  const startOAuth = async () => {
     try {
-      const oauthProvider = provider === 'microsoft' ? 'azure' : provider;
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: oauthProvider,
+        provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirectTo)}`,
         },
@@ -104,21 +94,15 @@ export default function LoginPage() {
 
   return (
     <SignInPage
-      title="Sign in to Burner Point"
-      description="Use the email address or international phone number linked to your Burner Point account."
+      title="Welcome back"
+      description="Sign in to continue."
       chips={productChips}
       socialAuth={
-        <div className="grid gap-3 sm:grid-cols-2">
-          {oauthProviders.map((provider, index) => (
-            <AuthProviderButton
-              key={provider.label}
-              provider={provider.label}
-              onClick={() => startOAuth(provider.provider)}
-              disabled={loading}
-              className={index === oauthProviders.length - 1 ? 'sm:col-span-2' : undefined}
-            />
-          ))}
-        </div>
+        <AuthProviderButton
+          provider="Google"
+          onClick={startOAuth}
+          disabled={loading}
+        />
       }
       footerContent={
         <div className="flex flex-col gap-3">

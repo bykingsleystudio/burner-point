@@ -3,7 +3,7 @@
 import { Phone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type ProviderName = 'Google' | 'Apple' | 'Microsoft' | 'Phone';
+type ProviderName = 'Google' | 'Phone';
 
 export function AuthProviderButton({
   provider,
@@ -40,7 +40,7 @@ export function AuthProviderButton({
 function ProviderLogo({ provider }: { provider: ProviderName }) {
   return (
     <span className="flex h-6 w-6 items-center justify-center">
-      {provider === 'Google' ? <GoogleLogo /> : provider === 'Apple' ? <AppleLogo /> : provider === 'Microsoft' ? <MicrosoftLogo /> : <Phone className="h-[18px] w-[18px] text-brand-green" />}
+      {provider === 'Google' ? <GoogleLogo /> : <Phone className="h-[18px] w-[18px] text-brand-green" />}
     </span>
   );
 }
@@ -56,21 +56,3 @@ function GoogleLogo() {
   );
 }
 
-function AppleLogo() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[18px] w-[18px] fill-white">
-      <path d="M16.365 12.79c.024 2.506 2.202 3.34 2.226 3.35-.018.06-.347 1.19-1.142 2.357-.686 1.01-1.398 2.014-2.52 2.035-1.102.02-1.456-.654-2.719-.654-1.262 0-1.656.633-2.698.674-1.083.041-1.909-1.086-2.6-2.092-1.41-2.04-2.486-5.764-1.04-8.275.718-1.247 2.002-2.036 3.395-2.056 1.062-.02 2.066.715 2.719.715.653 0 1.879-.885 3.165-.755.539.022 2.055.218 3.028 1.643-.078.048-1.81 1.054-1.794 3.058Zm-2.013-8.607c.574-.696.963-1.666.857-2.63-.827.034-1.827.55-2.42 1.246-.532.613-1 1.594-.874 2.533.922.072 1.863-.468 2.437-1.149Z" />
-    </svg>
-  );
-}
-
-function MicrosoftLogo() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[18px] w-[18px]">
-      <path fill="#F25022" d="M3 3h8.5v8.5H3z" />
-      <path fill="#7FBA00" d="M12.5 3H21v8.5h-8.5z" />
-      <path fill="#00A4EF" d="M3 12.5h8.5V21H3z" />
-      <path fill="#FFB900" d="M12.5 12.5H21V21h-8.5z" />
-    </svg>
-  );
-}

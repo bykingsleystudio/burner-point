@@ -42,7 +42,7 @@ export const SignInPage = ({
   footerContent,
   socialAuth,
   chips,
-  dividerLabel = 'OR CONTINUE WITH EMAIL AND PHONE NUMBER',
+  dividerLabel = 'or',
   asideTitle,
   asideDescription,
   helperContent,
@@ -57,7 +57,7 @@ export const SignInPage = ({
     >
       <div className="flex flex-col gap-5">
         {chips?.length ? (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
             {chips.map((chip) => (
               <span key={chip} className="bp-auth-chip">
                 {chip}

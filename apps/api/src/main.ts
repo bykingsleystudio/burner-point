@@ -216,8 +216,11 @@ async function bootstrap() {
     });
   });
 
-  const port = parseInt(process.env.PORT ?? process.env.APP_PORT ?? '3001', 10);
-  await app.listen(port, '0.0.0.0');
+  const port = Number(process.env.PORT ?? process.env.APP_PORT ?? 3001);
+  const host = '0.0.0.0';
+
+  await app.listen(port, host);
+  logger.log(`🚀 BurnerPoint API listening on http://${host}:${port} [${process.env.NODE_ENV ?? 'development'}]`);
   logger.log(`🔥 BurnerPoint API running on port ${port} [${process.env.NODE_ENV}]`);
 }
 
