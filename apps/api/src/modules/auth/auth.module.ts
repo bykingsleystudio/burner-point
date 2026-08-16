@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -10,6 +10,7 @@ import { User } from '../../database/entities/user.entity';
 import { RedisService } from '../global/redis.service';
 import { resolveJwtAccessSecret } from '../../config/runtime-env';
 
+@Global()
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
