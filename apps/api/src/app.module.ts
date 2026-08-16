@@ -71,7 +71,10 @@ import { SecurityMiddleware } from './middleware/security.middleware';
 
         const base = {
           type: 'postgres' as const,
-          synchronize: cfg.get<string>('DB_SYNCHRONIZE') === 'true',
+          // Supabase owns the canonical schema. TypeORM is an access layer only.
+          // Never auto-create/alter production tables.
+          synchronize: false,
+          migrationsRun: false,
           logging: cfg.get<string>('DB_LOGGING') === 'true',
           autoLoadEntities: true,
           retryAttempts: 20,
