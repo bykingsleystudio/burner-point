@@ -9,6 +9,11 @@ export enum ProviderName {
   TWILIO = 'twilio',
   TELNYX = 'telnyx',
   BANDWIDTH = 'bandwidth',
+  JUICYSMS = 'juicysms',
+  TEXTVERIFIED = 'textverified',
+  SMSPOOL = 'smspool',
+  TIGERSMS = 'tigersms',
+  QUACKR = 'quackr',
 }
 
 export enum RouteProduct {
@@ -443,6 +448,58 @@ export class ProviderService {
           notes: 'Bandwidth pricing varies by North America inventory, messaging volume, and voice route.',
         }),
       },
+      [ProviderName.JUICYSMS]: {
+        provider: ProviderName.JUICYSMS,
+        sendSMS: async () => { throw new Error('JuicySMS outbound messaging is not active in this release'); },
+        buyNumber: async () => { throw new Error('JuicySMS number purchase must use the verified-order API contract'); },
+        releaseNumber: async () => undefined,
+        receiveWebhook: async () => ({ success: true }),
+        startCall: async () => { throw new Error('JuicySMS voice is not active in this release'); },
+        endCall: async () => undefined,
+        lookupAvailability: async ({ countryCode }) => {
+          const services = await this.fetchJuicySmsServices(countryCode);
+          return services.map((service) => ({
+            number: '',
+            friendlyName: service.name,
+            countryCode: this.normalizeCountry(countryCode),
+            provider: ProviderName.JUICYSMS,
+            capabilities: { sms: true, voice: false, mms: false },
+          }));
+        },
+        getPricing: async (countryCode, product) => ({
+          provider: ProviderName.JUICYSMS,
+          product,
+          countryCode: this.normalizeCountry(countryCode),
+          currency: 'USD',
+          notes: 'JuicySMS pricing is quoted by service and country in EUR; the provider contract uses service-level pricing instead of a fixed numeric route rate.',
+        }),
+      },
+      [ProviderName.TEXTVERIFIED]: {
+        provider: ProviderName.TEXTVERIFIED,
+        sendSMS: async () => { throw new Error('TextVerified outbound messaging is not active in this release'); },
+        buyNumber: async () => { throw new Error('TextVerified number purchase must use the verification API contract'); },
+        releaseNumber: async () => undefined,
+        receiveWebhook: async () => ({ success: true }),
+        startCall: async () => { throw new Error('TextVerified voice is not active in this release'); },
+        endCall: async () => undefined,
+        lookupAvailability: async ({ countryCode }) => {
+          const services = await this.fetchTextVerifiedServices(countryCode);
+          return services.map((service) => ({
+            number: '',
+            friendlyName: service.name,
+            countryCode: this.normalizeCountry(countryCode),
+            provider: ProviderName.TEXTVERIFIED,
+            capabilities: { sms: true, voice: false, mms: false },
+          }));
+        },
+        getPricing: async (countryCode, product) => ({
+          provider: ProviderName.TEXTVERIFIED,
+          product,
+          countryCode: this.normalizeCountry(countryCode),
+          currency: 'USD',
+          notes: 'TextVerified pricing is service-specific and inflation-sensitive; maintain live provider reflectors and service caches instead of hard-coding rates.',
+        }),
+      },
     };
   }
 
@@ -464,19 +521,23 @@ export class ProviderService {
   private getVerificationProviderChain(countryCode: string, serviceCode?: string): ProviderName[] {
     const service = (serviceCode ?? '').toLowerCase();
     if (['US', 'CA', 'GB'].includes(countryCode)) {
-      return [ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH];
+      return [ProviderName.JUICYSMS, ProviderName.TEXTVERIFIED, ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH];
     }
     if (['DE', 'FR', 'ES', 'IT', 'NL', 'SE', 'NO', 'FI'].includes(countryCode)) {
-      return [ProviderName.TELNYX, ProviderName.TWILIO, ProviderName.BANDWIDTH];
+      return [ProviderName.JUICYSMS, ProviderName.TEXTVERIFIED, ProviderName.TELNYX, ProviderName.TWILIO, ProviderName.BANDWIDTH];
     }
     if (service.includes('high-risk')) {
-      return [ProviderName.TELNYX, ProviderName.TWILIO, ProviderName.BANDWIDTH];
+      return [ProviderName.TEXTVERIFIED, ProviderName.JUICYSMS, ProviderName.TELNYX, ProviderName.TWILIO, ProviderName.BANDWIDTH];
     }
-    return [ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH];
+    return [ProviderName.JUICYSMS, ProviderName.TEXTVERIFIED, ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH];
   }
 
   private getVerificationRouteLabel(provider: ProviderName): string {
     switch (provider) {
+      case ProviderName.JUICYSMS:
+        return 'BP JuicySMS Verify';
+      case ProviderName.TEXTVERIFIED:
+        return 'BP TextVerified Verify';
       case ProviderName.TWILIO:
         return 'BP Core Verify';
       case ProviderName.TELNYX:
@@ -485,6 +546,52 @@ export class ProviderService {
         return 'BP Carrier Route';
       default:
         return 'BP Deferred Route';
+    }
+  }
+
+  private async fetchJuicySmsServices(countryCode: string): Promise<Array<{ name: string; countryCode: string }>> {
+    const apiKey = this.configService.get<string>('JUICYSMS_API_KEY');
+    if (!apiKey) return [];
+
+    try {
+      const response = await axios.get('https://juicysms.com/api/v2/services', {
+        headers: { Authorization: `Bearer ${apiKey}` },
+        params: countryCode ? { country: countryCode } : undefined,
+      });
+
+      const list = Array.isArray(response.data?.data) ? response.data.data : [];
+      return list.map((service: Record<string, unknown>) => ({
+        name: String(service.name ?? 'JuicySMS service'),
+        countryCode: this.normalizeCountry(String(service.country ?? countryCode ?? 'global')),
+      }));
+    } catch (error) {
+      this.logger.warn(`JuicySMS service catalog lookup failed for ${countryCode}: ${this.describeError(error)}`);
+      return [];
+    }
+  }
+
+  private async fetchTextVerifiedServices(countryCode: string): Promise<Array<{ name: string; countryCode: string }>> {
+    const username = this.configService.get<string>('TEXTVERIFIED_API_USERNAME');
+    const apiKey = this.configService.get<string>('TEXTVERIFIED_API_KEY');
+    if (!username || !apiKey) return [];
+
+    try {
+      const response = await axios.get(`${this.configService.get<string>('TEXTVERIFIED_BASE_URL') ?? 'https://www.textverified.com/api/pub/v2'}/services`, {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'X-Textverified-Username': username,
+        },
+        params: countryCode ? { country: countryCode } : undefined,
+      });
+
+      const list = Array.isArray(response.data?.data) ? response.data.data : [];
+      return list.map((service: Record<string, unknown>) => ({
+        name: String(service.name ?? service.serviceName ?? 'TextVerified service'),
+        countryCode: this.normalizeCountry(String(service.country ?? countryCode ?? 'global')),
+      }));
+    } catch (error) {
+      this.logger.warn(`TextVerified service catalog lookup failed for ${countryCode}: ${this.describeError(error)}`);
+      return [];
     }
   }
 
@@ -877,6 +984,16 @@ export class ProviderService {
           this.configService.get('BANDWIDTH_USERNAME') &&
           this.configService.get('BANDWIDTH_PASSWORD'),
         );
+      case ProviderName.JUICYSMS:
+        return Boolean(this.configService.get('JUICYSMS_API_KEY'));
+      case ProviderName.TEXTVERIFIED:
+        return Boolean(
+          this.configService.get('TEXTVERIFIED_API_USERNAME') &&
+          this.configService.get('TEXTVERIFIED_API_KEY'),
+        );
+      case ProviderName.SMSPOOL:
+      case ProviderName.TIGERSMS:
+      case ProviderName.QUACKR:
       default:
         return false;
     }

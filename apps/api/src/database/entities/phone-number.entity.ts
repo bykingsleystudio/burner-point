@@ -11,6 +11,11 @@ export enum NumberProvider {
   TWILIO = 'twilio',
   TELNYX = 'telnyx',
   BANDWIDTH = 'bandwidth',
+  JUICYSMS = 'juicysms',
+  TEXTVERIFIED = 'textverified',
+  SMSPOOL = 'smspool',
+  TIGERSMS = 'tigersms',
+  QUACKR = 'quackr',
 }
 
 @Entity('phone_numbers')
