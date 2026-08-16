@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff, Zap } from 'lucide-react';
@@ -9,7 +9,8 @@ import { AuthProviderButton } from '@/components/auth-provider-button';
 import Button from '@/components/ui/button';
 import { GlassInputWrapper, SignInPage } from '@/components/ui/sign-in';
 import { supabase } from '@/lib/supabase';
-import { buildPostAuthRedirect, exchangeSupabaseSession, getErrorMessage, sanitizeRedirect } from '@/lib/auth';
+import { getErrorMessage, sanitizeRedirect } from '@/lib/auth';
+import { useManualAuthCompletion } from '@/lib/auth-session-sync';
 import {
   INTERNATIONAL_PHONE_ERROR,
   classifyAuthIdentifier,
@@ -20,9 +21,9 @@ import {
 const productChips = ['Private access', 'Secure account'];
 
 export default function LoginPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = useMemo(() => sanitizeRedirect(searchParams.get('redirect')), [searchParams]);
+  const completeAuth = useManualAuthCompletion();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -57,9 +58,11 @@ export default function LoginPage() {
         throw error ?? new Error('Unable to sign in.');
       }
 
-      const result = await exchangeSupabaseSession(data.session);
+      // Use centralized auth sync instead of direct redirect
+      await completeAuth(data.session, {
+        redirectTo: redirectTo || '/dashboard',
+      });
       toast.success('Welcome back.');
-      router.push(buildPostAuthRedirect(result, redirectTo));
     } catch (error: unknown) {
       const message = getErrorMessage(error, 'Something went wrong. Please sign in again.');
       if (/password|identifier|not found|invalid|incorrect|credentials/i.test(message)) {
@@ -79,7 +82,7 @@ export default function LoginPage() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirectTo)}`,
+          redirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirectTo || '/dashboard')}`,
         },
       });
 

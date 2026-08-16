@@ -1,14 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff, Zap } from 'lucide-react';
 import { AuthProviderButton } from '@/components/auth-provider-button';
 import Button from '@/components/ui/button';
 import { GlassInputWrapper, SignInPage } from '@/components/ui/sign-in';
-import { buildPostAuthRedirect, exchangeSupabaseSession, getErrorMessage, sanitizeRedirect } from '@/lib/auth';
+import { getErrorMessage, sanitizeRedirect } from '@/lib/auth';
+import { useManualAuthCompletion } from '@/lib/auth-session-sync';
 import {
   INTERNATIONAL_PHONE_ERROR,
   isValidInternationalPhone,
@@ -19,9 +20,9 @@ import { supabase } from '@/lib/supabase';
 const productChips = ['Private access', 'Secure account'];
 
 export default function RegisterPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = useMemo(() => sanitizeRedirect(searchParams.get('redirect')), [searchParams]);
+  const completeAuth = useManualAuthCompletion();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -99,21 +100,24 @@ export default function RegisterPage() {
       if (error) throw error;
 
       if (data.session) {
-        const result = await exchangeSupabaseSession(data.session, {
-          firstName,
-          lastName,
-          email,
-          phoneNumber,
-          acceptTerms: true,
-          acceptPrivacy: true,
+        // Use centralized auth sync instead of direct redirect
+        await completeAuth(data.session, {
+          redirectTo: redirectTo || '/dashboard',
+          profileData: {
+            firstName,
+            lastName,
+            email,
+            phoneNumber,
+            acceptTerms: true,
+            acceptPrivacy: true,
+          },
         });
         toast.success('Account created.');
-        router.push(buildPostAuthRedirect(result, redirectTo));
         return;
       }
 
       toast.success('Account created. Check your email to verify your account, then sign in.');
-      router.push(`/sign-in?redirect=${encodeURIComponent(redirectTo)}`);
+      window.location.href = `/sign-in?redirect=${encodeURIComponent(redirectTo)}`;
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, 'Failed to create account.'));
     } finally {
