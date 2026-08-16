@@ -10,7 +10,7 @@
     "start:prod": "node dist/main",
     "dev": "nest start --watch",
     "lint": "eslint src",
-    "test": "jest"
+    "test": "node --test --experimental-strip-types test/**/*.test.cjs"
   },
   "dependencies": {
     "@nestjs/cli": "^10.4.5",

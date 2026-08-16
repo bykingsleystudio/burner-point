@@ -4,6 +4,10 @@ import axios from 'axios';
 import Twilio = require('twilio');
 import { RedisService } from './redis.service';
 import { resolveApiUrl } from '../../config/runtime-env';
+import { JuicySmsAdapter } from '../providers/juicysms.adapter';
+import { TextVerifiedAdapter } from '../providers/textverified.adapter';
+import { SMSPoolAdapter } from '../providers/smspool.adapter';
+import { QuackrAdapter } from '../providers/quackr.adapter';
 
 export enum ProviderName {
   TWILIO = 'twilio',
@@ -448,58 +452,10 @@ export class ProviderService {
           notes: 'Bandwidth pricing varies by North America inventory, messaging volume, and voice route.',
         }),
       },
-      [ProviderName.JUICYSMS]: {
-        provider: ProviderName.JUICYSMS,
-        sendSMS: async () => { throw new Error('JuicySMS outbound messaging is not active in this release'); },
-        buyNumber: async () => { throw new Error('JuicySMS number purchase must use the verified-order API contract'); },
-        releaseNumber: async () => undefined,
-        receiveWebhook: async () => ({ success: true }),
-        startCall: async () => { throw new Error('JuicySMS voice is not active in this release'); },
-        endCall: async () => undefined,
-        lookupAvailability: async ({ countryCode }) => {
-          const services = await this.fetchJuicySmsServices(countryCode);
-          return services.map((service) => ({
-            number: '',
-            friendlyName: service.name,
-            countryCode: this.normalizeCountry(countryCode),
-            provider: ProviderName.JUICYSMS,
-            capabilities: { sms: true, voice: false, mms: false },
-          }));
-        },
-        getPricing: async (countryCode, product) => ({
-          provider: ProviderName.JUICYSMS,
-          product,
-          countryCode: this.normalizeCountry(countryCode),
-          currency: 'USD',
-          notes: 'JuicySMS pricing is quoted by service and country in EUR; the provider contract uses service-level pricing instead of a fixed numeric route rate.',
-        }),
-      },
-      [ProviderName.TEXTVERIFIED]: {
-        provider: ProviderName.TEXTVERIFIED,
-        sendSMS: async () => { throw new Error('TextVerified outbound messaging is not active in this release'); },
-        buyNumber: async () => { throw new Error('TextVerified number purchase must use the verification API contract'); },
-        releaseNumber: async () => undefined,
-        receiveWebhook: async () => ({ success: true }),
-        startCall: async () => { throw new Error('TextVerified voice is not active in this release'); },
-        endCall: async () => undefined,
-        lookupAvailability: async ({ countryCode }) => {
-          const services = await this.fetchTextVerifiedServices(countryCode);
-          return services.map((service) => ({
-            number: '',
-            friendlyName: service.name,
-            countryCode: this.normalizeCountry(countryCode),
-            provider: ProviderName.TEXTVERIFIED,
-            capabilities: { sms: true, voice: false, mms: false },
-          }));
-        },
-        getPricing: async (countryCode, product) => ({
-          provider: ProviderName.TEXTVERIFIED,
-          product,
-          countryCode: this.normalizeCountry(countryCode),
-          currency: 'USD',
-          notes: 'TextVerified pricing is service-specific and inflation-sensitive; maintain live provider reflectors and service caches instead of hard-coding rates.',
-        }),
-      },
+      [ProviderName.JUICYSMS]: new JuicySmsAdapter(this.configService),
+      [ProviderName.TEXTVERIFIED]: new TextVerifiedAdapter(this.configService),
+      [ProviderName.SMSPOOL]: new SMSPoolAdapter(this.configService),
+      [ProviderName.QUACKR]: new QuackrAdapter(this.configService),
     };
   }
 
@@ -519,17 +475,77 @@ export class ProviderService {
   }
 
   private getVerificationProviderChain(countryCode: string, serviceCode?: string): ProviderName[] {
-    const service = (serviceCode ?? '').toLowerCase();
-    if (['US', 'CA', 'GB'].includes(countryCode)) {
-      return [ProviderName.JUICYSMS, ProviderName.TEXTVERIFIED, ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH];
+    const verifyHubEnabled = this.configService.get<string>('VERIFY_HUB_ENABLED')?.toLowerCase() === 'true';
+    const verifyHubProviders = this.configService.get<string>('VERIFY_HUB_PROVIDERS')?.split(',').map((p) => p.trim()) || [];
+    const verifyHubPriority = this.configService.get<string>('VERIFY_HUB_PROVIDER_PRIORITY')?.split(',').map((p) => p.trim()) || [];
+
+    // If feature gate is off, fall back to legacy providers only
+    if (!verifyHubEnabled) {
+      if (['US', 'CA', 'GB'].includes(countryCode)) {
+        return [ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH];
+      }
+      if (['DE', 'FR', 'ES', 'IT', 'NL', 'SE', 'NO', 'FI'].includes(countryCode)) {
+        return [ProviderName.TELNYX, ProviderName.TWILIO, ProviderName.BANDWIDTH];
+      }
+      return [ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH];
     }
-    if (['DE', 'FR', 'ES', 'IT', 'NL', 'SE', 'NO', 'FI'].includes(countryCode)) {
-      return [ProviderName.JUICYSMS, ProviderName.TEXTVERIFIED, ProviderName.TELNYX, ProviderName.TWILIO, ProviderName.BANDWIDTH];
+
+    // Build provider chain respecting priority and feature gates
+    let chain: ProviderName[] = [];
+
+    // If explicit priority is configured, use it for configured providers
+    if (verifyHubPriority.length > 0) {
+      chain = verifyHubPriority
+        .map((name) => {
+          const upper = name.toUpperCase();
+          return Object.values(ProviderName).find((v) => v.toUpperCase() === upper);
+        })
+        .filter((p) => p && this.isProviderConfigured(p as ProviderName)) as ProviderName[];
     }
-    if (service.includes('high-risk')) {
-      return [ProviderName.TEXTVERIFIED, ProviderName.JUICYSMS, ProviderName.TELNYX, ProviderName.TWILIO, ProviderName.BANDWIDTH];
+
+    // If no priority, use default regional chains filtered by configured providers
+    if (chain.length === 0) {
+      let defaultChain: ProviderName[] = [];
+      if (['US', 'CA', 'GB'].includes(countryCode)) {
+        defaultChain = [ProviderName.JUICYSMS, ProviderName.TEXTVERIFIED, ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH];
+      } else if (['DE', 'FR', 'ES', 'IT', 'NL', 'SE', 'NO', 'FI'].includes(countryCode)) {
+        defaultChain = [ProviderName.JUICYSMS, ProviderName.TEXTVERIFIED, ProviderName.TELNYX, ProviderName.TWILIO, ProviderName.BANDWIDTH];
+      } else {
+        defaultChain = [ProviderName.JUICYSMS, ProviderName.TEXTVERIFIED, ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH];
+      }
+      chain = defaultChain.filter((p) => this.isProviderConfigured(p));
     }
-    return [ProviderName.JUICYSMS, ProviderName.TEXTVERIFIED, ProviderName.TWILIO, ProviderName.TELNYX, ProviderName.BANDWIDTH];
+
+    // If still empty (no providers configured), return legacy fallback
+    if (chain.length === 0) {
+      this.logger.warn(`No verification providers configured for ${countryCode}; falling back to Twilio`);
+      return [ProviderName.TWILIO];
+    }
+
+    return chain;
+  }
+
+  private isProviderConfigured(provider: ProviderName): boolean {
+    switch (provider) {
+      case ProviderName.TWILIO:
+        return !!this.configService.get<string>('TWILIO_ACCOUNT_SID');
+      case ProviderName.TELNYX:
+        return !!this.configService.get<string>('TELNYX_API_KEY');
+      case ProviderName.BANDWIDTH:
+        return !!this.configService.get<string>('BANDWIDTH_API_TOKEN');
+      case ProviderName.JUICYSMS:
+        return !!this.configService.get<string>('JUICYSMS_API_KEY');
+      case ProviderName.TEXTVERIFIED:
+        return !!this.configService.get<string>('TEXTVERIFIED_API_KEY');
+      case ProviderName.SMSPOOL:
+        return !!this.configService.get<string>('SMSPOOL_API_KEY');
+      case ProviderName.TIGERSMS:
+        return false; // Explicitly disabled until contract verification
+      case ProviderName.QUACKR:
+        return !!this.configService.get<string>('QUACKR_API_KEY');
+      default:
+        return false;
+    }
   }
 
   private getVerificationRouteLabel(provider: ProviderName): string {
@@ -571,15 +587,13 @@ export class ProviderService {
   }
 
   private async fetchTextVerifiedServices(countryCode: string): Promise<Array<{ name: string; countryCode: string }>> {
-    const username = this.configService.get<string>('TEXTVERIFIED_API_USERNAME');
     const apiKey = this.configService.get<string>('TEXTVERIFIED_API_KEY');
-    if (!username || !apiKey) return [];
+    if (!apiKey) return [];
 
     try {
       const response = await axios.get(`${this.configService.get<string>('TEXTVERIFIED_BASE_URL') ?? 'https://www.textverified.com/api/pub/v2'}/services`, {
         headers: {
           Authorization: `Bearer ${apiKey}`,
-          'X-Textverified-Username': username,
         },
         params: countryCode ? { country: countryCode } : undefined,
       });
