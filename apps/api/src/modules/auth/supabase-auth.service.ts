@@ -343,16 +343,17 @@ export class SupabaseAuthService {
 
     const metadata = (authUser.user_metadata ?? {}) as Record<string, unknown>;
     const primaryEmail = authUser.email ?? profile?.email;
-    if (!primaryEmail) {
-      throw new BadRequestException('Supabase user must have an email address before using Burner Point.');
-    }
-
     const primaryPhone =
       authUser.phone
       ?? this.asOptionalString(metadata.phone_number)
       ?? this.asOptionalString(metadata.phoneNumber)
       ?? profile?.phoneNumber;
-    const email = this.normalizeEmail(primaryEmail);
+
+    if (!primaryEmail && !primaryPhone) {
+      throw new BadRequestException('Supabase user must have either an email address or a phone number before using Burner Point.');
+    }
+
+    const email = primaryEmail ? this.normalizeEmail(primaryEmail) : undefined;
     const phoneNumber = primaryPhone ? this.normalizePhoneNumber(primaryPhone) : undefined;
     const firstName = this.normalizeOptionalText(
       profile?.firstName,
@@ -595,9 +596,6 @@ export class SupabaseAuthService {
   ) {
     const metadata = authUser.user_metadata ?? {};
     const email = authUser.email ? this.normalizeEmail(authUser.email) : existingUser?.email;
-    if (!email) {
-      throw new BadRequestException('Supabase user must have an email address before using Burner Point.');
-    }
 
     const metadataPhone =
       this.asOptionalString(metadata.phone_number) ||
@@ -605,6 +603,10 @@ export class SupabaseAuthService {
     const phoneNumber = authUser.phone || metadataPhone
       ? this.normalizePhoneNumber(String(authUser.phone || metadataPhone))
       : existingUser?.phoneNumber;
+
+    if (!email && !phoneNumber) {
+      throw new BadRequestException('Supabase user must have either an email address or a phone number before using Burner Point.');
+    }
     const firstName = this.normalizeOptionalText(
       existingUser?.firstName,
       this.asOptionalString(metadata.first_name),
@@ -780,8 +782,12 @@ export class SupabaseAuthService {
 
     if (!profile.firstName?.trim()) missing.push('firstName');
     if (!profile.lastName?.trim()) missing.push('lastName');
-    if (!profile.email?.trim()) missing.push('email');
-    if (!profile.phoneNumber?.trim()) missing.push('phoneNumber');
+    if (!profile.email?.trim() && !profile.phoneNumber?.trim()) {
+      missing.push('email');
+    }
+    if (!profile.phoneNumber?.trim() && !profile.email?.trim()) {
+      missing.push('phoneNumber');
+    }
     if (!profile.termsAccepted) missing.push('acceptTerms');
     if (!profile.privacyAccepted) missing.push('acceptPrivacy');
 
