@@ -150,6 +150,10 @@ export class ProviderService {
     return this.twilioClient;
   }
 
+  getConfigService(): ConfigService {
+    return this.configService;
+  }
+
   selectConversationRoute(countryCode: string, preferredProvider?: ProviderName): RouteDecision {
     const country = this.normalizeCountry(countryCode);
     const providerChain = this.getConversationProviderChain(country);

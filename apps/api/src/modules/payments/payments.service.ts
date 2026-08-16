@@ -1264,8 +1264,7 @@ export class PaymentsService {
 
   private isUniqueConstraintViolation(error: unknown): boolean {
     if (!(error instanceof QueryFailedError)) return false;
-    const driverError = error.driverError as { code?: string; constraint?: string } | undefined;
-    // Postgres unique violation code.
+    const driverError = (error as { driverError?: { code?: string; constraint?: string } }).driverError;
     return driverError?.code === '23505' || driverError?.constraint === 'webhook_dedup_event_id_key';
   }
 
@@ -1450,9 +1449,11 @@ export class PaymentsService {
         })
       : null;
 
+    const existingRecord = existing as Record<string, any> | null;
+
     const saved = await this.syncedSubscriptionRepo.save(
       this.syncedSubscriptionRepo.create({
-        ...existing,
+        ...existingRecord,
         userId,
         provider: SubscriptionProvider.PADDLE,
         providerCustomerId:
@@ -1480,7 +1481,7 @@ export class PaymentsService {
         expiresAt,
         lastSyncedAt: new Date(),
         metadata: {
-          ...(existing?.metadata ?? {}),
+          ...(existingRecord?.metadata ?? {}),
           source: 'paddle_subscription_event',
           planId: this.subscriptionPlanId(plan),
           planSlug: this.subscriptionPlanSlug(plan),
@@ -1523,27 +1524,28 @@ export class PaymentsService {
         (subscription) => subscription.isActive && this.subscriptionGrantsEntitlement(subscription.productId, identifier),
       );
       const existing = existingByIdentifier.get(identifier);
+      const existingRecord = existing as Record<string, any> | null;
       const isActive = Boolean(grantingSubscription);
 
       await this.entitlementRepo.save(
         this.entitlementRepo.create({
-          ...existing,
+          ...existingRecord,
           userId,
-          subscriptionId: grantingSubscription?.id ?? latestSubscriptionId ?? existing?.subscriptionId ?? null,
+          subscriptionId: grantingSubscription?.id ?? latestSubscriptionId ?? existingRecord?.subscriptionId ?? null,
           provider: SubscriptionProvider.PADDLE,
           identifier,
           displayName: this.displayNameForEntitlement(identifier),
           isActive,
-          productId: grantingSubscription?.productId ?? existing?.productId ?? null,
+          productId: grantingSubscription?.productId ?? existingRecord?.productId ?? null,
           offeringId: null,
           store: 'paddle',
           environment: this.configService.get('PADDLE_SANDBOX') === 'true' ? 'sandbox' : 'production',
-          purchasedAt: grantingSubscription?.purchasedAt ?? existing?.purchasedAt ?? null,
-          expiresAt: grantingSubscription?.expiresAt ?? existing?.expiresAt ?? null,
-          revokedAt: isActive ? null : (existing?.revokedAt ?? new Date()),
-          lastEventId: grantingSubscription?.providerEventId ?? existing?.lastEventId ?? null,
+          purchasedAt: grantingSubscription?.purchasedAt ?? existingRecord?.purchasedAt ?? null,
+          expiresAt: grantingSubscription?.expiresAt ?? existingRecord?.expiresAt ?? null,
+          revokedAt: isActive ? null : (existingRecord?.revokedAt ?? new Date()),
+          lastEventId: grantingSubscription?.providerEventId ?? existingRecord?.lastEventId ?? null,
           metadata: {
-            ...(existing?.metadata ?? {}),
+            ...(existingRecord?.metadata ?? {}),
             source: 'paddle_subscription_sync',
           },
         }),

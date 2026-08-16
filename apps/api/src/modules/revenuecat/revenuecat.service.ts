@@ -420,28 +420,29 @@ export class RevenueCatService {
 
     for (const identifier of allEntitlementIds) {
       const existing = existingByIdentifier.get(identifier);
+      const existingRecord = existing as Record<string, any> | null;
       const activeItem = activeEntitlements.get(identifier);
       const isActive = Boolean(activeItem);
 
       await repository.save(
         repository.create({
-          ...existing,
+          ...existingRecord,
           userId,
-          subscriptionId: subscriptionId ?? existing?.subscriptionId ?? null,
+          subscriptionId: subscriptionId ?? existingRecord?.subscriptionId ?? null,
           provider: SubscriptionProvider.REVENUECAT,
           identifier,
           displayName: this.displayNameForEntitlement(identifier),
           isActive,
-          productId: this.getString(event.product_id) ?? existing?.productId ?? null,
-          offeringId: this.getString(event.presented_offering_id) ?? existing?.offeringId ?? null,
-          store: this.getString(event.store) ?? existing?.store ?? null,
-          environment: this.getString(event.environment) ?? existing?.environment ?? null,
-          purchasedAt: purchasedAt ?? existing?.purchasedAt ?? null,
-          expiresAt: activeItem?.expiresAt ?? fallbackExpiresAt ?? existing?.expiresAt ?? null,
-          revokedAt: isActive ? null : (existing?.revokedAt ?? (this.eventImpliesCancellation(event) ? new Date() : null)),
-          lastEventId: this.getString(event.id) ?? existing?.lastEventId ?? null,
+          productId: this.getString(event.product_id) ?? existingRecord?.productId ?? null,
+          offeringId: this.getString(event.presented_offering_id) ?? existingRecord?.offeringId ?? null,
+          store: this.getString(event.store) ?? existingRecord?.store ?? null,
+          environment: this.getString(event.environment) ?? existingRecord?.environment ?? null,
+          purchasedAt: purchasedAt ?? existingRecord?.purchasedAt ?? null,
+          expiresAt: activeItem?.expiresAt ?? fallbackExpiresAt ?? existingRecord?.expiresAt ?? null,
+          revokedAt: isActive ? null : (existingRecord?.revokedAt ?? (this.eventImpliesCancellation(event) ? new Date() : null)),
+          lastEventId: this.getString(event.id) ?? existingRecord?.lastEventId ?? null,
           metadata: {
-            ...(existing?.metadata ?? {}),
+            ...(existingRecord?.metadata ?? {}),
             lastEventType: this.getString(event.type) ?? null,
             revenuecatItem: activeItem?.raw ?? null,
           },

@@ -113,12 +113,12 @@ export class VerificationHubService {
       order: { createdAt: 'DESC' },
       take: 100,
     });
-    const serviceIds = [...new Set(orders.map((order) => order.serviceId))];
+    const serviceIds = [...new Set(orders.map((order) => String(order.serviceId)))];
     const services = serviceIds.length
       ? await this.serviceRepo.findBy({ id: In(serviceIds) })
       : [];
     const serviceById = new Map(services.map((service) => [service.id, service]));
-    return orders.map((order) => this.getOrderView(order, true, serviceById.get(order.serviceId)));
+    return orders.map((order) => this.getOrderView(order, true, serviceById.get(String(order.serviceId))));
   }
 
   async cancelOrder(userId: string, orderId: string) {
@@ -234,17 +234,19 @@ export class VerificationHubService {
 
     try {
       if (order.provider === ProviderName.JUICYSMS) {
-        const adapter = new JuicySmsAdapter(
-          this.providerService.configService,
-        );
-        const result = await adapter.getOrderMessages(order.providerOrderId);
-        messages = result.messages || [];
+        const adapter = new JuicySmsAdapter(this.providerService.getConfigService());
+        const result = await adapter.getOrderMessages(Number(order.providerOrderId));
+        const payload = result as Record<string, any>;
+        messages = Array.isArray(payload.messages) ? payload.messages : [];
       } else if (order.provider === ProviderName.TEXTVERIFIED) {
-        const adapter = new TextVerifiedAdapter(
-          this.providerService.configService,
-        );
-        const result = await adapter.getVerificationSms(order.providerOrderId);
-        messages = result.messages || [];
+        const adapter = new TextVerifiedAdapter(this.providerService.getConfigService());
+        const result = await adapter.getVerificationSms(String(order.providerOrderId));
+        const payload = result as Record<string, any>;
+        messages = Array.isArray(payload.messages)
+          ? payload.messages
+          : Array.isArray(payload.sms)
+            ? payload.sms.map((item: any) => ({ body: item?.text ?? item?.body ?? '', timestamp: item?.receivedAt ?? item?.timestamp }))
+            : [];
       }
     } catch (error) {
       this.logger.warn(
@@ -287,7 +289,7 @@ export class VerificationHubService {
     countryCode: string,
   ) {
     // Check if Verify Hub feature is enabled
-    const verifyHubEnabled = Boolean(this.providerService.configService.get('VERIFY_HUB_ENABLED'));
+    const verifyHubEnabled = Boolean(this.providerService.getConfigService().get('VERIFY_HUB_ENABLED'));
     if (!verifyHubEnabled) {
       this.logger.log(`Verify Hub disabled; falling back to legacy provider routing`);
       return null;
@@ -305,28 +307,28 @@ export class VerificationHubService {
     for (const provider of providerChain) {
       try {
         if (provider === ProviderName.JUICYSMS) {
-          const adapter = new JuicySmsAdapter(this.providerService.configService);
+          const adapter = new JuicySmsAdapter(this.providerService.getConfigService());
           const result = await adapter.createVerificationOrder(
-            service.externalServiceId || service.serviceCode,
+            Number(service.serviceCode) || 0,
             countryCode,
           );
           return {
             provider: ProviderName.JUICYSMS,
-            orderId: result.order_id,
+            orderId: String(result.id),
             phoneNumber: result.phone_number,
-            expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 min default
+            expiresAt: new Date(Date.now() + 10 * 60 * 1000),
           };
         } else if (provider === ProviderName.TEXTVERIFIED) {
-          const adapter = new TextVerifiedAdapter(this.providerService.configService);
+          const adapter = new TextVerifiedAdapter(this.providerService.getConfigService());
           const result = await adapter.createVerification(
-            service.externalServiceId || service.serviceCode,
-            'US', // TextVerified US-only
+            service.serviceCode,
+            'US',
           );
           return {
             provider: ProviderName.TEXTVERIFIED,
-            orderId: result.verificationId,
+            orderId: String(result.id),
             phoneNumber: result.phoneNumber,
-            expiresAt: result.expiresAt || new Date(Date.now() + 10 * 60 * 1000),
+            expiresAt: result.expiresAt ? new Date(result.expiresAt) : new Date(Date.now() + 10 * 60 * 1000),
           };
         }
       } catch (error) {
