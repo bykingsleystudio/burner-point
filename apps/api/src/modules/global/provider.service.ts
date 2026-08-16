@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import Twilio = require('twilio');
+import * as Twilio from 'twilio';
 import { RedisService } from './redis.service';
 import { resolveApiUrl } from '../../config/runtime-env';
 import { JuicySmsAdapter } from '../providers/juicysms.adapter';
@@ -452,10 +452,74 @@ export class ProviderService {
           notes: 'Bandwidth pricing varies by North America inventory, messaging volume, and voice route.',
         }),
       },
-      [ProviderName.JUICYSMS]: new JuicySmsAdapter(this.configService),
-      [ProviderName.TEXTVERIFIED]: new TextVerifiedAdapter(this.configService),
-      [ProviderName.SMSPOOL]: new SMSPoolAdapter(this.configService),
-      [ProviderName.QUACKR]: new QuackrAdapter(this.configService),
+      [ProviderName.JUICYSMS]: {
+        provider: ProviderName.JUICYSMS,
+        sendSMS: async () => { throw new Error('JuicySMS outbound messaging is not active in this release'); },
+        buyNumber: async () => { throw new Error('JuicySMS number purchase must use verification-hub.createOrder'); },
+        releaseNumber: async () => undefined,
+        receiveWebhook: async (payload) => ({ success: true }),
+        startCall: async () => { throw new Error('JuicySMS voice is not active in this release'); },
+        endCall: async () => undefined,
+        lookupAvailability: async () => [],
+        getPricing: async (countryCode, product) => ({
+          provider: ProviderName.JUICYSMS,
+          product,
+          countryCode: this.normalizeCountry(countryCode),
+          currency: 'USD',
+          notes: 'JuicySMS pricing is quoted by service and country in EUR; use service-level pricing queries.',
+        }),
+      },
+      [ProviderName.TEXTVERIFIED]: {
+        provider: ProviderName.TEXTVERIFIED,
+        sendSMS: async () => { throw new Error('TextVerified outbound messaging is not active in this release'); },
+        buyNumber: async () => { throw new Error('TextVerified number purchase must use verification-hub.createOrder'); },
+        releaseNumber: async () => undefined,
+        receiveWebhook: async (payload) => ({ success: true }),
+        startCall: async () => { throw new Error('TextVerified voice is not active in this release'); },
+        endCall: async () => undefined,
+        lookupAvailability: async () => [],
+        getPricing: async (countryCode, product) => ({
+          provider: ProviderName.TEXTVERIFIED,
+          product,
+          countryCode: this.normalizeCountry(countryCode),
+          currency: 'USD',
+          notes: 'TextVerified is US-only; pricing is service-specific and inflation-sensitive.',
+        }),
+      },
+      [ProviderName.SMSPOOL]: {
+        provider: ProviderName.SMSPOOL,
+        sendSMS: async () => { throw new Error('SMSPool outbound messaging is not active in this release'); },
+        buyNumber: async () => { throw new Error('SMSPool number purchase must use rental-hub.createRental'); },
+        releaseNumber: async () => undefined,
+        receiveWebhook: async (payload) => ({ success: true }),
+        startCall: async () => { throw new Error('SMSPool voice is not active in this release'); },
+        endCall: async () => undefined,
+        lookupAvailability: async () => [],
+        getPricing: async (countryCode, product) => ({
+          provider: ProviderName.SMSPOOL,
+          product,
+          countryCode: this.normalizeCountry(countryCode),
+          currency: 'USD',
+          notes: 'SMSPool pricing is per-service and dynamic; use service lookup endpoints for live rates.',
+        }),
+      },
+      [ProviderName.QUACKR]: {
+        provider: ProviderName.QUACKR,
+        sendSMS: async () => { throw new Error('Quackr outbound messaging is not active in this release'); },
+        buyNumber: async () => { throw new Error('Quackr number purchase must use rental-hub.createRental'); },
+        releaseNumber: async () => undefined,
+        receiveWebhook: async (payload) => ({ success: true }),
+        startCall: async () => { throw new Error('Quackr voice is not active in this release'); },
+        endCall: async () => undefined,
+        lookupAvailability: async () => [],
+        getPricing: async (countryCode, product) => ({
+          provider: ProviderName.QUACKR,
+          product,
+          countryCode: this.normalizeCountry(countryCode),
+          currency: 'USD',
+          notes: 'Quackr pricing is per-service and dynamic; use service availability endpoints for live rates.',
+        }),
+      },
     };
   }
 
@@ -984,33 +1048,6 @@ export class ProviderService {
     const countryStatus = await this.redisService.get(this.healthKey(provider, product, countryCode));
     const globalStatus = await this.redisService.get(this.healthKey(provider, product, 'global'));
     return countryStatus !== 'down' && globalStatus !== 'down';
-  }
-
-  private isProviderConfigured(provider: ProviderName): boolean {
-    switch (provider) {
-      case ProviderName.TWILIO:
-        return Boolean(this.configService.get('TWILIO_ACCOUNT_SID') && this.configService.get('TWILIO_AUTH_TOKEN'));
-      case ProviderName.TELNYX:
-        return Boolean(this.configService.get('TELNYX_API_KEY'));
-      case ProviderName.BANDWIDTH:
-        return Boolean(
-          this.configService.get('BANDWIDTH_ACCOUNT_ID') &&
-          this.configService.get('BANDWIDTH_USERNAME') &&
-          this.configService.get('BANDWIDTH_PASSWORD'),
-        );
-      case ProviderName.JUICYSMS:
-        return Boolean(this.configService.get('JUICYSMS_API_KEY'));
-      case ProviderName.TEXTVERIFIED:
-        return Boolean(
-          this.configService.get('TEXTVERIFIED_API_USERNAME') &&
-          this.configService.get('TEXTVERIFIED_API_KEY'),
-        );
-      case ProviderName.SMSPOOL:
-      case ProviderName.TIGERSMS:
-      case ProviderName.QUACKR:
-      default:
-        return false;
-    }
   }
 
   private getWebhookBaseUrl(): string {

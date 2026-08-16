@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosError } from 'axios';
-import { MessengerProviderAdapter, ProviderName, ProviderPricingResult } from '../global/provider.service';
-import { RouteProduct } from '../global/provider.service';
+import { ProviderName, ProviderPricingResult, RouteProduct } from '../global/provider.service';
 
 /**
  * Quackr API Adapter
@@ -37,8 +36,7 @@ interface QuackrMessageResponse {
 }
 
 @Injectable()
-export class QuackrAdapter implements MessengerProviderAdapter {
-  provider = ProviderName.QUACKR;
+export class QuackrAdapter {
   private readonly logger = new Logger(`Quackr Adapter`);
   private readonly baseUrl: string;
   private readonly apiKey: string;

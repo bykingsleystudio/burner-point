@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosError } from 'axios';
-import { MessengerProviderAdapter, ProviderName, ProviderPricingResult } from '../global/provider.service';
-import { RouteProduct } from '../global/provider.service';
+import { ProviderName, ProviderPricingResult, RouteProduct } from '../global/provider.service';
 
 /**
  * TextVerified v2 API Adapter
@@ -63,8 +62,7 @@ interface TextVerifiedRentalResponse {
 }
 
 @Injectable()
-export class TextVerifiedAdapter implements MessengerProviderAdapter {
-  provider = ProviderName.TEXTVERIFIED;
+export class TextVerifiedAdapter {
   private readonly logger = new Logger(`TextVerified Adapter`);
   private readonly baseUrl: string;
   private readonly apiKey: string;

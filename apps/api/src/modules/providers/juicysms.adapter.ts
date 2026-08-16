@@ -1,8 +1,19 @@
+/**
+ * JuicySMS v2 API Adapter
+ * Verified production provider for verification and rental flows.
+ * 
+ * Contract: https://juicysms.com/api
+ * Auth: Bearer token in Authorization header
+ * Currencies: EUR (all amounts quoted/billed in EUR)
+ * 
+ * Note: This adapter is NOT a MessengerProviderAdapter. It provides
+ * specialized methods for verification order and rental workflows.
+ */
+
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosError } from 'axios';
-import { MessengerProviderAdapter, ProviderName, ProviderPricingResult, ProviderNumberSearchResult, ProviderNumberPurchaseResult } from '../global/provider.service';
-import { RouteProduct } from '../global/provider.service';
+import { ProviderName, ProviderPricingResult, RouteProduct } from '../global/provider.service';
 
 /**
  * JuicySMS v2 API Adapter
@@ -72,8 +83,7 @@ interface JuicySmsRentalResponse {
 }
 
 @Injectable()
-export class JuicySmsAdapter implements MessengerProviderAdapter {
-  provider = ProviderName.JUICYSMS;
+export class JuicySmsAdapter {
   private readonly logger = new Logger(`JuicySMS Adapter`);
   private readonly baseUrl: string;
   private readonly apiKey: string;

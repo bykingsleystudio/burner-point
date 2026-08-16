@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosError } from 'axios';
-import { MessengerProviderAdapter, ProviderName, ProviderPricingResult } from '../global/provider.service';
-import { RouteProduct } from '../global/provider.service';
+import { ProviderName, ProviderPricingResult, RouteProduct } from '../global/provider.service';
 
 /**
  * SMSPool API Adapter
@@ -38,8 +37,7 @@ interface SMSPoolMessageResponse {
 }
 
 @Injectable()
-export class SMSPoolAdapter implements MessengerProviderAdapter {
-  provider = ProviderName.SMSPOOL;
+export class SMSPoolAdapter {
   private readonly logger = new Logger(`SMSPool Adapter`);
   private readonly baseUrl: string;
   private readonly apiKey: string;

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
@@ -7,6 +7,9 @@ import { Message, MessageDirection } from '../../database/entities/message.entit
 import { NumberType } from '../../database/entities/phone-number.entity';
 import { CreditsService } from '../credits/credits.service';
 import { NumbersService } from '../numbers/numbers.service';
+import { ProviderService, ProviderName } from '../global/provider.service';
+import { JuicySmsAdapter } from '../providers/juicysms.adapter';
+import { TextVerifiedAdapter } from '../providers/textverified.adapter';
 
 export interface CreateVerificationOrderInput {
   serviceCode: string;
@@ -17,11 +20,14 @@ export interface CreateVerificationOrderInput {
 
 @Injectable()
 export class VerificationHubService {
+  private readonly logger = new Logger(VerificationHubService.name);
+
   constructor(
     @InjectRepository(VerificationService) private readonly serviceRepo: Repository<VerificationService>,
     @InjectRepository(VerificationOrder) private readonly orderRepo: Repository<VerificationOrder>,
     private readonly numbersService: NumbersService,
     private readonly creditsService: CreditsService,
+    private readonly providerService: ProviderService,
   ) {}
 
   async listServices(countryCode?: string) {
@@ -184,6 +190,155 @@ export class VerificationHubService {
         ).catch(() => null);
       }
     }
+  }
+
+  /**
+   * Poll SMS messages from verification providers (JuicySMS, TextVerified).
+   * This runs every 30 seconds to check for inbound SMS on active verification orders.
+   */
+  @Cron('*/30 * * * * *')
+  async pollVerificationMessages() {
+    try {
+      const orders = await this.orderRepo.find({
+        where: {
+          status: In(['waiting_for_code', 'active']),
+          provider: In([ProviderName.JUICYSMS, ProviderName.TEXTVERIFIED]),
+        },
+        take: 50,
+      });
+
+      for (const order of orders) {
+        if (!order.providerOrderId) continue;
+        try {
+          await this.pollOrderMessages(order);
+        } catch (error) {
+          this.logger.error(
+            `Failed to poll messages for order ${order.id}: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      }
+    } catch (error) {
+      this.logger.error(`Verification polling job failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  /**
+   * Poll messages from a specific verification order.
+   * Extracts OTP code and updates order status when message is received.
+   */
+  private async pollOrderMessages(order: VerificationOrder) {
+    if (order.status !== 'waiting_for_code' && order.status !== 'active') return;
+    if (!order.providerOrderId) return;
+
+    let messages: Array<{ body: string; timestamp?: string }> = [];
+
+    try {
+      if (order.provider === ProviderName.JUICYSMS) {
+        const adapter = new JuicySmsAdapter(
+          this.providerService.configService,
+        );
+        const result = await adapter.getOrderMessages(order.providerOrderId);
+        messages = result.messages || [];
+      } else if (order.provider === ProviderName.TEXTVERIFIED) {
+        const adapter = new TextVerifiedAdapter(
+          this.providerService.configService,
+        );
+        const result = await adapter.getVerificationSms(order.providerOrderId);
+        messages = result.messages || [];
+      }
+    } catch (error) {
+      this.logger.warn(
+        `Could not poll ${order.provider} order ${order.providerOrderId}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return;
+    }
+
+    if (!messages.length) return;
+
+    // Process first message with OTP
+    const firstMessage = messages[0];
+    if (!firstMessage || !firstMessage.body) return;
+
+    const otpCode = this.extractOtp(firstMessage.body);
+    if (!otpCode) return;
+
+    // Update order with received code
+    await this.orderRepo.update(order.id, {
+      status: 'code_received',
+      otpCode,
+      completedAt: new Date(),
+      metadata: {
+        ...(order.metadata ?? {}),
+        messageReceivedAt: new Date().toISOString(),
+        messageBody: firstMessage.body,
+      },
+    });
+
+    this.logger.log(`Verification order ${order.id} completed with OTP code`);
+  }
+
+  /**
+   * Create a verification order using new provider-specific adapters (JuicySMS, TextVerified).
+   * This integrates with the BP Verify Hub feature gate.
+   */
+  private async createVerificationOrderViaAdapter(
+    order: VerificationOrder,
+    service: VerificationService,
+    countryCode: string,
+  ) {
+    // Check if Verify Hub feature is enabled
+    const verifyHubEnabled = Boolean(this.providerService.configService.get('VERIFY_HUB_ENABLED'));
+    if (!verifyHubEnabled) {
+      this.logger.log(`Verify Hub disabled; falling back to legacy provider routing`);
+      return null;
+    }
+
+    // Get ordered list of enabled verification providers
+    const routeDecision = this.providerService.selectVerificationRoute(countryCode);
+    if (!routeDecision.primaryProvider) {
+      this.logger.warn(`No verification providers available for ${countryCode}`);
+      return null;
+    }
+
+    // Try providers in order: primary first, then fallbacks
+    const providerChain = [routeDecision.primaryProvider, ...(routeDecision.fallbackProviders || [])];
+    for (const provider of providerChain) {
+      try {
+        if (provider === ProviderName.JUICYSMS) {
+          const adapter = new JuicySmsAdapter(this.providerService.configService);
+          const result = await adapter.createVerificationOrder(
+            service.externalServiceId || service.serviceCode,
+            countryCode,
+          );
+          return {
+            provider: ProviderName.JUICYSMS,
+            orderId: result.order_id,
+            phoneNumber: result.phone_number,
+            expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 min default
+          };
+        } else if (provider === ProviderName.TEXTVERIFIED) {
+          const adapter = new TextVerifiedAdapter(this.providerService.configService);
+          const result = await adapter.createVerification(
+            service.externalServiceId || service.serviceCode,
+            'US', // TextVerified US-only
+          );
+          return {
+            provider: ProviderName.TEXTVERIFIED,
+            orderId: result.verificationId,
+            phoneNumber: result.phoneNumber,
+            expiresAt: result.expiresAt || new Date(Date.now() + 10 * 60 * 1000),
+          };
+        }
+      } catch (error) {
+        this.logger.warn(
+          `Verification order creation failed with ${provider}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        // Continue to next provider
+      }
+    }
+
+    this.logger.error(`All verification providers failed for order ${order.id}`);
+    return null;
   }
 
   private toPublicService(service: VerificationService) {
