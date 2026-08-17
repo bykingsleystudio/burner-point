@@ -242,13 +242,13 @@ export class AbuseEvent {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'user_id', nullable: true })
   userId: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'ip_address', nullable: true })
   ipAddress: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'device_fingerprint', nullable: true })
   deviceFingerprint: string;
 
   @Column({ type: 'enum', enum: AbuseEventType })
@@ -263,13 +263,13 @@ export class AbuseEvent {
   @Column({ type: 'jsonb', default: {} })
   details: Record<string, unknown>;
 
-  @Column({ nullable: true })
+  @Column({ name: 'resolved_by', nullable: true })
   resolvedBy: string;
 
-  @Column({ nullable: true, type: 'timestamp' })
+  @Column({ name: 'resolved_at', nullable: true, type: 'timestamp' })
   resolvedAt: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }
 
@@ -471,10 +471,10 @@ export class AuditLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ name: 'user_id' })
   userId: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'workspace_id', nullable: true })
   workspaceId: string;
 
   @Column()
@@ -483,7 +483,7 @@ export class AuditLog {
   @Column()
   resource: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'resource_id', nullable: true })
   resourceId: string;
 
   @Column({ type: 'jsonb', default: {} })
@@ -492,13 +492,13 @@ export class AuditLog {
   @Column({ type: 'jsonb', default: {} })
   newValue: Record<string, unknown>;
 
-  @Column({ nullable: true })
+  @Column({ name: 'ip_address', nullable: true })
   ipAddress: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'user_agent', nullable: true })
   userAgent: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }
 
