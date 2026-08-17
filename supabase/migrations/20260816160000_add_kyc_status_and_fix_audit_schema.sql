@@ -32,18 +32,14 @@ ALTER TABLE public.users
 -- 3. Ensure Audit Logs Has Proper Schema
 -- ─────────────────────────────────────────────────────────────
 
--- Add missing columns if they don't exist
+-- Only add columns that are absent in the live production schema.
+-- Do not alter existing UUID columns because their type is already correct
+-- and Postgres will reject the change when an RLS policy depends on the column.
 ALTER TABLE public.audit_logs
   ADD COLUMN IF NOT EXISTS workspace_id UUID REFERENCES public.workspaces(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS resource TEXT,
   ADD COLUMN IF NOT EXISTS old_value JSONB NOT NULL DEFAULT '{}'::jsonb,
   ADD COLUMN IF NOT EXISTS new_value JSONB NOT NULL DEFAULT '{}'::jsonb;
-
--- Ensure proper constraint on user_id if it exists
--- The user_id column should already exist from 0001_initial_schema.sql
--- with proper FK reference, but we verify it's properly typed
-ALTER TABLE public.audit_logs
-  ALTER COLUMN user_id TYPE UUID USING user_id::UUID;
 
 CREATE INDEX IF NOT EXISTS idx_audit_logs_workspace_created
   ON public.audit_logs(workspace_id, created_at DESC);
@@ -52,19 +48,33 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_workspace_created
 -- 4. Ensure Abuse Events Has Proper Schema
 -- ─────────────────────────────────────────────────────────────
 
--- The abuse_events table should have user_id from 0001_initial_schema.sql
--- Verify it's properly typed and indexed
+-- Only add columns that are missing. The live schema already has user_id as UUID
+-- and changing it would trigger policy dependency errors.
 ALTER TABLE public.abuse_events
-  ALTER COLUMN user_id TYPE UUID USING user_id::UUID;
+  ADD COLUMN IF NOT EXISTS workspace_id UUID REFERENCES public.workspaces(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS ip_address TEXT,
+  ADD COLUMN IF NOT EXISTS user_agent TEXT,
+  ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}'::jsonb;
 
 -- ─────────────────────────────────────────────────────────────
 -- 5. Ensure Wallet Transactions Has user_id Properly Mapped
 -- ─────────────────────────────────────────────────────────────
 
--- Wallet transactions should already have user_id from extended entities
--- But ensure the foreign key is properly set up
-ALTER TABLE public.wallet_transactions
-  ADD CONSTRAINT wallet_transactions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE NOT VALID;
+-- Wallet transactions should already have user_id from extended entities.
+-- Only add the foreign key if it is missing so we do not recreate an existing constraint.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'wallet_transactions_user_id_fkey'
+      AND conrelid = 'public.wallet_transactions'::regclass
+  ) THEN
+    ALTER TABLE public.wallet_transactions
+      ADD CONSTRAINT wallet_transactions_user_id_fkey
+      FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE NOT VALID;
+  END IF;
+END $$;
 
 -- ─────────────────────────────────────────────────────────────
 -- 6. Verify Users Table Has All Expected Columns
