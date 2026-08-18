@@ -9,7 +9,9 @@ import { AuthProviderButton } from '@/components/auth-provider-button';
 import Button from '@/components/ui/button';
 import { GlassInputWrapper, SignInPage } from '@/components/ui/sign-in';
 import { getErrorMessage, sanitizeRedirect } from '@/lib/auth';
+import { setRememberMePreference } from '@/lib/auth-persistence';
 import { useManualAuthCompletion } from '@/lib/auth-session-sync';
+import { TurnstileWidget } from '@/components/turnstile-widget';
 import {
   INTERNATIONAL_PHONE_ERROR,
   isValidInternationalPhone,
@@ -36,6 +38,8 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = event.target;
@@ -82,9 +86,28 @@ export default function RegisterPage() {
       return;
     }
 
+    if (turnstileSiteKey && !turnstileToken) {
+      toast.error('Please complete the security check before creating your account.');
+      return;
+    }
+
     setLoading(true);
 
     try {
+      setRememberMePreference(true);
+      if (turnstileSiteKey && turnstileToken) {
+        const verifyResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'https://api.burnerpoint.com'}/auth/turnstile/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: turnstileToken }),
+        });
+
+        if (!verifyResponse.ok) {
+          const payload = await verifyResponse.json().catch(() => ({}));
+          throw new Error(payload?.message || 'Security verification failed. Please try again.');
+        }
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password: formData.password,
@@ -308,6 +331,13 @@ export default function RegisterPage() {
             </div>
           </GlassInputWrapper>
         </div>
+
+        {turnstileSiteKey ? (
+          <TurnstileWidget
+            siteKey={turnstileSiteKey}
+            onTokenChange={setTurnstileToken}
+          />
+        ) : null}
 
         <div className="flex flex-col gap-3 text-sm">
           <label className="bp-auth-muted inline-flex items-start gap-2.5">

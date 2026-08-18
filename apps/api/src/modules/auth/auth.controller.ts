@@ -86,4 +86,11 @@ export class AuthController {
   ) {
     return this.authService.exchangeSupabaseSession(accessToken, profile, req.ip);
   }
+
+  @Post('turnstile/verify')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify a Cloudflare Turnstile token for the web auth flow' })
+  async verifyTurnstile(@Body('token') token: string, @Req() req: Request) {
+    return this.authService.verifyTurnstile(token, req.ip);
+  }
 }

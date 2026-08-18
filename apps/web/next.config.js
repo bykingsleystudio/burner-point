@@ -33,6 +33,7 @@ const nextConfig = {
         'https://*.posthog.com',
         'https://prod.spline.design',
         'https://cdn.paddle.com',
+        'https://challenges.cloudflare.com',
       ].join(' '),
       [
         "connect-src 'self' https: wss:",
@@ -41,11 +42,13 @@ const nextConfig = {
         'https://*.posthog.com',
         'https://prod.spline.design',
         'https://*.supabase.co',
+        'https://challenges.cloudflare.com',
       ].join(' '),
       [
         "frame-src 'self'",
         'https://checkout.paddle.com',
         'https://*.paddle.com',
+        'https://challenges.cloudflare.com',
       ].join(' '),
       "form-action 'self'",
       'upgrade-insecure-requests',

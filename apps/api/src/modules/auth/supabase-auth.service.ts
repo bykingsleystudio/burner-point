@@ -757,6 +757,36 @@ export class SupabaseAuthService {
       : this.normalizePhoneNumber(trimmed);
   }
 
+  async verifyTurnstile(token: string, ip?: string) {
+    const cleanToken = token?.trim();
+    if (!cleanToken) {
+      throw new BadRequestException('Turnstile token is required.');
+    }
+
+    const secret = this.configService.get<string>('TURNSTILE_SECRET_KEY');
+    if (!secret) {
+      throw new InternalServerErrorException('TURNSTILE_SECRET_KEY is not configured.');
+    }
+
+    const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        secret,
+        response: cleanToken,
+        remoteip: ip ?? '',
+      }),
+    });
+
+    const payload = (await response.json()) as { success?: boolean; 'error-codes'?: string[]; message?: string };
+
+    if (!response.ok || !payload.success) {
+      throw new BadRequestException(payload.message || 'Security verification failed. Please try again.');
+    }
+
+    return { success: true };
+  }
+
   private normalizeOptionalText(...values: Array<string | undefined | null>) {
     for (const value of values) {
       if (typeof value !== 'string') continue;

@@ -10,7 +10,9 @@ import Button from '@/components/ui/button';
 import { GlassInputWrapper, SignInPage } from '@/components/ui/sign-in';
 import { supabase } from '@/lib/supabase';
 import { getErrorMessage, sanitizeRedirect } from '@/lib/auth';
+import { getRememberMePreference, setRememberMePreference } from '@/lib/auth-persistence';
 import { useManualAuthCompletion } from '@/lib/auth-session-sync';
+import { TurnstileWidget } from '@/components/turnstile-widget';
 import {
   INTERNATIONAL_PHONE_ERROR,
   classifyAuthIdentifier,
@@ -28,8 +30,11 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState<boolean>(() => getRememberMePreference());
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
-  const canSubmit = identifier.trim().length >= 3 && password.length >= 8;
+  const canSubmit = identifier.trim().length >= 3 && password.length >= 8 && (!turnstileSiteKey || !!turnstileToken);
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -46,8 +51,27 @@ export default function LoginPage() {
       return;
     }
 
+    if (turnstileSiteKey && !turnstileToken) {
+      toast.error('Please complete the security check before signing in.');
+      return;
+    }
+
     setLoading(true);
     try {
+      setRememberMePreference(rememberMe);
+      if (turnstileSiteKey && turnstileToken) {
+        const verifyResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'https://api.burnerpoint.com'}/auth/turnstile/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: turnstileToken }),
+        });
+
+        if (!verifyResponse.ok) {
+          const payload = await verifyResponse.json().catch(() => ({}));
+          throw new Error(payload?.message || 'Security verification failed. Please try again.');
+        }
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword(
         identifierType === 'phone'
           ? { phone: normalizedIdentifier, password }
@@ -174,9 +198,25 @@ export default function LoginPage() {
           </GlassInputWrapper>
         </div>
 
+        {turnstileSiteKey ? (
+          <TurnstileWidget
+            siteKey={turnstileSiteKey}
+            onTokenChange={setTurnstileToken}
+          />
+        ) : null}
+
         <div className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
           <label className="bp-auth-muted inline-flex items-center gap-2.5">
-            <input type="checkbox" className="bp-auth-checkbox h-4 w-4 rounded border-white/15 bg-transparent" />
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(event) => {
+                const next = event.target.checked;
+                setRememberMe(next);
+                setRememberMePreference(next);
+              }}
+              className="bp-auth-checkbox h-4 w-4 rounded border-white/15 bg-transparent"
+            />
             Keep me signed in
           </label>
           <Link href="/forgot-password" className="bp-auth-inline-link font-medium">
