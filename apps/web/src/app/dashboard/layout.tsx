@@ -1,6 +1,6 @@
 'use client';
 
-import { type ComponentType, useEffect, useMemo, useState } from 'react';
+import { type ComponentType, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -184,6 +184,8 @@ function mapSupabaseUser(sessionUser: User | null) {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const authCheckRef = useRef(false);
+  const sessionExchangeRef = useRef<string | null>(null);
   const [sessionUser, setSessionUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const { user: storedUser, clearAuth, updateUser } = useAuthStore();
@@ -192,8 +194,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const currentUser = useMemo(() => storedUser ?? mapSupabaseUser(sessionUser), [sessionUser, storedUser]);
 
   useEffect(() => {
+    if (authCheckRef.current) {
+      return;
+    }
+
     const checkAuth = async () => {
       try {
+        authCheckRef.current = true;
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!session) {
@@ -212,9 +219,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             window.sessionStorage.getItem('accessToken');
         }
 
-        if (!storedAccessToken || !storedUser) {
+        const sessionExchangeKey = `${session.user.id}:${session.access_token.slice(0, 16)}`;
+        if ((!storedAccessToken || !storedUser) && sessionExchangeRef.current !== sessionExchangeKey) {
+          sessionExchangeRef.current = sessionExchangeKey;
           const exchange = await exchangeSupabaseSession(session);
           storedAccessToken = exchange.accessToken;
+          sessionExchangeRef.current = null;
         }
 
         if (storedAccessToken) {
@@ -229,8 +239,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         router.replace('/sign-in');
       }
     };
-    
-    checkAuth();
+
+    void checkAuth();
   }, [clearAuth, router, storedUser]);
 
   const handleSignOut = async () => {

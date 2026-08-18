@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabase';
 import { synchronizeAuthSession } from '@/lib/auth-session-sync';
 import { sanitizeRedirect } from '@/lib/auth';
 
+let authCallbackInFlight = false;
+
 export default function AuthCallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -14,6 +16,13 @@ export default function AuthCallbackPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (authCallbackInFlight) {
+      setIsProcessing(false);
+      return;
+    }
+
+    authCallbackInFlight = true;
+
     const handleCallback = async () => {
       try {
         const errorParam = searchParams.get('error');
@@ -95,6 +104,7 @@ export default function AuthCallbackPage() {
         }, 1500);
       } finally {
         setIsProcessing(false);
+        authCallbackInFlight = false;
       }
     };
 

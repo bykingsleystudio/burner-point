@@ -24,6 +24,14 @@ interface AuthSyncResult {
   error?: string;
 }
 
+const pendingSessionSyncs = new Map<string, Promise<AuthSyncResult>>();
+
+function getSessionSyncKey(session: Session): string {
+  const userId = session.user?.id ?? 'unknown-user';
+  const accessToken = session.access_token ?? '';
+  return `${userId}:${accessToken.slice(0, 32)}:${accessToken.length}`;
+}
+
 /**
  * Exchange a Supabase session for app tokens and determine post-auth route.
  * This is the single source of truth for all auth flows.
@@ -51,26 +59,42 @@ export async function synchronizeAuthSession(
     };
   }
 
+  const syncKey = getSessionSyncKey(session);
+  const existing = pendingSessionSyncs.get(syncKey);
+  if (existing) {
+    return existing;
+  }
+
+  const syncPromise = (async (): Promise<AuthSyncResult> => {
+    try {
+      const result = await exchangeSupabaseSession(session, options?.profileData);
+
+      // Determine routing based on onboarding state
+      const redirectTo = buildPostAuthRedirect(
+        result,
+        sanitizeRedirect(options?.redirectTo) || '/dashboard'
+      );
+
+      return {
+        success: true,
+        redirectTo,
+      };
+    } catch (error: unknown) {
+      const errorMessage = getErrorMessage(error, 'Authentication failed');
+      return {
+        success: false,
+        redirectTo: '/sign-in',
+        error: errorMessage,
+      };
+    }
+  })();
+
+  pendingSessionSyncs.set(syncKey, syncPromise);
+
   try {
-    const result = await exchangeSupabaseSession(session, options?.profileData);
-
-    // Determine routing based on onboarding state
-    const redirectTo = buildPostAuthRedirect(
-      result,
-      sanitizeRedirect(options?.redirectTo) || '/dashboard'
-    );
-
-    return {
-      success: true,
-      redirectTo,
-    };
-  } catch (error: unknown) {
-    const errorMessage = getErrorMessage(error, 'Authentication failed');
-    return {
-      success: false,
-      redirectTo: '/sign-in',
-      error: errorMessage,
-    };
+    return await syncPromise;
+  } finally {
+    pendingSessionSyncs.delete(syncKey);
   }
 }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { buildPostAuthRedirect, exchangeSupabaseSession, sanitizeRedirect } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 
@@ -13,8 +13,13 @@ import { supabase } from '@/lib/supabase';
  */
 export function AuthSessionRouter() {
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
+    if (pathname === '/auth/callback' || pathname.startsWith('/auth/callback/')) {
+      return;
+    }
+
     const consumeHashSession = async () => {
       // Only consume hash sessions (from OAuth callbacks or password recovery)
       const hash = window.location.hash;
@@ -56,7 +61,7 @@ export function AuthSessionRouter() {
     };
 
     void consumeHashSession();
-  }, [router]);
+  }, [pathname, router]);
 
   return null;
 }
