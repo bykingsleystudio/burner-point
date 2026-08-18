@@ -9,6 +9,7 @@ const {
   resolveApiUrl,
   resolveWebhookBaseUrl,
 } = require('../src/config/runtime-env.ts');
+const { validateProductionEnv } = require('../src/config/production-env.ts');
 
 function test(name, fn) {
   try {
@@ -78,6 +79,35 @@ test('hasConfiguredEnv treats Supabase publishable and secret key aliases as equ
   assert.equal(hasConfiguredEnv('SUPABASE_SERVICE_ROLE_KEY', env), true);
   assert.equal(hasConfiguredEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', env), true);
   assert.equal(hasConfiguredEnv('EXPO_PUBLIC_SUPABASE_ANON_KEY', env), true);
+});
+
+test('validateProductionEnv accepts canonical apex origin without requiring the www host', () => {
+  const env = {
+    NODE_ENV: 'production',
+    APP_URL: 'https://burnerpoint.com',
+    API_URL: 'https://api.burnerpoint.com',
+    NEXT_PUBLIC_APP_URL: 'https://burnerpoint.com',
+    NEXT_PUBLIC_API_URL: 'https://api.burnerpoint.com',
+    SUPABASE_URL: 'https://example.supabase.co',
+    SUPABASE_ANON_KEY: 'anon_key',
+    SUPABASE_SERVICE_ROLE_KEY: 'service_role_key',
+    JWT_SECRET: 'jwt_secret',
+    JWT_REFRESH_SECRET: 'jwt_refresh_secret',
+    ENCRYPTION_KEY: 'encryption_key',
+    CORS_ALLOWED_ORIGINS: 'https://burnerpoint.com',
+    INTERNAL_API_KEY: 'internal_api_key',
+    WEBHOOK_SIGNING_SECRET: 'webhook_signing_secret',
+    REDIS_URL: 'redis://localhost:6379',
+    SUPABASE_STORAGE_USER_UPLOADS_BUCKET: 'bp-user-uploads',
+    SUPABASE_STORAGE_MEDIA_BUCKET: 'bp-media',
+    SUPABASE_STORAGE_VERIFICATION_ASSETS_BUCKET: 'bp-verification-assets',
+    SUPABASE_STORAGE_DOCUMENTS_BUCKET: 'bp-documents',
+    PADDLE_SANDBOX: 'false',
+    NOWPAYMENTS_SANDBOX: 'false',
+    SECONDARY_GATEWAYS_SANDBOX: 'false',
+  };
+
+  assert.doesNotThrow(() => validateProductionEnv(env));
 });
 
 test('isConfiguredValue rejects blank and placeholder values', () => {

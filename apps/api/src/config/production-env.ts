@@ -56,12 +56,8 @@ export function validateProductionEnv(env: EnvMap) {
   if (!corsOrigins.includes('https://burnerpoint.com')) {
     failures.push('CORS_ALLOWED_ORIGINS must include https://burnerpoint.com');
   }
-  if (!corsOrigins.includes('https://www.burnerpoint.com')) {
-    failures.push('CORS_ALLOWED_ORIGINS should include https://www.burnerpoint.com');
-  }
   const allowedProductionOrigins = new Set([
     'https://burnerpoint.com',
-    'https://www.burnerpoint.com',
     ...additionalAllowedOrigins,
   ]);
   const unexpectedOrigins = corsOrigins.filter(
