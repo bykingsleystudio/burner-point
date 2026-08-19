@@ -324,7 +324,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="relative flex min-h-screen bg-brand-black pb-24 text-white md:pb-0">
+    <div className="bp-dashboard-shell relative flex min-h-screen pb-24 md:pb-0">
       <div className="pointer-events-none fixed inset-0">
         <div className="bp-grid-bg absolute inset-0 opacity-30" />
         <div className="absolute left-0 top-0 h-[28rem] w-[32rem] rounded-full bg-[radial-gradient(circle,rgba(0,255,157,0.12),transparent_68%)] blur-3xl" />
@@ -332,7 +332,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
       <aside
         className={clsx(
-          'fixed inset-y-0 left-0 z-40 flex w-[19rem] max-w-[88vw] flex-col border-r border-white/8 bg-[linear-gradient(180deg,rgba(1,50,32,0.94),rgba(0,0,0,0.98))] shadow-[28px_0_80px_rgba(0,0,0,0.48)] transition-transform duration-300 md:static md:max-w-none',
+          'bp-dashboard-sidebar fixed inset-y-0 left-0 z-40 flex w-[19rem] max-w-[88vw] flex-col border-r shadow-[28px_0_80px_rgba(0,0,0,0.18)] transition-transform duration-300 md:static md:max-w-none',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
         )}
       >
@@ -456,7 +456,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       ) : null}
 
       <div className="relative z-10 flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 border-b border-white/8 bg-brand-black/86 px-4 py-4 backdrop-blur-xl md:px-6">
+        <header className="sticky top-0 z-20 border-b border-[var(--bp-border-subtle)] bg-[color:var(--bp-background)]/90 px-4 py-4 backdrop-blur-xl md:px-6">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex items-start gap-3">
               <button

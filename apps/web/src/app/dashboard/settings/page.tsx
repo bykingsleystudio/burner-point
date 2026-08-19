@@ -16,10 +16,12 @@ import { authApi, clearApiSession } from '@/lib/api';
 import { SUPPORT_EMAIL_HREF, TELEGRAM_SUPPORT_URL } from '@/lib/support';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store';
+import { useTheme, type ThemePreference } from '@/components/theme-provider';
 
 export default function SettingsPage() {
   const pathname = usePathname();
   const { user, refreshToken, clearAuth } = useAuthStore();
+  const { preference, setPreference } = useTheme();
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ');
 
   const handleSignOut = async () => {
@@ -109,6 +111,34 @@ export default function SettingsPage() {
             <Link href="/dashboard/security" className="rounded-[0.95rem] border border-white/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-white/70 transition hover:border-brand-green/20 hover:text-brand-green">
               Manage 2FA
             </Link>
+          </div>
+        </article>
+
+        <article className="rounded-[1.5rem] border border-[var(--bp-border-subtle)] bg-[var(--bp-surface)] p-5">
+          <div className="flex items-center gap-3">
+            <UserRound className="h-5 w-5 text-brand-green" />
+            <div>
+              <h3 className="text-base font-semibold">Appearance</h3>
+              <p className="mt-1 text-sm bp-dashboard-muted">Choose how Burner Point looks on this device.</p>
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Theme preference">
+            {(['light', 'dark', 'system'] as ThemePreference[]).map((option) => (
+              <button
+                key={option}
+                type="button"
+                role="radio"
+                aria-checked={preference === option}
+                onClick={() => setPreference(option)}
+                className={`min-h-11 rounded-[0.85rem] border px-3 text-xs font-semibold capitalize transition ${
+                  preference === option
+                    ? 'border-brand-green/40 bg-brand-green/10 text-brand-green'
+                    : 'border-[var(--bp-border-subtle)] bg-[var(--bp-surface-muted)] text-[var(--bp-foreground-muted)] hover:border-brand-green/25'
+                }`}
+              >
+                {option}
+              </button>
+            ))}
           </div>
         </article>
 
