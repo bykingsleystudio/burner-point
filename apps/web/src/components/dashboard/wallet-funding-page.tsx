@@ -5,7 +5,8 @@ import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { Bitcoin, ExternalLink, Shield, Wallet } from 'lucide-react';
 import { paymentsApi, type PaymentGatewayId } from '@/lib/api';
-import { formatNgnKobo, formatStoredKoboAsUsd } from '@/lib/money';
+import { formatStoredKoboAsUsd } from '@/lib/money';
+import { useLocalCurrency } from '@/lib/use-local-currency';
 
 interface FundingOption {
   id: string;
@@ -66,6 +67,7 @@ export default function WalletFundingPage() {
   const [selectedGateway, setSelectedGateway] = useState<PaymentGatewayId>('paystack');
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const localCurrency = useLocalCurrency();
 
   useEffect(() => {
     setLoading(true);
@@ -147,9 +149,11 @@ export default function WalletFundingPage() {
                 <p className="mt-1 font-mono text-xl font-bold text-brand-green">
                   {formatStoredKoboAsUsd(option.priceKobo)}
                 </p>
-                <p className="mt-0.5 text-xs text-brand-muted">
-                  {formatNgnKobo(option.priceKobo)} local checkout
-                </p>
+                {localCurrency.formatUsdCents(option.priceKobo) ? (
+                  <p className="mt-0.5 text-xs text-brand-muted">
+                    ≈ {localCurrency.formatUsdCents(option.priceKobo)} {localCurrency.currency} display
+                  </p>
+                ) : null}
                 <p className="mt-1 text-xs text-brand-muted">
                   Wallet funding amount: {formatStoredKoboAsUsd(option.amountKobo)}
                 </p>
@@ -188,9 +192,13 @@ export default function WalletFundingPage() {
           </span>
         </div>
         <div className="mb-5 flex items-center justify-between">
-          <span className="text-sm text-brand-muted">Local checkout</span>
+          <span className="text-sm text-brand-muted">Informational display</span>
           <span className="text-sm text-white/70">
-            {selectedOption ? formatNgnKobo(selectedOption.priceKobo) : '-'}
+            {selectedOption
+              ? (localCurrency.formatUsdCents(selectedOption.priceKobo)
+                ? `≈ ${localCurrency.formatUsdCents(selectedOption.priceKobo)} ${localCurrency.currency}`
+                : 'Unavailable')
+              : '-'}
           </span>
         </div>
         <div className="mb-5 flex items-center justify-between">

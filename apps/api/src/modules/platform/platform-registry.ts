@@ -314,7 +314,7 @@ export const STACK_REGISTRY: StackIntegrationDefinition[] = [
     role: 'Primary Nigerian/local card and bank payment gateway',
     productSurface: 'Credits, rentals, one-time purchases',
     requiredEnv: ['PAYSTACK_SECRET_KEY'],
-    optionalEnv: ['PAYSTACK_WEBHOOK_SECRET', 'PAYSTACK_PUBLIC_KEY', 'PAYMENT_USD_TO_NGN_RATE'],
+    optionalEnv: ['PAYSTACK_WEBHOOK_SECRET', 'PAYSTACK_PUBLIC_KEY', 'OPEN_EXCHANGE_RATES_APP_ID'],
   },
   {
     id: 'paddle',

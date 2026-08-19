@@ -200,9 +200,9 @@ export class CreditsService {
         availableUsdCents: walletBalance.balanceUsdCents - walletBalance.lockedBalanceUsdCents,
         displayCurrency: walletBalance.displayCurrency,
         localDisplay: {
-          currency: 'NGN',
-          amountKobo: walletBalance.balanceKobo,
-          fxRateNgnPerUsd: walletBalance.fxRateNgnPerUsd,
+          currency: null,
+          amountKobo: null,
+          fxRateNgnPerUsd: null,
         },
       },
       credits: this.toCreditAccountView(creditAccount),
@@ -217,9 +217,9 @@ export class CreditsService {
       availableUsdCents: walletBalance.balanceUsdCents - walletBalance.lockedBalanceUsdCents,
       displayCurrency: walletBalance.displayCurrency,
       localDisplay: {
-        currency: 'NGN',
-        amountKobo: walletBalance.balanceKobo,
-        fxRateNgnPerUsd: walletBalance.fxRateNgnPerUsd,
+        currency: null,
+        amountKobo: null,
+        fxRateNgnPerUsd: null,
       },
     };
   }
@@ -1570,9 +1570,9 @@ export class CreditsService {
       lockedBalanceUsdCents: Number(wallet.lockedBalanceUsdCents ?? 0),
       availableUsdCents: presentation.walletBalanceUsdCents - Number(wallet.lockedBalanceUsdCents ?? 0),
       localDisplay: {
-        currency: 'NGN',
-        amountKobo: presentation.walletBalanceKobo,
-        fxRateNgnPerUsd: presentation.walletFxRateNgnPerUsd,
+        currency: null,
+        amountKobo: null,
+        fxRateNgnPerUsd: null,
       },
     };
   }

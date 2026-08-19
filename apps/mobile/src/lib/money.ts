@@ -1,5 +1,3 @@
-const DEFAULT_USD_TO_NGN_RATE = Number(process.env.EXPO_PUBLIC_PAYMENT_USD_TO_NGN_RATE ?? 1600);
-
 type WalletLike = {
   walletBalanceUsdCents?: number | null;
   walletBalanceKobo?: number | null;
@@ -14,14 +12,13 @@ function finiteNumber(value: unknown): number | null {
 export function resolveUsdToNgnRate(rate?: number | null): number {
   const direct = finiteNumber(rate);
   if (direct && direct > 0) return direct;
-  return Number.isFinite(DEFAULT_USD_TO_NGN_RATE) && DEFAULT_USD_TO_NGN_RATE > 0
-    ? DEFAULT_USD_TO_NGN_RATE
-    : 1600;
+  return 0;
 }
 
 export function legacyNgnKoboToUsdCents(kobo?: number | null, rate?: number | null): number {
   const amountKobo = finiteNumber(kobo) ?? 0;
   const fx = resolveUsdToNgnRate(rate);
+  if (!fx) return 0;
   return Math.round((amountKobo / 100 / fx) * 100);
 }
 
@@ -42,5 +39,5 @@ export function getWalletUsdCents(wallet?: WalletLike | null): number {
 }
 
 export function formatStoredKoboAsUsd(kobo?: number | null, rate?: number | null): string {
-  return formatUsdCents(legacyNgnKoboToUsdCents(kobo, rate));
+  return formatUsdCents(kobo);
 }

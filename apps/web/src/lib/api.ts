@@ -99,6 +99,7 @@ export interface AuthExchangeResponse {
     firstName: string;
     lastName: string;
     role: string;
+    country?: string;
     walletBalanceKobo: number;
     walletBalanceUsdCents?: number;
     walletBalanceUsd?: number;
@@ -124,6 +125,27 @@ export const authApi = {
   logout: (refreshToken: string) => api.post('/auth/logout', { refreshToken }),
   exchangeSupabaseToken: (accessToken: string, profile?: Record<string, unknown>) =>
     api.post<AuthExchangeResponse>('/auth/supabase/exchange', { accessToken, profile }),
+};
+
+export type FxRateResponse = {
+  available: boolean;
+  baseCurrency: 'USD';
+  quoteCurrency: string;
+  rate?: number;
+  provider?: string;
+  providerTimestamp?: string;
+  fetchedAt?: string;
+  expiresAt?: string;
+  cached?: boolean;
+};
+
+export const fxApi = {
+  currencyForCountry: (country?: string) =>
+    api.get<{ countryCode: string | null; currency: string; metadata: { code: string; name: string; symbol: string } }>(
+      '/fx/currency-for-country',
+      { params: country ? { country } : {} },
+    ),
+  rate: (currency: string) => api.get<FxRateResponse>('/fx/rates', { params: { currency } }),
 };
 
 export const supportApi = {

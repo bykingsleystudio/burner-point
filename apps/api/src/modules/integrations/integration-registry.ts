@@ -203,7 +203,7 @@ export const BACKEND_INTEGRATION_CONTRACTS: BackendIntegrationContract[] = [
     category: 'payments',
     backendOnly: true,
     secretEnv: ['PAYSTACK_SECRET_KEY'],
-    optionalEnv: ['PAYSTACK_PUBLIC_KEY', 'PAYSTACK_WEBHOOK_SECRET', 'PAYMENT_USD_TO_NGN_RATE'],
+    optionalEnv: ['PAYSTACK_PUBLIC_KEY', 'PAYSTACK_WEBHOOK_SECRET', 'OPEN_EXCHANGE_RATES_APP_ID'],
     publicClientEnv: [],
     frontendRule: 'Use /payments/initialize; checkout URLs are created server-side.',
     endpoints: [

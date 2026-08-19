@@ -14,7 +14,6 @@ import {
   SubscriptionEntitlement,
 } from '../../database/entities/subscription.entity';
 import { User } from '../../database/entities/user.entity';
-import { usdCentsToNgnKobo } from '../../config/money';
 import { RevenueCatService } from '../revenuecat/revenuecat.service';
 import {
   BILLING_SUBSCRIPTION_PLANS,
@@ -78,7 +77,7 @@ export class BillingService {
         autoRenewAt: item.autoRenewAt?.toISOString() ?? null,
         expiresAt: item.expiresAt?.toISOString() ?? null,
         renewalPriceUsdCents: Number(item.renewalPriceKobo ?? 0),
-        renewalPriceDisplayNgnKobo: usdCentsToNgnKobo(Number(item.renewalPriceKobo ?? 0), this.configService),
+        renewalPriceDisplayNgnKobo: null,
         countryCode: item.countryCode ?? null,
         provider: item.provider,
       }));
@@ -90,9 +89,9 @@ export class BillingService {
         lockedBalanceUsdCents: creditBalance.wallet.lockedBalanceUsdCents,
         displayCurrency: 'USD',
         localDisplay: {
-          currency: 'NGN',
-          amountKobo: creditBalance.wallet.localDisplay.amountKobo,
-          fxRateNgnPerUsd: creditBalance.wallet.localDisplay.fxRateNgnPerUsd,
+          currency: null,
+          amountKobo: null,
+          fxRateNgnPerUsd: null,
         },
         fundingMethods: WALLET_FUNDING_METHODS,
       },

@@ -1,5 +1,3 @@
-const DEFAULT_USD_TO_NGN_RATE = Number(process.env.NEXT_PUBLIC_PAYMENT_USD_TO_NGN_RATE ?? 1600);
-
 type WalletLike = {
   walletBalanceUsdCents?: number | null;
   walletBalanceKobo?: number | null;
@@ -20,20 +18,20 @@ function finiteNumber(value: unknown): number | null {
 export function resolveUsdToNgnRate(rate?: number | null): number {
   const direct = finiteNumber(rate);
   if (direct && direct > 0) return direct;
-  return Number.isFinite(DEFAULT_USD_TO_NGN_RATE) && DEFAULT_USD_TO_NGN_RATE > 0
-    ? DEFAULT_USD_TO_NGN_RATE
-    : 1600;
+  return 0;
 }
 
 export function legacyNgnKoboToUsdCents(kobo?: number | null, rate?: number | null): number {
   const amountKobo = finiteNumber(kobo) ?? 0;
   const fx = resolveUsdToNgnRate(rate);
+  if (!fx) return 0;
   return Math.round((amountKobo / 100 / fx) * 100);
 }
 
 export function usdCentsToNgnKobo(usdCents?: number | null, rate?: number | null): number {
   const cents = finiteNumber(usdCents) ?? 0;
   const fx = resolveUsdToNgnRate(rate);
+  if (!fx) return 0;
   return Math.round((cents / 100) * fx * 100);
 }
 
@@ -47,6 +45,14 @@ export function formatNgnKobo(kobo?: number | null): string {
   return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(value);
 }
 
+export function formatLocalAmount(amountUsdCents: number | null | undefined, currency: string, rate?: number | null): string | null {
+  const usdCents = finiteNumber(amountUsdCents);
+  const fx = resolveUsdToNgnRate(rate);
+  if (usdCents === null || !fx) return null;
+  const value = (usdCents / 100) * fx;
+  return new Intl.NumberFormat('en', { style: 'currency', currency, maximumFractionDigits: 2 }).format(value);
+}
+
 export function getWalletUsdCents(wallet?: WalletLike | null): number {
   if (!wallet) return 0;
   return finiteNumber(wallet.walletBalanceUsdCents)
@@ -58,10 +64,10 @@ export function formatWalletPrimary(wallet?: WalletLike | null): string {
 }
 
 export function formatWalletSecondary(wallet?: WalletLike | null): string {
-  if (!wallet) return formatNgnKobo(0);
+  if (!wallet) return '';
   const amountKobo = finiteNumber(wallet.walletBalanceKobo)
     ?? usdCentsToNgnKobo(wallet.walletBalanceUsdCents, wallet.walletFxRateNgnPerUsd);
-  return formatNgnKobo(amountKobo);
+  return amountKobo ? formatNgnKobo(amountKobo) : '';
 }
 
 export function formatLegacyAmountPrimary(amount?: LegacyAmountLike | null): string {
@@ -72,12 +78,12 @@ export function formatLegacyAmountPrimary(amount?: LegacyAmountLike | null): str
 }
 
 export function formatLegacyAmountSecondary(amount?: LegacyAmountLike | null): string {
-  if (!amount) return formatNgnKobo(0);
+  if (!amount) return '';
   const amountKobo = finiteNumber(amount.amountKobo)
     ?? usdCentsToNgnKobo(amount.amountUsdCents, amount.walletFxRateNgnPerUsd);
-  return formatNgnKobo(amountKobo);
+  return amountKobo ? formatNgnKobo(amountKobo) : '';
 }
 
 export function formatStoredKoboAsUsd(kobo?: number | null, rate?: number | null): string {
-  return formatUsdCents(legacyNgnKoboToUsdCents(kobo, rate));
+  return formatUsdCents(kobo);
 }

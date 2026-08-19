@@ -42,6 +42,7 @@ import { UsersService } from '../users/users.service';
 import { NumbersService } from '../numbers/numbers.service';
 import { resolveApiUrl, resolveConfiguredEnv } from '../../config/runtime-env';
 import { BILLING_SUBSCRIPTION_PLANS, findBillingSubscriptionPlan } from '../billing-v2/billing-config';
+import { FxService } from '../global/fx.service';
 
 export enum PaymentType {
   WALLET = 'wallet',
@@ -107,7 +108,6 @@ const DEFERRED_GATEWAYS = [
   PaymentGateway.KORAPAY,
 ];
 
-const DEFAULT_USD_TO_NGN_RATE = 1600;
 const PAYMENT_SESSION_TTL_MINUTES = 60;
 
 const DEFAULT_WALLET_FUNDING_OPTIONS = [
@@ -186,6 +186,7 @@ export class PaymentsService {
     private configService: ConfigService,
     private usersService: UsersService,
     private numbersService: NumbersService,
+    private fxService: FxService,
   ) {}
 
   async getCreditPackages() {
@@ -749,26 +750,25 @@ export class PaymentsService {
         const creditPackage = await this.findCreditPackage(packageId);
         const walletCreditKobo = Number(creditPackage.amountKobo) + Number(creditPackage.bonusKobo || 0);
         const priceKobo = Number(creditPackage.priceKobo);
+        const settlement = await this.resolveSettlementAmount(priceKobo, currency);
         return {
-          amountMinor: currency === 'NGN' ? priceKobo : this.ngnKoboToUsdCents(priceKobo),
+          amountMinor: settlement.amountMinor,
           currency,
           walletCreditKobo,
           walletEquivalentKobo: priceKobo,
           productLabel: creditPackage.name,
-          metadata: { fundingOptionName: creditPackage.name },
+          metadata: { fundingOptionName: creditPackage.name, ...settlement.metadata },
         };
       }
 
-      const chargeAmountMinor = currency === 'NGN'
-        ? this.usdCentsToNgnKobo(500)
-        : 500;
+      const settlement = await this.resolveSettlementAmount(500, currency);
       return {
-        amountMinor: chargeAmountMinor,
+        amountMinor: settlement.amountMinor,
         currency,
         walletCreditKobo: 500,
         walletEquivalentKobo: 500,
         productLabel: 'Wallet funding',
-        metadata: { unitPriceUsdCents: 500 },
+        metadata: { unitPriceUsdCents: 500, ...settlement.metadata },
       };
     }
 
@@ -778,8 +778,9 @@ export class PaymentsService {
 
     const plan = planId ? await this.resolveSubscriptionPlan(planId) : await this.resolveSubscriptionPlan('');
     const priceUsdCents = this.subscriptionPlanPriceUsdCents(plan);
+    const settlement = await this.resolveSettlementAmount(priceUsdCents, currency);
     return {
-      amountMinor: currency === 'NGN' ? this.usdCentsToNgnKobo(priceUsdCents) : priceUsdCents,
+      amountMinor: settlement.amountMinor,
       currency,
       walletCreditKobo: 0,
       walletEquivalentKobo: priceUsdCents,
@@ -792,6 +793,7 @@ export class PaymentsService {
         productName: this.subscriptionPlanName(plan),
         planName: this.subscriptionPlanLabel(plan),
         paddlePriceEnv: this.subscriptionPlanPaddlePriceEnv(plan),
+        ...settlement.metadata,
       },
     };
   }
@@ -1390,17 +1392,22 @@ export class PaymentsService {
     return gateway === PaymentGateway.PADDLE || gateway === PaymentGateway.NOWPAYMENTS ? 'USD' : 'NGN';
   }
 
-  private usdCentsToNgnKobo(usdCents: number): number {
-    return Math.round((usdCents / 100) * this.usdToNgnRate() * 100);
-  }
+  private async resolveSettlementAmount(sourceUsdCents: number, currency: ChargeCurrency) {
+    if (currency === 'USD') {
+      return { amountMinor: sourceUsdCents, metadata: { sourceCurrency: 'USD', sourceAmountUsdCents: sourceUsdCents } };
+    }
 
-  private ngnKoboToUsdCents(ngnKobo: number): number {
-    return Math.max(1, Math.round((ngnKobo / 100 / this.usdToNgnRate()) * 100));
-  }
-
-  private usdToNgnRate(): number {
-    const configured = Number(this.configService.get<string>('PAYMENT_USD_TO_NGN_RATE'));
-    return Number.isFinite(configured) && configured > 0 ? configured : DEFAULT_USD_TO_NGN_RATE;
+    const fx = await this.fxService.convertUsdCentsToMinor(sourceUsdCents, currency);
+    return {
+      amountMinor: fx.amountMinor,
+      metadata: {
+        sourceCurrency: 'USD',
+        sourceAmountUsdCents: sourceUsdCents,
+        settlementCurrency: currency,
+        settlementAmountMinor: fx.amountMinor,
+        fx: fx.fx,
+      },
+    };
   }
 
   private getPaddlePriceId(paymentType: PaymentType): string {
@@ -1651,7 +1658,8 @@ export class PaymentsService {
 
   private subscriptionPlanPriceUsdCents(plan: any) {
     if (this.isCatalogPlan(plan)) return Number(plan.priceUsdCents);
-    return this.ngnKoboToUsdCents(Number(plan.priceKoboMonthly ?? 0));
+    // Legacy column names are retained, but subscription prices are stored as USD cents.
+    return Number(plan.priceKoboMonthly ?? 0);
   }
 
   private parseDateValue(value: unknown) {

@@ -11,7 +11,8 @@ import {
   Wallet,
 } from 'lucide-react';
 import { billingApi } from '@/lib/api';
-import { formatNgnKobo, formatUsdCents } from '@/lib/money';
+import { formatUsdCents } from '@/lib/money';
+import { useLocalCurrency } from '@/lib/use-local-currency';
 
 type BillingOverview = {
   wallet: {
@@ -19,9 +20,9 @@ type BillingOverview = {
     lockedBalanceUsdCents: number;
     displayCurrency: 'USD';
     localDisplay: {
-      currency: 'NGN';
-      amountKobo: number;
-      fxRateNgnPerUsd: number;
+      currency: string | null;
+      amountKobo: number | null;
+      fxRateNgnPerUsd: number | null;
     };
     fundingMethods: Array<{
       id: 'paystack' | 'flutterwave' | 'nowpayments';
@@ -75,6 +76,7 @@ export default function BillingPage() {
   const [overview, setOverview] = useState<BillingOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const localCurrency = useLocalCurrency();
 
   const loadOverview = async () => {
     try {
@@ -145,7 +147,9 @@ export default function BillingPage() {
             {loading ? '...' : formatUsdCents(overview?.wallet.balanceUsdCents)}
           </h2>
           <p className="mt-2 text-sm text-white/58">
-            {loading ? 'Loading local display...' : `${formatNgnKobo(overview?.wallet.localDisplay.amountKobo)} local estimate`}
+            {loading ? 'Loading local display...' : localCurrency.formatUsdCents(overview?.wallet.balanceUsdCents)
+              ? `≈ ${localCurrency.formatUsdCents(overview?.wallet.balanceUsdCents)} ${localCurrency.currency} display`
+              : 'Local conversion temporarily unavailable'}
           </p>
           <p className="mt-4 text-xs leading-6 text-white/46">
             Locked: {loading ? '...' : formatUsdCents(overview?.wallet.lockedBalanceUsdCents)}

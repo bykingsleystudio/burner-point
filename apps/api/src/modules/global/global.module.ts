@@ -4,11 +4,14 @@ import { RedisService } from './redis.service';
 import { ProviderService } from './provider.service';
 import { PhoneNumber } from '../../database/entities/phone-number.entity';
 import { Message } from '../../database/entities/message.entity';
+import { FxService } from './fx.service';
+import { FxController } from './fx.controller';
 
 @Global()
 @Module({
   imports: [TypeOrmModule.forFeature([PhoneNumber, Message])],
-  providers: [RedisService, ProviderService],
-  exports: [RedisService, ProviderService],
+  controllers: [FxController],
+  providers: [RedisService, ProviderService, FxService],
+  exports: [RedisService, ProviderService, FxService],
 })
 export class GlobalModule {}

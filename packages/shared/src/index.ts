@@ -135,5 +135,5 @@ export interface Workspace {
 // ─── Utils ────────────────────────────────────────────────────────────────────
 export const KOBO_TO_NGN = (kobo: number): number => kobo / 100;
 export const NGN_TO_KOBO = (ngn: number): number => Math.round(ngn * 100);
-export const NGN_TO_USD = (ngn: number, rate = 1600): number => ngn / rate;
+export const NGN_TO_USD = (ngn: number, rate: number): number => ngn / rate;
 export const formatNgn = (kobo: number): string => `₦${KOBO_TO_NGN(kobo).toLocaleString('en-NG')}`;

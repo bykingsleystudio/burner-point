@@ -9,6 +9,7 @@ interface User {
   firstName: string;
   lastName: string;
   role: string;
+  country?: string;
   walletBalanceKobo: number;
   walletBalanceUsdCents?: number;
   walletBalanceUsd?: number;
