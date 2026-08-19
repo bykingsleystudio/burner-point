@@ -9,6 +9,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   Bell,
   ChevronDown,
+  ChevronsLeft,
+  ChevronsRight,
   CreditCard,
   FileText,
   Globe2,
@@ -37,6 +39,7 @@ import { BpLoadingState } from '@/components/design-system';
 import { AccountAttentionBanner } from '@/components/dashboard/account-attention-banner';
 
 type NavItem = {
+  group: string;
   href: string;
   label: string;
   shortLabel: string;
@@ -46,6 +49,7 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   {
+    group: 'Workspace',
     href: '/dashboard',
     label: 'Dashboard',
     shortLabel: 'Overview',
@@ -53,6 +57,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: LayoutDashboard,
   },
   {
+    group: 'Communication',
     href: '/dashboard/messenger',
     label: 'BP Messenger',
     shortLabel: 'Messenger',
@@ -60,6 +65,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: MessageSquareText,
   },
   {
+    group: 'Verification',
     href: '/dashboard/verify-hub',
     label: 'BP Verify Hub',
     shortLabel: 'Verify Hub',
@@ -67,6 +73,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: ShieldCheck,
   },
   {
+    group: 'Verification',
     href: '/dashboard/rentals',
     label: 'BP Number Rentals',
     shortLabel: 'Rentals',
@@ -74,6 +81,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: Phone,
   },
   {
+    group: 'Connectivity',
     href: '/dashboard/esim',
     label: 'BP eSIM Store',
     shortLabel: 'eSIM Store',
@@ -81,6 +89,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: Smartphone,
   },
   {
+    group: 'Connectivity',
     href: '/dashboard/proxy',
     label: 'BP Proxy Store',
     shortLabel: 'Proxy Store',
@@ -88,6 +97,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: Globe2,
   },
   {
+    group: 'Connectivity',
     href: '/dashboard/secure-tunnel',
     label: 'BP Secure Tunnel',
     shortLabel: 'Secure Tunnel',
@@ -95,6 +105,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: Shield,
   },
   {
+    group: 'Account',
     href: '/dashboard/settings',
     label: 'Settings',
     shortLabel: 'Settings',
@@ -189,7 +200,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sessionUser, setSessionUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const { user: storedUser, clearAuth, updateUser } = useAuthStore();
-  const { sidebarOpen, toggleSidebar, setSidebarOpen } = useUIStore();
+  const { sidebarOpen, sidebarCollapsed, toggleSidebar, toggleSidebarCollapsed, setSidebarOpen } = useUIStore();
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const currentUser = useMemo(() => storedUser ?? mapSupabaseUser(sessionUser), [sessionUser, storedUser]);
 
@@ -332,34 +343,37 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
       <aside
         className={clsx(
-          'bp-dashboard-sidebar fixed inset-y-0 left-0 z-40 flex w-[19rem] max-w-[88vw] flex-col border-r shadow-[28px_0_80px_rgba(0,0,0,0.18)] transition-transform duration-300 md:static md:max-w-none',
+          'bp-dashboard-sidebar fixed inset-y-0 left-0 z-40 flex max-w-[88vw] flex-col border-r shadow-[28px_0_80px_rgba(0,0,0,0.18)] transition-[width,transform] duration-300 md:static md:max-w-none',
+          sidebarCollapsed ? 'w-[5.25rem]' : 'w-[19rem]',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
         )}
       >
-        <div className="border-b border-white/8 px-5 py-5">
+        <div className={clsx('border-b border-white/8 py-5', sidebarCollapsed ? 'px-3' : 'px-5')}>
           <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
             <Image src="/assets/logo-mark.svg" alt="" width={28} height={30} className="h-auto w-auto drop-shadow-[0_0_20px_rgba(0,255,157,0.2)]" />
-            <span>
+            <span className={clsx(sidebarCollapsed && 'hidden')}>
               <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={138} height={26} className="h-auto w-auto" />
               <span className="mt-1 block text-[11px] text-white/48">Private telecom control surface</span>
             </span>
           </Link>
         </div>
 
-        <div className="border-b border-white/8 px-5 py-4">
+        <div className={clsx('border-b border-white/8 py-4', sidebarCollapsed ? 'px-3' : 'px-5')}>
           <div className="rounded-[1.25rem] border border-brand-green/18 bg-brand-green/[0.06] p-4">
             <div className="flex items-center justify-between gap-3">
-              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green">Credits balance</span>
+              <span className={clsx('font-mono text-[10px] uppercase tracking-[0.18em] text-brand-green', sidebarCollapsed && 'sr-only')}>Credits balance</span>
               <CreditCard className="h-4 w-4 text-brand-green" />
             </div>
-            <p className="mt-3 font-mono text-2xl text-white">{formatWalletPrimary(currentUser)}</p>
-            <p className="mt-2 text-xs leading-5 text-white/48">Local convenience value: {formatWalletSecondary(currentUser)}</p>
+            <p className={clsx('mt-3 font-mono text-2xl text-white', sidebarCollapsed && 'text-center text-lg')}>{formatWalletPrimary(currentUser)}</p>
+            <p className={clsx('mt-2 text-xs leading-5 text-white/48', sidebarCollapsed && 'hidden')}>Local convenience value: {formatWalletSecondary(currentUser)}</p>
           </div>
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Dashboard">
-          <div className="space-y-1">
-            {NAV_ITEMS.map((item) => {
+          <div className="space-y-5">
+            {[...new Set(NAV_ITEMS.map((item) => item.group))].map((group) => <div key={group}>
+              <p className={clsx('mb-2 px-3 font-mono text-[10px] uppercase tracking-[0.18em] text-white/32', sidebarCollapsed && 'sr-only')}>{group}</p>
+              <div className="space-y-1">{NAV_ITEMS.filter((item) => item.group === group).map((item) => {
               const active =
                 item.href === '/dashboard'
                   ? pathname === item.href
@@ -386,23 +400,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   >
                     <Icon className="h-5 w-5" />
                   </span>
-                  <span className="min-w-0">
+                  <span className={clsx('min-w-0', sidebarCollapsed && 'hidden')}>
                     <span className={clsx('block text-sm font-semibold', active ? 'text-white' : 'text-white/82')}>{item.label}</span>
                     <span className="mt-1 block text-xs leading-5 text-white/42">{item.description}</span>
                   </span>
-                </Link>
-              );
-            })}
+                </Link>);
+              })}</div>
+            </div>)}
           </div>
         </nav>
 
-        <div className="border-t border-white/8 px-4 py-4">
+        <div className={clsx('border-t border-white/8 py-4', sidebarCollapsed ? 'px-3' : 'px-4')}>
           <details className="group [&_summary::-webkit-details-marker]:hidden">
             <summary className="flex min-h-12 cursor-pointer list-none items-center gap-3 rounded-[1.15rem] border border-white/8 bg-white/[0.03] px-3 py-3 transition hover:border-brand-green/22 hover:bg-brand-green/[0.05]">
               <span className="flex h-11 w-11 items-center justify-center rounded-full border border-brand-green/24 bg-brand-green/10 text-sm font-semibold text-brand-green">
                 {(currentUser?.firstName || 'B').slice(0, 1).toUpperCase()}
               </span>
-              <span className="min-w-0 flex-1">
+              <span className={clsx('min-w-0 flex-1', sidebarCollapsed && 'hidden')}>
                 <span className="block truncate text-sm font-semibold text-white">
                   {currentUser?.firstName || 'Burner Point user'}
                 </span>
@@ -410,7 +424,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   {currentUser?.email || 'Private account'}
                 </span>
               </span>
-              <ChevronDown className="h-4 w-4 text-white/42 transition group-open:rotate-180" />
+              <ChevronDown className={clsx('h-4 w-4 text-white/42 transition group-open:rotate-180', sidebarCollapsed && 'hidden')} />
             </summary>
             <div className="mt-2 rounded-[1.15rem] border border-white/8 bg-[#020806]/36 p-2">
               <Link href="/dashboard/settings" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-white/68 transition hover:bg-white/[0.04] hover:text-white">
@@ -443,6 +457,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </button>
             </div>
           </details>
+          <button type="button" onClick={toggleSidebarCollapsed} className="mt-3 hidden min-h-10 w-full items-center justify-center gap-2 rounded-[0.8rem] border border-white/8 text-xs text-white/55 transition hover:border-brand-green/25 hover:text-brand-green md:flex" aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+            {sidebarCollapsed ? <ChevronsRight className="h-4 w-4" /> : <><ChevronsLeft className="h-4 w-4" />Collapse</>}
+          </button>
         </div>
       </aside>
 

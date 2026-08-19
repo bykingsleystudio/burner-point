@@ -2,288 +2,97 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import {
-  ArrowRight,
-  BellRing,
-  CreditCard,
-  MessageSquareText,
-  Phone,
-  RadioTower,
-  Route,
-  Server,
-  ShieldCheck,
-  Smartphone,
-  Sparkles,
-} from 'lucide-react';
-import { billingApi, numbersApi } from '@/lib/api';
-import { formatLegacyAmountPrimary, formatLegacyAmountSecondary, formatWalletPrimary, formatWalletSecondary } from '@/lib/money';
-import { SUPPORT_EMAIL, SUPPORT_EMAIL_HREF } from '@/lib/support';
+import { formatDistanceToNow } from 'date-fns';
+import { ArrowUpRight, CreditCard, Inbox, MessageSquareText, Phone, Plus, ShieldCheck, Ticket, Wallet } from 'lucide-react';
+import { billingApi, messagesApi, numbersApi, supportApi } from '@/lib/api';
+import { formatUsdCents } from '@/lib/money';
 import { useAuthStore } from '@/store';
 
-type NumberRecord = {
-  id: string;
-  number: string;
-  status?: string;
-  type?: string;
-  smsReceived?: number;
-  createdAt?: string;
-  updatedAt?: string;
+type NumberRecord = { id: string; number: string; status?: string; type?: string; countryCode?: string; expiresAt?: string; smsReceived?: number };
+type BillingOverview = {
+  wallet?: { balanceUsdCents?: number; lockedBalanceUsdCents?: number };
+  subscriptions?: Array<{ id: string; status: string; productId: string | null; renewsAt: string | null }>;
+  walletTransactions?: Array<{ id: string; type: string; status: string; amountUsdCents: number; description: string | null; createdAt: string | null }>;
 };
+type SupportTicket = { id: string; subject: string; status: 'open' | 'in_progress' | 'resolved' | 'closed'; updatedAt?: string };
 
-type LedgerItem = {
-  id: string;
-  description?: string;
-  type?: string;
-  status?: string;
-  amountKobo?: number;
-  createdAt?: string;
-};
+function statusLabel(status: string) { return status.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()); }
+function statusClass(status: string) {
+  if (['paid', 'active', 'resolved', 'delivered'].includes(status.toLowerCase())) return 'border-brand-green/25 bg-brand-green/10 text-brand-green';
+  if (['failed', 'expired', 'closed'].includes(status.toLowerCase())) return 'border-red-300/25 bg-red-400/10 text-red-200';
+  return 'border-[#9FA6B2]/25 bg-[#9FA6B2]/10 text-[var(--bp-foreground-muted)]';
+}
+function formatDate(value?: string | null) { return value ? formatDistanceToNow(new Date(value), { addSuffix: true }) : 'Date unavailable'; }
+function Skeleton({ className = '' }: { className?: string }) { return <div aria-hidden="true" className={`animate-pulse rounded-md bg-[var(--bp-surface-raised)] ${className}`} />; }
+function EmptyState({ title, text, href, action }: { title: string; text: string; href?: string; action?: string }) {
+  return <div className="border-t border-[var(--bp-border-subtle)] py-8"><p className="text-sm font-semibold">{title}</p><p className="mt-2 max-w-md text-sm leading-6 bp-dashboard-muted">{text}</p>{href && action ? <Link href={href} className="mt-4 inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-brand-green hover:text-brand-neon"><ArrowUpRight className="h-4 w-4" />{action}</Link> : null}</div>;
+}
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
+  const [billing, setBilling] = useState<BillingOverview | null>(null);
   const [numbers, setNumbers] = useState<NumberRecord[]>([]);
-  const [activity, setActivity] = useState<LedgerItem[]>([]);
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [unreadMessages, setUnreadMessages] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     let mounted = true;
-
-    Promise.allSettled([numbersApi.list(), billingApi.ledger(1, 6)])
-      .then((results) => {
+    Promise.allSettled([billingApi.overview(), numbersApi.list(), supportApi.tickets()])
+      .then(async ([billingResult, numbersResult, ticketsResult]) => {
         if (!mounted) return;
-
-        const nextNumbers = results[0].status === 'fulfilled' && Array.isArray(results[0].value.data)
-          ? results[0].value.data
-          : [];
-        const nextLedger = results[1].status === 'fulfilled'
-          ? results[1].value.data?.transactions ?? []
-          : [];
-
+        const nextNumbers = numbersResult.status === 'fulfilled' && Array.isArray(numbersResult.value.data) ? numbersResult.value.data as NumberRecord[] : [];
+        setBilling(billingResult.status === 'fulfilled' ? billingResult.value.data as BillingOverview : null);
         setNumbers(nextNumbers);
-        setActivity(nextLedger);
+        setTickets(ticketsResult.status === 'fulfilled' && Array.isArray(ticketsResult.value.data) ? ticketsResult.value.data as SupportTicket[] : []);
+        const messageResults = await Promise.allSettled(nextNumbers.filter((number) => number.status === 'active').slice(0, 5).map((number) => messagesApi.list(number.id, 1, 1)));
+        if (!mounted) return;
+        setUnreadMessages(messageResults.reduce((total, result) => total + (result.status === 'fulfilled' ? Number(result.value.data?.unreadCount ?? 0) : 0), 0));
+        setLoadError([billingResult, numbersResult, ticketsResult].every((result) => result.status === 'rejected'));
       })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
-
-    return () => {
-      mounted = false;
-    };
+      .catch(() => { if (mounted) setLoadError(true); })
+      .finally(() => { if (mounted) setLoading(false); });
+    return () => { mounted = false; };
   }, []);
 
-  const greeting = useMemo(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
-  }, []);
-
-  const activeNumbers = numbers.filter((item) => item.status === 'active').length;
-  const messagesToday = numbers.reduce((sum, item) => sum + Number(item.smsReceived ?? 0), 0);
-  const activeRentals = numbers.filter((item) => item.type === 'rental' || item.type === 'burner').length;
-  const headlineName = user?.firstName || 'there';
+  const greeting = useMemo(() => { const hour = new Date().getHours(); return hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'; }, []);
+  const activeNumbers = numbers.filter((item) => item.status === 'active');
+  const activeRentals = activeNumbers.filter((item) => item.type === 'rental' || item.type === 'burner');
+  const activeSubscriptions = billing?.subscriptions?.filter((item) => ['active', 'trialing'].includes(item.status)) ?? [];
+  const transactions = billing?.walletTransactions?.slice(0, 5) ?? [];
+  const openTickets = tickets.filter((ticket) => ['open', 'in_progress'].includes(ticket.status));
+  const firstName = user?.firstName || 'there';
 
   return (
-    <div className="space-y-6">
-      <section className="overflow-hidden rounded-[2rem] border border-white/8 bg-[linear-gradient(135deg,rgba(1,50,32,0.94),rgba(0,0,0,0.98)_62%)] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.38)] md:p-8">
-        <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr] xl:items-end">
-          <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Burner Point overview</p>
-            <h2 className="mt-4 max-w-[14ch] text-[2.45rem] font-semibold leading-[0.94] text-white sm:text-[3rem] md:text-[3.7rem]">
-              {greeting}, <span className="text-brand-green">{headlineName}</span>.
-            </h2>
-            <p className="mt-4 max-w-3xl text-base leading-8 text-white/58">
-              Stay Anonymous. Stay Connected. Private By Design. This workspace keeps your messaging, verification, rentals, billing activity, and privacy controls in one place.
-            </p>
-          </div>
-
-          <div className="rounded-[1.6rem] border border-white/10 bg-[#020806]/28 p-5">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Credits balance</p>
-                <p className="mt-3 font-mono text-3xl text-white">{formatWalletPrimary(user)}</p>
-                <p className="mt-2 text-sm text-white/42">{formatWalletSecondary(user)}</p>
-              </div>
-              <span className="flex h-12 w-12 items-center justify-center rounded-[1rem] border border-brand-green/24 bg-brand-green/10">
-                <CreditCard className="h-5 w-5 text-brand-green" />
-              </span>
-            </div>
-            <p className="mt-4 text-sm leading-6 text-white/52">
-              Wallet-backed services cover BP Verify Hub, BP Number Rentals, BP eSIM Store, and BP Proxy Store. Recurring subscriptions remain inside billing and subscriptions.
-            </p>
-          </div>
-        </div>
+    <div className="mx-auto max-w-[1440px] space-y-8">
+      <section className="grid gap-5 border-b border-[var(--bp-border-subtle)] pb-8 xl:grid-cols-[1fr_24rem] xl:items-end">
+        <div><p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Burner Point overview</p><h2 className="mt-4 max-w-[15ch] text-4xl font-semibold leading-[0.96] tracking-[-0.02em] md:text-6xl">{greeting}, {firstName}.</h2><p className="mt-5 max-w-2xl text-base leading-7 bp-dashboard-muted">Your private communications, numbers, and account activity in one operational view.</p></div>
+        <section className="rounded-[1.25rem] border border-brand-green/25 bg-[linear-gradient(145deg,rgba(1,50,32,0.92),var(--bp-surface))] p-5" aria-label="Wallet balance">
+          <div className="flex items-start justify-between gap-4"><div><p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-green">Available balance</p>{loading ? <Skeleton className="mt-3 h-10 w-36" /> : <p className="mt-3 font-mono text-3xl font-semibold text-white">{formatUsdCents(billing?.wallet?.balanceUsdCents)}</p>}<p className="mt-2 text-xs text-white/60">USD, canonical wallet currency</p></div><Wallet className="h-5 w-5 text-brand-green" /></div>
+          <div className="mt-5 flex flex-wrap gap-2"><Link href="/dashboard/wallet" className="bp-primary-action inline-flex min-h-10 items-center gap-2 px-3 text-xs font-semibold uppercase tracking-[0.12em]"><Plus className="h-4 w-4" />Add funds</Link><Link href="/dashboard/billing" className="inline-flex min-h-10 items-center gap-2 rounded-[0.5rem] border border-white/15 px-3 text-xs font-semibold uppercase tracking-[0.12em] text-white/80 hover:border-brand-green/35 hover:text-brand-green">View wallet</Link></div>
+          {billing?.wallet?.lockedBalanceUsdCents ? <p className="mt-4 text-xs text-white/55">{formatUsdCents(billing.wallet.lockedBalanceUsdCents)} currently locked</p> : null}
+        </section>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-3">
-        {[
-          {
-            label: 'Active Numbers',
-            value: activeNumbers,
-            text: 'Lines currently active across verification, messaging, or rentals.',
-            icon: Phone,
-          },
-          {
-            label: 'Messages Today',
-            value: messagesToday,
-            text: 'Inbound message volume currently attached to your live number inventory.',
-            icon: MessageSquareText,
-          },
-          {
-            label: 'Active Rentals',
-            value: activeRentals,
-            text: 'Numbers currently assigned to short-term or renewable rental workflows.',
-            icon: RadioTower,
-          },
-        ].map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <article key={stat.label} className="rounded-[1.5rem] border border-white/8 bg-brand-card p-5">
-              <span className="flex h-11 w-11 items-center justify-center rounded-[1rem] border border-brand-green/20 bg-brand-green/10">
-                <Icon className="h-5 w-5 text-brand-green" />
-              </span>
-              <p className="mt-5 text-4xl font-semibold text-white">{loading ? '...' : stat.value}</p>
-              <p className="mt-2 text-sm font-semibold uppercase tracking-[0.12em] text-white/78">{stat.label}</p>
-              <p className="mt-3 text-sm leading-6 text-white/50">{stat.text}</p>
-            </article>
-          );
-        })}
+      {loadError ? <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-[0.9rem] border border-red-300/25 bg-red-400/10 px-4 py-3 text-sm text-red-100"><span>Some account data could not be loaded. Values shown below may be incomplete.</span><Link href="/dashboard/billing" className="font-semibold underline">Open billing</Link></div> : null}
+
+      <section aria-labelledby="quick-actions-heading"><p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-green">Next actions</p><h3 id="quick-actions-heading" className="mt-2 text-2xl font-semibold">What do you want to do?</h3><div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{[
+        { href: '/dashboard/verify-hub', label: 'Get a verification', icon: ShieldCheck }, { href: '/dashboard/rentals', label: 'Get a number', icon: Phone }, { href: '/dashboard/messenger', label: 'Open BP Messenger', icon: MessageSquareText }, { href: '/dashboard/wallet', label: 'Fund wallet', icon: CreditCard },
+      ].map((action) => { const Icon = action.icon; return <Link key={action.href} href={action.href} className="group flex min-h-16 items-center justify-between gap-3 border-b border-[var(--bp-border-subtle)] px-1 py-4 transition hover:border-brand-green/40"><span className="flex items-center gap-3 text-sm font-semibold"><Icon className="h-5 w-5 text-brand-green" />{action.label}</span><ArrowUpRight className="h-4 w-4 bp-dashboard-faint transition group-hover:text-brand-green" /></Link>; })}</div></section>
+
+      <section className="grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
+        <div><div className="flex items-end justify-between gap-4"><div><p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-green">Connected products</p><h3 className="mt-2 text-2xl font-semibold">Active services</h3></div><Link href="/dashboard/settings" className="text-sm font-semibold text-brand-green">Manage</Link></div><div className="mt-4 divide-y divide-[var(--bp-border-subtle)] border-y border-[var(--bp-border-subtle)]">
+          <div className="flex items-center justify-between gap-4 py-4"><span className="flex items-center gap-3 text-sm font-semibold"><MessageSquareText className="h-5 w-5 text-brand-green" />BP Messenger</span><span className={`rounded-full border px-2.5 py-1 text-xs ${activeNumbers.length ? statusClass('active') : statusClass('inactive')}`}>{activeNumbers.length ? `${activeNumbers.length} active number${activeNumbers.length === 1 ? '' : 's'}` : 'No active numbers'}</span></div>
+          <div className="flex items-center justify-between gap-4 py-4"><span className="flex items-center gap-3 text-sm font-semibold"><Phone className="h-5 w-5 text-brand-green" />Number rentals</span><span className={`rounded-full border px-2.5 py-1 text-xs ${activeRentals.length ? statusClass('active') : statusClass('inactive')}`}>{activeRentals.length ? `${activeRentals.length} active` : 'None active'}</span></div>
+          <div className="flex items-center justify-between gap-4 py-4"><span className="flex items-center gap-3 text-sm font-semibold"><CreditCard className="h-5 w-5 text-brand-green" />Subscriptions</span><span className={`rounded-full border px-2.5 py-1 text-xs ${activeSubscriptions.length ? statusClass('active') : statusClass('inactive')}`}>{activeSubscriptions.length ? `${activeSubscriptions.length} active` : 'None active'}</span></div>
+        </div><p className="mt-3 text-xs leading-5 bp-dashboard-faint">Verification, eSIM, proxy, and Secure Tunnel summaries are not exposed by the current dashboard API contract.</p></div>
+        <div><div className="flex items-end justify-between gap-4"><div><p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-green">Communication</p><h3 className="mt-2 text-2xl font-semibold">Messager summary</h3></div><Link href="/dashboard/messenger" className="text-sm font-semibold text-brand-green">Open</Link></div><div className="mt-4 border-y border-[var(--bp-border-subtle)] py-5"><div className="flex items-center justify-between"><span className="flex items-center gap-3 text-sm font-semibold"><Inbox className="h-5 w-5 text-brand-green" />Unread conversations</span><span className="font-mono text-2xl font-semibold">{loading ? '...' : unreadMessages}</span></div><p className="mt-3 text-sm leading-6 bp-dashboard-muted">Unread counts are loaded from active numbers where the messaging contract is available.</p></div>{!activeNumbers.length ? <EmptyState title="No active numbers" text="Get a private number before starting a conversation." href="/dashboard/rentals" action="Get a number" /> : null}</div>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-        <div className="rounded-[1.6rem] border border-white/8 bg-brand-card p-5 md:p-6">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Quick actions</p>
-              <h3 className="mt-3 text-2xl font-semibold text-white">Move into the next task without hunting for it.</h3>
-            </div>
-            <span className="hidden h-12 w-12 items-center justify-center rounded-[1rem] border border-brand-green/20 bg-brand-green/10 lg:flex">
-              <Sparkles className="h-5 w-5 text-brand-green" />
-            </span>
-          </div>
-
-          <div className="mt-6 grid gap-3 md:grid-cols-3">
-            {[
-              {
-                href: '/dashboard/rentals',
-                label: 'Buy Number',
-                text: 'Browse inventory, choose duration, and assign a line to your account.',
-                icon: Phone,
-              },
-              {
-                href: '/dashboard/messenger',
-                label: 'Start Chat',
-                text: 'Open BP Messenger and continue an existing conversation or create a new one.',
-                icon: MessageSquareText,
-              },
-              {
-                href: '/dashboard/verify-hub',
-                label: 'Run Verification',
-                text: 'Pick a tier, select a service, and watch live OTP updates in the hub.',
-                icon: ShieldCheck,
-              },
-            ].map((action) => {
-              const Icon = action.icon;
-              return (
-                <Link
-                  key={action.href}
-                  href={action.href}
-                  className="group rounded-[1.35rem] border border-white/8 bg-[#020806]/24 p-4 transition hover:-translate-y-0.5 hover:border-brand-green/28 hover:bg-brand-green/[0.05]"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-[1rem] border border-brand-green/18 bg-brand-green/10">
-                      <Icon className="h-5 w-5 text-brand-green" />
-                    </span>
-                    <ArrowRight className="h-4 w-4 text-white/28 transition group-hover:translate-x-1 group-hover:text-brand-green" />
-                  </div>
-                  <p className="mt-4 text-base font-semibold text-white">{action.label}</p>
-                  <p className="mt-2 text-sm leading-6 text-white/50">{action.text}</p>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        <aside className="rounded-[1.6rem] border border-white/8 bg-brand-card p-5 md:p-6">
-          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Recent activity</p>
-          <div className="mt-5 space-y-3">
-            {activity.length ? (
-              activity.map((item) => (
-                <div key={item.id} className="rounded-[1.25rem] border border-white/8 bg-[#020806]/24 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-white">{item.description || item.type || 'Wallet event'}</p>
-                      <p className="mt-1 text-xs uppercase tracking-[0.12em] text-white/42">{item.status || 'Recorded'}</p>
-                    </div>
-                    <BellRing className="h-4 w-4 text-brand-green" />
-                  </div>
-                  <p className="mt-3 font-mono text-sm text-brand-green">{formatLegacyAmountPrimary(item)}</p>
-                  <p className="mt-1 text-xs text-white/40">{formatLegacyAmountSecondary(item)}</p>
-                  <p className="mt-2 text-xs text-white/42">
-                    {item.createdAt ? new Date(item.createdAt).toLocaleString() : 'Pending timestamp'}
-                  </p>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-[1.25rem] border border-white/8 bg-[#020806]/24 p-5 text-sm leading-6 text-white/52">
-                Recent verification events, rentals, and wallet activity will appear here once the account starts transacting.
-              </div>
-            )}
-          </div>
-        </aside>
-      </section>
-
-      <section className="rounded-[1.6rem] border border-white/8 bg-[linear-gradient(180deg,rgba(1,50,32,0.78),rgba(0,0,0,0.94))] p-5 md:p-6">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Platform map</p>
-            <h3 className="mt-3 text-2xl font-semibold text-white">Move across every Burner Point module from one shell.</h3>
-          </div>
-          <div className="text-sm text-white/48">
-            Email support: <a href={SUPPORT_EMAIL_HREF} className="text-brand-green transition hover:text-[#39FF14]">{SUPPORT_EMAIL}</a>
-          </div>
-        </div>
-
-        <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {[
-            { href: '/dashboard/messenger', title: 'BP Messenger', text: 'Private threads, media context, and conversation continuity.', icon: MessageSquareText },
-            { href: '/dashboard/verify-hub', title: 'BP Verify Hub', text: 'Codes, status, and number activity in one place.', icon: ShieldCheck },
-            { href: '/dashboard/rentals', title: 'BP Number Rentals', text: 'Temporary and renewable number lifecycle management.', icon: Phone },
-            { href: '/dashboard/esim', title: 'BP eSIM Store', text: 'Travel data plans and activation state inside the platform.', icon: Smartphone },
-            { href: '/dashboard/proxy', title: 'BP Proxy Store', text: 'Secure routing options and location-aware connection control.', icon: Server },
-            { href: '/dashboard/secure-tunnel', title: 'BP Secure Tunnel', text: 'Integrated protection and private session continuity.', icon: Route },
-          ].map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="group rounded-[1.35rem] border border-white/8 bg-[#020806]/24 p-4 transition hover:-translate-y-0.5 hover:border-brand-green/28 hover:bg-brand-green/[0.05]"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-[1rem] border border-brand-green/18 bg-brand-green/10">
-                    <Icon className="h-5 w-5 text-brand-green" />
-                  </span>
-                  <ArrowRight className="h-4 w-4 text-white/28 transition group-hover:translate-x-1 group-hover:text-brand-green" />
-                </div>
-                <p className="mt-4 text-base font-semibold text-white">{item.title}</p>
-                <p className="mt-2 text-sm leading-6 text-white/50">{item.text}</p>
-              </Link>
-            );
-          })}
-        </div>
-
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link href="/dashboard/support" className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-4 text-sm text-white/70 transition hover:border-brand-green/24 hover:text-brand-green">
-            Support
-          </Link>
-          <Link href="/dashboard/security" className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-4 text-sm text-white/70 transition hover:border-brand-green/24 hover:text-brand-green">
-            2FA and security
-          </Link>
-          <Link href="/dashboard/settings" className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-4 text-sm text-white/70 transition hover:border-brand-green/24 hover:text-brand-green">
-            Account settings
-          </Link>
-        </div>
+      <section className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
+        <div><div className="flex items-end justify-between gap-4"><div><p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-green">Wallet ledger</p><h3 className="mt-2 text-2xl font-semibold">Recent transactions</h3></div><Link href="/dashboard/billing" className="text-sm font-semibold text-brand-green">View all</Link></div><div className="mt-4 overflow-hidden border-y border-[var(--bp-border-subtle)]">{loading ? <div className="space-y-4 py-5"><Skeleton className="h-6 w-full" /><Skeleton className="h-6 w-4/5" /><Skeleton className="h-6 w-3/5" /></div> : transactions.length ? <div className="divide-y divide-[var(--bp-border-subtle)]">{transactions.map((transaction) => <div key={transaction.id} className="grid gap-2 py-4 sm:grid-cols-[1fr_auto_auto] sm:items-center sm:gap-5"><div><p className="text-sm font-semibold">{transaction.description || statusLabel(transaction.type)}</p><p className="mt-1 text-xs bp-dashboard-faint">{formatDate(transaction.createdAt)}</p></div><span className={`w-fit rounded-full border px-2.5 py-1 text-xs ${statusClass(transaction.status)}`}>{statusLabel(transaction.status)}</span><p className="font-mono text-sm">{formatUsdCents(transaction.amountUsdCents)}</p></div>)}</div> : <EmptyState title="No recent transactions" text="Your wallet activity will appear here after a payment or product purchase." href="/dashboard/wallet" action="Fund wallet" />}</div></div>
+        <div><div className="flex items-end justify-between gap-4"><div><p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-green">Support</p><h3 className="mt-2 text-2xl font-semibold">Account attention</h3></div><Link href="/dashboard/support" className="text-sm font-semibold text-brand-green">View support</Link></div>{openTickets.length ? <div className="mt-4 divide-y divide-[var(--bp-border-subtle)] border-y border-[var(--bp-border-subtle)]">{openTickets.slice(0, 3).map((ticket) => <Link key={ticket.id} href="/dashboard/support" className="flex items-center justify-between gap-4 py-4"><span className="flex min-w-0 items-center gap-3"><Ticket className="h-5 w-5 flex-none text-brand-green" /><span className="min-w-0"><span className="block truncate text-sm font-semibold">{ticket.subject}</span><span className="mt-1 block text-xs bp-dashboard-faint">Updated {formatDate(ticket.updatedAt)}</span></span></span><span className={`flex-none rounded-full border px-2.5 py-1 text-xs ${statusClass(ticket.status)}`}>{statusLabel(ticket.status)}</span></Link>)}</div> : <EmptyState title="No open support tickets" text="Support requests and replies will appear here when you need them." href="/dashboard/support" action="Contact support" />}</div>
       </section>
     </div>
   );

@@ -60,16 +60,20 @@ export const useAuthStore = create<AuthState>()(
 
 interface UIState {
   sidebarOpen: boolean;
+  sidebarCollapsed: boolean;
   activeNumberId: string | null;
   toggleSidebar: () => void;
+  toggleSidebarCollapsed: () => void;
   setSidebarOpen: (v: boolean) => void;
   setActiveNumber: (id: string | null) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
   sidebarOpen: true,
+  sidebarCollapsed: false,
   activeNumberId: null,
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
+  toggleSidebarCollapsed: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
   setSidebarOpen: (v) => set({ sidebarOpen: v }),
   setActiveNumber: (id) => set({ activeNumberId: id }),
 }));
