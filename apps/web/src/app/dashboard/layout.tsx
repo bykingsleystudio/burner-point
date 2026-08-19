@@ -64,7 +64,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       } catch {
         clearAuth();
         clearApiSession();
-        await supabase.auth.signOut();
+        void supabase.auth.signOut().catch(() => undefined);
         router.replace('/sign-in');
       }
     };
