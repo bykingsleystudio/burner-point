@@ -113,9 +113,12 @@ export function useAuthSessionSync(
   const router = useRouter();
   const syncedRef = useRef(false);
   const syncInProgressRef = useRef(false);
+  const redirectTo = options?.redirectTo;
+  const enabled = options?.enabled;
+  const onError = options?.onError;
 
   useEffect(() => {
-    if (!session || !options?.enabled) return;
+    if (!session || !enabled) return;
 
     // Prevent double-sync (React strict mode, etc)
     if (syncInProgressRef.current || syncedRef.current) return;
@@ -124,14 +127,14 @@ export function useAuthSessionSync(
       syncInProgressRef.current = true;
       try {
         const result = await synchronizeAuthSession(session, {
-          redirectTo: options?.redirectTo,
+          redirectTo,
         });
 
         if (result.success) {
           syncedRef.current = true;
           router.push(result.redirectTo);
         } else {
-          options?.onError?.(result.error || 'Sync failed');
+          onError?.(result.error || 'Sync failed');
           toast.error(result.error || 'Authentication sync failed');
         }
       } finally {
@@ -140,7 +143,7 @@ export function useAuthSessionSync(
     };
 
     performSync();
-  }, [session, options?.redirectTo, options?.enabled, router, options?.onError]);
+  }, [session, redirectTo, enabled, router, onError]);
 }
 
 /**

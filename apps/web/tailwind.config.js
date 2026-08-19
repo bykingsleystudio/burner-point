@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: ['class', '[data-theme="dark"]'],
   content: [
     './src/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
@@ -10,6 +11,13 @@ module.exports = {
     extend: {
       colors: {
         brand: {
+          // Core brand colors
+          primary: '#013220',
+          'primary-dark': '#000E0A',
+          accent: '#00FF9D',
+          'accent-muted': '#00CC7E',
+          
+          // Legacy names for compatibility
           deep: '#013220',
           'deep-green': '#013220',
           green: '#00FF9D',
@@ -29,8 +37,9 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['Neue Haas Grotesk Display', 'Inter', 'system-ui', 'sans-serif'],
-        mono: ['DM Mono', 'monospace'],
+        sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-mono)', 'monospace'],
+        brand: ['var(--font-brand)', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         bp: '8px',
@@ -40,6 +49,12 @@ module.exports = {
       boxShadow: {
         glow: '0 0 20px rgba(0,255,157,0.15)',
         'glow-lg': '0 0 40px rgba(0,255,157,0.2)',
+      },
+      spacing: {
+        safe: 'var(--safe-area-inset-left)',
+        'safe-r': 'var(--safe-area-inset-right)',
+        'safe-t': 'var(--safe-area-inset-top)',
+        'safe-b': 'var(--safe-area-inset-bottom)',
       },
     },
   },
