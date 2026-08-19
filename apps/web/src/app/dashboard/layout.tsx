@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { io } from 'socket.io-client';
 import toast from 'react-hot-toast';
 import { clearApiSession } from '@/lib/api';
@@ -12,7 +11,6 @@ import { BpLoadingState } from '@/components/design-system';
 import { AppShell } from '@/components/app-shell';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
   const authCheckRef = useRef(false);
   const sessionExchangeRef = useRef<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,7 +34,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (!session) {
           clearAuth();
           clearApiSession();
-          router.replace('/sign-in');
+          window.location.replace('/sign-in');
           return;
         }
 
@@ -65,12 +63,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         clearAuth();
         clearApiSession();
         void supabase.auth.signOut().catch(() => undefined);
-        router.replace('/sign-in');
+        window.location.replace('/sign-in');
       }
     };
 
     void checkAuth();
-  }, [clearAuth, router, storedUser]);
+  }, [clearAuth, storedUser]);
 
   useEffect(() => {
     if (!accessToken) return;
