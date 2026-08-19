@@ -47,13 +47,13 @@ export class WalletTransaction {
   @Column({ type: 'enum', enum: TransactionStatus, default: TransactionStatus.PENDING })
   status: TransactionStatus;
 
-  @Column({ name: 'amount_kobo', type: 'bigint' })
+  @Column({ name: 'amount_usd_cents', type: 'bigint' })
   amountKobo: number;
 
-  @Column({ name: 'balance_before_kobo', type: 'bigint' })
+  @Column({ name: 'balance_before_usd_cents', type: 'bigint' })
   balanceBeforeKobo: number;
 
-  @Column({ name: 'balance_after_kobo', type: 'bigint' })
+  @Column({ name: 'balance_after_usd_cents', type: 'bigint' })
   balanceAfterKobo: number;
 
   @Column({ nullable: true })
