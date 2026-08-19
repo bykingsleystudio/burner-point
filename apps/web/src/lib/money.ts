@@ -84,6 +84,6 @@ export function formatLegacyAmountSecondary(amount?: LegacyAmountLike | null): s
   return amountKobo ? formatNgnKobo(amountKobo) : '';
 }
 
-export function formatStoredKoboAsUsd(kobo?: number | null, rate?: number | null): string {
+export function formatStoredKoboAsUsd(kobo?: number | null): string {
   return formatUsdCents(kobo);
 }
