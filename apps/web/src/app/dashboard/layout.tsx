@@ -25,7 +25,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const checkAuth = async () => {
       try {
         authCheckRef.current = true;
-        const { data: { session } } = await supabase.auth.getSession();
+        const sessionResult = await Promise.race([
+          supabase.auth.getSession(),
+          new Promise<never>((_, reject) => {
+            window.setTimeout(() => reject(new Error('Auth session lookup timed out')), 8000);
+          }),
+        ]);
+        const { data: { session } } = sessionResult;
 
         if (!session) {
           clearAuth();
