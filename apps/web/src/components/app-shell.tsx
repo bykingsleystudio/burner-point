@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { 
   Home, MessageSquare, ShoppingCart, ActivitySquare, Settings, 
   Wallet, CreditCard, ShieldCheck, Ticket, Code2, Menu, X, Search, UserRound
@@ -66,9 +67,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Link
         href={item.href}
         onClick={() => mobile && setSidebarOpen(false)}
-        className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+        className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
           active
-            ? 'bg-brand-accent/10 text-brand-accent'
+            ? 'bg-brand-green/10 text-brand-green'
             : 'text-[var(--bp-foreground-muted)] hover:text-[var(--bp-foreground)] hover:bg-[var(--bp-surface-muted)]'
         }`}
       >
@@ -79,16 +80,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="flex min-h-screen flex-col lg:flex-row bg-[var(--bp-background)]">
+    <div className="bp-dashboard-shell flex min-h-screen flex-col bg-[var(--bp-background)] lg:flex-row">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 bg-[var(--bp-surface)] border-r border-[var(--bp-border-subtle)] sticky top-0 h-screen overflow-y-auto">
-        <div className="p-4 space-y-6 flex-1">
+      <aside className="bp-dashboard-sidebar hidden w-60 shrink-0 flex-col border-r lg:sticky lg:top-0 lg:flex lg:h-screen lg:overflow-y-auto">
+        <div className="flex-1 space-y-7 p-4">
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center gap-2 px-2">
-            <div className="w-8 h-8 rounded-lg bg-brand-accent/10 flex items-center justify-center text-brand-accent font-bold">
-              BP
-            </div>
-            <span className="font-bold text-[var(--bp-foreground)]">Burner Point</span>
+            <Image src="/assets/burner-point-combination-mark.svg" alt="Burner Point" width={220} height={64} className="h-8 w-auto" />
           </Link>
 
           {/* Main Navigation */}
@@ -102,7 +100,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
 
           {/* Manage Section */}
-          <nav className="space-y-1 pt-4 border-t border-[var(--bp-border-subtle)]">
+          <nav className="space-y-1 border-t border-[var(--bp-border-subtle)] pt-5">
             <div className="px-2 text-xs font-semibold text-[var(--bp-foreground-muted)] uppercase tracking-wider mb-2">
               Manage
             </div>
@@ -112,7 +110,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
 
           {/* Developer Section */}
-          <nav className="space-y-1 pt-4 border-t border-[var(--bp-border-subtle)]">
+          <nav className="space-y-1 border-t border-[var(--bp-border-subtle)] pt-5">
             <div className="px-2 text-xs font-semibold text-[var(--bp-foreground-muted)] uppercase tracking-wider mb-2">
               Developer
             </div>
@@ -122,7 +120,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
 
           {/* Account Section */}
-          <nav className="space-y-1 pt-4 border-t border-[var(--bp-border-subtle)]">
+          <nav className="space-y-1 border-t border-[var(--bp-border-subtle)] pt-5">
             <div className="px-2 text-xs font-semibold text-[var(--bp-foreground-muted)] uppercase tracking-wider mb-2">
               Account
             </div>
@@ -139,7 +137,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               href="/dashboard/settings"
               className="flex items-center gap-3 p-2 rounded-lg hover:bg-[var(--bp-surface-muted)] transition-colors"
             >
-              <div className="w-10 h-10 rounded-full bg-brand-accent/20 flex items-center justify-center text-brand-accent font-bold text-sm flex-shrink-0">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-brand-green/15 text-sm font-bold text-brand-green">
                 {user.firstName?.charAt(0) || 'U'}
               </div>
               <div className="min-w-0 flex-1">
@@ -158,9 +156,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {/* Mobile Header */}
         <div className="lg:hidden flex items-center justify-between p-4 bg-[var(--bp-surface)] border-b border-[var(--bp-border-subtle)] sticky top-0 z-30">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-brand-accent/10 flex items-center justify-center text-brand-accent font-bold text-sm">
-              BP
-            </div>
+            <Image src="/assets/burner-point-logo-icon.svg" alt="Burner Point" width={40} height={40} className="h-8 w-8" />
           </Link>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -200,9 +196,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         {/* Page Content */}
         <main className="flex-1 overflow-auto pb-20 lg:pb-0">
-          <div className="sticky top-0 z-20 border-b border-[var(--bp-border-subtle)] bg-[var(--bp-background)]/90 px-4 py-3 backdrop-blur sm:px-6 lg:px-8">
+          <div className="sticky top-0 z-20 border-b border-[var(--bp-border-subtle)] bg-[var(--bp-background)]/95 px-4 py-3 sm:px-6 lg:px-8">
             <div className="relative mx-auto max-w-7xl">
-              <div className="flex min-h-11 items-center gap-3 rounded-md border border-[var(--bp-border-subtle)] bg-[var(--bp-surface)] px-3">
+              <div className="flex min-h-11 items-center gap-3 rounded-md border border-[var(--bp-border-subtle)] bg-[var(--bp-surface)] px-3 shadow-sm">
                 <Search className="h-4 w-4 text-[var(--bp-foreground-muted)]" />
                 <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search dashboard" className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--bp-foreground-muted)]" aria-label="Search dashboard" />
                 <Link href="/dashboard/settings" aria-label="Open account settings" className="hidden rounded-full p-1.5 text-[var(--bp-foreground-muted)] hover:bg-[var(--bp-surface-muted)] hover:text-brand-accent sm:block"><UserRound className="h-4 w-4" /></Link>

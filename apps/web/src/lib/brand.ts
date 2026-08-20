@@ -8,15 +8,15 @@ export const burnerPointBrand = {
     neonGreen: '#39FF14',
     metalStart: '#9FA6B2',
     metalEnd: '#E5E7EB',
-    dark: '#03110B',
-    surface: '#07140F',
-    border: '#123425',
+    dark: '#06130D',
+    surface: '#0B1E15',
+    border: 'rgba(255,255,255,0.11)',
     muted: '#617169',
     white: '#FFFFFF',
   },
   typography: {
     primary: 'Neue Haas Grotesk Display',
-    fallback: 'Inter',
+    fallback: 'Helvetica Neue',
     mono: 'DM Mono',
     headlineWeight: 900,
     labelWeight: 600,
@@ -25,7 +25,7 @@ export const burnerPointBrand = {
   radii: {
     sm: '8px',
     md: '12px',
-    lg: '16px',
+    lg: '12px',
   },
   spacing: {
     0: '0',
@@ -39,8 +39,8 @@ export const burnerPointBrand = {
     16: '64px',
   },
   shadows: {
-    card: '0 30px 70px rgba(0,0,0,0.34)',
-    elevated: '0 34px 100px rgba(0,0,0,0.46)',
+    card: '0 12px 32px rgba(1,50,32,0.08)',
+    elevated: '0 20px 56px rgba(1,50,32,0.14)',
     focus: '0 0 0 4px rgba(0,255,157,0.08)',
   },
   glow: {

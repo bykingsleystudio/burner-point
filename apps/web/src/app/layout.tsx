@@ -39,11 +39,10 @@ export const metadata: Metadata = {
   verification,
   icons: {
     icon: [
-      { url: '/assets/icon-192.png', type: 'image/png', sizes: '192x192' },
-      { url: '/assets/icon-512.png', type: 'image/png', sizes: '512x512' },
+      { url: '/assets/burner-point-logo-icon.svg', type: 'image/svg+xml' },
     ],
-    shortcut: '/assets/icon-192.png',
-    apple: '/assets/icon-192.png',
+    shortcut: '/assets/burner-point-logo-icon.svg',
+    apple: '/assets/burner-point-logo-icon.svg',
   },
   appleWebApp: {
     capable: true,
@@ -57,8 +56,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#F3F8F5' },
-    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+    { media: '(prefers-color-scheme: light)', color: '#F7FAF8' },
+    { media: '(prefers-color-scheme: dark)', color: '#06130D' },
   ],
 };
 
@@ -66,7 +65,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen font-sans antialiased">
-        <meta name="theme-color" content="#000000" />
+        <meta name="theme-color" content="#06130D" />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem('burnerpoint-theme')||'system';var d=t==='system'?(!window.matchMedia('(prefers-color-scheme: dark)').matches?'light':'dark'):t;document.documentElement.dataset.theme=d}catch(e){document.documentElement.dataset.theme='dark'}})()`,

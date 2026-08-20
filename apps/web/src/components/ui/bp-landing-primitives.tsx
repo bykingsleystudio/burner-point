@@ -39,23 +39,7 @@ const buttonSizes: Record<ButtonSize, string> = {
 export function BpLogo({ compact = false }: { compact?: boolean }) {
   return (
     <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
-      <Image
-        src="/assets/logo-mark.svg"
-        alt=""
-        width={40}
-        height={40}
-        priority
-        className="h-10 w-10"
-      />
-      {!compact ? (
-        <Image
-          src="/assets/wordmark-white.svg"
-          alt="Burner Point"
-          width={190}
-          height={26}
-          className="h-6 w-auto sm:h-7"
-        />
-      ) : null}
+      <Image src={compact ? '/assets/burner-point-logo-icon.svg' : '/assets/burner-point-combination-mark.svg'} alt="Burner Point" width={compact ? 40 : 220} height={compact ? 40 : 64} priority className={compact ? 'h-10 w-10' : 'h-8 w-auto sm:h-9'} />
     </Link>
   );
 }

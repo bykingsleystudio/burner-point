@@ -26,7 +26,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     const themeMeta = document.head.querySelector('meta[name="theme-color"]') ?? document.createElement('meta');
     themeMeta.setAttribute('name', 'theme-color');
-    themeMeta.setAttribute('content', resolvedTheme === 'dark' ? '#000000' : '#F3F8F5');
+    themeMeta.setAttribute('content', resolvedTheme === 'dark' ? '#06130D' : '#F7FAF8');
 
     if (!themeMeta.parentElement) {
       document.head.appendChild(themeMeta);

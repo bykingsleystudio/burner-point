@@ -57,11 +57,7 @@ export function MarketingHeader() {
     <header className="sticky top-0 z-50 border-b border-black/6 bg-white/86 backdrop-blur-2xl dark:border-white/8 dark:bg-[#06120d]/88">
       <div className="mx-auto flex min-h-20 max-w-[92rem] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
-          <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} className="h-8 w-8 flex-none sm:h-9 sm:w-9" priority />
-          <span className="flex items-center rounded-full bg-[#020806]/[0.03] px-3 py-2 dark:bg-white/[0.04]">
-            <Image src="/assets/wordmark-black.svg" alt="Burner Point" width={166} height={26} className="h-[1.05rem] w-auto dark:hidden sm:h-[1.15rem]" />
-            <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={166} height={26} className="hidden h-[1.05rem] w-auto dark:block sm:h-[1.15rem]" />
-          </span>
+          <Image src="/assets/burner-point-combination-mark.svg" alt="Burner Point" width={220} height={64} className="h-9 w-auto sm:h-10" priority />
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
@@ -234,8 +230,7 @@ export function MarketingFooter() {
         <div className="grid items-start gap-10 xl:grid-cols-[minmax(0,1.08fr)_repeat(4,minmax(0,1fr))] 2xl:grid-cols-[minmax(0,1fr)_repeat(4,minmax(0,1fr))]">
           <div className="min-w-0 max-w-sm xl:pr-4">
             <Link href="/" className="inline-flex max-w-full items-center gap-2.5" aria-label="Burner Point home">
-              <Image src="/assets/logo-mark.svg" alt="" width={34} height={34} className="h-8 w-8 sm:h-9 sm:w-9" />
-              <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={166} height={26} className="h-[1.15rem] max-w-full w-auto sm:h-5" />
+              <Image src="/assets/burner-point-combination-mark-gradient.svg" alt="Burner Point" width={220} height={64} className="h-9 max-w-full w-auto sm:h-10" />
             </Link>
             <p className="mt-5 max-w-sm text-sm leading-7 text-white/74">
               Stay Anonymous. Stay Connected. Private by Design.
