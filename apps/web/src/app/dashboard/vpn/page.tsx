@@ -22,7 +22,6 @@ type LedgerItem = {
 type SessionSummary = {
   status: string;
   reference?: string;
-  chargeUsdCents?: number;
 };
 
 function extractReference(payload: unknown) {
@@ -62,7 +61,7 @@ export default function VpnPage() {
         setCatalog(nextCatalog);
         setHistory(nextSessions.map((item: Record<string, unknown>) => ({
           id: String(item.id),
-          type: 'vpn_purchase',
+          type: 'vpn_subscription',
           description: typeof item.deviceName === 'string' ? item.deviceName : 'Secure tunnel session',
           referenceId: typeof item.providerSessionId === 'string' ? item.providerSessionId : undefined,
           createdAt: typeof item.createdAt === 'string' ? item.createdAt : undefined,
@@ -91,15 +90,14 @@ export default function VpnPage() {
         idempotencyKey: crypto.randomUUID(),
       });
 
-      if (response.data?.status !== 'submitted') {
+      if (!response.data?.id || response.data?.status === 'failed') {
         toast.error('Secure tunnel session creation is not available right now.');
         return;
       }
 
       setLastSession({
-        status: 'Submitted',
-        reference: extractReference(response.data?.data),
-        chargeUsdCents: response.data?.walletDebitedUsdCents,
+        status: response.data.status || 'provisioning',
+        reference: extractReference(response.data),
       });
       toast.success('Secure tunnel session requested.');
     } catch (error: unknown) {
@@ -116,7 +114,7 @@ export default function VpnPage() {
         <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">BP Secure Tunnel VPN</p>
         <h1 className="mt-3 text-3xl font-semibold text-white">Protected session requests with device and region assignment.</h1>
         <p className="mt-3 max-w-3xl text-sm leading-7 text-white/54">
-          Request a secure tunnel session, attach it to a device label, and keep purchase and status history in one account surface without exposing private configuration details in the UI.
+          Use your BP Secure Tunnel VPN subscription to request a protected WireGuard session. VPN access is subscription-only and never charges the Burner Point Wallet.
         </p>
       </section>
 
@@ -147,12 +145,12 @@ export default function VpnPage() {
           </div>
 
           <div className="mt-5 rounded-[1.2rem] border border-brand-green/18 bg-brand-green/[0.05] p-4">
-            <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-brand-green">Session scope</p>
+            <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-brand-green">Subscription access</p>
             <p className="mt-2 text-sm text-white/72">
               {form.deviceName || 'Primary device'} targeting {form.region || 'the default region'}.
             </p>
             <p className="mt-3 text-sm leading-6 text-white/52">
-              Dedicated device assignment and region preferences are stored on the account side. Sensitive tunnel credentials stay server-controlled until an approved delivery path is configured.
+              Dedicated device assignment and region preferences are stored on the account side. Sensitive tunnel credentials stay server-controlled until an approved delivery path is configured. Wallet balance is not used for VPN access.
             </p>
           </div>
 
@@ -162,7 +160,7 @@ export default function VpnPage() {
             disabled={submitting}
             className="mt-5 inline-flex min-h-12 items-center justify-center rounded-[1rem] bg-brand-green px-5 text-xs font-semibold uppercase tracking-[0.16em] text-black transition hover:bg-[#1cffac] disabled:opacity-50"
           >
-            {submitting ? 'Submitting...' : 'Request Secure Tunnel Session'}
+            {submitting ? 'Connecting...' : 'Connect Secure Tunnel'}
           </button>
         </div>
 
@@ -186,7 +184,7 @@ export default function VpnPage() {
           </div>
 
           <div className="rounded-[1.5rem] border border-white/8 bg-brand-card p-5">
-            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Recent secure tunnel activity</p>
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Subscription session activity</p>
             {loading ? (
               <div className="mt-4 space-y-3">
                 {[1, 2].map((item) => <div key={item} className="h-20 animate-pulse rounded-[1rem] border border-white/8 bg-[#020806]/20" />)}
@@ -212,7 +210,7 @@ export default function VpnPage() {
               <div className="mt-4">
                 <BpEmptyState
                   title="No secure tunnel sessions yet"
-                  text="Requested sessions will appear here once the billing ledger records them."
+                  text="Connected sessions will appear here while your VPN subscription is active."
                 />
               </div>
             )}

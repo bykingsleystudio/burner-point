@@ -1433,7 +1433,6 @@ export class CreditsService {
         const base = this.configuredUsdCents('PROXY_ORDER_DAILY_PRICE_USD_CENTS', 199);
         return base * Math.max(1, Math.round(Number(input.durationDays ?? 30)));
       }
-      case 'secure_tunnel':
       case 'dedicated_ip':
         return this.configuredUsdCents('VPN_SESSION_PRICE_USD_CENTS', 499);
       case 'messenger_calls':

@@ -1025,6 +1025,9 @@ export class VpnSession {
   @Index()
   idempotencyKey: string;
 
+  @Column({ name: 'entitlement_source', nullable: true })
+  entitlementSource: string;
+
   @Column({ type: 'jsonb', default: {} })
   metadata: Record<string, unknown>;
 

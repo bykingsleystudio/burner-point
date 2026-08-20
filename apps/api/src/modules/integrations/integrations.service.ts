@@ -433,57 +433,42 @@ export class IntegrationsService {
       entitlementConfig.secureTunnel,
       entitlementConfig.premium,
     ]);
+    if (!hasSubscriptionAccess) {
+      throw new BadRequestException('An active BP Secure Tunnel VPN subscription is required');
+    }
+    const entitlementSnapshot = await this.revenueCatService.getEntitlementSnapshot(userId);
+    const entitlementSource = entitlementSnapshot.summary.activeEntitlements.includes(entitlementConfig.secureTunnel)
+      ? 'secure_tunnel_standalone_or_addon'
+      : 'premium_bundle';
+
     const idempotencyKey = this.integrationIdempotencyKey('vpn', input, input.idempotencyKey);
     const existing = await this.vpnSessionRepo.findOne({ where: { userId, idempotencyKey } });
     if (existing) return this.toPublicVpnSession(existing);
 
-    const priceUsdCents = hasSubscriptionAccess
-      ? 0
-      : this.resolveConfiguredUsdCents('VPN_SESSION_PRICE_USD_CENTS', 'secure tunnel session');
     const session = await this.vpnSessionRepo.save(this.vpnSessionRepo.create({
       userId,
       provider: 'wireguard',
       deviceName: input.deviceName,
       serverLocation: input.region ?? null,
-      priceUsdCents,
+      priceUsdCents: 0,
       idempotencyKey,
       status: 'pending',
-      metadata: { subscriptionAccess: hasSubscriptionAccess },
+      entitlementSource,
+      metadata: { subscriptionAccess: true, entitlementSource },
     }));
 
     try {
-      if (hasSubscriptionAccess) {
-        const providerResult = await this.callConfiguredProvider(
-          'wireguard.session',
-          userId,
-          { ...input, idempotencyKey, subscriptionAccess: true },
-          async (rawData) => this.persistVpnAcceptance(session, this.sanitizeProviderResponse(rawData), rawData),
-        );
-        if (providerResult.status !== 'submitted') {
-          await this.vpnSessionRepo.update(session.id, {
-            status: 'failed',
-            failureReason: 'WireGuard control-plane provider is not configured',
-          });
-        }
-      } else {
-        const result = await this.purchaseIntegrationProduct(
-          userId,
-          'wireguard.session',
-          { ...input, idempotencyKey },
-          priceUsdCents,
-          'secure_tunnel',
-          TransactionType.VPN_PURCHASE,
-          'BP Secure Tunnel session',
-          { deviceName: input.deviceName, region: input.region ?? null, sessionId: session.id },
-          idempotencyKey,
-          async (safeData, rawData) => this.persistVpnAcceptance(session, safeData, rawData),
-        );
-        if (result.status !== 'submitted') {
-          await this.vpnSessionRepo.update(session.id, {
-            status: 'failed',
-            failureReason: 'WireGuard control-plane provider is not configured',
-          });
-        }
+      const providerResult = await this.callConfiguredProvider(
+        'wireguard.session',
+        userId,
+        { ...input, idempotencyKey, subscriptionAccess: true },
+        async (rawData) => this.persistVpnAcceptance(session, this.sanitizeProviderResponse(rawData), rawData),
+      );
+      if (providerResult.status !== 'submitted') {
+        await this.vpnSessionRepo.update(session.id, {
+          status: 'failed',
+          failureReason: 'WireGuard control-plane provider is not configured',
+        });
       }
     } catch (error) {
       await this.markConnectivityFailure(this.vpnSessionRepo, session.id, error);
