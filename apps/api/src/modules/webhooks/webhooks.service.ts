@@ -5,7 +5,7 @@ import { createHmac, createPublicKey, timingSafeEqual, verify as verifySignature
 import { Repository } from 'typeorm';
 import twilio from 'twilio';
 import { Request } from 'express';
-import { Message } from '../../database/entities/message.entity';
+import { Message, MessageDirection, MessageStatus, MessageType } from '../../database/entities/message.entity';
 import { Call, CallDirection, CallStatus, WebhookDedup } from '../../database/entities/extended-entities';
 import { PhoneNumber } from '../../database/entities/phone-number.entity';
 import { EventsGateway } from '../gateway/events.gateway';
@@ -200,16 +200,76 @@ export class WebhooksService {
     const callSid = payload.CallSid;
     if (!callSid) return { success: true };
 
+    // Update call record with voicemail recording
+    const call = await this.callRepo.findOne({ where: { providerCallId: callSid } });
+    if (!call) return { success: true };
+
+    const recordingUrl = payload.RecordingUrl;
+    const durationSeconds = parseInt(payload.RecordingDuration || '0', 10);
+    const isCompleted = payload.RecordingStatus === 'completed';
+
     await this.callRepo.update(
-      { providerCallId: callSid },
+      { id: call.id },
       {
-        recordingUrl: payload.RecordingUrl,
-        voicemailUrl: payload.RecordingUrl,
-        durationSeconds: parseInt(payload.RecordingDuration || '0', 10),
-        status: payload.RecordingStatus === 'completed' ? CallStatus.COMPLETED : CallStatus.RINGING,
+        recordingUrl,
+        voicemailUrl: recordingUrl,
+        durationSeconds,
+        status: isCompleted ? CallStatus.COMPLETED : CallStatus.RINGING,
         metadata: payload,
       },
     );
+
+    // Create a message record for voicemail so it appears in the thread
+    if (isCompleted && call.userId && recordingUrl) {
+      try {
+        const phoneNum = call.phoneNumberId ? await this.numRepo.findOne({ where: { id: call.phoneNumberId } }) : null;
+        
+        // Generate signed read URL for the voicemail audio
+        let signedUrl = recordingUrl; // fallback to provider URL
+        if (call.userId) {
+          try {
+            const bucket = this.integrationsService['storageBucket']('voicemail'); // bp-media
+            const objectKey = `voicemail/${call.userId}/${callSid}/recording.mp3`;
+            const signed = await this.integrationsService.createSignedReadUrl(call.userId, bucket, objectKey);
+            signedUrl = signed.signedUrl;
+          } catch (error) {
+            this.logger.warn(`Failed to create signed URL for voicemail ${callSid}: ${error instanceof Error ? error.message : String(error)}`);
+            // Continue with provider URL as fallback
+          }
+        }
+
+        // Create message record for voicemail
+        const voicemailMessage = await this.msgRepo.save(
+          this.msgRepo.create({
+
+            from: call.from,
+            to: call.to,
+            body: `Voicemail (${durationSeconds}s)`,
+            direction: MessageDirection.INBOUND,
+            status: MessageStatus.RECEIVED,
+            type: MessageType.VOICEMAIL,
+            providerMessageSid: callSid,
+            mediaUrls: [signedUrl],
+            numSegments: 1,
+            phoneNumberId: phoneNum?.id,
+            userId: call.userId,
+          } as Partial<Message>),
+        );
+        // Emit realtime event so UI refreshes with voicemail
+        if (call.userId) {
+          this.eventsGateway.emitToUser(call.userId, 'message.inbound', {
+            messageId: voicemailMessage.id,
+            from: call.from,
+            to: call.to,
+            body: `Voicemail (${durationSeconds}s)`,
+            type: 'VOICEMAIL',
+            mediaUrls: [signedUrl],
+          });
+        }
+      } catch (error) {
+        this.logger.warn(`Failed to create voicemail message record: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
 
     return { success: true };
   }

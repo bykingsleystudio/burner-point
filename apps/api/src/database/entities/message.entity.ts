@@ -7,7 +7,7 @@ import { PhoneNumber } from './phone-number.entity';
 
 export enum MessageDirection { INBOUND = 'inbound', OUTBOUND = 'outbound' }
 export enum MessageStatus { PENDING = 'pending', QUEUED = 'queued', SENT = 'sent', DELIVERED = 'delivered', FAILED = 'failed', RECEIVED = 'received', UNREAD = 'unread', READ = 'read' }
-export enum MessageType { SMS = 'sms', MMS = 'mms' }
+export enum MessageType { SMS = 'sms', MMS = 'mms', VOICEMAIL = 'voicemail', CALL = 'call' }
 
 @Entity('messages')
 export class Message {
