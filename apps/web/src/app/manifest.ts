@@ -14,17 +14,17 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ['productivity', 'utilities', 'business'],
     icons: [
       {
-        src: '/assets/burner-point-logo-icon.svg',
+        src: '/assets/burner-point-icon-plain.svg',
         type: 'image/svg+xml',
         purpose: 'any',
       },
       {
-        src: '/assets/burner-point-logo-icon.svg',
+        src: '/assets/burner-point-icon-gradient.svg',
         type: 'image/svg+xml',
         purpose: 'maskable',
       },
       {
-        src: '/assets/burner-point-logo-icon-gradient.svg',
+        src: '/assets/burner-point-icon-gradient.svg',
         type: 'image/svg+xml',
         purpose: 'any',
       },

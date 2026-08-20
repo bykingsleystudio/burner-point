@@ -86,7 +86,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="flex-1 space-y-7 p-4">
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center gap-2 px-2">
-            <Image src="/assets/burner-point-combination-mark.svg" alt="Burner Point" width={220} height={64} className="h-8 w-auto" />
+            <Image src="/assets/burner-point-horizontal-gradient.svg" alt="Burner Point" width={220} height={64} className="h-8 w-auto" />
           </Link>
 
           {/* Main Navigation */}
@@ -156,7 +156,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {/* Mobile Header */}
         <div className="lg:hidden flex items-center justify-between p-4 bg-[var(--bp-surface)] border-b border-[var(--bp-border-subtle)] sticky top-0 z-30">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <Image src="/assets/burner-point-logo-icon.svg" alt="Burner Point" width={40} height={40} className="h-8 w-8" />
+            <Image src="/assets/burner-point-icon-gradient.svg" alt="Burner Point" width={40} height={40} className="h-8 w-8" />
           </Link>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}

@@ -39,10 +39,10 @@ export const metadata: Metadata = {
   verification,
   icons: {
     icon: [
-      { url: '/assets/burner-point-logo-icon.svg', type: 'image/svg+xml' },
+      { url: '/assets/burner-point-icon-plain.svg', type: 'image/svg+xml' },
     ],
-    shortcut: '/assets/burner-point-logo-icon.svg',
-    apple: '/assets/burner-point-logo-icon.svg',
+    shortcut: '/assets/burner-point-icon-plain.svg',
+    apple: '/assets/burner-point-icon-plain.svg',
   },
   appleWebApp: {
     capable: true,
