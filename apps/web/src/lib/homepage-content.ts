@@ -61,7 +61,7 @@ export const socialProfiles = [
   { label: 'YouTube', handle: '@burnerpointapp', href: 'https://www.youtube.com/@burnerpointapp' },
 ] as const;
 
-    export const productLinks: ProductLink[] = [
+  export const productLinks: ProductLink[] = [
   {
     name: 'BP Messenger Pro',
     description: 'Private US, UK, and Canada numbers for calling, texting, and contact separation.',
@@ -76,6 +76,7 @@ export const socialProfiles = [
     name: 'BP Rental Hub',
     description: 'Keep a temporary or renewable number active for continuity and recovery.',
     href: '/products/rentals',
+  },
   {
     name: 'BP eSIM Store',
     description: 'Buy travel data plans and activate connectivity without a physical SIM.',
