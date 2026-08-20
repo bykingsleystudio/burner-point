@@ -123,7 +123,8 @@ export const productStripCards: FeatureCard[] = [
     title: 'BP Rental Hub',
     description: 'Rent temporary or renewable numbers for days, weeks, months, or longer.',
   },
-     title: 'BP eSIM Store',
+  {
+    title: 'BP eSIM Store',
     description: 'Buy country and regional data plans for travel, remote work, and global movement.',
   },
   {
