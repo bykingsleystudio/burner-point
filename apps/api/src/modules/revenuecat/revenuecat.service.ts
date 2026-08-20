@@ -711,7 +711,7 @@ export class RevenueCatService {
   private displayNameForEntitlement(identifier: string) {
     const configured = this.getEntitlementConfig();
     if (identifier === configured.messenger) return 'BP Messenger Pro';
-    if (identifier === configured.secureTunnel) return 'BP Secure Tunnel';
+    if (identifier === configured.secureTunnel) return 'BP Secure Tunnel VPN';
     if (identifier === configured.premium) return 'BP Premium';
     return identifier
       .split('_')

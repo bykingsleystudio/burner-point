@@ -59,7 +59,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     group: 'Communication',
     href: '/dashboard/messenger',
-    label: 'BP Messenger',
+    label: 'BP Messenger Pro',
     shortLabel: 'Messenger',
     description: 'Messaging, calls, contacts, and shared media.',
     icon: MessageSquareText,
@@ -75,7 +75,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     group: 'Verification',
     href: '/dashboard/rentals',
-    label: 'BP Number Rentals',
+    label: 'BP Rental Hub',
     shortLabel: 'Rentals',
     description: 'Available numbers, active rentals, and renewals.',
     icon: Phone,

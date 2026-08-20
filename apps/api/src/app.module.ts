@@ -38,6 +38,7 @@ import { SecurityModule } from './modules/security/security.module';
 import { SupportModule } from './modules/support/support.module';
 import { RevenueCatModule } from './modules/revenuecat/revenuecat.module';
 import { CallsModule } from './modules/calls/calls.module';
+import { FxModule } from './modules/fx/fx.module';
 
 // ── Security middleware ───────────────────────────────────────────────────────
 import { SecurityMiddleware } from './middleware/security.middleware';
@@ -114,6 +115,7 @@ import { SecurityMiddleware } from './middleware/security.middleware';
     IntegrationsModule,    // Backend-only provider contracts, analytics, storage, eSIM/proxy/VPN adapters
     RevenueCatModule,      // Mobile subscription entitlements + webhook sync
     CallsModule,           // Outbound BP Messenger call billing + history
+    FxModule,              // Server-side USD display-rate conversion
 
     // Feature modules — all 10 services connected
     AuthModule,

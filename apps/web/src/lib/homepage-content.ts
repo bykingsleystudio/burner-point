@@ -63,7 +63,7 @@ export const socialProfiles = [
 
 export const productLinks: ProductLink[] = [
   {
-    name: 'BP Messenger',
+    name: 'BP Messenger Pro',
     description: 'Private US, UK, and Canada numbers for calling, texting, and contact separation.',
     href: '/products/messenger',
   },
@@ -73,7 +73,7 @@ export const productLinks: ProductLink[] = [
     href: '/products/verify-hub',
   },
   {
-    name: 'BP Rentals',
+    name: 'BP Rental Hub',
     description: 'Keep a temporary or renewable number active for continuity and recovery.',
     href: '/products/rentals',
   },
@@ -88,7 +88,7 @@ export const productLinks: ProductLink[] = [
     href: '/products/proxy-store',
   },
   {
-    name: 'BP Secure Tunnel',
+    name: 'BP Secure Tunnel VPN',
     description: 'Protect your connection with secure access and dedicated IP options.',
     href: '/products/secure-tunnel',
   },
@@ -114,7 +114,7 @@ export const heroTrustItems = [
 
 export const productStripCards: FeatureCard[] = [
   {
-    title: 'BP Messenger',
+    title: 'BP Messenger Pro',
     description: 'Private US, UK, and Canada numbers for calling, texting, and managing contacts.',
   },
   {
@@ -122,7 +122,7 @@ export const productStripCards: FeatureCard[] = [
     description: 'Receive supported SMS or voice codes for services and countries where available.',
   },
   {
-    title: 'BP Rentals',
+    title: 'BP Rental Hub',
     description: 'Rent temporary or renewable numbers for days, weeks, months, or longer.',
   },
   {
@@ -134,7 +134,7 @@ export const productStripCards: FeatureCard[] = [
     description: 'Access residential, datacenter, and rotating proxy plans with location control.',
   },
   {
-    title: 'BP Secure Tunnel',
+    title: 'BP Secure Tunnel VPN',
     description: 'Protect your connection with secure access and dedicated IP options.',
   },
 ];
@@ -184,7 +184,7 @@ export const solutionFeatures: FeatureCard[] = [
 export const productSections: ProductSection[] = [
   {
     id: 'bp-messenger',
-    eyebrow: 'BP Messenger',
+    eyebrow: 'BP Messenger Pro',
     title: "Your phone's other number.",
     description:
       'BP Messenger gives you a private number for calls, texts, contacts, and work-life separation.',
@@ -217,7 +217,7 @@ export const productSections: ProductSection[] = [
   },
   {
     id: 'bp-rentals',
-    eyebrow: 'BP Rentals',
+    eyebrow: 'BP Rental Hub',
     title: 'Keep a number when you need continuity.',
     description:
       'Rent temporary or renewable numbers for repeated messages, recovery, and longer access where supported.',
@@ -263,8 +263,8 @@ export const productSections: ProductSection[] = [
   },
   {
     id: 'bp-secure-tunnel',
-    eyebrow: 'BP Secure Tunnel',
-    title: 'Secure your connection with BP Secure Tunnel.',
+    eyebrow: 'BP Secure Tunnel VPN',
+    title: 'Secure your connection with BP Secure Tunnel VPN.',
     description:
       'Protect your connection with secure access, location choices, and dedicated IP options where available.',
     href: '/products/secure-tunnel',
@@ -337,7 +337,7 @@ export const pricingCards: PricingCard[] = [
     ],
   },
   {
-    title: 'BP Messenger',
+    title: 'BP Messenger Pro',
     price: 'Region-based monthly pricing',
     description: 'Dedicated number for private calling and texting.',
     href: '/products/messenger',
@@ -408,7 +408,7 @@ export const availabilityItems = [
     description: 'Availability depends on service and country',
   },
   {
-    title: 'BP Rentals',
+    title: 'BP Rental Hub',
     description: 'Country availability depends on number inventory',
   },
   {
@@ -420,7 +420,7 @@ export const availabilityItems = [
     description: 'Location-based proxy plans',
   },
   {
-    title: 'BP Secure Tunnel',
+    title: 'BP Secure Tunnel VPN',
     description: 'Secure locations and dedicated IP options',
   },
 ];
@@ -456,7 +456,7 @@ export const faqCategories: FaqCategory[] = [
       {
         question: 'Is Burner Point only for phone numbers?',
         answer:
-          'No. Burner Point includes BP Messenger, BP Verify Hub, BP Rentals, BP eSIM Store, BP Proxy Store, and BP Secure Tunnel.',
+          'No. Burner Point includes BP Messenger Pro, BP Verify Hub, BP Rental Hub, BP eSIM Store, BP Proxy Store, and BP Secure Tunnel VPN.',
       },
       {
         question: 'What does "Private by Design" mean?',
@@ -477,7 +477,7 @@ export const faqCategories: FaqCategory[] = [
   },
   {
     id: 'messenger',
-    label: 'BP Messenger',
+    label: 'BP Messenger Pro',
     description: 'Questions about dedicated second numbers, calls, texts, and privacy separation.',
     items: [
       {
@@ -544,7 +544,7 @@ export const faqCategories: FaqCategory[] = [
   },
   {
     id: 'rentals',
-    label: 'BP Rentals',
+    label: 'BP Rental Hub',
     description: 'Temporary and renewable number access for continuity and recovery.',
     items: [
       {

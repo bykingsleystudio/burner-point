@@ -109,7 +109,7 @@ export default function RentalsPage() {
   return (
     <div className="space-y-5">
       <section className="rounded-[1.7rem] border border-white/8 bg-brand-card p-5 md:p-6">
-        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">BP Number Rentals</p>
+        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">BP Rental Hub</p>
         <h2 className="mt-3 text-3xl font-semibold text-white">Available numbers and active rentals in one assignment view.</h2>
         <p className="mt-3 max-w-3xl text-sm leading-7 text-white/54">
           Search by country, choose a number type, confirm rental duration, and assign directly from wallet balance. Once a number is active it stays visible with renewal state, next billing timing, and release control.
@@ -216,7 +216,7 @@ export default function RentalsPage() {
 
           <div className="mt-4 rounded-[1rem] border border-white/8 bg-[#020806]/20 p-4">
             <p className="text-sm text-white/60">
-              BP Rentals no longer uses direct external rental checkout. Fund the wallet first, then assign the number from the selected inventory row.
+              BP Rental Hub no longer uses direct external rental checkout. Fund the wallet first, then assign the number from the selected inventory row.
             </p>
           </div>
 

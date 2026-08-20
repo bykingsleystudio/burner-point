@@ -44,7 +44,7 @@ type SupportTicketRecord = {
 const CATEGORY_OPTIONS: Array<{ value: SupportCategory; label: string }> = [
   { value: 'verification', label: 'Verification' },
   { value: 'rental', label: 'Rentals' },
-  { value: 'messenger', label: 'BP Messenger' },
+  { value: 'messenger', label: 'BP Messenger Pro' },
   { value: 'billing', label: 'Billing' },
   { value: 'esim', label: 'eSIM' },
   { value: 'proxy', label: 'Proxy' },

@@ -21,7 +21,7 @@ const page: MarketingPageContent = {
     {
       meta: '02',
       title: 'Choose a product',
-      text: 'Use BP Messenger, Verify Hub, Rentals, eSIM Store, Proxy Store, or Secure Tunnel based on the task in front of you.',
+      text: 'Use BP Messenger Pro, BP Verify Hub, BP Rental Hub, BP eSIM Store, BP Proxy Store, or BP Secure Tunnel VPN based on the task in front of you.',
       items: ['Product pages explain use cases, pricing, and availability', 'Dashboard modules stay grouped by product'],
     },
     {

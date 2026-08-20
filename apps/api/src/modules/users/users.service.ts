@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { User } from '../../database/entities/user.entity';
 import { Wallet } from '../../database/entities/financial-ledger.entity';
 import { buildWalletPresentation, withWalletPresentation } from '../../config/money';
+import { FxRateService } from '../fx/fx.service';
 
 @Injectable()
 export class UsersService {
@@ -12,6 +13,7 @@ export class UsersService {
     @InjectRepository(User) private userRepo: Repository<User>,
     @InjectRepository(Wallet) private walletRepo: Repository<Wallet>,
     private configService: ConfigService,
+    private fxRateService: FxRateService,
   ) {}
 
   async getProfile(userId: string) {
@@ -34,16 +36,28 @@ export class UsersService {
     return this.getProfile(userId);
   }
 
-  async getWalletBalance(userId: string) {
+  async getWalletBalance(userId: string, displayCurrency = 'USD') {
     const user = await this.userRepo.findOne({ where: { id: userId }, select: ['id'] });
     if (!user) throw new NotFoundException('User not found');
     const walletRecord = await this.ensureWalletRecord(userId);
     const wallet = buildWalletPresentation(Number(walletRecord.balanceUsdCents), this.configService);
-    return {
+    const response = {
       balanceUsdCents: wallet.walletBalanceUsdCents,
       balanceUsd: wallet.walletBalanceUsd,
       displayCurrency: wallet.walletDisplayCurrency,
       lockedBalanceUsdCents: Number(walletRecord.lockedBalanceUsdCents ?? 0),
+    };
+    if (displayCurrency.toUpperCase() === 'USD') return response;
+    const fxRate = await this.fxRateService.getUsdToLocalRate(displayCurrency);
+    return {
+      ...response,
+      localDisplay: {
+        currency: fxRate.quoteCurrency,
+        amount: wallet.walletBalanceUsd * fxRate.rate,
+        rate: fxRate.rate,
+        provider: fxRate.provider,
+        timestamp: fxRate.timestamp,
+      },
     };
   }
 

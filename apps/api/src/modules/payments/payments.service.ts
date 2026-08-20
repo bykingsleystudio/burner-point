@@ -777,7 +777,7 @@ export class PaymentsService {
     }
 
     if (paymentType === PaymentType.RENTAL) {
-      throw new BadRequestException('BP Rentals are wallet-only. Fund your wallet first, then rent from wallet balance.');
+      throw new BadRequestException('BP Rental Hub is wallet-only. Fund your wallet first, then rent from wallet balance.');
     }
 
     const plan = planId ? await this.resolveSubscriptionPlan(planId) : await this.resolveSubscriptionPlan('');
@@ -840,9 +840,9 @@ export class PaymentsService {
   ) {
     if (paymentType === PaymentType.RENTAL) {
       if (!rentalDays || rentalDays < 1 || rentalDays > 365) {
-        throw new BadRequestException('BP Rentals durations must be selected before a wallet-backed order is created.');
+        throw new BadRequestException('BP Rental Hub durations must be selected before a wallet-backed order is created.');
       }
-      throw new BadRequestException('Direct rental checkout is disabled. Use wallet balance for BP Rentals.');
+      throw new BadRequestException('Direct rental checkout is disabled. Use wallet balance for BP Rental Hub.');
     }
 
     if (paymentType === PaymentType.SUBSCRIPTION) {
@@ -1595,7 +1595,7 @@ export class PaymentsService {
   private displayNameForEntitlement(identifier: string) {
     const configured = this.getEntitlementConfig();
     if (identifier === configured.messenger) return 'BP Messenger Pro';
-    if (identifier === configured.secureTunnel) return 'BP Secure Tunnel';
+    if (identifier === configured.secureTunnel) return 'BP Secure Tunnel VPN';
     if (identifier === configured.premium) return 'BP Premium';
     return identifier;
   }

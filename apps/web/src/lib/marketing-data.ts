@@ -211,14 +211,14 @@ export const marketingPages: Record<string, MarketingPageContent> = {
     slug: 'pricing',
     eyebrow: 'Pricing',
     title: 'Wallet-based usage plus recurring subscriptions.',
-    description: 'Fund a USD-priced wallet for BP Verify Hub, BP Number Rentals, BP eSIM Store, and BP Proxy Store, then use subscriptions for BP Messenger Pro, BP Secure Tunnel, and advanced recurring plans.',
+    description: 'Fund a USD-priced wallet for BP Verify Hub, BP Rental Hub, BP eSIM Store, and BP Proxy Store, then use subscriptions for BP Messenger Pro, BP Secure Tunnel VPN, and advanced recurring plans.',
     primaryCta: { label: 'Get Your Number', href: '/sign-up' },
     secondaryCta: { label: 'Contact Support', href: '/support' },
     highlights: ['Wallet top-up for usage-based products', 'Subscriptions for recurring access', 'Paystack, Paddle, and NOWPayments'],
     cards: [
-      { icon: 'credit', title: 'Wallet Top-Up', meta: 'Usage-based', text: 'Use wallet funds for BP Verify Hub, BP Number Rentals, BP eSIM Store, and BP Proxy Store.', href: '/sign-up', cta: 'Create Account' },
+      { icon: 'credit', title: 'Wallet Top-Up', meta: 'Usage-based', text: 'Use wallet funds for BP Verify Hub, BP Rental Hub, BP eSIM Store, and BP Proxy Store.', href: '/sign-up', cta: 'Create Account' },
       { icon: 'calendar', title: 'Renewable Rentals', meta: 'Recurring', text: 'Keep the same number active when continuity, recovery, and monthly access matter.', href: '/products/rentals', cta: 'Rent A Number' },
-      { icon: 'shield', title: 'Subscriptions', meta: 'Recurring', text: 'Use subscriptions for BP Messenger Pro, BP Secure Tunnel, and advanced recurring platform access.', href: '/pricing', cta: 'View Pricing' },
+      { icon: 'shield', title: 'Subscriptions', meta: 'Recurring', text: 'Use subscriptions for BP Messenger Pro, BP Secure Tunnel VPN, and advanced recurring platform access.', href: '/pricing', cta: 'View Pricing' },
     ],
   },
   blog: {

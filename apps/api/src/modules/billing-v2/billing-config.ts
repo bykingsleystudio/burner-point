@@ -114,7 +114,7 @@ export const BILLING_SUBSCRIPTION_PLANS: BillingSubscriptionPlan[] = [
   {
     id: 'bp-secure-tunnel-basic',
     product: 'bp_secure_tunnel',
-    productName: 'BP Secure Tunnel',
+    productName: 'BP Secure Tunnel VPN',
     planName: 'Basic',
     headline: 'Encrypted WireGuard access across US, UK, and global servers.',
     priceUsdCents: 599,
@@ -135,7 +135,7 @@ export const BILLING_SUBSCRIPTION_PLANS: BillingSubscriptionPlan[] = [
   {
     id: 'bp-secure-tunnel-pro',
     product: 'bp_secure_tunnel',
-    productName: 'BP Secure Tunnel',
+    productName: 'BP Secure Tunnel VPN',
     planName: 'Pro',
     headline: 'Premium routing with dedicated IP support where available.',
     priceUsdCents: 999,

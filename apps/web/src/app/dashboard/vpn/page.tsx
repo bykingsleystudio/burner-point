@@ -107,7 +107,7 @@ export default function VpnPage() {
   return (
     <div className="space-y-5">
       <section className="rounded-[1.7rem] border border-white/8 bg-brand-card p-5 md:p-6">
-        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">BP Secure Tunnel</p>
+        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">BP Secure Tunnel VPN</p>
         <h1 className="mt-3 text-3xl font-semibold text-white">Protected session requests with device and region assignment.</h1>
         <p className="mt-3 max-w-3xl text-sm leading-7 text-white/54">
           Request a secure tunnel session, attach it to a device label, and keep purchase and status history in one account surface without exposing private configuration details in the UI.

@@ -203,8 +203,8 @@ export const dashboardModules: Record<string, DashboardModuleContent> = {
     note: 'Proxy access is for lawful, approved use cases and should stay easy to manage without exposing unnecessary technical details.',
   },
   vpn: {
-    eyebrow: 'BP Secure Tunnel',
-    title: 'Secure your connection with BP Secure Tunnel.',
+    eyebrow: 'BP Secure Tunnel VPN',
+    title: 'Secure your connection with BP Secure Tunnel VPN.',
     description:
       'BP Secure Tunnel gives users encrypted connectivity, device setup guidance, server location choice, and dedicated IP options where available.',
     status: 'Secure tunnel access',

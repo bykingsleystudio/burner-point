@@ -40,7 +40,7 @@ export const MOBILE_PRODUCT_MODULES = {
     note: 'Use BP Verify Hub only for accounts, services, and workflows you are authorized to access.',
   },
   rentals: {
-    eyebrow: 'BP Rentals',
+    eyebrow: 'BP Rental Hub',
     title: 'Keep a number when you need continuity.',
     description:
       'Rent temporary or renewable numbers for repeated messages, recovery, and longer account workflows where supported.',
@@ -103,7 +103,7 @@ export const MOBILE_PRODUCT_MODULES = {
     note: 'Proxy access must be used lawfully and in accordance with Burner Point’s Acceptable Use Policy.',
   },
   vpn: {
-    eyebrow: 'BP Secure Tunnel',
+    eyebrow: 'BP Secure Tunnel VPN',
     title: 'Secure your connection with private tunnel access.',
     description:
       'Use WireGuard-based secure tunnel plans with location choice, device setup guidance, and dedicated IP options where available.',
@@ -124,7 +124,7 @@ export const MOBILE_PRODUCT_MODULES = {
     note: 'Secure Tunnel is built for lawful privacy, account protection, and safer connectivity.',
   },
   voicemail: {
-    eyebrow: 'BP Messenger',
+    eyebrow: 'BP Messenger Pro',
     title: 'Missed calls stay attached to your private number.',
     description:
       'Voicemail, missed calls, transcripts, and callbacks live inside the same private communication timeline.',

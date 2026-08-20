@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Delete, Body, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Delete, Body, Req, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -20,7 +20,7 @@ export class UsersController {
 
   @Get('me/wallet')
   @ApiOperation({ summary: 'Get wallet balance' })
-  getWallet(@Req() req) { return this.service.getWalletBalance(req.user.id); }
+  getWallet(@Req() req, @Query('currency') currency?: string) { return this.service.getWalletBalance(req.user.id, currency ?? 'USD'); }
 
   @Delete('me')
   @ApiOperation({ summary: 'Delete account' })

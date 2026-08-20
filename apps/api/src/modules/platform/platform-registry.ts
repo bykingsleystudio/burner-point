@@ -200,7 +200,7 @@ export const STACK_REGISTRY: StackIntegrationDefinition[] = [
     category: 'payments',
     priority: 'core',
     exposure: 'server-only',
-    role: 'App Store and Google Play subscription entitlement system for BP Messenger, BP Secure Tunnel, and premium mobile plans',
+    role: 'App Store and Google Play subscription entitlement system for BP Messenger Pro, BP Secure Tunnel VPN, and premium mobile plans',
     productSurface: 'Mobile subscription offerings, entitlement sync, webhook reconciliation, and store-managed renewals',
     requiredEnv: ['REVENUECAT_SECRET_API_KEY', 'REVENUECAT_PROJECT_ID'],
     optionalEnv: [

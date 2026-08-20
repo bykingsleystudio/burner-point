@@ -29,7 +29,7 @@ const MODULES: Array<{
     featured: true,
   },
   {
-    title: 'BP Number Rentals',
+    title: 'BP Rental Hub',
     price: 'From $5.99',
     description: 'Temporary or renewable private numbers for account setup, recovery, and controlled messaging.',
     href: '/products/rentals',
@@ -39,7 +39,7 @@ const MODULES: Array<{
     highlights: ['Renewable numbers', 'SMS and voice ready'],
   },
   {
-    title: 'BP Messenger',
+    title: 'BP Messenger Pro',
     price: '$9.99/mo',
     description: 'Private threads, call context, voicemail, and calmer conversation control.',
     href: '/products/messenger',
@@ -59,7 +59,7 @@ const MODULES: Array<{
     highlights: ['QR delivery', 'Global roaming access'],
   },
   {
-    title: 'BP Secure Tunnel',
+    title: 'BP Secure Tunnel VPN',
     price: '$5.99/mo',
     description: 'Protected routing, secure session continuity, and privacy-first connection control.',
     href: '/products/secure-tunnel',

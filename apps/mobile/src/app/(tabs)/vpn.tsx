@@ -17,7 +17,7 @@ export default function VpnScreen() {
       <SafeAreaView style={s.container}>
         <View style={s.gateWrap}>
           <EntitlementGate
-            eyebrow="BP Secure Tunnel"
+            eyebrow="BP Secure Tunnel VPN"
             title="Secure tunnel access needs an active subscription entitlement."
             text="Burner Point uses RevenueCat entitlements for BP Secure Tunnel and BP Premium so store-managed subscriptions unlock VPN access without exposing payment secrets inside the app."
             bullets={[

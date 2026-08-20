@@ -201,7 +201,7 @@ export class CreditsService {
         displayCurrency: walletBalance.displayCurrency,
         localDisplay: {
           currency: null,
-          amountKobo: null,
+          amountUsdCents: null,
           fxRateNgnPerUsd: null,
         },
       },
@@ -218,7 +218,7 @@ export class CreditsService {
       displayCurrency: walletBalance.displayCurrency,
       localDisplay: {
         currency: null,
-        amountKobo: null,
+        amountUsdCents: null,
         fxRateNgnPerUsd: null,
       },
     };
@@ -452,9 +452,9 @@ export class CreditsService {
           userId,
           type: TransactionType.CALL_CREDIT_PURCHASE,
           status: TransactionStatus.COMPLETED,
-          amountKobo: -Number(pkg.usdPriceCents),
-          balanceBeforeKobo: balanceBeforeUsdCents,
-          balanceAfterKobo: Number(wallet.balanceUsdCents),
+          amountUsdCents: -Number(pkg.usdPriceCents),
+          balanceBeforeUsdCents,
+          balanceAfterUsdCents: Number(wallet.balanceUsdCents),
           referenceId: idempotencyKey,
           description: `Purchased ${pkg.name} from wallet balance`,
           metadata: {
@@ -585,9 +585,9 @@ export class CreditsService {
           userId: input.userId,
           type: TransactionType.WALLET_LOCK,
           status: TransactionStatus.COMPLETED,
-          amountKobo: 0,
-          balanceBeforeKobo: Number(wallet.balanceUsdCents),
-          balanceAfterKobo: Number(wallet.balanceUsdCents),
+          amountUsdCents: 0,
+          balanceBeforeUsdCents: Number(wallet.balanceUsdCents),
+          balanceAfterUsdCents: Number(wallet.balanceUsdCents),
           description: input.description ?? input.reason,
           referenceId: input.idempotencyKey,
           metadata: {
@@ -667,9 +667,9 @@ export class CreditsService {
           userId: input.userId,
           type: input.type ?? TransactionType.PRODUCT_PURCHASE,
           status: TransactionStatus.COMPLETED,
-          amountKobo: -spendAmountUsdCents,
-          balanceBeforeKobo: balanceBeforeUsdCents,
-          balanceAfterKobo: Number(wallet.balanceUsdCents),
+          amountUsdCents: -spendAmountUsdCents,
+          balanceBeforeUsdCents,
+          balanceAfterUsdCents: Number(wallet.balanceUsdCents),
           description: input.description ?? lock.reason,
           referenceId: input.idempotencyKey,
           metadata: {
@@ -691,9 +691,9 @@ export class CreditsService {
             userId: input.userId,
             type: TransactionType.WALLET_RELEASE,
             status: TransactionStatus.COMPLETED,
-            amountKobo: 0,
-            balanceBeforeKobo: Number(wallet.balanceUsdCents),
-            balanceAfterKobo: Number(wallet.balanceUsdCents),
+            amountUsdCents: 0,
+            balanceBeforeUsdCents: Number(wallet.balanceUsdCents),
+            balanceAfterUsdCents: Number(wallet.balanceUsdCents),
             description: `Released unused wallet hold from ${lock.reason}`,
             metadata: {
               lockId: lock.id,
@@ -753,9 +753,9 @@ export class CreditsService {
           userId: input.userId,
           type: TransactionType.WALLET_RELEASE,
           status: TransactionStatus.COMPLETED,
-          amountKobo: 0,
-          balanceBeforeKobo: Number(wallet.balanceUsdCents),
-          balanceAfterKobo: Number(wallet.balanceUsdCents),
+          amountUsdCents: 0,
+          balanceBeforeUsdCents: Number(wallet.balanceUsdCents),
+          balanceAfterUsdCents: Number(wallet.balanceUsdCents),
           description: input.description ?? `Released ${lock.reason}`,
           referenceId: input.idempotencyKey,
           metadata: {
@@ -822,9 +822,9 @@ export class CreditsService {
           userId: input.userId,
           type: input.type ?? TransactionType.PRODUCT_REFUND,
           status: TransactionStatus.COMPLETED,
-          amountKobo: amountUsdCents,
-          balanceBeforeKobo: balanceBeforeUsdCents,
-          balanceAfterKobo: Number(wallet.balanceUsdCents),
+          amountUsdCents,
+          balanceBeforeUsdCents,
+          balanceAfterUsdCents: Number(wallet.balanceUsdCents),
           description: input.description ?? 'Wallet refund',
           referenceId: input.idempotencyKey,
           metadata: {
@@ -1241,9 +1241,9 @@ export class CreditsService {
               userId: persistedLock.userId,
               type: TransactionType.WALLET_RELEASE,
               status: TransactionStatus.COMPLETED,
-              amountKobo: 0,
-              balanceBeforeKobo: Number(walletRow.balanceUsdCents),
-              balanceAfterKobo: Number(walletRow.balanceUsdCents),
+              amountUsdCents: 0,
+              balanceBeforeUsdCents: Number(walletRow.balanceUsdCents),
+              balanceAfterUsdCents: Number(walletRow.balanceUsdCents),
               description: `Released expired ${persistedLock.reason}`,
               referenceId: `wallet-lock-expiration:${persistedLock.id}`,
               metadata: {
@@ -1518,7 +1518,7 @@ export class CreditsService {
     await manager
       .createQueryBuilder()
       .update('users')
-      .set({ wallet_balance_kobo: balanceUsdCents })
+      .set({ wallet_balance_usd_cents: balanceUsdCents })
       .where('id = :userId', { userId })
       .execute();
   }
@@ -1571,7 +1571,7 @@ export class CreditsService {
       availableUsdCents: presentation.walletBalanceUsdCents - Number(wallet.lockedBalanceUsdCents ?? 0),
       localDisplay: {
         currency: null,
-        amountKobo: null,
+        amountUsdCents: null,
         fxRateNgnPerUsd: null,
       },
     };

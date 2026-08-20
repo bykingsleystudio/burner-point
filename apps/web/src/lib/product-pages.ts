@@ -4,7 +4,7 @@ export const productPages: Record<string, MarketingPageContent> = {
   messenger: {
     ...marketingPages.numbers,
     slug: 'messenger',
-    eyebrow: 'BP Messenger',
+    eyebrow: 'BP Messenger Pro',
     title: "Your phone's other number.",
     description:
       'Call, text, and manage contacts with a private number built for separation between your real line and the rest of your online life.',
@@ -22,7 +22,7 @@ export const productPages: Record<string, MarketingPageContent> = {
   rentals: {
     ...marketingPages.rentals,
     slug: 'rentals',
-    eyebrow: 'BP Rentals',
+    eyebrow: 'BP Rental Hub',
     primaryCta: { label: 'Get Started', href: '/sign-up' },
     secondaryCta: { label: 'View Pricing', href: '/pricing' },
   },
@@ -45,8 +45,8 @@ export const productPages: Record<string, MarketingPageContent> = {
   'secure-tunnel': {
     ...marketingPages.security,
     slug: 'secure-tunnel',
-    eyebrow: 'BP Secure Tunnel',
-    title: 'Secure your connection with BP Secure Tunnel.',
+    eyebrow: 'BP Secure Tunnel VPN',
+    title: 'Secure your connection with BP Secure Tunnel VPN.',
     description:
       'Protect your connection with secure access, location control, and dedicated IP options from the same Burner Point account.',
     primaryCta: { label: 'Get Started', href: '/sign-up' },

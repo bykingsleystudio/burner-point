@@ -236,7 +236,7 @@ export default function BillingScreen() {
             text="RevenueCat is configured, but the current build cannot see any active offering packages yet. Check the offering setup in the RevenueCat dashboard and confirm App Store / Google Play products are attached."
             bullets={[
               'Make sure the default offering is set in RevenueCat.',
-              'Attach products to BP Messenger, BP Secure Tunnel, or BP Premium packages.',
+              'Attach products to BP Messenger Pro, BP Secure Tunnel VPN, or BP Premium packages.',
               'Use restore if this account already owns a store subscription.',
             ]}
             primaryLabel="Open Web Billing"
@@ -297,8 +297,8 @@ export default function BillingScreen() {
 }
 
 function labelForOffering(identifier: string, offeringConfig: { default: string; messenger: string; vpn: string; premium: string }) {
-  if (identifier === offeringConfig.messenger) return 'BP Messenger';
-  if (identifier === offeringConfig.vpn) return 'BP Secure Tunnel';
+  if (identifier === offeringConfig.messenger) return 'BP Messenger Pro';
+  if (identifier === offeringConfig.vpn) return 'BP Secure Tunnel VPN';
   if (identifier === offeringConfig.premium) return 'BP Premium';
   if (identifier === offeringConfig.default) return 'Default offering';
   return identifier;
