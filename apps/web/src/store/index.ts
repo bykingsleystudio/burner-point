@@ -10,11 +10,9 @@ interface User {
   lastName: string;
   role: string;
   country?: string;
-  walletBalanceUsdCents: number;
   walletBalanceUsdCents?: number;
   walletBalanceUsd?: number;
   walletDisplayCurrency?: 'USD';
-  walletFxRateNgnPerUsd?: number;
   referralCode?: string;
   needsOnboarding?: boolean;
   onboardingMissingFields?: string[];
