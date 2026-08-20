@@ -13,7 +13,7 @@ export type ProductLink = {
 };
 
 export type FeatureCard = {
-       cta: 'Start BP Messenger Pro',
+  title: string;
   description: string;
 };
 
@@ -46,7 +46,7 @@ export type FaqCategory = {
   id: string;
   label: string;
   description: string;
-       cta: 'Rent a Number',
+  items: FaqItem[];
 };
 
 export const supportContacts = SUPPORT_CONTACTS;
