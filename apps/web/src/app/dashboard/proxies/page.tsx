@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Globe2, Lock, Radio, ShoppingBag } from 'lucide-react';
 import { BpEmptyState } from '@/components/design-system';
-import { integrationsApi } from '@/lib/api';
+import { integrationsApi, walletApi } from '@/lib/api';
 
 type CatalogItem = {
   id: string;
@@ -42,16 +42,21 @@ export default function ProxiesPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [lastOrder, setLastOrder] = useState<ProxySummary | null>(null);
+  const [walletBalanceCents, setWalletBalanceCents] = useState(0);
   const [form, setForm] = useState({
     region: 'United States',
     type: 'residential' as 'residential' | 'mobile',
     durationDays: 30,
+    protocol: 'https' as 'http' | 'https' | 'socks5',
+    bandwidthGb: 10,
+    ipCount: 1,
+    rotationMode: 'rotating' as 'rotating' | 'sticky' | 'static',
   });
 
   useEffect(() => {
     let mounted = true;
 
-    Promise.allSettled([integrationsApi.catalog(), integrationsApi.proxyOrders()])
+    Promise.allSettled([integrationsApi.catalog(), integrationsApi.proxyOrders(), walletApi.balance()])
       .then((results) => {
         if (!mounted) return;
         const nextCatalog = results[0].status === 'fulfilled' && Array.isArray(results[0].value.data)
@@ -61,6 +66,10 @@ export default function ProxiesPage() {
           ? results[1].value.data
           : [];
         setCatalog(nextCatalog);
+        if (results[2].status === 'fulfilled') {
+          const wallet = results[2].value.data?.wallet ?? results[2].value.data;
+          setWalletBalanceCents(Number(wallet?.availableUsdCents ?? wallet?.balanceUsdCents ?? 0));
+        }
         setHistory(nextOrders.map((item: Record<string, unknown>) => ({
           id: String(item.id),
           type: 'proxy_purchase',
@@ -94,15 +103,15 @@ export default function ProxiesPage() {
         ...form,
         idempotencyKey: crypto.randomUUID(),
       });
-      if (response.data?.status !== 'submitted') {
+      if (!response.data?.id || response.data?.status === 'failed' || response.data?.status === 'refunded') {
         toast.error('Proxy ordering is not available right now.');
         return;
       }
 
       setLastOrder({
-        status: 'Submitted',
-        reference: extractReference(response.data?.data),
-        chargeUsdCents: response.data?.walletDebitedUsdCents,
+        status: response.data.status || 'provisioning',
+        reference: extractReference(response.data),
+        chargeUsdCents: response.data.priceUsdCents,
       });
       toast.success('Proxy order submitted.');
     } catch (error: unknown) {
@@ -125,6 +134,12 @@ export default function ProxiesPage() {
 
       <section className="grid gap-4 xl:grid-cols-[1fr_22rem]">
         <div className="rounded-[1.5rem] border border-white/8 bg-brand-card p-5">
+          <div className="mb-5 rounded-[1.2rem] border border-brand-green/18 bg-brand-green/[0.05] p-4">
+            <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-brand-green">Burner Point Wallet</p>
+            <p className="mt-2 text-2xl font-semibold text-white">${(walletBalanceCents / 100).toFixed(2)}</p>
+            <p className="mt-1 text-xs text-white/45">Available for proxy purchases, renewals, and bandwidth.</p>
+          </div>
+
           <div className="grid gap-4 md:grid-cols-3">
             <label className="block text-sm text-white/68">
               Region
@@ -161,6 +176,29 @@ export default function ProxiesPage() {
                 ))}
               </select>
             </label>
+
+            <label className="block text-sm text-white/68">
+              Protocol
+              <select value={form.protocol} onChange={(event) => setForm((current) => ({ ...current, protocol: event.target.value as typeof current.protocol }))} className="bp-input mt-2">
+                <option value="http">HTTP</option>
+                <option value="https">HTTPS</option>
+                <option value="socks5">SOCKS5</option>
+              </select>
+            </label>
+
+            <label className="block text-sm text-white/68">
+              Bandwidth (GB)
+              <input type="number" min={1} max={10000} value={form.bandwidthGb} onChange={(event) => setForm((current) => ({ ...current, bandwidthGb: Number(event.target.value) }))} className="bp-input mt-2" />
+            </label>
+
+            <label className="block text-sm text-white/68">
+              Rotation
+              <select value={form.rotationMode} onChange={(event) => setForm((current) => ({ ...current, rotationMode: event.target.value as typeof current.rotationMode }))} className="bp-input mt-2">
+                <option value="rotating">Rotating</option>
+                <option value="sticky">Sticky</option>
+                <option value="static">Static</option>
+              </select>
+            </label>
           </div>
 
           <div className="mt-5 rounded-[1.2rem] border border-brand-green/18 bg-brand-green/[0.05] p-4">
@@ -171,6 +209,7 @@ export default function ProxiesPage() {
             <p className="mt-3 text-sm leading-6 text-white/52">
               Proxy access is for lawful, approved use cases only and remains subject to Burner Point acceptable use and provider availability.
             </p>
+            <p className="mt-2 text-xs text-white/42">Every charge is wallet-funded. Proxy access never requires a subscription.</p>
           </div>
 
           <button

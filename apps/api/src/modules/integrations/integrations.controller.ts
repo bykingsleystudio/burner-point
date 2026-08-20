@@ -90,6 +90,26 @@ class ProxyOrderDto implements ProxyOrderInput {
   durationDays?: number;
 
   @IsOptional()
+  @IsIn(['http', 'https', 'socks5'])
+  protocol?: ProxyOrderInput['protocol'];
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(10000)
+  bandwidthGb?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(1000)
+  ipCount?: number;
+
+  @IsOptional()
+  @IsIn(['rotating', 'sticky', 'static'])
+  rotationMode?: ProxyOrderInput['rotationMode'];
+
+  @IsOptional()
   @IsString()
   @MaxLength(180)
   idempotencyKey?: string;

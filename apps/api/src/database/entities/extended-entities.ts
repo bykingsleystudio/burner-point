@@ -953,12 +953,18 @@ export class ProxyOrder {
   @Column({ name: 'cancelled_at', nullable: true, type: 'timestamp' })
   cancelledAt: Date;
 
+  @Column({ name: 'refunded_at', nullable: true, type: 'timestamp' })
+  refundedAt: Date;
+
   @Column({ name: 'failure_reason', nullable: true })
   failureReason: string;
 
   @Column({ name: 'idempotency_key', nullable: true })
   @Index()
   idempotencyKey: string;
+
+  @Column({ name: 'wallet_transaction_id', nullable: true })
+  walletTransactionId: string;
 
   @Column({ type: 'jsonb', default: {} })
   metadata: Record<string, unknown>;

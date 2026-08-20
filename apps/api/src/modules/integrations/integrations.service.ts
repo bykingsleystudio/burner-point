@@ -61,6 +61,10 @@ export interface ProxyOrderInput {
   region: string;
   type: 'residential' | 'mobile';
   durationDays?: number;
+  protocol?: 'http' | 'https' | 'socks5';
+  bandwidthGb?: number;
+  ipCount?: number;
+  rotationMode?: 'rotating' | 'sticky' | 'static';
   idempotencyKey?: string;
 }
 
@@ -362,10 +366,16 @@ export class IntegrationsService {
       provider: 'pending',
       planType: input.type,
       location: input.region,
+      ipCount: input.ipCount ?? null,
+      bandwidthGb: input.bandwidthGb ?? null,
       priceUsdCents: totalPriceUsdCents,
       idempotencyKey,
       status: 'pending',
-      metadata: { durationDays },
+      metadata: {
+        durationDays,
+        protocol: input.protocol ?? 'https',
+        rotationMode: input.rotationMode ?? 'rotating',
+      },
     }));
     const preferredOperations: ProviderOperation[] = ['oxylabs.proxyOrder', 'smartproxy.proxyOrder'];
     const missingByProvider: Array<{ integrationId: BackendIntegrationId; missingEnv: string[] }> = [];
@@ -399,6 +409,9 @@ export class IntegrationsService {
           async (safeData, rawData) => this.persistProxyAcceptance(order, operation, safeData, rawData),
         );
         if (result.status === 'submitted') {
+          await this.proxyOrderRepo.update(order.id, {
+            walletTransactionId: 'walletTransactionId' in result ? result.walletTransactionId ?? null : null,
+          });
           return this.toPublicProxyOrder(await this.proxyOrderRepo.findOneByOrFail({ id: order.id }));
         }
       } catch (error) {
@@ -569,6 +582,19 @@ export class IntegrationsService {
       activatedAt: status === 'active' ? now : order.activatedAt,
       metadata: { ...(order.metadata ?? {}), lastProviderEvent: safePayload },
     });
+    if (status === 'failed' && order.status !== 'failed' && order.status !== 'refunded') {
+      await this.creditsService.refundWallet({
+        userId: order.userId,
+        amountUsdCents: Number(order.priceUsdCents ?? 0),
+        type: TransactionType.PRODUCT_REFUND,
+        relatedProduct: 'proxy_store',
+        relatedEntityId: order.id,
+        description: `Refunded failed proxy order ${order.id}`,
+        idempotencyKey: `proxy-refund:${order.id}`,
+        metadata: { providerOrderId: providerReference, reason: 'provider_failed' },
+      });
+      await this.proxyOrderRepo.update(order.id, { status: 'refunded', refundedAt: now });
+    }
     return true;
   }
 
@@ -778,6 +804,7 @@ export class IntegrationsService {
       renewalAt: order.renewalAt,
       expiresAt: order.expiresAt,
       failureReason: order.failureReason,
+      walletTransactionId: order.walletTransactionId,
       createdAt: order.createdAt,
     };
   }
