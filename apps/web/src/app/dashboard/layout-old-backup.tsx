@@ -184,7 +184,7 @@ function mapSupabaseUser(sessionUser: User | null) {
     firstName,
     lastName,
     role: 'user',
-    walletBalanceKobo: 0,
+    walletBalanceUsdCents: 0,
     phoneNumber,
     phoneVerified,
     needsOnboarding,
@@ -300,11 +300,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const wallet = data?.wallet;
       if (wallet) {
         updateUser({
-          walletBalanceKobo: Number(wallet.balanceUsdCents ?? 0),
           walletBalanceUsdCents: Number(wallet.balanceUsdCents ?? 0),
           walletBalanceUsd: Number(wallet.balanceUsdCents ?? 0) / 100,
           walletDisplayCurrency: 'USD',
-          walletFxRateNgnPerUsd: Number(wallet.localDisplay?.fxRateNgnPerUsd ?? 0),
         });
       }
       toast.success('Billing balance updated.');

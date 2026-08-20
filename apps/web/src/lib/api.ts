@@ -100,11 +100,9 @@ export interface AuthExchangeResponse {
     lastName: string;
     role: string;
     country?: string;
-    walletBalanceKobo: number;
-    walletBalanceUsdCents?: number;
+    walletBalanceUsdCents: number;
     walletBalanceUsd?: number;
     walletDisplayCurrency?: 'USD';
-    walletFxRateNgnPerUsd?: number;
     phoneNumber?: string;
     phoneVerified?: boolean;
     referralCode?: string;

@@ -5,15 +5,15 @@ import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { Bitcoin, ExternalLink, Shield, Wallet } from 'lucide-react';
 import { paymentsApi, type PaymentGatewayId } from '@/lib/api';
-import { formatStoredKoboAsUsd } from '@/lib/money';
+import { formatStoredUsdCents } from '@/lib/money';
 import { useLocalCurrency } from '@/lib/use-local-currency';
 
 interface FundingOption {
   id: string;
   name: string;
-  amountKobo: number;
-  bonusKobo: number;
-  priceKobo: number;
+  amountUsdCents: number;
+  bonusUsdCents: number;
+  priceUsdCents: number;
   isFeatured: boolean;
 }
 
@@ -147,15 +147,15 @@ export default function WalletFundingPage() {
                 ) : null}
                 <p className="text-sm font-semibold">{option.name}</p>
                 <p className="mt-1 font-mono text-xl font-bold text-brand-green">
-                  {formatStoredKoboAsUsd(option.priceKobo)}
+                  {formatStoredUsdCents(option.priceUsdCents)}
                 </p>
-                {localCurrency.formatUsdCents(option.priceKobo) ? (
+                {localCurrency.formatUsdCents(option.priceUsdCents) ? (
                   <p className="mt-0.5 text-xs text-brand-muted">
-                    ≈ {localCurrency.formatUsdCents(option.priceKobo)} {localCurrency.currency} display
+                    ≈ {localCurrency.formatUsdCents(option.priceUsdCents)} {localCurrency.currency} display
                   </p>
                 ) : null}
                 <p className="mt-1 text-xs text-brand-muted">
-                  Wallet funding amount: {formatStoredKoboAsUsd(option.amountKobo)}
+                  Wallet funding amount: {formatStoredUsdCents(option.amountUsdCents)}
                 </p>
               </button>
             ))}
@@ -188,15 +188,15 @@ export default function WalletFundingPage() {
         <div className="mb-3 flex items-center justify-between">
           <span className="text-sm text-brand-muted">USD amount</span>
           <span className="font-mono font-bold text-brand-green">
-            {selectedOption ? formatStoredKoboAsUsd(selectedOption.priceKobo) : '-'}
+            {selectedOption ? formatStoredUsdCents(selectedOption.priceUsdCents) : '-'}
           </span>
         </div>
         <div className="mb-5 flex items-center justify-between">
           <span className="text-sm text-brand-muted">Informational display</span>
           <span className="text-sm text-white/70">
             {selectedOption
-              ? (localCurrency.formatUsdCents(selectedOption.priceKobo)
-                ? `≈ ${localCurrency.formatUsdCents(selectedOption.priceKobo)} ${localCurrency.currency}`
+              ? (localCurrency.formatUsdCents(selectedOption.priceUsdCents)
+                ? `≈ ${localCurrency.formatUsdCents(selectedOption.priceUsdCents)} ${localCurrency.currency}`
                 : 'Unavailable')
               : '-'}
           </span>

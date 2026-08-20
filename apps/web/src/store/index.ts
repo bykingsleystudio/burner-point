@@ -10,7 +10,7 @@ interface User {
   lastName: string;
   role: string;
   country?: string;
-  walletBalanceKobo: number;
+  walletBalanceUsdCents: number;
   walletBalanceUsdCents?: number;
   walletBalanceUsd?: number;
   walletDisplayCurrency?: 'USD';

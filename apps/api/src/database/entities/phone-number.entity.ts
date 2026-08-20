@@ -62,11 +62,11 @@ export class PhoneNumber {
   @Column({ name: 'auto_renew', default: false })
   autoRenew: boolean;
 
-  @Column({ name: 'price_kobo', type: 'int', default: 0 })
-  priceKobo: number;
+  @Column({ name: 'price_usd_cents', type: 'int', default: 0 })
+  priceUsdCents: number;
 
-  @Column({ name: 'renewal_price_kobo', type: 'int', default: 0 })
-  renewalPriceKobo: number;
+  @Column({ name: 'renewal_price_usd_cents', type: 'int', default: 0 })
+  renewalPriceUsdCents: number;
 
   @Column({ name: 'sms_received', default: 0 })
   smsReceived: number;

@@ -23,7 +23,7 @@ export class UsersService {
     return withWalletPresentation(
       {
         ...user,
-        walletBalanceKobo: Number(wallet?.balanceUsdCents ?? 0),
+        walletBalanceUsdCents: Number(wallet?.balanceUsdCents ?? 0),
       },
       this.configService,
     );
@@ -40,12 +40,9 @@ export class UsersService {
     const walletRecord = await this.ensureWalletRecord(userId);
     const wallet = buildWalletPresentation(Number(walletRecord.balanceUsdCents), this.configService);
     return {
-      balanceKobo: wallet.walletBalanceKobo, // legacy (display)
-      balanceNgn: wallet.walletBalanceNgn, // display
       balanceUsdCents: wallet.walletBalanceUsdCents,
       balanceUsd: wallet.walletBalanceUsd,
       displayCurrency: wallet.walletDisplayCurrency,
-      fxRateNgnPerUsd: wallet.walletFxRateNgnPerUsd,
       lockedBalanceUsdCents: Number(walletRecord.lockedBalanceUsdCents ?? 0),
     };
   }
@@ -59,10 +56,9 @@ export class UsersService {
     return this.userRepo.findOne({ where: { id } });
   }
 
-  // Wallet is stored in USD cents (legacy column name "kobo").
   // This operation is transactional and row-locked to prevent race conditions.
-  async creditWallet(userId: string, amountKobo: number): Promise<User> {
-    const deltaUsdCents = Number(amountKobo);
+  async creditWallet(userId: string, amountUsdCents: number): Promise<User> {
+    const deltaUsdCents = Number(amountUsdCents);
     if (!Number.isFinite(deltaUsdCents) || deltaUsdCents <= 0) {
       throw new BadRequestException('Invalid wallet credit amount');
     }
@@ -76,15 +72,15 @@ export class UsersService {
 
       const wallet = await this.findOrCreateWalletWithManager(manager, userId);
       wallet.balanceUsdCents = Number(wallet.balanceUsdCents) + deltaUsdCents;
-      user.walletBalanceKobo = Number(wallet.balanceUsdCents);
+      user.walletBalanceUsdCents = Number(wallet.balanceUsdCents);
       // lifetimeSpend tracks debits only (spend), not credits.
       await manager.save(wallet);
       return manager.save(user);
     });
   }
 
-  async debitWallet(userId: string, amountKobo: number): Promise<User> {
-    const deltaUsdCents = Number(amountKobo);
+  async debitWallet(userId: string, amountUsdCents: number): Promise<User> {
+    const deltaUsdCents = Number(amountUsdCents);
     if (!Number.isFinite(deltaUsdCents) || deltaUsdCents <= 0) {
       throw new BadRequestException('Invalid wallet debit amount');
     }
@@ -102,8 +98,8 @@ export class UsersService {
       }
 
       wallet.balanceUsdCents = Number(wallet.balanceUsdCents) - deltaUsdCents;
-      user.walletBalanceKobo = Number(wallet.balanceUsdCents);
-      user.lifetimeSpendKobo = Number(user.lifetimeSpendKobo) + deltaUsdCents;
+      user.walletBalanceUsdCents = Number(wallet.balanceUsdCents);
+      user.lifetimeSpendUsdCents = Number(user.lifetimeSpendUsdCents) + deltaUsdCents;
       await manager.save(wallet);
       return manager.save(user);
     });

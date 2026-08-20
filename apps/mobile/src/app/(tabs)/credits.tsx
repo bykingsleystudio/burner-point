@@ -14,16 +14,16 @@ import axios from 'axios';
 
 import { API_BASE_URL, WEB_BILLING_URL } from '../../lib/config';
 import { BRAND } from '../../lib/brand';
-import { formatNgnKobo, formatStoredKoboAsUsd } from '../../lib/money';
+import { formatStoredUsdCents } from '../../lib/money';
 import { triggerHaptic } from '../../lib/native-ux';
 
 type GatewayId = 'paystack' | 'paddle' | 'nowpayments';
 type FundingPackage = {
   id: string;
   name: string;
-  amountKobo: number;
-  bonusKobo: number;
-  priceKobo: number;
+  amountUsdCents: number;
+  bonusUsdCents: number;
+  priceUsdCents: number;
   isFeatured?: boolean;
 };
 
@@ -108,10 +108,9 @@ export default function CreditsScreen() {
               </View>
             ) : null}
             <Text style={s.pkgName}>{pkg.name}</Text>
-            <Text style={s.pkgPrice}>{formatStoredKoboAsUsd(pkg.priceKobo)}</Text>
-            <Text style={s.pkgLocal}>{formatNgnKobo(pkg.priceKobo)} local checkout</Text>
+            <Text style={s.pkgPrice}>{formatStoredUsdCents(pkg.priceUsdCents)}</Text>
             <Text style={s.pkgCredits}>
-              {formatStoredKoboAsUsd(pkg.amountKobo)} added to available balance
+              {formatStoredUsdCents(pkg.amountUsdCents)} added to available balance
             </Text>
           </TouchableOpacity>
         )}

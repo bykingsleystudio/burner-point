@@ -13,7 +13,7 @@ export interface User {
   lastName?: string;
   role: UserRole;
   status: UserStatus;
-  walletBalanceKobo: number;
+  walletBalanceUsdCents: number;
   emailVerified: boolean;
   phoneVerified: boolean;
   referralCode?: string;
@@ -37,7 +37,7 @@ export interface PhoneNumber {
   capabilities: string[];
   expiresAt?: string;
   autoRenew: boolean;
-  priceKobo: number;
+  priceUsdCents: number;
   smsReceived: number;
   smsSent: number;
   userId: string;
@@ -70,9 +70,9 @@ export type PaymentGateway = 'flutterwave' | 'paystack' | 'korapay' | 'paddle' |
 export interface CreditPackage {
   id: string;
   name: string;
-  amountKobo: number;
-  bonusKobo: number;
-  priceKobo: number;
+  amountUsdCents: number;
+  bonusUsdCents: number;
+  priceUsdCents: number;
   availableGateways: PaymentGateway[];
   isFeatured: boolean;
 }
@@ -81,8 +81,8 @@ export interface WalletTransaction {
   id: string;
   type: string;
   status: string;
-  amountKobo: number;
-  balanceAfterKobo: number;
+  amountUsdCents: number;
+  balanceAfterUsdCents: number;
   description?: string;
   gateway?: PaymentGateway;
   createdAt: string;

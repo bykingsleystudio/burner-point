@@ -643,7 +643,7 @@ export class PaymentsService {
     const user = await this.userRepo.findOne({ where: { id: session.userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    const balanceBefore = Number(user.walletBalanceKobo);
+    const balanceBefore = Number(user.walletBalanceUsdCents);
     await this.usersService.creditWallet(session.userId, walletCreditKobo);
 
     await this.recordTransaction(session, {
@@ -676,7 +676,7 @@ export class PaymentsService {
       return;
     }
 
-    const balance = Number(user.walletBalanceKobo);
+    const balance = Number(user.walletBalanceUsdCents);
     await this.recordTransaction(session, {
       type: TransactionType.NUMBER_PURCHASE,
       amountKobo,
@@ -712,9 +712,9 @@ export class PaymentsService {
         userId: session.userId,
         type: input.type,
         status: TransactionStatus.COMPLETED,
-        amountKobo: input.amountKobo,
-        balanceBeforeKobo: input.balanceBeforeKobo,
-        balanceAfterKobo: input.balanceAfterKobo,
+        amountUsdCents: input.amountKobo,
+        balanceBeforeUsdCents: input.balanceBeforeKobo,
+        balanceAfterUsdCents: input.balanceAfterKobo,
         description: input.description,
         referenceId: session.id,
         externalReference: session.reference,

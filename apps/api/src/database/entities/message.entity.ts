@@ -41,7 +41,7 @@ export class Message {
   numSegments: number;
 
   @Column({ name: 'price_usd_cents', type: 'int', default: 0 })
-  priceKobo: number;
+  priceUsdCents: number;
 
   @Column({ nullable: true })
   aiClassification: string;

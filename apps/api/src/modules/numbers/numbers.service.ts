@@ -98,8 +98,8 @@ export class NumbersService {
         countryCode: country,
         userId,
         assignedToUserId: userId,
-        priceKobo: quote.usdValueCents,
-        renewalPriceKobo: type === NumberType.VERIFICATION ? 0 : quote.usdValueCents,
+        priceUsdCents: quote.usdValueCents,
+        renewalPriceUsdCents: type === NumberType.VERIFICATION ? 0 : quote.usdValueCents,
         expiresAt,
         autoRenew: type === NumberType.RENTAL,
         capabilities: ['sms', 'mms', 'voice'],
@@ -200,8 +200,8 @@ export class NumbersService {
       countryCode: country,
       userId,
       assignedToUserId: userId,
-      priceKobo: options.priceKobo,
-      renewalPriceKobo: options.priceKobo,
+      priceUsdCents: options.priceKobo,
+      renewalPriceUsdCents: options.priceKobo,
       expiresAt,
       autoRenew: Boolean(options.autoRenew),
       capabilities: ['sms', 'mms', 'voice'],
@@ -252,7 +252,7 @@ export class NumbersService {
       countryCode: num.countryCode || 'US',
       numberType: num.type,
       durationDays: 30,
-      basePriceUsdCents: num.renewalPriceKobo,
+      basePriceUsdCents: num.renewalPriceUsdCents,
       relatedEntityId: num.id,
     }, userId);
 
@@ -266,7 +266,7 @@ export class NumbersService {
       expiresAt: new Date(Date.now() + 15 * 60 * 1000),
       idempotencyKey: `number-renew-lock:${num.id}:${num.expiresAt?.toISOString() || 'na'}`,
       metadata: {
-        renewalPriceUsdCents: num.renewalPriceKobo,
+        renewalPriceUsdCents: num.renewalPriceUsdCents,
       },
     });
 

@@ -48,13 +48,13 @@ export class WalletTransaction {
   status: TransactionStatus;
 
   @Column({ name: 'amount_usd_cents', type: 'bigint' })
-  amountKobo: number;
+  amountUsdCents: number;
 
   @Column({ name: 'balance_before_usd_cents', type: 'bigint' })
-  balanceBeforeKobo: number;
+  balanceBeforeUsdCents: number;
 
   @Column({ name: 'balance_after_usd_cents', type: 'bigint' })
-  balanceAfterKobo: number;
+  balanceAfterUsdCents: number;
 
   @Column({ nullable: true })
   description: string;
@@ -141,11 +141,11 @@ export class SubscriptionPlan {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ name: 'price_kobo_monthly', type: 'bigint' })
-  priceKoboMonthly: number;
+  @Column({ name: 'price_usd_cents_monthly', type: 'bigint' })
+  priceUsdCentsMonthly: number;
 
-  @Column({ name: 'price_kobo_yearly', type: 'bigint' })
-  priceKoboYearly: number;
+  @Column({ name: 'price_usd_cents_yearly', type: 'bigint' })
+  priceUsdCentsYearly: number;
 
   @Column({ type: 'jsonb', default: {} })
   features: Record<string, unknown>;
@@ -430,7 +430,7 @@ export class Workspace {
   isActive: boolean;
 
   @Column({ type: 'bigint', default: 0 })
-  walletBalanceKobo: number;
+  walletBalanceUsdCents: number;
 
   @CreateDateColumn()
   createdAt: Date;

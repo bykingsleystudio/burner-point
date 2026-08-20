@@ -19,11 +19,6 @@ type BillingOverview = {
     balanceUsdCents: number;
     lockedBalanceUsdCents: number;
     displayCurrency: 'USD';
-    localDisplay: {
-      currency: string | null;
-      amountKobo: number | null;
-      fxRateNgnPerUsd: number | null;
-    };
     fundingMethods: Array<{
       id: 'paystack' | 'flutterwave' | 'nowpayments';
       label: string;

@@ -46,7 +46,7 @@ export class AdminService {
       userId,
       type: TransactionType.ADJUSTMENT,
       amountKobo: Number(amountKobo),
-      balanceAfterKobo: Number(user.walletBalanceKobo),
+      balanceAfterKobo: Number(user.walletBalanceUsdCents),
       description: 'Admin wallet adjustment',
       metadata: { source: 'admin' },
     });

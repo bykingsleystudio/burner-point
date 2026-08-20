@@ -42,11 +42,11 @@ export class User {
   @Column({ name: 'kyc_status', type: 'enum', enum: KycStatus, default: KycStatus.NONE })
   kycStatus: KycStatus;
 
-  @Column({ name: 'wallet_balance_kobo', type: 'bigint', default: 0 })
-  walletBalanceKobo: number;
+  @Column({ name: 'wallet_balance_usd_cents', type: 'bigint', default: 0 })
+  walletBalanceUsdCents: number;
 
-  @Column({ name: 'lifetime_spend_kobo', type: 'bigint', default: 0 })
-  lifetimeSpendKobo: number;
+  @Column({ name: 'lifetime_spend_usd_cents', type: 'bigint', default: 0 })
+  lifetimeSpendUsdCents: number;
 
   @Column({ name: 'email_verified', default: false })
   emailVerified: boolean;
@@ -118,7 +118,4 @@ export class User {
     return [this.firstName, this.lastName].filter(Boolean).join(' ');
   }
 
-  get walletBalanceNgn(): number {
-    return this.walletBalanceKobo / 100;
-  }
 }

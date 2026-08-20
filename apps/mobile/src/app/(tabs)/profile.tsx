@@ -9,7 +9,7 @@ import { API_BASE_URL } from '../../lib/config';
 import { clearApiSession, getApiAccessToken } from '../../lib/auth';
 import { useBurnerAuth } from '../../lib/auth-context';
 import { BRAND } from '../../lib/brand';
-import { formatNgnKobo, formatUsdCents, getWalletUsdCents } from '../../lib/money';
+import { formatUsdCents, getWalletUsdCents } from '../../lib/money';
 import { triggerHaptic } from '../../lib/native-ux';
 
 type ProfileUser = {
@@ -17,9 +17,7 @@ type ProfileUser = {
   lastName?: string;
   email?: string;
   referralCode?: string;
-  walletBalanceKobo?: number;
   walletBalanceUsdCents?: number;
-  walletFxRateNgnPerUsd?: number;
 };
 
 export default function ProfileScreen() {
@@ -79,7 +77,6 @@ export default function ProfileScreen() {
         <View style={s.walletCard}>
           <Text style={s.walletLabel}>Wallet Balance</Text>
           <Text style={s.walletBalance}>{formatUsdCents(getWalletUsdCents(user))}</Text>
-          <Text style={s.walletSecondary}>{formatNgnKobo(user?.walletBalanceKobo)}</Text>
         </View>
 
         {/* Referral */}
