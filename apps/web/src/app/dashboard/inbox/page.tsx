@@ -44,6 +44,8 @@ type MessageRecord = {
   status?: string;
   createdAt: string;
   extractedOtp?: string;
+    type?: 'SMS' | 'MMS' | 'CALL' | 'VOICEMAIL';
+    mediaUrls?: string[];
 };
 
 type ConversationThread = {
@@ -596,6 +598,48 @@ export default function InboxPage() {
                         </div>
                       ) : null}
                       <p>{message.body}</p>
+                        {message.mediaUrls && message.mediaUrls.length > 0 && (
+                          <div className="mt-3 grid gap-2 grid-cols-[repeat(auto-fit,minmax(120px,1fr))]">
+                            {message.mediaUrls.map((mediaUrl, idx) => {
+                              const isImage = mediaUrl.match(/\.(jpg|jpeg|png|webp|gif)$/i);
+                              const isVideo = mediaUrl.match(/\.(mp4|webm|mov)$/i);
+                              const isAudio = mediaUrl.match(/\.(mp3|wav|ogg|m4a)$/i);
+                              const isPdf = mediaUrl.match(/\.pdf$/i);
+                              return (
+                                <div key={idx} className="group relative">
+                                  {isImage ? (
+                                    <a href={mediaUrl} target="_blank" rel="noopener noreferrer" className="block rounded-lg overflow-hidden bg-white/8 hover:bg-white/12">
+                                      <img src={mediaUrl} alt="Media attachment" className="w-full h-32 object-cover" />
+                                    </a>
+                                  ) : isVideo ? (
+                                    <video src={mediaUrl} controls className="w-full h-32 rounded-lg bg-white/8 object-cover" />
+                                  ) : isAudio ? (
+                                    <div className="flex items-center gap-2 p-2 rounded-lg bg-white/8 group-hover:bg-white/12">
+                                      <Music className="h-4 w-4 text-brand-green flex-shrink-0" />
+                                      <a href={mediaUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-brand-green hover:underline flex-1 truncate">
+                                        Audio attachment
+                                      </a>
+                                    </div>
+                                  ) : isPdf ? (
+                                    <div className="flex items-center gap-2 p-2 rounded-lg bg-white/8 group-hover:bg-white/12">
+                                      <FileText className="h-4 w-4 text-brand-green flex-shrink-0" />
+                                      <a href={mediaUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-brand-green hover:underline flex-1 truncate">
+                                        PDF document
+                                      </a>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-2 p-2 rounded-lg bg-white/8 group-hover:bg-white/12">
+                                      <Paperclip className="h-4 w-4 text-brand-green flex-shrink-0" />
+                                      <a href={mediaUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-brand-green hover:underline flex-1 truncate">
+                                        Media attachment
+                                      </a>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       <p className="mt-2 text-[11px] text-white/38">
                         {formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}
                       </p>
