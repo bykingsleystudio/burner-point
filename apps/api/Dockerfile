@@ -5,7 +5,7 @@ WORKDIR /app
 RUN apk add --no-cache python3 make g++
 
 COPY apps/api/package*.json ./
-RUN npm ci --build-from-source
+RUN npm ci
 
 FROM dependencies AS build
 
