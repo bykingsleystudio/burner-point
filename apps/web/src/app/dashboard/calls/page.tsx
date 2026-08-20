@@ -376,7 +376,7 @@ export default function CallsPage() {
                       href="/dashboard/messenger"
                       className="rounded-[0.95rem] bg-brand-green px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:bg-[#1cffac]"
                     >
-                      Open BP Messenger
+                      Open BP Messenger Pro
                     </Link>
                   }
                 />

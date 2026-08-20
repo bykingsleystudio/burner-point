@@ -22,7 +22,7 @@ const billingModules = [
   {
     icon: CalendarDays,
     title: 'Store subscriptions',
-    text: 'RevenueCat manages BP Messenger Pro, BP Secure Tunnel, and BP Premium across the App Store and Google Play.',
+    text: 'RevenueCat manages BP Messenger Pro, BP Secure Tunnel VPN, and BP Premium across the App Store and Google Play.',
     action: 'Manage subscriptions',
   },
   {
@@ -288,7 +288,7 @@ export default function BillingScreen() {
         <View style={s.policyCard}>
           <Text style={s.policyTitle}>Production billing split</Text>
           <Text style={s.policyText}>
-            RevenueCat manages App Store and Google Play entitlements for BP Messenger Pro, BP Secure Tunnel, and BP Premium. Wallet top-ups stay on secure Burner Point checkout through Paystack, Flutterwave, and NOWPayments, Call Credits are scoped to BP Messenger international calling, and web subscriptions are managed through Paddle.
+            RevenueCat manages App Store and Google Play entitlements for BP Messenger Pro, BP Secure Tunnel VPN, and BP Premium. Wallet top-ups stay on secure Burner Point checkout through Paystack, Flutterwave, and NOWPayments, Call Credits are scoped to BP Messenger Pro international calling, and web subscriptions are managed through Paddle.
           </Text>
         </View>
       </ScrollView>

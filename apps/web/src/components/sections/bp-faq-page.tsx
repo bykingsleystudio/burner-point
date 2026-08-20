@@ -43,7 +43,7 @@ export function BurnerPointFaqPage() {
               Clear answers for private communication and connected access.
             </h1>
             <p className="mt-6 max-w-3xl text-lg leading-8 text-[#456052]">
-              Explore Burner Point questions by category. This page covers General, BP Messenger, BP Verify Hub, BP Rentals, Wallet & Payments, eSIM, Proxies, Secure Tunnel, and Account & Security.
+              Explore Burner Point questions by category. This page covers General, BP Messenger Pro, BP Verify Hub, BP Rental Hub, Wallet & Payments, BP eSIM Store, BP Proxy Store, BP Secure Tunnel VPN, and Account & Security.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">

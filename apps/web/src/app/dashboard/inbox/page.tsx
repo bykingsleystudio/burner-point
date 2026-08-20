@@ -313,7 +313,7 @@ export default function InboxPage() {
       <section className="rounded-[1.7rem] border border-white/8 bg-brand-card p-5 md:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">BP Messenger</p>
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">BP Messenger Pro</p>
             <h2 className="mt-3 text-3xl font-semibold text-white">Messaging, calls, and contacts without exposing your main line.</h2>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-white/54">
               BP Messenger keeps conversations scoped to Burner Point numbers. Messaging and calling remain limited to supported conversation regions while contacts, media context, and moderation controls stay in one interface.
@@ -484,7 +484,7 @@ export default function InboxPage() {
             <div>
               <p className="text-lg font-semibold text-white">{selectedThread?.counterpart || 'New conversation'}</p>
               <p className="mt-1 text-sm text-white/48">
-                {selectedNumber ? `${selectedNumber.number} routed through BP Messenger` : 'Choose a Burner Point number to continue.'}
+                {selectedNumber ? `${selectedNumber.number} routed through BP Messenger Pro` : 'Choose a Burner Point number to continue.'}
               </p>
             </div>
 

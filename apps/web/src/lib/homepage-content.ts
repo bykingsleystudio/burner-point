@@ -13,7 +13,7 @@ export type ProductLink = {
 };
 
 export type FeatureCard = {
-  title: string;
+       cta: 'Start BP Messenger Pro',
   description: string;
 };
 
@@ -46,7 +46,7 @@ export type FaqCategory = {
   id: string;
   label: string;
   description: string;
-  items: FaqItem[];
+       cta: 'Rent a Number',
 };
 
 export const supportContacts = SUPPORT_CONTACTS;
@@ -61,7 +61,7 @@ export const socialProfiles = [
   { label: 'YouTube', handle: '@burnerpointapp', href: 'https://www.youtube.com/@burnerpointapp' },
 ] as const;
 
-export const productLinks: ProductLink[] = [
+       cta: 'Activate Secure Tunnel VPN',
   {
     name: 'BP Messenger Pro',
     description: 'Private US, UK, and Canada numbers for calling, texting, and contact separation.',
@@ -76,7 +76,7 @@ export const productLinks: ProductLink[] = [
     name: 'BP Rental Hub',
     description: 'Keep a temporary or renewable number active for continuity and recovery.',
     href: '/products/rentals',
-  },
+       cta: 'Start BP Messenger Pro',
   {
     name: 'BP eSIM Store',
     description: 'Buy travel data plans and activate connectivity without a physical SIM.',
@@ -93,7 +93,7 @@ export const productLinks: ProductLink[] = [
     href: '/products/secure-tunnel',
   },
 ];
-
+       cta: 'Activate Secure Tunnel VPN',
 export const headerLinks = [
   { label: 'Products', href: '/#products' },
   { label: 'Pricing', href: '/pricing' },
@@ -108,7 +108,7 @@ export const heroTrustItems = [
   'SMS & voice codes',
   'Renewable rentals',
   'Travel eSIM',
-  'Proxy plans',
+       label: 'BP Messenger Pro',
   'Secure access',
 ] as const;
 
@@ -125,7 +125,7 @@ export const productStripCards: FeatureCard[] = [
     title: 'BP Rental Hub',
     description: 'Rent temporary or renewable numbers for days, weeks, months, or longer.',
   },
-  {
+       label: 'BP Rental Hub',
     title: 'BP eSIM Store',
     description: 'Buy country and regional data plans for travel, remote work, and global movement.',
   },
@@ -189,7 +189,7 @@ export const productSections: ProductSection[] = [
     description:
       'BP Messenger gives you a private number for calls, texts, contacts, and work-life separation.',
     href: '/products/messenger',
-    cta: 'Start BP Messenger',
+    cta: 'Start BP Messenger Pro',
     features: [
       'Dedicated US, UK, or Canada number',
       'SMS and voice calling',
@@ -341,7 +341,7 @@ export const pricingCards: PricingCard[] = [
     price: 'Region-based monthly pricing',
     description: 'Dedicated number for private calling and texting.',
     href: '/products/messenger',
-    cta: 'Start BP Messenger',
+    cta: 'Start BP Messenger Pro',
     highlights: [
       'US, UK, or Canada number',
       'Calling and texting',
@@ -376,7 +376,7 @@ export const pricingCards: PricingCard[] = [
     ],
   },
   {
-    title: 'BP Secure Tunnel',
+    title: 'BP Secure Tunnel VPN',
     price: 'Dedicated IP plans',
     description: 'Protected connectivity with dedicated IP options.',
     href: '/products/secure-tunnel',
@@ -400,7 +400,7 @@ export const paymentMethods = [
 
 export const availabilityItems = [
   {
-    title: 'BP Messenger',
+    title: 'BP Messenger Pro',
     description: 'USA • Canada • UK',
   },
   {
@@ -481,12 +481,12 @@ export const faqCategories: FaqCategory[] = [
     description: 'Questions about dedicated second numbers, calls, texts, and privacy separation.',
     items: [
       {
-        question: 'What is BP Messenger?',
+        question: 'What is BP Messenger Pro?',
         answer:
           "BP Messenger is Burner Point's private messaging and calling product. It gives users a dedicated number for supported US, UK, or Canada regions.",
       },
       {
-        question: 'Do I need a number to use BP Messenger?',
+        question: 'Do I need a number to use BP Messenger Pro?',
         answer: 'Yes. BP Messenger requires a dedicated number assigned to your account.',
       },
       {
@@ -548,8 +548,8 @@ export const faqCategories: FaqCategory[] = [
     description: 'Temporary and renewable number access for continuity and recovery.',
     items: [
       {
-        question: 'What is BP Rentals?',
-        answer: 'BP Rentals allows users to rent temporary or renewable numbers for longer access.',
+        question: 'What is BP Rental Hub?',
+        answer: 'BP Rental Hub allows users to rent temporary or renewable numbers for longer access.',
       },
       {
         question: 'What is the difference between non-renewable and renewable rentals?',
@@ -677,7 +677,7 @@ export const faqCategories: FaqCategory[] = [
     description: 'Secure access questions covering devices, locations, and dedicated IPs.',
     items: [
       {
-        question: 'What is BP Secure Tunnel?',
+        question: 'What is BP Secure Tunnel VPN?',
         answer:
           'BP Secure Tunnel helps protect your connection with secure access and dedicated IP options where available.',
       },

@@ -99,7 +99,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     group: 'Connectivity',
     href: '/dashboard/secure-tunnel',
-    label: 'BP Secure Tunnel',
+    label: 'BP Secure Tunnel VPN',
     shortLabel: 'Secure Tunnel',
     description: 'Secure tunnel access, server regions, and device setup.',
     icon: Shield,
@@ -115,15 +115,15 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 const PAGE_META: Array<{ match: string; title: string; description: string }> = [
-  { match: '/dashboard/messenger', title: 'BP Messenger', description: 'Messaging, calling, and contacts across your private number stack.' },
-  { match: '/dashboard/calls', title: 'BP Messenger', description: 'Missed, incoming, and outgoing activity tied to Burner Point lines.' },
-  { match: '/dashboard/contacts', title: 'BP Messenger', description: 'Contact control, dialing, and private communication identity.' },
-  { match: '/dashboard/messages', title: 'BP Messenger', description: 'Conversation context, media, and secure message history.' },
+  { match: '/dashboard/messenger', title: 'BP Messenger Pro', description: 'Messaging, calling, and contacts across your private number stack.' },
+  { match: '/dashboard/calls', title: 'BP Messenger Pro', description: 'Missed, incoming, and outgoing activity tied to Burner Point lines.' },
+  { match: '/dashboard/contacts', title: 'BP Messenger Pro', description: 'Contact control, dialing, and private communication identity.' },
+  { match: '/dashboard/messages', title: 'BP Messenger Pro', description: 'Conversation context, media, and secure message history.' },
   { match: '/dashboard/verify-hub', title: 'BP Verify Hub', description: 'Codes, status, and number activity in one place.' },
-  { match: '/dashboard/rentals', title: 'BP Number Rentals', description: 'Browse inventory, activate rentals, and manage renewal timing.' },
+  { match: '/dashboard/rentals', title: 'BP Rental Hub', description: 'Browse inventory, activate rentals, and manage renewal timing.' },
   { match: '/dashboard/esim', title: 'BP eSIM Store', description: 'Provision travel data plans and manage installed eSIMs.' },
   { match: '/dashboard/proxy', title: 'BP Proxy Store', description: 'Filter proxy plans, review setup details, and monitor active connections.' },
-  { match: '/dashboard/secure-tunnel', title: 'BP Secure Tunnel', description: 'Secure routing, server choice, and device setup guidance.' },
+  { match: '/dashboard/secure-tunnel', title: 'BP Secure Tunnel VPN', description: 'Secure routing, server choice, and device setup guidance.' },
   { match: '/dashboard/settings', title: 'Settings', description: 'Profile, billing, support, and security controls.' },
   { match: '/dashboard/profile', title: 'Settings', description: 'Manage personal details and recovery information.' },
   { match: '/dashboard/billing', title: 'Billing & Subscription', description: 'Available balance, call credits, invoices, and active subscriptions.' },

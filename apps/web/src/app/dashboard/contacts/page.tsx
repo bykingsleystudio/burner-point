@@ -110,10 +110,10 @@ export default function ContactsPage() {
   return (
     <div className="space-y-5">
       <section className="rounded-[1.7rem] border border-white/8 bg-brand-card p-5 md:p-6">
-        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">BP Messenger</p>
+        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">BP Messenger Pro</p>
         <h2 className="mt-3 text-3xl font-semibold text-white">Contacts that stay linked to private communication history.</h2>
         <p className="mt-3 max-w-3xl text-sm leading-7 text-white/54">
-          Use Contacts to search the numbers you already communicate with through BP Messenger. Each contact remains anchored to the Burner Point lines that have handled that conversation.
+          Use Contacts to search the numbers you already communicate with through BP Messenger Pro. Each contact remains anchored to the Burner Point lines that have handled that conversation.
         </p>
         <div className="mt-5">
           <MessengerTabs active="/dashboard/contacts" />
@@ -133,7 +133,7 @@ export default function ContactsPage() {
             />
           </label>
           <div className="rounded-[1rem] border border-brand-green/18 bg-brand-green/[0.06] px-4 py-3 text-sm text-white/60">
-            {loading ? 'Loading contacts...' : `${filteredContacts.length} contacts in BP Messenger`}
+            {loading ? 'Loading contacts...' : `${filteredContacts.length} contacts in BP Messenger Pro`}
           </div>
         </div>
       </section>
@@ -193,7 +193,7 @@ export default function ContactsPage() {
                   href="/dashboard/messenger"
                   className="rounded-[0.95rem] bg-brand-green px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:bg-[#1cffac]"
                 >
-                  Open BP Messenger
+                  Open BP Messenger Pro
                 </Link>
               }
             />
