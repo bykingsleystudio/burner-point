@@ -61,7 +61,7 @@ export const socialProfiles = [
   { label: 'YouTube', handle: '@burnerpointapp', href: 'https://www.youtube.com/@burnerpointapp' },
 ] as const;
 
-       cta: 'Activate Secure Tunnel VPN',
+    export const productLinks: ProductLink[] = [
   {
     name: 'BP Messenger Pro',
     description: 'Private US, UK, and Canada numbers for calling, texting, and contact separation.',
@@ -76,7 +76,6 @@ export const socialProfiles = [
     name: 'BP Rental Hub',
     description: 'Keep a temporary or renewable number active for continuity and recovery.',
     href: '/products/rentals',
-       cta: 'Start BP Messenger Pro',
   {
     name: 'BP eSIM Store',
     description: 'Buy travel data plans and activate connectivity without a physical SIM.',
@@ -93,7 +92,6 @@ export const socialProfiles = [
     href: '/products/secure-tunnel',
   },
 ];
-       cta: 'Activate Secure Tunnel VPN',
 export const headerLinks = [
   { label: 'Products', href: '/#products' },
   { label: 'Pricing', href: '/pricing' },
@@ -108,7 +106,6 @@ export const heroTrustItems = [
   'SMS & voice codes',
   'Renewable rentals',
   'Travel eSIM',
-       label: 'BP Messenger Pro',
   'Secure access',
 ] as const;
 
@@ -125,8 +122,7 @@ export const productStripCards: FeatureCard[] = [
     title: 'BP Rental Hub',
     description: 'Rent temporary or renewable numbers for days, weeks, months, or longer.',
   },
-       label: 'BP Rental Hub',
-    title: 'BP eSIM Store',
+     title: 'BP eSIM Store',
     description: 'Buy country and regional data plans for travel, remote work, and global movement.',
   },
   {
