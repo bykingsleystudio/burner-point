@@ -880,6 +880,9 @@ export class EsimOrder {
   @Index()
   idempotencyKey: string;
 
+  @Column({ name: 'wallet_transaction_id', nullable: true })
+  walletTransactionId: string;
+
   @Column({ type: 'jsonb', default: {} })
   metadata: Record<string, unknown>;
 

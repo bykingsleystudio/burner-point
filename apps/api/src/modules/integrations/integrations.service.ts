@@ -34,6 +34,22 @@ export interface EsimPlansInput {
   region?: string;
 }
 
+export interface NormalizedEsimPlan {
+  id: string;
+  name: string;
+  countryCode: string;
+  region: string | null;
+  dataAmountGb: number | null;
+  validityDays: number | null;
+  priceUsdCents: number;
+  currency: string;
+  networks: string[];
+  supports5g: boolean | null;
+  supportsHotspot: boolean | null;
+  activationPolicy: string | null;
+  metadata: Record<string, unknown>;
+}
+
 export interface EsimOrderInput {
   planId: string;
   countryCode: string;
@@ -266,33 +282,47 @@ export class IntegrationsService {
     return ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'].every((env) => this.hasEnv(env));
   }
 
-  requestEsimPlans(userId: string, input: EsimPlansInput) {
-    return this.callConfiguredProvider('airalo.plans', userId, input);
+  async requestEsimPlans(userId: string, input: EsimPlansInput) {
+    const result = await this.callConfiguredProvider('airalo.plans', userId, input);
+    if (result.status !== 'submitted') return result;
+    return { ...result, data: this.normalizeEsimPlans(result.data, input.countryCode) };
   }
 
   async createEsimOrder(userId: string, input: EsimOrderInput) {
-    const priceUsdCents = this.resolveConfiguredUsdCents('ESIM_ORDER_PRICE_USD_CENTS', 'eSIM order');
     const idempotencyKey = this.integrationIdempotencyKey('esim', input, input.idempotencyKey);
     const existing = await this.esimOrderRepo.findOne({ where: { userId, idempotencyKey } });
     if (existing) return this.toPublicEsimOrder(existing);
+
+    const catalogResult = await this.callConfiguredProvider('airalo.plans', userId, {
+      countryCode: input.countryCode,
+    });
+    if (catalogResult.status !== 'submitted') {
+      throw new BadRequestException('eSIM catalog provider is not configured');
+    }
+    const plan = this.normalizeEsimPlans(catalogResult.data, input.countryCode)
+      .find((item) => item.id === input.planId);
+    if (!plan) throw new BadRequestException('eSIM plan is no longer available');
 
     const order = await this.esimOrderRepo.save(this.esimOrderRepo.create({
       userId,
       provider: 'airalo',
       planId: input.planId,
+      planName: plan.name,
       country: input.countryCode,
-      priceUsdCents,
+      dataAmountGb: plan.dataAmountGb,
+      validityDays: plan.validityDays,
+      priceUsdCents: plan.priceUsdCents,
       idempotencyKey,
       status: 'pending',
-      metadata: {},
+      metadata: { plan, walletCurrency: plan.currency },
     }));
 
     try {
       const result = await this.purchaseIntegrationProduct(
         userId,
         'airalo.order',
-        { ...input, idempotencyKey },
-        priceUsdCents,
+        { ...input, idempotencyKey, plan },
+        plan.priceUsdCents,
         'esim_store',
         TransactionType.ESIM_PURCHASE,
         'BP eSIM order',
@@ -305,6 +335,10 @@ export class IntegrationsService {
         await this.esimOrderRepo.update(order.id, {
           status: 'failed',
           failureReason: 'Airalo order provider is not configured',
+        });
+      } else {
+        await this.esimOrderRepo.update(order.id, {
+          walletTransactionId: 'walletTransactionId' in result ? result.walletTransactionId ?? null : null,
         });
       }
     } catch (error) {
@@ -490,6 +524,19 @@ export class IntegrationsService {
         activatedAt: ['active', 'completed'].includes(status) ? now : order.activatedAt,
         metadata: { ...(order.metadata ?? {}), lastProviderEvent: safePayload },
       });
+      if (status === 'failed' && order.status !== 'failed' && order.status !== 'refunded') {
+        await this.creditsService.refundWallet({
+          userId: order.userId,
+          amountUsdCents: Number(order.priceUsdCents ?? 0),
+          type: TransactionType.PRODUCT_REFUND,
+          relatedProduct: 'esim_store',
+          relatedEntityId: order.id,
+          description: `Refunded failed eSIM order ${order.id}`,
+          idempotencyKey: `esim-refund:${order.id}`,
+          metadata: { providerOrderId: providerReference, reason: 'provider_failed' },
+        });
+        await this.esimOrderRepo.update(order.id, { status: 'refunded', refundedAt: now });
+      }
       return true;
     }
 
@@ -653,6 +700,72 @@ export class IntegrationsService {
     };
   }
 
+  private normalizeEsimPlans(payload: unknown, countryCode: string): NormalizedEsimPlan[] {
+    return this.extractCollection(payload).map((item, index) => {
+      const record = item && typeof item === 'object' ? item as Record<string, unknown> : {};
+      const rawPrice = this.readNumber(record, ['price', 'price_usd', 'priceUsd', 'amount', 'retail_price']);
+      const priceUsdCents = rawPrice === null ? 0 : Math.round(rawPrice < 100 ? rawPrice * 100 : rawPrice);
+      return {
+        id: this.readString(record, ['id', 'planId', 'package_id', 'slug']) ?? `airalo-${countryCode}-${index + 1}`,
+        name: this.readString(record, ['name', 'title', 'package_name']) ?? `eSIM ${countryCode}`,
+        countryCode,
+        region: this.readString(record, ['region', 'coverage']),
+        dataAmountGb: this.readNumber(record, ['data_gb', 'dataAmountGb', 'gb', 'volume', 'data']),
+        validityDays: this.readNumber(record, ['validity_days', 'validityDays', 'days', 'duration']),
+        priceUsdCents,
+        currency: (this.readString(record, ['currency', 'currency_code']) ?? 'USD').toUpperCase(),
+        networks: this.readStringArray(record, ['networks', 'operators', 'network']),
+        supports5g: this.readBoolean(record, ['supports_5g', 'supports5g', 'five_g']),
+        supportsHotspot: this.readBoolean(record, ['supports_hotspot', 'supportsHotspot', 'hotspot']),
+        activationPolicy: this.readString(record, ['activation_policy', 'activationPolicy']),
+        metadata: this.sanitizeProviderResponse(record) as Record<string, unknown>,
+      };
+    }).filter((item) => item.priceUsdCents > 0);
+  }
+
+  private extractCollection(payload: unknown): unknown[] {
+    if (Array.isArray(payload)) return payload;
+    if (!payload || typeof payload !== 'object') return [];
+    const record = payload as Record<string, unknown>;
+    for (const key of ['plans', 'items', 'results', 'data']) {
+      const nested = this.extractCollection(record[key]);
+      if (nested.length) return nested;
+    }
+    return [];
+  }
+
+  private readString(record: Record<string, unknown>, keys: string[]): string | null {
+    for (const key of keys) {
+      if (typeof record[key] === 'string' && record[key].trim()) return record[key].trim();
+    }
+    return null;
+  }
+
+  private readNumber(record: Record<string, unknown>, keys: string[]): number | null {
+    for (const key of keys) {
+      const value = typeof record[key] === 'string' ? Number(record[key]) : record[key];
+      if (typeof value === 'number' && Number.isFinite(value)) return value;
+    }
+    return null;
+  }
+
+  private readBoolean(record: Record<string, unknown>, keys: string[]): boolean | null {
+    for (const key of keys) {
+      if (typeof record[key] === 'boolean') return record[key];
+      if (record[key] === 'true' || record[key] === 'false') return record[key] === 'true';
+    }
+    return null;
+  }
+
+  private readStringArray(record: Record<string, unknown>, keys: string[]): string[] {
+    for (const key of keys) {
+      const value = record[key];
+      if (Array.isArray(value)) return value.filter((item): item is string => typeof item === 'string');
+      if (typeof value === 'string' && value.trim()) return [value.trim()];
+    }
+    return [];
+  }
+
   private toPublicProxyOrder(order: ProxyOrder) {
     return {
       id: order.id,
@@ -746,7 +859,7 @@ export class IntegrationsService {
         await onProviderAccepted(providerResult.data, rawProviderData);
       }
 
-      await this.creditsService.spendWalletLock({
+      const spent = await this.creditsService.spendWalletLock({
         userId,
         lockId: lock.lock.id,
         type: walletTransactionType,
@@ -766,6 +879,7 @@ export class IntegrationsService {
         ...providerResult,
         walletDebitedUsdCents: quote.usdValueCents,
         walletChargeRecorded: true,
+        walletTransactionId: spent.transaction.id,
       };
     } catch (error) {
       await this.creditsService.releaseWalletLock({

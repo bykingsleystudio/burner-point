@@ -5,7 +5,7 @@ import { getCountryDataList, getEmojiFlag } from 'countries-list';
 import toast from 'react-hot-toast';
 import { Globe2, QrCode, ShoppingBag, Smartphone } from 'lucide-react';
 import { BpEmptyState } from '@/components/design-system';
-import { integrationsApi } from '@/lib/api';
+import { integrationsApi, walletApi } from '@/lib/api';
 
 type CatalogItem = {
   id: string;
@@ -23,7 +23,8 @@ type LedgerItem = {
 type PlanCard = {
   id: string;
   name: string;
-  price: string;
+  priceUsdCents: number;
+  currency: string;
   coverage: string;
   dataAmount: string;
   duration: string;
@@ -72,7 +73,8 @@ function normalizePlans(payload: unknown, countryLabel: string): PlanCard[] {
       return {
         id: extractString(record, ['id', 'planId', 'slug', 'package_id'], `plan-${index + 1}`),
         name: extractString(record, ['name', 'title', 'package_name'], `Plan ${index + 1}`),
-        price: extractString(record, ['price', 'priceUsd', 'price_usd', 'amount'], 'Pricing available at checkout'),
+        priceUsdCents: Number(record.priceUsdCents ?? 0),
+        currency: extractString(record, ['currency'], 'USD'),
         coverage: extractString(record, ['country', 'coverage', 'region', 'operator'], countryLabel),
         dataAmount: extractString(record, ['data', 'dataAmount', 'gb', 'volume'], 'See plan details'),
         duration: extractString(record, ['duration', 'validity', 'days'], 'See plan details'),
@@ -102,11 +104,12 @@ export default function EsimPage() {
   const [searching, setSearching] = useState(false);
   const [orderingPlanId, setOrderingPlanId] = useState<string | null>(null);
   const [lastOrder, setLastOrder] = useState<OrderSummary | null>(null);
+  const [walletBalanceCents, setWalletBalanceCents] = useState(0);
 
   useEffect(() => {
     let mounted = true;
 
-    Promise.allSettled([integrationsApi.catalog(), integrationsApi.esimOrders()])
+    Promise.allSettled([integrationsApi.catalog(), integrationsApi.esimOrders(), walletApi.balance()])
       .then((results) => {
         if (!mounted) return;
         const nextCatalog = results[0].status === 'fulfilled' && Array.isArray(results[0].value.data)
@@ -116,6 +119,10 @@ export default function EsimPage() {
           ? results[1].value.data
           : [];
         setCatalog(nextCatalog);
+        if (results[2].status === 'fulfilled') {
+          const wallet = results[2].value.data?.wallet ?? results[2].value.data;
+          setWalletBalanceCents(Number(wallet?.availableUsdCents ?? wallet?.balanceUsdCents ?? 0));
+        }
         setHistory(nextOrders.map((item: Record<string, unknown>) => ({
           id: String(item.id),
           type: 'esim_purchase',
@@ -182,15 +189,15 @@ export default function EsimPage() {
         countryCode,
         idempotencyKey: crypto.randomUUID(),
       });
-      if (response.data?.status !== 'submitted') {
+      if (!response.data?.id || response.data?.status === 'failed' || response.data?.status === 'refunded') {
         toast.error('eSIM checkout is not available right now.');
         return;
       }
 
       const summary: OrderSummary = {
-        status: 'Submitted',
-        reference: extractReference(response.data?.data),
-        chargeUsdCents: response.data?.walletDebitedUsdCents,
+        status: response.data.status || 'provisioning',
+        reference: extractReference(response.data),
+        chargeUsdCents: response.data.priceUsdCents,
       };
       setLastOrder(summary);
       toast.success('eSIM order submitted.');
@@ -270,7 +277,12 @@ export default function EsimPage() {
                       <p className="mt-2 text-white">{plan.duration}</p>
                     </div>
                   </div>
-                  <p className="mt-4 font-mono text-sm text-brand-green">{plan.price}</p>
+                  <p className="mt-4 font-mono text-sm text-brand-green">
+                    {plan.currency} {(plan.priceUsdCents / 100).toFixed(2)}
+                  </p>
+                  <p className="mt-2 text-xs text-white/42">
+                    Wallet available: ${(walletBalanceCents / 100).toFixed(2)}
+                  </p>
                   <button
                     type="button"
                     onClick={() => purchasePlan(plan.id)}
