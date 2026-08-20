@@ -7,13 +7,18 @@ import { AuthController } from './auth.controller';
 import { SupabaseAuthService } from './supabase-auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { User } from '../../database/entities/user.entity';
+import { AuthSession } from '../../database/entities/auth-security.entity';
+import { AuthChallenge, OAuthAuthorizationCode, OAuthClient, PasskeyCredential } from '../../database/entities/auth-security.entity';
+import { AuthSecurityController, OAuthController, PasskeyAuthenticationController } from './auth-security.controller';
+import { AuthSecurityService } from './auth-security.service';
+import { RolesGuard } from './guards/roles.guard';
 import { RedisService } from '../global/redis.service';
 import { resolveJwtAccessSecret } from '../../config/runtime-env';
 
 @Global()
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, AuthSession, AuthChallenge, PasskeyCredential, OAuthClient, OAuthAuthorizationCode]),
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -24,8 +29,8 @@ import { resolveJwtAccessSecret } from '../../config/runtime-env';
       }),
     }),
   ],
-  controllers: [AuthController],
-  providers: [SupabaseAuthService, JwtStrategy, RedisService],
+  controllers: [AuthController, AuthSecurityController, PasskeyAuthenticationController, OAuthController],
+  providers: [SupabaseAuthService, AuthSecurityService, JwtStrategy, RedisService, RolesGuard],
   exports: [SupabaseAuthService, JwtModule],
 })
 export class AuthModule {}

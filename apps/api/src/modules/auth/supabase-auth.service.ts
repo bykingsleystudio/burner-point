@@ -37,6 +37,14 @@ import { LoginDto } from './dto/login.dto';
 import { withWalletPresentation } from '../../config/money';
 import { resolveJwtRefreshSecret } from '../../config/runtime-env';
 import { createSupabaseFromConfig } from '../../config/supabase';
+import { AuthSession } from '../../database/entities/auth-security.entity';
+import { createHash } from 'crypto';
+import QRCode from 'qrcode';
+
+const speakeasy = require('speakeasy') as {
+  generateSecret(options: { name: string; issuer: string }): { base32: string; otpauth_url?: string };
+  totp: { verify(options: { secret: string; encoding: 'base32'; token: string; window: number }): boolean };
+};
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
@@ -47,6 +55,7 @@ export class SupabaseAuthService {
 
   constructor(
     @InjectRepository(User) private userRepo: Repository<User>,
+    @InjectRepository(AuthSession) private sessionRepo: Repository<AuthSession>,
     private jwtService: JwtService,
     private configService: ConfigService,
     private redisService: RedisService,
@@ -196,8 +205,11 @@ export class SupabaseAuthService {
     if (user.status === UserStatus.SUSPENDED)
       throw new ForbiddenException('Account suspended');
 
-    if (user.twoFactorEnabled)
-      throw new ForbiddenException('Additional verification required');
+    if (user.twoFactorEnabled) {
+      const twoFactorSecret = await this.getTwoFactorSecret(user.id);
+      const validCode = Boolean(dto.twoFactorCode && twoFactorSecret && this.verifyTwoFactorCode(twoFactorSecret, dto.twoFactorCode));
+      if (!validCode) throw new ForbiddenException('A valid authenticator code is required');
+    }
 
     // Reset failed attempts on success
     await this.userRepo.update(user.id, {
@@ -312,6 +324,15 @@ export class SupabaseAuthService {
     return { url: data.url };
   }
 
+  async inviteUser(email: string, redirectTo?: string) {
+    const normalizedEmail = this.normalizeEmail(email);
+    const { data, error } = await this.supabase.auth.admin.inviteUserByEmail(normalizedEmail, {
+      redirectTo: redirectTo || `${this.getWebUrl()}/auth/callback?redirect=/onboarding`,
+    });
+    if (error || !data.user) throw new BadRequestException(error?.message || 'Unable to send invitation');
+    return { invited: true, userId: data.user.id, email: normalizedEmail };
+  }
+
   /**
    * Exchange a Supabase browser session for Burner Point API tokens.
    * This lets web/mobile clients authenticate with Supabase directly
@@ -327,6 +348,7 @@ export class SupabaseAuthService {
       country: string;
       acceptTerms: boolean;
       acceptPrivacy: boolean;
+      twoFactorCode?: string;
     }>,
     ip?: string,
   ) {
@@ -467,6 +489,12 @@ export class SupabaseAuthService {
     }
 
     await this.userRepo.save(user);
+    if (user.twoFactorEnabled) {
+      const twoFactorSecret = await this.getTwoFactorSecret(user.id);
+      if (!profile?.twoFactorCode || !twoFactorSecret || !this.verifyTwoFactorCode(twoFactorSecret, profile.twoFactorCode)) {
+        throw new ForbiddenException('A valid authenticator code is required');
+      }
+    }
     const tokens = await this.generateTokens(user);
     const needsPhoneVerification = Boolean(user.phoneNumber) && !user.phoneVerified;
 
@@ -502,6 +530,11 @@ export class SupabaseAuthService {
       });
       if (!user) throw new UnauthorizedException('User not found');
 
+      const session = await this.sessionRepo.findOne({ where: { refreshTokenHash: this.hashToken(refreshToken) } });
+      if (!session || session.revokedAt || session.expiresAt <= new Date()) {
+        throw new UnauthorizedException('Session expired or revoked');
+      }
+
       // Revoke old refresh token
       const ttl = payload.exp - Math.floor(Date.now() / 1000);
       if (ttl > 0) {
@@ -510,6 +543,12 @@ export class SupabaseAuthService {
           '1',
           ttl
         );
+      }
+
+      if (session) {
+        session.revokedAt = new Date();
+        session.lastUsedAt = new Date();
+        await this.sessionRepo.save(session);
       }
 
       return this.generateTokens(user);
@@ -534,10 +573,115 @@ export class SupabaseAuthService {
           ttl
         );
       }
+      await this.sessionRepo.update(
+        { refreshTokenHash: this.hashToken(refreshToken), revokedAt: null },
+        { revokedAt: new Date(), lastUsedAt: new Date() },
+      );
     } catch {
       // already expired, nothing to revoke
     }
     return { success: true };
+  }
+
+  async listSessions(userId: string) {
+    const sessions = await this.sessionRepo.find({
+      where: { userId },
+      order: { lastUsedAt: 'DESC', createdAt: 'DESC' },
+    });
+    return sessions.map((session) => ({
+      id: session.id,
+      deviceName: session.deviceName,
+      userAgent: session.userAgent,
+      ipAddress: session.ipAddress,
+      createdAt: session.createdAt,
+      lastUsedAt: session.lastUsedAt,
+      expiresAt: session.expiresAt,
+      revokedAt: session.revokedAt,
+      active: !session.revokedAt && session.expiresAt > new Date(),
+    }));
+  }
+
+  async revokeSession(userId: string, sessionId: string) {
+    const result = await this.sessionRepo.update(
+      { id: sessionId, userId, revokedAt: null },
+      { revokedAt: new Date() },
+    );
+    if (!result.affected) throw new BadRequestException('Session not found or already revoked');
+    return { success: true };
+  }
+
+  async revokeAllSessions(userId: string) {
+    await this.sessionRepo
+      .createQueryBuilder()
+      .update(AuthSession)
+      .set({ revokedAt: new Date() })
+      .where('user_id = :userId AND revoked_at IS NULL', { userId })
+      .execute();
+    return { success: true };
+  }
+
+  async getTwoFactorStatus(userId: string) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException('User not found');
+    return { enabled: Boolean(user.twoFactorEnabled) };
+  }
+
+  async setupTwoFactor(userId: string) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException('User not found');
+    if (user.twoFactorEnabled) throw new BadRequestException('Authenticator 2FA is already enabled');
+
+    const secret = speakeasy.generateSecret({
+      name: user.email || `Burner Point:${user.id}`,
+      issuer: 'Burner Point',
+    });
+    if (!secret.otpauth_url) throw new InternalServerErrorException('Unable to create authenticator setup');
+
+    await this.userRepo.update(user.id, { twoFactorSecret: secret.base32 });
+    return {
+      enabled: false,
+      secret: secret.base32,
+      otpauthUrl: secret.otpauth_url,
+      qrCodeDataUrl: await QRCode.toDataURL(secret.otpauth_url),
+    };
+  }
+
+  async enableTwoFactor(userId: string, code: string) {
+    const secret = await this.getTwoFactorSecret(userId);
+    if (!secret || !this.verifyTwoFactorCode(secret, code)) {
+      throw new UnauthorizedException('Invalid authenticator code');
+    }
+
+    await this.userRepo.update(userId, { twoFactorEnabled: true });
+    return { enabled: true };
+  }
+
+  async disableTwoFactor(userId: string, code: string) {
+    const secret = await this.getTwoFactorSecret(userId);
+    if (!secret || !this.verifyTwoFactorCode(secret, code)) {
+      throw new UnauthorizedException('Invalid authenticator code');
+    }
+
+    await this.userRepo.update(userId, { twoFactorEnabled: false, twoFactorSecret: null });
+    return { enabled: false };
+  }
+
+  private async getTwoFactorSecret(userId: string) {
+    const user = await this.userRepo
+      .createQueryBuilder('user')
+      .addSelect('user.twoFactorSecret')
+      .where('user.id = :userId', { userId })
+      .getOne();
+    return user?.twoFactorSecret || null;
+  }
+
+  private verifyTwoFactorCode(secret: string, code: string) {
+    return speakeasy.totp.verify({
+      secret,
+      encoding: 'base32',
+      token: code.trim(),
+      window: 1,
+    });
   }
 
   /**
@@ -567,6 +711,12 @@ export class SupabaseAuthService {
   /**
    * Generate JWT tokens
    */
+  async issueTokensForUser(userId: string) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException('User not found');
+    return this.generateTokens(user);
+  }
+
   private async generateTokens(user: User) {
     const payload = { sub: user.id, email: user.email, role: user.role };
 
@@ -576,7 +726,19 @@ export class SupabaseAuthService {
       expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_IN', '30d'),
     });
 
+    const refreshPayload = this.jwtService.decode(refreshToken) as { exp?: number } | null;
+    await this.sessionRepo.save(this.sessionRepo.create({
+      userId: user.id,
+      refreshTokenHash: this.hashToken(refreshToken),
+      lastUsedAt: new Date(),
+      expiresAt: new Date((refreshPayload?.exp ?? Math.floor(Date.now() / 1000)) * 1000),
+    }));
+
     return { accessToken, refreshToken, userId: user.id };
+  }
+
+  private hashToken(token: string) {
+    return createHash('sha256').update(token).digest('hex');
   }
 
   private async syncLocalUserFromSupabaseAuthUser(

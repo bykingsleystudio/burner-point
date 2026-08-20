@@ -24,6 +24,7 @@ export default function AuthCallbackPage() {
     authCallbackInFlight = true;
 
     const handleCallback = async () => {
+      const redirectParam = sanitizeRedirect(searchParams.get('redirect'));
       try {
         const errorParam = searchParams.get('error');
         const errorDescription = searchParams.get('error_description');
@@ -31,7 +32,6 @@ export default function AuthCallbackPage() {
           throw new Error(errorDescription || errorParam);
         }
 
-        const redirectParam = sanitizeRedirect(searchParams.get('redirect'));
         const hash = window.location.hash || '';
         const code = searchParams.get('code');
 
@@ -97,6 +97,10 @@ export default function AuthCallbackPage() {
         router.replace(result.redirectTo);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Authentication callback failed';
+        if (/authenticator code is required/i.test(message)) {
+          router.replace(`/sign-in?mfa=1&redirect=${encodeURIComponent(redirectParam)}`);
+          return;
+        }
         setError(message);
         toast.error(message);
         setTimeout(() => {

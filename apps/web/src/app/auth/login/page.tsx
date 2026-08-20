@@ -3,8 +3,11 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
+import { useEffect } from 'react';
+import type { Session } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff, Zap } from 'lucide-react';
+import { startAuthentication } from '@simplewebauthn/browser';
 import { AuthProviderButton } from '@/components/auth-provider-button';
 import Button from '@/components/ui/button';
 import { GlassInputWrapper, SignInPage } from '@/components/ui/sign-in';
@@ -12,6 +15,8 @@ import { supabase } from '@/lib/supabase';
 import { getErrorMessage, sanitizeRedirect } from '@/lib/auth';
 import { getRememberMePreference, setRememberMePreference } from '@/lib/auth-persistence';
 import { useManualAuthCompletion } from '@/lib/auth-session-sync';
+import { authApi, setApiSession, usersApi } from '@/lib/api';
+import { useAuthStore } from '@/store';
 import { TurnstileWidget } from '@/components/turnstile-widget';
 import {
   INTERNATIONAL_PHONE_ERROR,
@@ -26,12 +31,22 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const redirectTo = useMemo(() => sanitizeRedirect(searchParams.get('redirect')), [searchParams]);
   const completeAuth = useManualAuthCompletion();
+  const setAuth = useAuthStore((state) => state.setAuth);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState<boolean>(() => getRememberMePreference());
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [requiresTwoFactor, setRequiresTwoFactor] = useState(false);
+  const [pendingSession, setPendingSession] = useState<Session | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get('mfa') !== '1') return;
+    setRequiresTwoFactor(true);
+    void supabase.auth.getSession().then(({ data }) => setPendingSession(data.session));
+  }, [searchParams]);
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   const canSubmit = identifier.trim().length >= 3 && password.length >= 8 && (!turnstileSiteKey || !!turnstileToken);
@@ -60,36 +75,35 @@ export default function LoginPage() {
     try {
       setRememberMePreference(rememberMe);
       if (turnstileSiteKey && turnstileToken) {
-        const verifyResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'https://api.burnerpoint.com'}/auth/turnstile/verify`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: turnstileToken }),
-        });
-
-        if (!verifyResponse.ok) {
-          const payload = await verifyResponse.json().catch(() => ({}));
-          throw new Error(payload?.message || 'Security verification failed. Please try again.');
-        }
+        await authApi.verifyTurnstile(turnstileToken);
       }
 
-      const { data, error } = await supabase.auth.signInWithPassword(
-        identifierType === 'phone'
-          ? { phone: normalizedIdentifier, password }
-          : { email: normalizedIdentifier.toLowerCase(), password },
-      );
+      let session = pendingSession;
+      if (!session) {
+        const { data, error } = await supabase.auth.signInWithPassword(
+          identifierType === 'phone'
+            ? { phone: normalizedIdentifier, password }
+            : { email: normalizedIdentifier.toLowerCase(), password },
+        );
 
-      if (error || !data.session) {
-        throw error ?? new Error('Unable to sign in.');
+        if (error || !data.session) throw error ?? new Error('Unable to sign in.');
+        session = data.session;
       }
 
       // Use centralized auth sync instead of direct redirect
-      await completeAuth(data.session, {
+      await completeAuth(session, {
         redirectTo: redirectTo || '/dashboard',
+        profileData: twoFactorCode.trim() ? { twoFactorCode: twoFactorCode.trim() } : undefined,
       });
       toast.success('Welcome back.');
     } catch (error: unknown) {
       const message = getErrorMessage(error, 'Something went wrong. Please sign in again.');
-      if (/password|identifier|not found|invalid|incorrect|credentials/i.test(message)) {
+      if (/authenticator code is required/i.test(message)) {
+        setRequiresTwoFactor(true);
+        const { data } = await supabase.auth.getSession();
+        setPendingSession(data.session);
+        toast('Enter the code from your authenticator app to finish signing in.');
+      } else if (/password|identifier|not found|invalid|incorrect|credentials/i.test(message)) {
         toast.error('Email/phone number or password is incorrect.');
       } else if (/captcha|challenge|browser/i.test(message)) {
         toast.error('Verification failed. Try again or switch browser.');
@@ -116,6 +130,59 @@ export default function LoginPage() {
       }
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, 'Something went wrong. Please sign in again.'));
+    }
+  };
+
+  const signInWithPasskey = async () => {
+    setLoading(true);
+    try {
+      const { data: options } = await authApi.passkeyAuthenticationOptions();
+      const response = await startAuthentication({ optionsJSON: options });
+      const { data: tokens } = await authApi.verifyPasskeyAuthentication(response as unknown as Record<string, unknown>);
+      setApiSession(tokens.access_token, tokens.refresh_token);
+      const { data: user } = await usersApi.me();
+      setAuth(user, tokens.access_token, tokens.refresh_token);
+      window.location.assign(redirectTo || '/dashboard');
+    } catch (error: unknown) {
+      const message = getErrorMessage(error, 'Passkey sign-in failed.');
+      if (!/cancel/i.test(message)) toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendPasswordlessCode = async () => {
+    const normalizedIdentifier = normalizeAuthIdentifier(identifier);
+    const identifierType = classifyAuthIdentifier(identifier);
+    if (identifierType === 'phone' && !isValidInternationalPhone(identifier)) {
+      toast.error(INTERNATIONAL_PHONE_ERROR);
+      return;
+    }
+    if (!normalizedIdentifier) {
+      toast.error('Enter your email address or phone number first.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (turnstileSiteKey && turnstileToken) await authApi.verifyTurnstile(turnstileToken);
+      if (identifierType === 'phone') {
+        const { error } = await supabase.auth.signInWithOtp({ phone: normalizedIdentifier });
+        if (error) throw error;
+        window.location.assign(`/auth/phone-verify?mode=supabase-login&phone=${encodeURIComponent(normalizedIdentifier)}&redirect=${encodeURIComponent(redirectTo)}`);
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithOtp({
+        email: normalizedIdentifier.toLowerCase(),
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirectTo)}` },
+      });
+      if (error) throw error;
+      toast.success('Check your email for a secure sign-in link.');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Unable to send a sign-in code.'));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -198,6 +265,25 @@ export default function LoginPage() {
           </GlassInputWrapper>
         </div>
 
+        {requiresTwoFactor ? (
+          <div className="space-y-2">
+            <label htmlFor="twoFactorCode" className="bp-auth-label">
+              Authenticator code
+            </label>
+            <GlassInputWrapper>
+              <input
+                id="twoFactorCode"
+                value={twoFactorCode}
+                onChange={(event) => setTwoFactorCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="123456"
+                className="bp-auth-text-input font-mono tracking-[0.3em]"
+              />
+            </GlassInputWrapper>
+          </div>
+        ) : null}
+
         {turnstileSiteKey ? (
           <TurnstileWidget
             siteKey={turnstileSiteKey}
@@ -239,6 +325,22 @@ export default function LoginPage() {
             </>
           )}
         </Button>
+        <button
+          type="button"
+          onClick={() => void signInWithPasskey()}
+          disabled={loading}
+          className="bp-auth-provider inline-flex min-h-12 w-full items-center justify-center rounded-[1rem] border border-white/10 px-5 text-sm font-semibold text-white/80 transition hover:border-brand-green/30 hover:text-brand-green disabled:opacity-50"
+        >
+          Sign in with passkey
+        </button>
+        <button
+          type="button"
+          onClick={() => void sendPasswordlessCode()}
+          disabled={loading}
+          className="bp-auth-provider inline-flex min-h-12 w-full items-center justify-center rounded-[1rem] border border-white/10 px-5 text-sm font-semibold text-white/80 transition hover:border-brand-green/30 hover:text-brand-green disabled:opacity-50"
+        >
+          Email me a sign-in link or send phone OTP
+        </button>
       </form>
     </SignInPage>
   );

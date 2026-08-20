@@ -48,6 +48,7 @@ export async function synchronizeAuthSession(
       country?: string;
       acceptTerms?: boolean;
       acceptPrivacy?: boolean;
+      twoFactorCode?: string;
     };
   }
 ): Promise<AuthSyncResult> {
@@ -166,6 +167,7 @@ export function useManualAuthCompletion() {
           country?: string;
           acceptTerms?: boolean;
           acceptPrivacy?: boolean;
+          twoFactorCode?: string;
         };
       }
     ) => {

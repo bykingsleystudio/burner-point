@@ -26,6 +26,7 @@
     "@nestjs/swagger": "^7.4.0",
     "@nestjs/typeorm": "^10.0.2",
     "@nestjs/websockets": "^10.3.10",
+    "@simplewebauthn/server": "^13.3.2",
     "@socket.io/redis-adapter": "^8.3.0",
     "@supabase/supabase-js": "^2.105.1",
     "axios": "^1.7.9",

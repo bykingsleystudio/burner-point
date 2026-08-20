@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Globe2, MonitorSmartphone, ShieldCheck, ShoppingBag } from 'lucide-react';
 import { BpEmptyState } from '@/components/design-system';
-import { billingApi, integrationsApi } from '@/lib/api';
+import { integrationsApi } from '@/lib/api';
 
 type CatalogItem = {
   id: string;
@@ -50,17 +50,23 @@ export default function VpnPage() {
   useEffect(() => {
     let mounted = true;
 
-    Promise.allSettled([integrationsApi.catalog(), billingApi.ledger(1, 20)])
+    Promise.allSettled([integrationsApi.catalog(), integrationsApi.vpnSessions()])
       .then((results) => {
         if (!mounted) return;
         const nextCatalog = results[0].status === 'fulfilled' && Array.isArray(results[0].value.data)
           ? results[0].value.data
           : [];
-        const nextLedger = results[1].status === 'fulfilled'
-          ? results[1].value.data?.transactions ?? []
+        const nextSessions = results[1].status === 'fulfilled' && Array.isArray(results[1].value.data)
+          ? results[1].value.data
           : [];
         setCatalog(nextCatalog);
-        setHistory(nextLedger.filter((item: LedgerItem) => item.type === 'vpn_purchase'));
+        setHistory(nextSessions.map((item: Record<string, unknown>) => ({
+          id: String(item.id),
+          type: 'vpn_purchase',
+          description: typeof item.deviceName === 'string' ? item.deviceName : 'Secure tunnel session',
+          referenceId: typeof item.providerSessionId === 'string' ? item.providerSessionId : undefined,
+          createdAt: typeof item.createdAt === 'string' ? item.createdAt : undefined,
+        })));
       })
       .finally(() => {
         if (mounted) setLoading(false);

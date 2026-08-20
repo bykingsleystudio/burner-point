@@ -31,7 +31,7 @@ export class UsersService {
     );
   }
 
-  async updateProfile(userId: string, dto: Partial<{ firstName: string; lastName: string; timezone: string; country: string; preferences: Record<string, unknown> }>) {
+  async updateProfile(userId: string, dto: Partial<{ firstName: string; lastName: string; timezone: string; country: string; avatarUrl: string; preferences: Record<string, unknown> }>) {
     await this.userRepo.update(userId, dto);
     return this.getProfile(userId);
   }

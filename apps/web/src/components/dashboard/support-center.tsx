@@ -92,6 +92,9 @@ export function SupportCenter({ fullHistory = false }: { fullHistory?: boolean }
   const [tickets, setTickets] = useState<SupportTicketRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [expandedTicket, setExpandedTicket] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState({ rating: 5, message: '' });
   const [form, setForm] = useState({
     category: 'verification' as SupportCategory,
     product: 'BP Verify Hub',
@@ -155,6 +158,23 @@ export function SupportCenter({ fullHistory = false }: { fullHistory?: boolean }
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const reply = async (ticketId: string) => {
+    const message = replyDrafts[ticketId]?.trim();
+    if (!message) return;
+    try {
+      await supportApi.reply(ticketId, message);
+      setReplyDrafts((current) => ({ ...current, [ticketId]: '' }));
+      toast.success('Reply sent.');
+    } catch { toast.error('Unable to send your reply.'); }
+  };
+
+  const submitFeedback = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!feedback.message.trim()) return;
+    try { await supportApi.feedback({ ...feedback, message: feedback.message.trim() }); setFeedback({ rating: 5, message: '' }); toast.success('Feedback sent.'); }
+    catch { toast.error('Unable to send feedback.'); }
   };
 
   return (
@@ -354,6 +374,8 @@ export function SupportCenter({ fullHistory = false }: { fullHistory?: boolean }
                   <span className="inline-flex items-center gap-2"><LifeBuoy className="h-3.5 w-3.5" /> Priority: {ticket.priority}</span>
                   <span className="inline-flex items-center gap-2"><Headphones className="h-3.5 w-3.5" /> Updated: {ticket.updatedAt ? new Date(ticket.updatedAt).toLocaleString() : 'Pending'}</span>
                 </div>
+                <button type="button" onClick={() => setExpandedTicket(expandedTicket === ticket.id ? null : ticket.id)} className="mt-4 text-xs font-semibold uppercase tracking-[0.12em] text-brand-green">{expandedTicket === ticket.id ? 'Close reply' : 'Reply to support'}</button>
+                {expandedTicket === ticket.id ? <div className="mt-3 flex gap-2"><input value={replyDrafts[ticket.id] || ''} onChange={(event) => setReplyDrafts((current) => ({ ...current, [ticket.id]: event.target.value }))} className="bp-input" placeholder="Write a reply" /><button type="button" onClick={() => void reply(ticket.id)} className="min-h-11 rounded-md bg-brand-green px-4 text-xs font-semibold uppercase text-black">Send</button></div> : null}
               </article>
             ))}
           </div>
@@ -365,6 +387,12 @@ export function SupportCenter({ fullHistory = false }: { fullHistory?: boolean }
             />
           </div>
         )}
+      </section>
+
+      <section className="rounded-[1.5rem] border border-white/8 bg-brand-card p-5">
+        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Feedback</p>
+        <h2 className="mt-2 text-xl font-semibold text-white">Tell support how we did</h2>
+        <form onSubmit={submitFeedback} className="mt-4 grid gap-3 sm:grid-cols-[10rem_1fr_auto] sm:items-end"><label className="text-sm text-white/60">Rating<select value={feedback.rating} onChange={(event) => setFeedback((current) => ({ ...current, rating: Number(event.target.value) }))} className="bp-input mt-2">{[5, 4, 3, 2, 1].map((rating) => <option key={rating} value={rating}>{rating}/5</option>)}</select></label><textarea value={feedback.message} onChange={(event) => setFeedback((current) => ({ ...current, message: event.target.value }))} className="bp-input min-h-11" maxLength={4000} placeholder="Your feedback" required /><button type="submit" className="min-h-11 rounded-md bg-brand-green px-4 text-xs font-semibold uppercase text-black">Send feedback</button></form>
       </section>
     </div>
   );

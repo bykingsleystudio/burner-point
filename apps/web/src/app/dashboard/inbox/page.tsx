@@ -20,11 +20,12 @@ import {
   UserPlus,
   Users,
 } from 'lucide-react';
-import { callCreditsApi, messagesApi, numbersApi } from '@/lib/api';
+import { billingApi, callCreditsApi, messagesApi, numbersApi, storageApi } from '@/lib/api';
 import { formatUsdCents } from '@/lib/money';
 import { BpEmptyState } from '@/components/design-system';
 import { MessengerTabs } from '@/components/dashboard/messenger-tabs';
 import { useNumbersStore } from '@/store';
+import { supabase } from '@/lib/supabase';
 
 type NumberRecord = {
   id: string;
@@ -159,6 +160,10 @@ export default function InboxPage() {
   const [callCreditHistory, setCallCreditHistory] = useState<CallCreditTransaction[]>([]);
   const [callCreditPackages, setCallCreditPackages] = useState<CallCreditPackage[]>([]);
   const [purchasingCallCreditPackage, setPurchasingCallCreditPackage] = useState<string | null>(null);
+  const [messengerAccess, setMessengerAccess] = useState<boolean | null>(null);
+  const [attachments, setAttachments] = useState<string[]>([]);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -237,6 +242,12 @@ export default function InboxPage() {
     void loadCallCreditData();
   }, []);
 
+  useEffect(() => {
+    billingApi.entitlements()
+      .then(({ data }) => setMessengerAccess(Boolean(data?.summary?.canAccessMessenger || data?.summary?.canAccessPremium)))
+      .catch(() => setMessengerAccess(null));
+  }, []);
+
   const selectedNumber = useMemo(() => {
     return (numbers as NumberRecord[]).find((item) => item.id === selectedNumberId) ?? null;
   }, [numbers, selectedNumberId]);
@@ -257,6 +268,15 @@ export default function InboxPage() {
   }, [selectedThread, selectedThreadId]);
 
   useEffect(() => {
+    if (!selectedThread) return;
+    const unreadMessages = selectedThread.messages.filter((message) => message.direction === 'inbound' && message.status !== 'read');
+    if (!unreadMessages.length) return;
+    Promise.all(unreadMessages.map((message) => messagesApi.markRead(message.id)))
+      .then(() => setMessages((current) => current.map((message) => unreadMessages.some((item) => item.id === message.id) ? { ...message, status: 'read' } : message)))
+      .catch(() => undefined);
+  }, [selectedThread]);
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [selectedThread?.messages.length]);
 
@@ -267,7 +287,11 @@ export default function InboxPage() {
   };
 
   const sendMessage = async () => {
-    if (!selectedNumber || !sendTo.trim() || !composer.trim()) {
+    if (messengerAccess === false) {
+      toast.error('BP Messenger Pro subscription is required.');
+      return;
+    }
+    if (!selectedNumber || !sendTo.trim() || (!composer.trim() && !attachments.length)) {
       toast.error('Select a number, choose a recipient, and enter a message.');
       return;
     }
@@ -278,16 +302,41 @@ export default function InboxPage() {
         from: selectedNumber.number,
         to: sendTo.trim(),
         body: composer.trim(),
+        mediaUrls: attachments,
       });
 
       setMessages((current) => [...current, response.data]);
       setComposer('');
+      setAttachments([]);
       setSelectedThreadId(response.data.to);
     } catch (error: unknown) {
       const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
       toast.error(message || 'Unable to send this message right now.');
     } finally {
       setSending(false);
+    }
+  };
+
+  const uploadAttachment = async (file?: File) => {
+    if (!file) return;
+    setUploadingAttachment(true);
+    try {
+      const { data } = await storageApi.uploadIntent({
+        purpose: 'mms',
+        fileName: file.name,
+        contentType: file.type,
+        byteSize: file.size,
+      });
+      if (data.status !== 'ready' || !data.upload?.token) throw new Error('Private media storage is not configured.');
+      const uploadResult = await supabase.storage.from(data.bucket).uploadToSignedUrl(data.upload.path, data.upload.token, file);
+      if (uploadResult.error) throw uploadResult.error;
+      const signed = await storageApi.signedReadUrl({ bucket: data.bucket, objectKey: data.objectKey });
+      setAttachments((current) => [...current, signed.data.signedUrl].slice(0, 8));
+      toast.success('Media attached.');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Unable to attach media.');
+    } finally {
+      setUploadingAttachment(false);
     }
   };
 
@@ -336,6 +385,7 @@ export default function InboxPage() {
 
       <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <article className="rounded-[1.5rem] border border-white/8 bg-brand-card p-5">
+          {messengerAccess === false ? <div role="alert" className="mb-5 flex flex-col gap-3 rounded-md border border-amber-300/30 bg-amber-300/[0.08] p-4 text-sm text-amber-100 sm:flex-row sm:items-center sm:justify-between"><span>BP Messenger Pro subscription is required for messaging and calling.</span><Link href="/dashboard/subscriptions" className="inline-flex min-h-10 items-center justify-center rounded-md bg-brand-green px-3 text-xs font-semibold uppercase tracking-[0.12em] text-black">View plans</Link></div> : null}
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-green">Call Credits</p>
@@ -376,7 +426,7 @@ export default function InboxPage() {
                 <button
                   type="button"
                   onClick={() => purchaseCallCredits(pkg.id)}
-                  disabled={Boolean(purchasingCallCreditPackage)}
+                  disabled={Boolean(purchasingCallCreditPackage) || messengerAccess === false}
                   className="mt-4 inline-flex min-h-10 items-center justify-center rounded-[0.95rem] bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.12em] text-black transition hover:bg-[#1cffac] disabled:opacity-50"
                 >
                   {purchasingCallCreditPackage === pkg.id ? 'Processing...' : 'Buy Call Credits'}
@@ -575,18 +625,22 @@ export default function InboxPage() {
             <div className="grid gap-3 lg:grid-cols-[auto_auto_auto_auto_auto_auto_auto_auto_auto_1fr_auto]">
               {MEDIA_ACTIONS.map((item) => {
                 const Icon = item.icon;
+                const attachable = item.label === 'Gallery' || item.label === 'File manager';
                 return (
                   <button
                     key={item.label}
                     type="button"
-                    disabled
-                    title={`${item.label} is enabled only when secure media configuration is active for this account.`}
-                    className="flex min-h-11 items-center justify-center rounded-[0.95rem] border border-white/8 bg-[#020806]/18 text-white/28"
+                    disabled={!attachable || uploadingAttachment || messengerAccess === false}
+                    onClick={attachable ? () => fileInputRef.current?.click() : undefined}
+                    title={attachable ? 'Attach private media' : `${item.label} is unavailable until its provider contract is enabled`}
+                    className={`flex min-h-11 items-center justify-center rounded-[0.95rem] border border-white/8 ${attachable ? 'bg-[#020806]/18 text-white/70 hover:border-brand-green/25 hover:text-brand-green' : 'bg-[#020806]/18 text-white/28'}`}
                   >
                     <Icon className="h-4 w-4" />
                   </button>
                 );
               })}
+
+              <input ref={fileInputRef} type="file" accept="image/*,video/mp4,audio/*,application/pdf" className="hidden" onChange={(event) => { void uploadAttachment(event.target.files?.[0]); event.currentTarget.value = ''; }} />
 
               <input
                 value={sendTo}
@@ -611,6 +665,7 @@ export default function InboxPage() {
                   <Send className="h-5 w-5" />
                 </button>
               </div>
+              {attachments.length ? <p className="text-xs text-brand-green">{attachments.length} private attachment{attachments.length === 1 ? '' : 's'} ready to send.</p> : null}
             </div>
           </div>
         </div>

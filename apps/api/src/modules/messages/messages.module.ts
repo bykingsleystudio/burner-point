@@ -7,9 +7,10 @@ import { GlobalModule } from '../global/global.module';
 import { ApiPlatformModule } from '../api-platform/api-platform.module';
 import { MessagesController } from './messages.controller';
 import { MessagesService } from './messages.service';
+import { RevenueCatModule } from '../revenuecat/revenuecat.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Message, PhoneNumber]), GatewayModule, GlobalModule, ApiPlatformModule],
+  imports: [TypeOrmModule.forFeature([Message, PhoneNumber]), GatewayModule, GlobalModule, ApiPlatformModule, RevenueCatModule],
   controllers: [MessagesController],
   providers: [MessagesService],
   exports: [MessagesService],

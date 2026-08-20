@@ -14,6 +14,8 @@ interface User {
   walletBalanceUsd?: number;
   walletDisplayCurrency?: 'USD';
   referralCode?: string;
+  avatarUrl?: string;
+  preferences?: Record<string, unknown>;
   needsOnboarding?: boolean;
   onboardingMissingFields?: string[];
 }

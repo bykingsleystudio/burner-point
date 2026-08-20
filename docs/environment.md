@@ -1,6 +1,6 @@
 # Burner Point Environment
 
-The root [`.env.example`](/abs/path/c:/Users/HP/projects/burner-point/burner-point/.env.example) is the canonical environment template.
+The root [.env.example](../.env.example) is the canonical environment template.
 
 ## Rules
 
@@ -21,16 +21,17 @@ The root [`.env.example`](/abs/path/c:/Users/HP/projects/burner-point/burner-poi
 
 - Supabase: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`
 - Storage: the four `SUPABASE_STORAGE_*_BUCKET` variables
-- Auth: Google, Apple, Microsoft, email/password, phone OTP
-- Telecom: Twilio, Telnyx, Tremil, Bandwidth
+- Auth: Google, Apple, Microsoft, email/password, email magic links, phone OTP, Cloudflare Turnstile
+- Auth security: `WEBAUTHN_RP_NAME`, `WEBAUTHN_RP_ID`, `WEBAUTHN_ORIGIN`, `OAUTH_ISSUER`
+- Telecom: Twilio, Telnyx, Bandwidth
 - Payments: Paystack, Flutterwave, Paddle, NOWPayments
 - Subscriptions: RevenueCat
 - Messaging/email: Resend
 - Cache/queues: Redis
 - Monitoring: Sentry, PostHog
-- Security: encryption, JWT, webhook signing, internal API key, CORS
+- Security: encryption, JWT, durable auth sessions, passkeys, OAuth authorization codes/PKCE, webhook signing, internal API key, CORS
 
 ## App-specific templates
 
-- API names-only reference: [apps/api/.env.example](/abs/path/c:/Users/HP/projects/burner-point/burner-point/apps/api/.env.example)
-- Web names-only reference: [apps/web/.env.local.example](/abs/path/c:/Users/HP/projects/burner-point/burner-point/apps/web/.env.local.example)
+- API names-only reference: [apps/api/.env.example](../apps/api/.env.example)
+- Web names-only reference: [apps/web/.env.local.example](../apps/web/.env.local.example)

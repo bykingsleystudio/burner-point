@@ -123,6 +123,22 @@ export const authApi = {
   logout: (refreshToken: string) => api.post('/auth/logout', { refreshToken }),
   exchangeSupabaseToken: (accessToken: string, profile?: Record<string, unknown>) =>
     api.post<AuthExchangeResponse>('/auth/supabase/exchange', { accessToken, profile }),
+  verifyTurnstile: (token: string) => api.post('/auth/turnstile/verify', { token }),
+  inviteUser: (email: string, redirectTo?: string) => api.post('/auth/invite', { email, redirectTo }),
+  twoFactorStatus: () => api.get<{ enabled: boolean }>('/auth/2fa/status'),
+  setupTwoFactor: () => api.post<{ enabled: boolean; secret: string; otpauthUrl: string; qrCodeDataUrl: string }>('/auth/2fa/setup'),
+  enableTwoFactor: (code: string) => api.post<{ enabled: boolean }>('/auth/2fa/verify', { code }),
+  disableTwoFactor: (code: string) => api.post<{ enabled: boolean }>('/auth/2fa/disable', { code }),
+  sessions: () => api.get('/auth/sessions'),
+  revokeSession: (id: string) => api.post(`/auth/sessions/${id}/revoke`),
+  revokeAllSessions: () => api.post('/auth/sessions/revoke-all'),
+  passkeys: () => api.get('/auth/passkeys'),
+  passkeyRegistrationOptions: () => api.get('/auth/passkeys/registration/options'),
+  verifyPasskeyRegistration: (response: Record<string, unknown>, name?: string) =>
+    api.post('/auth/passkeys/registration/verify', { response, name }),
+  removePasskey: (id: string) => api.delete(`/auth/passkeys/${id}`),
+  passkeyAuthenticationOptions: () => api.get('/auth/passkey-authentication/options'),
+  verifyPasskeyAuthentication: (response: Record<string, unknown>) => api.post('/auth/passkey-authentication/verify', response),
 };
 
 export type FxRateResponse = {
@@ -166,6 +182,12 @@ export const supportApi = {
     priority?: 'normal' | 'high' | 'urgent';
     reference?: string;
   }) => api.post('/support/tickets', data),
+  reply: (id: string, message: string) => api.post(`/support/tickets/${id}/replies`, { message }),
+  feedback: (data: { rating: number; message: string; reference?: string }) => api.post('/support/feedback', data),
+};
+
+export const growthApi = {
+  referralStats: () => api.get<{ totalReferrals: number; totalEarnedUsdCents: number }>('/growth/referral/stats'),
 };
 
 export const numbersApi = {
@@ -184,8 +206,13 @@ export const messagesApi = {
     api.get<MessageListResponse>('/messages', { params: { phoneNumberId, page, limit } }),
   conversation: (phoneNumberId: string, counterpart: string, page = 1, limit = 50) =>
     api.get<MessageListResponse>(`/messages/conversations/${phoneNumberId}/${encodeURIComponent(counterpart)}`, { params: { page, limit } }),
-  send: (data: { to: string; from: string; body: string }) => api.post('/messages', data),
+  send: (data: { to: string; from: string; body: string; mediaUrls?: string[] }) => api.post('/messages', data),
   markRead: (id: string) => api.patch(`/messages/${id}/read`),
+};
+
+export const storageApi = {
+  uploadIntent: (data: { purpose: 'mms' | 'voicemail' | 'support_attachment' | 'document' | 'export'; fileName: string; contentType: string; byteSize: number }) => api.post('/integrations/storage/upload-intents', data),
+  signedReadUrl: (data: { bucket: string; objectKey: string }) => api.post<{ signedUrl: string }>('/integrations/storage/signed-read-url', data),
 };
 
 export interface MessageRecord {
@@ -358,6 +385,7 @@ export const usersApi = {
   me: () => api.get('/users/me'),
   update: (data: Record<string, unknown>) => api.patch('/users/me', data),
   wallet: () => api.get('/users/me/wallet'),
+  delete: () => api.delete('/users/me'),
 };
 
 export const developerApi = {
@@ -374,10 +402,29 @@ export const integrationsApi = {
   catalog: () => api.get('/integrations/catalog'),
   esimPlans: (data: { countryCode: string; region?: string }) =>
     api.post('/integrations/esim/plans', data),
+  esimOrders: () => api.get('/integrations/esim/orders'),
   esimOrder: (data: { planId: string; countryCode: string; iccid?: string; idempotencyKey?: string }) =>
     api.post('/integrations/esim/orders', data),
+  proxyOrders: () => api.get('/integrations/proxies/orders'),
   proxyOrder: (data: { region: string; type: 'residential' | 'mobile'; durationDays?: number; idempotencyKey?: string }) =>
     api.post('/integrations/proxies/orders', data),
+  vpnSessions: () => api.get('/integrations/vpn/sessions'),
   vpnSession: (data: { deviceName: string; region?: string; idempotencyKey?: string }) =>
     api.post('/integrations/vpn/sessions', data),
+};
+
+export const verificationHubApi = {
+  services: (country?: string) => api.get('/verify-hub/services', { params: country ? { country } : {} }),
+  orders: () => api.get('/verify-hub/orders'),
+  createOrder: (data: {
+    channel: 'sms' | 'voice';
+    serviceCode: string;
+    countryCode: string;
+    phoneNumber: string;
+    areaCode?: string;
+    carrier?: string;
+    tier: 'premium' | 'standard' | 'economy';
+    idempotencyKey: string;
+  }) => api.post('/verify-hub/orders', data),
+  cancelOrder: (id: string) => api.delete(`/verify-hub/orders/${id}`),
 };

@@ -44,6 +44,8 @@ class UploadIntentDto implements UploadIntentInput {
   byteSize: number;
 }
 
+class SignedReadUrlDto { @IsString() bucket: string; @IsString() @MaxLength(300) objectKey: string; }
+
 class EsimPlansDto implements EsimPlansInput {
   @IsString()
   @Matches(/^[A-Z]{2}$/)
@@ -143,6 +145,12 @@ export class IntegrationsController {
   @ApiOperation({ summary: 'Create a backend-controlled private object upload intent' })
   uploadIntent(@Req() req: { user: { id: string } }, @Body() dto: UploadIntentDto) {
     return this.integrationsService.createUploadIntent(req.user.id, dto);
+  }
+
+  @Post('storage/signed-read-url')
+  @ApiOperation({ summary: 'Create a short-lived private Supabase media URL owned by the caller' })
+  signedReadUrl(@Req() req: { user: { id: string } }, @Body() dto: SignedReadUrlDto) {
+    return this.integrationsService.createSignedReadUrl(req.user.id, dto.bucket, dto.objectKey);
   }
 
   @Post('esim/plans')

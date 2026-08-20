@@ -18,6 +18,7 @@ import {
   normalizeInternationalPhone,
 } from '@/lib/phone';
 import { supabase } from '@/lib/supabase';
+import { authApi } from '@/lib/api';
 
 const productChips = ['Private access', 'Secure account'];
 
@@ -61,16 +62,12 @@ export default function RegisterPage() {
       toast.error('Enter your first and last name.');
       return;
     }
-    if (!email) {
-      toast.error('Enter your email address.');
+    if (!email && !phoneNumber) {
+      toast.error('Enter either an email address or phone number.');
       return;
     }
     if (formData.phone && !isValidInternationalPhone(formData.phone)) {
       toast.error(INTERNATIONAL_PHONE_ERROR);
-      return;
-    }
-    if (!phoneNumber && !email) {
-      toast.error('Enter either a valid email or phone number.');
       return;
     }
     if (formData.password.length < 8) {
@@ -96,26 +93,23 @@ export default function RegisterPage() {
     try {
       setRememberMePreference(true);
       if (turnstileSiteKey && turnstileToken) {
-        const verifyResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'https://api.burnerpoint.com'}/auth/turnstile/verify`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: turnstileToken }),
-        });
-
-        if (!verifyResponse.ok) {
-          const payload = await verifyResponse.json().catch(() => ({}));
-          throw new Error(payload?.message || 'Security verification failed. Please try again.');
-        }
+        await authApi.verifyTurnstile(turnstileToken);
       }
 
+      const identity = email
+        ? { email }
+        : { phone: phoneNumber };
       const { data, error } = await supabase.auth.signUp({
-        email,
+        ...identity,
         password: formData.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirectTo)}`,
           data: {
             first_name: firstName,
             last_name: lastName,
             phone_number: phoneNumber,
+            acceptTerms: true,
+            acceptPrivacy: true,
           },
         },
       });
@@ -139,8 +133,12 @@ export default function RegisterPage() {
         return;
       }
 
-      toast.success('Account created. Check your email to verify your account, then sign in.');
-      window.location.href = `/sign-in?redirect=${encodeURIComponent(redirectTo)}`;
+      toast.success(email
+        ? 'Account created. Check your email to verify your account, then sign in.'
+        : 'Account created. Check your phone for the verification code.');
+      window.location.href = email
+        ? `/sign-in?redirect=${encodeURIComponent(redirectTo)}`
+        : `/auth/phone-verify?mode=supabase-signup&phone=${encodeURIComponent(phoneNumber)}&redirect=${encodeURIComponent(redirectTo)}`;
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, 'Failed to create account.'));
     } finally {

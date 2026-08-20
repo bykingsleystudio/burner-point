@@ -12,9 +12,13 @@ import { JuicySmsAdapter } from '../providers/juicysms.adapter';
 import { TextVerifiedAdapter } from '../providers/textverified.adapter';
 
 export interface CreateVerificationOrderInput {
+  channel: 'sms' | 'voice';
   serviceCode: string;
   countryCode: string;
   phoneNumber: string;
+  areaCode?: string;
+  carrier?: string;
+  tier: 'premium' | 'standard' | 'economy';
   idempotencyKey: string;
 }
 
@@ -53,6 +57,14 @@ export class VerificationHubService {
     const existing = await this.orderRepo.findOne({ where: { userId, idempotencyKey } });
     if (existing) return this.getOrderView(existing, true);
 
+    const activeOrder = await this.orderRepo.findOne({
+      where: { userId, status: In(['pending', 'provisioning', 'active', 'waiting_for_code']) },
+      order: { createdAt: 'DESC' },
+    });
+    if (activeOrder) {
+      throw new BadRequestException('You already have an active verification. Use it or cancel it before requesting another.');
+    }
+
     const service = await this.serviceRepo.findOne({ where: { serviceCode, isActive: true } });
     if (!service) throw new BadRequestException('The requested verification service is not configured or active');
     if (service.countries.length && !service.countries.includes(countryCode)) {
@@ -68,7 +80,13 @@ export class VerificationHubService {
       priceUsdCents,
       idempotencyKey,
       status: 'provisioning',
-      metadata: { serviceCode },
+      metadata: {
+        serviceCode,
+        tier: input.tier,
+        channel: input.channel,
+        areaCode: input.areaCode?.trim() || null,
+        carrier: input.carrier?.trim() || null,
+      },
     }));
 
     try {
@@ -91,6 +109,10 @@ export class VerificationHubService {
         expiresAt: provisioned.expiresAt,
         metadata: {
           serviceCode,
+          tier: input.tier,
+          channel: input.channel,
+          areaCode: input.areaCode?.trim() || null,
+          carrier: input.carrier?.trim() || null,
           numberId: provisioned.id,
           provider: provisioned.provider,
           pricing: provisioned.pricing,
@@ -358,6 +380,10 @@ export class VerificationHubService {
       id: order.id,
       serviceCode: service?.serviceCode ?? this.readMetadataString(order.metadata, 'serviceCode') ?? null,
       serviceName: service?.displayName ?? null,
+      tier: this.readMetadataString(order.metadata, 'tier') ?? 'standard',
+      channel: this.readMetadataString(order.metadata, 'channel') ?? 'sms',
+      areaCode: this.readMetadataString(order.metadata, 'areaCode') ?? null,
+      carrier: this.readMetadataString(order.metadata, 'carrier') ?? null,
       countryCode: order.countryCode,
       provider: order.provider,
       phoneNumber: order.phoneNumber,

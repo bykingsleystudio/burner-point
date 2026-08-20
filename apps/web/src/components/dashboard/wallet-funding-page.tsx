@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { Bitcoin, ExternalLink, Shield, Wallet } from 'lucide-react';
 import { paymentsApi, type PaymentGatewayId } from '@/lib/api';
@@ -254,12 +253,6 @@ export default function WalletFundingPage() {
         </div>
       </section>
 
-      <div className="flex items-center justify-center pt-2">
-        <div className="opacity-50 transition-opacity hover:opacity-70">
-          <Image src="/assets/logo-mark.svg" alt="Burner Point" width={24} height={24} className="mr-2 inline-block" />
-          <span className="font-mono text-xs text-brand-muted">Burner Point</span>
-        </div>
-      </div>
     </div>
   );
 }

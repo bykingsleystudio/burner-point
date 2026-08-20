@@ -5,7 +5,7 @@ import { getCountryDataList, getEmojiFlag } from 'countries-list';
 import toast from 'react-hot-toast';
 import { Globe2, QrCode, ShoppingBag, Smartphone } from 'lucide-react';
 import { BpEmptyState } from '@/components/design-system';
-import { billingApi, integrationsApi } from '@/lib/api';
+import { integrationsApi } from '@/lib/api';
 
 type CatalogItem = {
   id: string;
@@ -106,17 +106,23 @@ export default function EsimPage() {
   useEffect(() => {
     let mounted = true;
 
-    Promise.allSettled([integrationsApi.catalog(), billingApi.ledger(1, 20)])
+    Promise.allSettled([integrationsApi.catalog(), integrationsApi.esimOrders()])
       .then((results) => {
         if (!mounted) return;
         const nextCatalog = results[0].status === 'fulfilled' && Array.isArray(results[0].value.data)
           ? results[0].value.data
           : [];
-        const nextLedger = results[1].status === 'fulfilled'
-          ? results[1].value.data?.transactions ?? []
+        const nextOrders = results[1].status === 'fulfilled' && Array.isArray(results[1].value.data)
+          ? results[1].value.data
           : [];
         setCatalog(nextCatalog);
-        setHistory(nextLedger.filter((item: LedgerItem) => item.type === 'esim_purchase'));
+        setHistory(nextOrders.map((item: Record<string, unknown>) => ({
+          id: String(item.id),
+          type: 'esim_purchase',
+          description: typeof item.planName === 'string' ? item.planName : 'eSIM order',
+          referenceId: typeof item.providerOrderId === 'string' ? item.providerOrderId : undefined,
+          createdAt: typeof item.createdAt === 'string' ? item.createdAt : undefined,
+        })));
       })
       .finally(() => {
         if (mounted) setLoading(false);

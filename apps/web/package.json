@@ -14,6 +14,7 @@
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-slot": "^1.2.4",
     "@sentry/nextjs": "^10.48.0",
+    "@simplewebauthn/browser": "^13.3.0",
     "@splinetool/react-spline": "^4.1.0",
     "@splinetool/runtime": "^1.12.87",
     "@supabase/ssr": "^0.10.3",

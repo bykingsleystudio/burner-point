@@ -9,6 +9,7 @@ import { EsimOrder, ProxyOrder, TransactionType, VpnSession } from '../../databa
 import { RevenueCatService } from '../revenuecat/revenuecat.service';
 import { CreditsService } from '../credits/credits.service';
 import { CredentialCipherService } from './credential-cipher.service';
+import { createSupabaseFromConfig } from '../../config/supabase';
 import {
   BACKEND_INTEGRATION_CONTRACTS,
   BackendIntegrationContract,
@@ -204,9 +205,44 @@ export class IntegrationsService {
     ].join('/');
 
     const configured = this.hasStorageConfigured();
+    const bucket = this.storageBucket(input.purpose);
+    let upload: { token: string; path: string } | null = null;
+    if (configured && this.hasSupabaseStorageConfigured()) {
+      // The service-role client creates a one-use upload token; the browser never receives service credentials.
+      const client = createSupabaseFromConfig(this.config);
+      return client.storage.from(bucket).createSignedUploadUrl(objectKey).then(({ data, error }) => {
+        if (error || !data) throw new BadRequestException('Unable to create private upload intent');
+        upload = { token: data.token, path: data.path };
+        return this.toUploadIntentResponse(input, objectKey, bucket, configured, upload);
+      });
+    }
+
+    return this.toUploadIntentResponse(input, objectKey, bucket, configured, upload);
+  }
+
+  async createSignedReadUrl(userId: string, bucket: string, objectKey: string) {
+    if (!this.hasSupabaseStorageConfigured()) throw new BadRequestException('Supabase private storage is not configured');
+    const safeKey = objectKey.replace(/\\/g, '/');
+    const userShard = createHash('sha256').update(userId).digest('hex').slice(0, 16);
+    if (!safeKey.includes(`/${userShard}/`)) throw new BadRequestException('Storage object is not owned by this user');
+    const { data, error } = await createSupabaseFromConfig(this.config).storage.from(bucket).createSignedUrl(safeKey, 60 * 60);
+    if (error || !data?.signedUrl) throw new BadRequestException('Unable to create private media URL');
+    return { signedUrl: data.signedUrl, expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString() };
+  }
+
+  private toUploadIntentResponse(
+    input: UploadIntentInput,
+    objectKey: string,
+    bucket: string,
+    configured: boolean,
+    upload: { token: string; path: string } | null,
+  ) {
+    const maxBytes = this.maxUploadBytes(input.purpose);
     return {
       status: configured ? 'ready' : 'not_configured',
       objectKey,
+      bucket,
+      upload,
       uploadMethod: 'backend-controlled',
       accessControl: 'private',
       directPublicAccess: false,
@@ -217,6 +253,17 @@ export class IntegrationsService {
       missingEnv: configured ? [] : this.getMissingStorageEnv(),
       note: 'The API owns object-storage credentials. Clients must not call object storage directly.',
     };
+  }
+
+  private storageBucket(purpose: UploadIntentInput['purpose']) {
+    if (purpose === 'mms' || purpose === 'voicemail') return this.readOptionalEnv('SUPABASE_STORAGE_MEDIA_BUCKET') ?? 'bp-media';
+    if (purpose === 'document') return this.readOptionalEnv('SUPABASE_STORAGE_DOCUMENTS_BUCKET') ?? 'bp-documents';
+    if (purpose === 'support_attachment') return this.readOptionalEnv('SUPABASE_STORAGE_USER_UPLOADS_BUCKET') ?? 'bp-user-uploads';
+    return this.readOptionalEnv('SUPABASE_STORAGE_USER_UPLOADS_BUCKET') ?? 'bp-user-uploads';
+  }
+
+  private hasSupabaseStorageConfigured() {
+    return ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'].every((env) => this.hasEnv(env));
   }
 
   requestEsimPlans(userId: string, input: EsimPlansInput) {

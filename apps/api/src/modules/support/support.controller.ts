@@ -35,6 +35,9 @@ class CreateSupportTicketDto {
   reference?: string;
 }
 
+class SupportReplyDto { @IsString() @MaxLength(4000) message: string; }
+class SupportFeedbackDto { @IsIn([1, 2, 3, 4, 5]) rating: number; @IsString() @MaxLength(4000) message: string; @IsOptional() @IsString() @MaxLength(120) reference?: string; }
+
 @ApiTags('support')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -61,5 +64,17 @@ export class SupportController {
   @ApiOperation({ summary: 'Create a support ticket for the authenticated user' })
   createTicket(@Req() req: { user: { id: string } }, @Body() dto: CreateSupportTicketDto) {
     return this.supportService.createTicket(req.user.id, dto);
+  }
+
+  @Post('tickets/:id/replies')
+  @ApiOperation({ summary: 'Reply to an authenticated user support ticket' })
+  reply(@Req() req: { user: { id: string } }, @Param('id') id: string, @Body() dto: SupportReplyDto) {
+    return this.supportService.replyToTicket(req.user.id, id, dto.message);
+  }
+
+  @Post('feedback')
+  @ApiOperation({ summary: 'Submit authenticated user support feedback' })
+  feedback(@Req() req: { user: { id: string } }, @Body() dto: SupportFeedbackDto) {
+    return this.supportService.submitFeedback(req.user.id, dto);
   }
 }

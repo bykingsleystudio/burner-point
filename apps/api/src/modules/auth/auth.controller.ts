@@ -1,9 +1,13 @@
-import { BadRequestException, Body, Controller, Param, Post, Req, HttpCode, HttpStatus } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Post, Req, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Request } from 'express';
 import { SupabaseAuthService } from './supabase-auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RolesGuard } from './guards/roles.guard';
+import { Roles } from './decorators/roles.decorator';
+import { UserRole } from '../../database/entities/user.entity';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -68,6 +72,14 @@ export class AuthController {
     return this.authService.oauthLogin(provider);
   }
 
+  @Post('invite')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.ENTERPRISE)
+  @ApiOperation({ summary: 'Invite a user through Supabase Auth' })
+  invite(@Body('email') email: string, @Body('redirectTo') redirectTo?: string) {
+    return this.authService.inviteUser(email, redirectTo);
+  }
+
   @Post('supabase/exchange')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Exchange a Supabase browser session for Burner Point API tokens' })
@@ -81,6 +93,7 @@ export class AuthController {
       country: string;
       acceptTerms: boolean;
       acceptPrivacy: boolean;
+      twoFactorCode?: string;
     }> | undefined,
     @Req() req: Request,
   ) {
@@ -92,5 +105,54 @@ export class AuthController {
   @ApiOperation({ summary: 'Verify a Cloudflare Turnstile token for the web auth flow' })
   async verifyTurnstile(@Body('token') token: string, @Req() req: Request) {
     return this.authService.verifyTurnstile(token, req.ip);
+  }
+
+  @Get('2fa/status')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get authenticator-app 2FA status' })
+  twoFactorStatus(@Req() req: { user: { id: string } }) {
+    return this.authService.getTwoFactorStatus(req.user.id);
+  }
+
+  @Post('2fa/setup')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Create an authenticator-app 2FA enrollment secret' })
+  setupTwoFactor(@Req() req: { user: { id: string } }) {
+    return this.authService.setupTwoFactor(req.user.id);
+  }
+
+  @Post('2fa/verify')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Enable authenticator-app 2FA after code verification' })
+  enableTwoFactor(@Body('code') code: string, @Req() req: { user: { id: string } }) {
+    return this.authService.enableTwoFactor(req.user.id, code);
+  }
+
+  @Post('2fa/disable')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Disable authenticator-app 2FA after code verification' })
+  disableTwoFactor(@Body('code') code: string, @Req() req: { user: { id: string } }) {
+    return this.authService.disableTwoFactor(req.user.id, code);
+  }
+
+  @Get('sessions')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'List active and revoked authenticated sessions' })
+  sessions(@Req() req: { user: { id: string } }) {
+    return this.authService.listSessions(req.user.id);
+  }
+
+  @Post('sessions/:id/revoke')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Revoke one authenticated session' })
+  revokeSession(@Param('id') id: string, @Req() req: { user: { id: string } }) {
+    return this.authService.revokeSession(req.user.id, id);
+  }
+
+  @Post('sessions/revoke-all')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Revoke all authenticated sessions' })
+  revokeAllSessions(@Req() req: { user: { id: string } }) {
+    return this.authService.revokeAllSessions(req.user.id);
   }
 }

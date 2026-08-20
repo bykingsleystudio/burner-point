@@ -5,9 +5,9 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { 
   Home, MessageSquare, ShoppingCart, ActivitySquare, Settings, 
-  Wallet, CreditCard, ShieldCheck, Ticket, Code2, Menu, X 
+  Wallet, CreditCard, ShieldCheck, Ticket, Code2, Menu, X, Search, UserRound
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useAuthStore } from '@/store';
 
 type NavItem = {
@@ -47,6 +47,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { user } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const searchItems = useMemo(() => [...MAIN_NAV, ...MANAGE_NAV, ...DEVELOPER_NAV, ...ACCOUNT_NAV], []);
+  const searchResults = query.trim()
+    ? searchItems.filter((item) => item.label.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 6)
+    : [];
 
   const isActive = (href: string) => {
     if (href === '/dashboard') return pathname === '/dashboard';
@@ -195,6 +200,16 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         {/* Page Content */}
         <main className="flex-1 overflow-auto pb-20 lg:pb-0">
+          <div className="sticky top-0 z-20 border-b border-[var(--bp-border-subtle)] bg-[var(--bp-background)]/90 px-4 py-3 backdrop-blur sm:px-6 lg:px-8">
+            <div className="relative mx-auto max-w-7xl">
+              <div className="flex min-h-11 items-center gap-3 rounded-md border border-[var(--bp-border-subtle)] bg-[var(--bp-surface)] px-3">
+                <Search className="h-4 w-4 text-[var(--bp-foreground-muted)]" />
+                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search dashboard" className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--bp-foreground-muted)]" aria-label="Search dashboard" />
+                <Link href="/dashboard/settings" aria-label="Open account settings" className="hidden rounded-full p-1.5 text-[var(--bp-foreground-muted)] hover:bg-[var(--bp-surface-muted)] hover:text-brand-accent sm:block"><UserRound className="h-4 w-4" /></Link>
+              </div>
+              {searchResults.length ? <div className="absolute left-0 right-0 top-14 z-30 overflow-hidden rounded-md border border-[var(--bp-border-subtle)] bg-[var(--bp-surface)] shadow-xl">{searchResults.map((item) => <Link key={item.href} href={item.href} onClick={() => setQuery('')} className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-[var(--bp-surface-muted)]"><item.icon className="h-4 w-4 text-brand-accent" />{item.label}</Link>)}</div> : null}
+            </div>
+          </div>
           <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
             {children}
           </div>

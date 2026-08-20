@@ -250,6 +250,29 @@ export class ProviderService {
     throw lastError ?? new Error('No healthy SMS provider route available');
   }
 
+  async sendMms(
+    to: string,
+    from: string,
+    body: string,
+    mediaUrls: string[],
+    options: SmsSendOptions = {},
+  ): Promise<ProviderSmsResult> {
+    const countryCode = options.countryCode ?? this.inferCountryFromPhone(to);
+    const route = this.selectConversationRoute(countryCode, options.preferredProvider);
+    let lastError: unknown;
+    for (const provider of [route.primaryProvider, ...route.fallbackProviders]) {
+      try {
+        if (provider !== ProviderName.TWILIO) throw new Error(`${provider} MMS adapter is not configured`);
+        const result = await this.sendTwilioMms(to, from, body, mediaUrls);
+        return { ...result, provider, routeLabel: route.routeLabel };
+      } catch (error) {
+        lastError = error;
+        this.logger.warn(`${provider} MMS route failed for ${countryCode}: ${this.describeError(error)}`);
+      }
+    }
+    throw lastError ?? new Error('No MMS provider route available');
+  }
+
   async searchNumbers(countryCode: string, areaCode?: string, smsEnabled = true): Promise<ProviderNumberSearchResult[]> {
     const country = this.normalizeCountry(countryCode);
     const route = this.selectConversationRoute(country);
@@ -680,6 +703,12 @@ export class ProviderService {
   private async sendTwilioSms(to: string, from: string, body: string) {
     if (!this.twilioClient) throw new Error('Twilio not configured');
     const msg = await this.twilioClient.messages.create({ to, from, body });
+    return { sid: msg.sid, status: msg.status };
+  }
+
+  private async sendTwilioMms(to: string, from: string, body: string, mediaUrls: string[]) {
+    if (!this.twilioClient) throw new Error('Twilio not configured');
+    const msg = await this.twilioClient.messages.create({ to, from, body, mediaUrl: mediaUrls });
     return { sid: msg.sid, status: msg.status };
   }
 

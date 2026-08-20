@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Globe2, Lock, Radio, ShoppingBag } from 'lucide-react';
 import { BpEmptyState } from '@/components/design-system';
-import { billingApi, integrationsApi } from '@/lib/api';
+import { integrationsApi } from '@/lib/api';
 
 type CatalogItem = {
   id: string;
@@ -51,17 +51,23 @@ export default function ProxiesPage() {
   useEffect(() => {
     let mounted = true;
 
-    Promise.allSettled([integrationsApi.catalog(), billingApi.ledger(1, 20)])
+    Promise.allSettled([integrationsApi.catalog(), integrationsApi.proxyOrders()])
       .then((results) => {
         if (!mounted) return;
         const nextCatalog = results[0].status === 'fulfilled' && Array.isArray(results[0].value.data)
           ? results[0].value.data
           : [];
-        const nextLedger = results[1].status === 'fulfilled'
-          ? results[1].value.data?.transactions ?? []
+        const nextOrders = results[1].status === 'fulfilled' && Array.isArray(results[1].value.data)
+          ? results[1].value.data
           : [];
         setCatalog(nextCatalog);
-        setHistory(nextLedger.filter((item: LedgerItem) => item.type === 'proxy_purchase'));
+        setHistory(nextOrders.map((item: Record<string, unknown>) => ({
+          id: String(item.id),
+          type: 'proxy_purchase',
+          description: typeof item.type === 'string' ? `${item.type} proxy order` : 'Proxy order',
+          referenceId: typeof item.providerOrderId === 'string' ? item.providerOrderId : undefined,
+          createdAt: typeof item.createdAt === 'string' ? item.createdAt : undefined,
+        })));
       })
       .finally(() => {
         if (mounted) setLoading(false);

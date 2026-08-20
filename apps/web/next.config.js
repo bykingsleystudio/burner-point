@@ -35,6 +35,8 @@ const nextConfig = {
         'https://cdn.paddle.com',
         'https://challenges.cloudflare.com',
       ].join(' '),
+      "worker-src 'self' blob:",
+      "manifest-src 'self'",
       [
         "connect-src 'self' https: wss:",
         'https://*.sentry.io',

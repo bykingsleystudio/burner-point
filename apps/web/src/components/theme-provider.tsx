@@ -19,6 +19,20 @@ function resolveTheme(preference: ThemePreference): 'light' | 'dark' {
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [preference, setPreference] = useState<ThemePreference>('system');
 
+  const syncThemeColor = (resolvedTheme: 'light' | 'dark') => {
+    if (typeof document === 'undefined') return;
+
+    document.documentElement.dataset.theme = resolvedTheme;
+
+    const themeMeta = document.head.querySelector('meta[name="theme-color"]') ?? document.createElement('meta');
+    themeMeta.setAttribute('name', 'theme-color');
+    themeMeta.setAttribute('content', resolvedTheme === 'dark' ? '#000000' : '#F3F8F5');
+
+    if (!themeMeta.parentElement) {
+      document.head.appendChild(themeMeta);
+    }
+  };
+
   useEffect(() => {
     const saved = window.localStorage.getItem('burnerpoint-theme');
     if (saved === 'light' || saved === 'dark' || saved === 'system') {
@@ -28,7 +42,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const applyTheme = () => {
-      document.documentElement.dataset.theme = resolveTheme(preference);
+      const resolvedTheme = resolveTheme(preference);
+      syncThemeColor(resolvedTheme);
     };
 
     applyTheme();

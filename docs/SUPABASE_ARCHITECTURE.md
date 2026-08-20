@@ -118,6 +118,17 @@
 User → Supabase Auth → JWT → API (validate JWT) → Database (RLS)
 ```
 
+### Web Authentication Paths
+
+- Email/password registration uses `supabase.auth.signUp`, then the confirmation callback exchanges the Supabase session with the API.
+- Google OAuth uses Supabase's provider redirect and the shared `/auth/callback` route.
+- Email magic links use `supabase.auth.signInWithOtp` with the same callback route.
+- Phone signup and phone login use Supabase SMS OTP; account phone verification remains a separate Twilio Verify flow after authentication.
+- Password reset and password update use `resetPasswordForEmail` and `updateUser` directly in Supabase.
+- Email changes require Supabase reauthentication and confirmation of the new and current addresses.
+- Cloudflare Turnstile is rendered in the web client and verified server-side through `/api/auth/turnstile/verify`.
+- API refresh sessions, passkeys, and OAuth authorization codes are persisted in Supabase Postgres by `20260820120000_auth_sessions_passkeys_oauth.sql`.
+
 ### Database Access Flow
 ```
 API Request → JWT Token → auth.uid() → RLS Policy → Data Access

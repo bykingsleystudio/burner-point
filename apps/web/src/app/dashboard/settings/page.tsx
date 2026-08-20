@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import {
   Bell,
   CreditCard,
@@ -10,19 +12,112 @@ import {
   ShieldCheck,
   Trash2,
   UserRound,
+  Save,
 } from 'lucide-react';
 import { BpTabs } from '@/components/design-system';
-import { authApi, clearApiSession } from '@/lib/api';
+import { authApi, clearApiSession, supportApi, usersApi } from '@/lib/api';
 import { SUPPORT_EMAIL_HREF, TELEGRAM_SUPPORT_URL } from '@/lib/support';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store';
 import { useTheme, type ThemePreference } from '@/components/theme-provider';
 
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+};
+
 export default function SettingsPage() {
   const pathname = usePathname();
   const { user, refreshToken, clearAuth } = useAuthStore();
   const { preference, setPreference } = useTheme();
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [installReady, setInstallReady] = useState(false);
+  const [notifications, setNotifications] = useState({ balance: true, expiry: true, support: true });
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [savingAccount, setSavingAccount] = useState(false);
+  const [closureReason, setClosureReason] = useState('');
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ');
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      const promptEvent = event as BeforeInstallPromptEvent;
+      (window as Window & { bpInstallPrompt?: BeforeInstallPromptEvent }).bpInstallPrompt = promptEvent;
+      setInstallPrompt(promptEvent);
+      setInstallReady(true);
+    };
+
+    const handleAppInstalled = () => {
+      setInstallPrompt(null);
+      setInstallReady(false);
+      (window as Window & { bpInstallPrompt?: BeforeInstallPromptEvent }).bpInstallPrompt = undefined;
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    const existingPrompt = (window as Window & { bpInstallPrompt?: BeforeInstallPromptEvent }).bpInstallPrompt;
+    if (existingPrompt) {
+      setInstallPrompt(existingPrompt);
+      setInstallReady(true);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    const promptEvent = installPrompt ?? (window as Window & { bpInstallPrompt?: BeforeInstallPromptEvent }).bpInstallPrompt;
+    if (!promptEvent) return;
+
+    await promptEvent.prompt();
+    const choice = await promptEvent.userChoice;
+    if (choice.outcome === 'accepted') {
+      setInstallReady(false);
+    }
+    setInstallPrompt(null);
+    (window as Window & { bpInstallPrompt?: BeforeInstallPromptEvent }).bpInstallPrompt = undefined;
+  };
+
+  useEffect(() => {
+    const stored = (user as { preferences?: { notifications?: Partial<typeof notifications> } } | null)?.preferences?.notifications;
+    if (stored) setNotifications((current) => ({ ...current, ...stored }));
+  }, [user]);
+
+  const saveNotifications = async (next: typeof notifications) => {
+    setNotifications(next);
+    try {
+      await usersApi.update({ preferences: { notifications: next } });
+      toast.success('Notification preferences saved.');
+    } catch { toast.error('Unable to save notification preferences.'); }
+  };
+
+  const changePassword = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (password.length < 8 || password !== confirmPassword) { toast.error('Enter matching passwords with at least 8 characters.'); return; }
+    setSavingAccount(true);
+    try { const { error } = await supabase.auth.updateUser({ password }); if (error) throw error; setPassword(''); setConfirmPassword(''); toast.success('Password changed.'); }
+    catch (error) { toast.error(error instanceof Error ? error.message : 'Unable to change password.'); }
+    finally { setSavingAccount(false); }
+  };
+
+  const requestClosure = async () => {
+    if (closureReason.trim().length < 10) { toast.error('Tell support why you want to close the account.'); return; }
+    setSavingAccount(true);
+    try { await supportApi.createTicket({ category: 'account', subject: 'Account closure request', message: closureReason.trim(), priority: 'high' }); toast.success('Account closure request sent to support.'); setClosureReason(''); }
+    catch { toast.error('Unable to submit the closure request.'); }
+    finally { setSavingAccount(false); }
+  };
+
+  const deleteAccount = async () => {
+    if (!window.confirm('Delete this account? This cannot be undone.')) return;
+    setSavingAccount(true);
+    try { await usersApi.delete(); await handleSignOut(); }
+    catch { toast.error('Unable to delete the account. Submit a closure request instead.'); setSavingAccount(false); }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -140,6 +235,16 @@ export default function SettingsPage() {
               </button>
             ))}
           </div>
+
+          {installReady ? (
+            <button
+              type="button"
+              onClick={() => void handleInstallApp()}
+              className="mt-4 inline-flex min-h-11 items-center justify-center rounded-[0.85rem] border border-brand-green/30 bg-brand-green/12 px-3 text-xs font-semibold uppercase tracking-[0.14em] text-brand-green transition hover:bg-brand-green/18"
+            >
+              Install Burner Point
+            </button>
+          ) : null}
         </article>
 
         <article className="rounded-[1.5rem] border border-white/8 bg-brand-card p-5">
@@ -148,19 +253,16 @@ export default function SettingsPage() {
             <h3 className="text-base font-semibold text-white">Notification preferences</h3>
           </div>
           <div className="mt-4 grid gap-3">
-            {[
-              'Balance changes and successful top-ups',
-              'Rental expiry and renewal reminders',
-              'Verification results and support replies',
-            ].map((item) => (
-              <div key={item} className="rounded-[1rem] border border-white/8 bg-[#020806]/20 px-4 py-3 text-sm text-white/62">
-                {item}
-              </div>
+            {[['balance', 'Balance changes and successful top-ups'], ['expiry', 'Rental expiry and renewal reminders'], ['support', 'Verification results and support replies']].map(([key, item]) => (
+              <label key={key} className="flex items-center justify-between rounded-[1rem] border border-white/8 bg-[#020806]/20 px-4 py-3 text-sm text-white/62"><span>{item}</span><input type="checkbox" checked={notifications[key as keyof typeof notifications]} onChange={(event) => void saveNotifications({ ...notifications, [key]: event.target.checked })} className="bp-auth-checkbox h-4 w-4" /></label>
             ))}
           </div>
-          <p className="mt-4 text-sm leading-6 text-white/50">
-            Notification controls are surfaced here while account security settings manage sign-in, recovery, and 2FA.
-          </p>
+          <p className="mt-4 text-sm leading-6 text-white/50">Changes apply to this account across supported product notifications.</p>
+        </article>
+
+        <article className="rounded-[1.5rem] border border-[var(--bp-border-subtle)] bg-[var(--bp-surface)] p-5">
+          <div className="flex items-center gap-3"><ShieldCheck className="h-5 w-5 text-brand-green" /><h3 className="text-base font-semibold">Password</h3></div>
+          <form onSubmit={changePassword} className="mt-4 space-y-3"><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="bp-input" placeholder="New password" autoComplete="new-password" /><input type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} className="bp-input" placeholder="Confirm new password" autoComplete="new-password" /><button type="submit" disabled={savingAccount} className="inline-flex min-h-11 items-center gap-2 rounded-md bg-brand-green px-4 text-xs font-semibold uppercase tracking-[0.14em] text-black disabled:opacity-50"><Save className="h-4 w-4" />Change password</button></form>
         </article>
 
         <article className="rounded-[1.5rem] border border-white/8 bg-brand-card p-5">
@@ -220,7 +322,7 @@ export default function SettingsPage() {
             <h3 className="text-base font-semibold text-white">Account</h3>
           </div>
           <p className="mt-4 text-sm leading-6 text-white/58">
-            Sign out from this device at any time. Destructive account deletion should remain gated behind a dedicated confirmed flow once full account deletion is available.
+            Sign out from this device, request account closure from support, or permanently delete the account after confirmation.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <button
@@ -236,6 +338,9 @@ export default function SettingsPage() {
             >
               Account Closure Request
             </Link>
+            <textarea value={closureReason} onChange={(event) => setClosureReason(event.target.value)} className="bp-input min-h-20 w-full" placeholder="Reason for closure request" />
+            <button type="button" onClick={() => void requestClosure()} disabled={savingAccount} className="rounded-[0.95rem] border border-red-300/30 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-red-200/80 disabled:opacity-50">Submit Closure Request</button>
+            <button type="button" onClick={() => void deleteAccount()} disabled={savingAccount} className="rounded-[0.95rem] bg-red-500/15 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-red-200 disabled:opacity-50">Delete Account</button>
           </div>
         </article>
       </section>

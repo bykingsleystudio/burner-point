@@ -33,6 +33,9 @@ export default function PhoneVerifyPage() {
   const [lastError, setLastError] = useState<string | null>(null);
 
   const redirectTo = useMemo(() => sanitizeRedirect(searchParams.get('redirect')), [searchParams]);
+  const supabaseOtpMode = searchParams.get('mode');
+  const isSupabaseOtp = supabaseOtpMode === 'supabase-signup' || supabaseOtpMode === 'supabase-login';
+  const isSupabaseSignup = supabaseOtpMode === 'supabase-signup';
   const normalizedPhone = useMemo(() => normalizeInternationalPhone(phoneNumber), [phoneNumber]);
   const phoneIsValid = isValidInternationalPhone(phoneNumber);
   const codeIsValid = /^\d{4,10}$/.test(code.trim());
@@ -42,6 +45,12 @@ export default function PhoneVerifyPage() {
 
     async function prepareApiSession() {
       try {
+        if (isSupabaseOtp) {
+          setPhoneNumber(searchParams.get('phone') || '');
+          setStep('sent');
+          return;
+        }
+
         const {
           data: { session },
         } = await supabase.auth.getSession();
@@ -80,7 +89,7 @@ export default function PhoneVerifyPage() {
     return () => {
       cancelled = true;
     };
-  }, [redirectTo, router, user?.phoneNumber]);
+  }, [isSupabaseOtp, redirectTo, router, searchParams, user?.phoneNumber]);
 
   const sendCode = async () => {
     if (!phoneIsValid) {
@@ -91,6 +100,14 @@ export default function PhoneVerifyPage() {
     setLoading(true);
     setLastError(null);
     try {
+      if (isSupabaseOtp) {
+        const { error } = await supabase.auth.signInWithOtp({ phone: normalizedPhone });
+        if (error) throw error;
+        setStep('sent');
+        toast.success('A new verification code was sent.');
+        return;
+      }
+
       const { data } = await phoneAuthApi.send({ phoneNumber: normalizedPhone, channel });
       setExpiresAt(data.expiresAt);
       setAttemptsRemaining(data.attemptsRemaining);
@@ -112,6 +129,24 @@ export default function PhoneVerifyPage() {
     setLoading(true);
     setLastError(null);
     try {
+      if (isSupabaseOtp) {
+        const { data, error } = await supabase.auth.verifyOtp({
+          phone: normalizedPhone,
+          token: code.trim(),
+          type: 'sms',
+        });
+        if (error || !data.session) throw error ?? new Error('Supabase phone verification did not create a session.');
+
+        const result = await exchangeSupabaseSession(data.session, isSupabaseSignup
+          ? { phoneNumber: normalizedPhone, acceptTerms: true, acceptPrivacy: true }
+          : { phoneNumber: normalizedPhone });
+        updateUser({ phoneNumber: normalizedPhone, phoneVerified: true });
+        setStep('approved');
+        toast.success('Phone verified. Opening Burner Point.');
+        router.replace(buildPhoneRedirect(result, redirectTo));
+        return;
+      }
+
       const { data } = await phoneAuthApi.verify({ phoneNumber: normalizedPhone, code: code.trim() });
       updateUser({ phoneNumber: normalizedPhone, phoneVerified: true });
       setStep('approved');
@@ -278,6 +313,12 @@ export default function PhoneVerifyPage() {
       </div>
     </SignInPage>
   );
+}
+
+function buildPhoneRedirect(result: { needsOnboarding?: boolean; user?: { phoneNumber?: string }; onboarding?: unknown }, redirectTo: string) {
+  return result.needsOnboarding
+    ? `/onboarding?redirect=${encodeURIComponent(redirectTo)}`
+    : redirectTo;
 }
 
 function getOtpError(error: unknown, fallback: string) {

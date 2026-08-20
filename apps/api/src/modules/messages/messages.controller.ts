@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsArray, IsEnum, IsOptional, IsString, Matches, MaxLength, MinLength, IsUrl } from 'class-validator';
 import { ProviderName } from '../global/provider.service';
 import { MessagesService } from './messages.service';
 import { ApiKeyOrJwtGuard } from '../api-platform/api-key.guard';
@@ -17,6 +17,12 @@ class SendMessageDto {
   @MinLength(1)
   @MaxLength(1600)
   body: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsUrl({}, { each: true })
+  @MaxLength(8, { each: true })
+  mediaUrls?: string[];
 
   @IsOptional()
   @IsEnum(ProviderName)

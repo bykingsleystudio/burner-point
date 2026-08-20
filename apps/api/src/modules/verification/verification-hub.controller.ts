@@ -1,11 +1,14 @@
 import { Body, Controller, Delete, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { IsString, IsUUID, Matches, MaxLength } from 'class-validator';
+import { IsIn, IsOptional, IsString, IsUUID, Matches, MaxLength } from 'class-validator';
 import { ApiKeyOrJwtGuard } from '../api-platform/api-key.guard';
 import { ApiScopes } from '../api-platform/api-scopes.decorator';
 import { VerificationHubService } from './verification-hub.service';
 
 class CreateVerificationOrderDto {
+  @IsIn(['sms', 'voice'])
+  channel: 'sms' | 'voice';
+
   @IsString()
   @MaxLength(64)
   serviceCode: string;
@@ -17,6 +20,19 @@ class CreateVerificationOrderDto {
   @IsString()
   @Matches(/^\+[1-9]\d{6,14}$/)
   phoneNumber: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(12)
+  areaCode?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  carrier?: string;
+
+  @IsIn(['premium', 'standard', 'economy'])
+  tier: 'premium' | 'standard' | 'economy';
 
   @IsUUID()
   idempotencyKey: string;

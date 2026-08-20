@@ -8,6 +8,7 @@ import {
 } from '../../database/entities/extended-entities';
 import { MessagingService } from '../messaging/messaging.service';
 import { UsersService } from '../users/users.service';
+import { SupportMessage } from '../../database/entities/support-message.entity';
 
 export interface CreateSupportTicketInput {
   category: string;
@@ -27,6 +28,8 @@ export class SupportService {
     private readonly supportTicketRepo: Repository<SupportTicket>,
     private readonly usersService: UsersService,
     private readonly messagingService: MessagingService,
+    @InjectRepository(SupportMessage)
+    private readonly supportMessageRepo: Repository<SupportMessage>,
   ) {}
 
   async listTickets(userId: string, status?: SupportTicketStatus) {
@@ -39,7 +42,27 @@ export class SupportService {
   async getTicket(userId: string, id: string) {
     const ticket = await this.supportTicketRepo.findOne({ where: { id, userId } });
     if (!ticket) throw new NotFoundException('Support ticket not found');
-    return ticket;
+    const messages = await this.supportMessageRepo.find({ where: { ticketId: id, userId }, order: { createdAt: 'ASC' } });
+    return { ...ticket, messages };
+  }
+
+  async replyToTicket(userId: string, ticketId: string, message: string) {
+    const ticket = await this.supportTicketRepo.findOne({ where: { id: ticketId, userId } });
+    if (!ticket) throw new NotFoundException('Support ticket not found');
+    const reply = await this.supportMessageRepo.save(this.supportMessageRepo.create({ ticketId, userId, authorRole: 'customer', message: message.trim() }));
+    await this.supportTicketRepo.update(ticket.id, { lastReplyAt: new Date(), status: SupportTicketStatus.OPEN });
+    return reply;
+  }
+
+  async submitFeedback(userId: string, input: { rating: number; message: string; reference?: string }) {
+    return this.createTicket(userId, {
+      category: 'other',
+      product: 'Support feedback',
+      subject: `Support feedback (${input.rating}/5)`,
+      message: input.message,
+      priority: SupportTicketPriority.NORMAL,
+      reference: input.reference,
+    });
   }
 
   async createTicket(userId: string, input: CreateSupportTicketInput) {

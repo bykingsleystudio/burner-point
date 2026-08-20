@@ -11,12 +11,14 @@ import { NumberStatus, PhoneNumber } from '../../database/entities/phone-number.
 import { ProviderName, ProviderService } from '../global/provider.service';
 import { EventsGateway } from '../gateway/events.gateway';
 import { ApiPlatformService } from '../api-platform/api-platform.service';
+import { RevenueCatService } from '../revenuecat/revenuecat.service';
 
 export interface SendMessageInput {
   from: string;
   to: string;
   body: string;
   preferredProvider?: ProviderName;
+  mediaUrls?: string[];
 }
 
 export interface MessagePage {
@@ -33,6 +35,7 @@ export class MessagesService {
     private readonly providerService: ProviderService,
     private readonly eventsGateway: EventsGateway,
     private readonly apiPlatformService: ApiPlatformService,
+    private readonly revenueCatService: RevenueCatService,
   ) {}
 
   async list(userId: string, phoneNumberId: string, page = 1, limit = 50): Promise<MessagePage> {
@@ -92,6 +95,15 @@ export class MessagesService {
   }
 
   async send(userId: string, input: SendMessageInput): Promise<Message> {
+    const entitlementConfig = this.revenueCatService.getEntitlementConfig();
+    const hasMessengerAccess = await this.revenueCatService.hasAnyActiveEntitlement(userId, [
+      entitlementConfig.messenger,
+      entitlementConfig.premium,
+    ]);
+    if (!hasMessengerAccess) {
+      throw new BadRequestException('BP Messenger Pro subscription is required before sending messages');
+    }
+
     const from = this.requireE164(input.from, 'Sender');
     const to = this.requireE164(input.to, 'Recipient');
     const body = input.body?.trim();
@@ -106,7 +118,15 @@ export class MessagesService {
       throw new BadRequestException('The selected phone number does not support SMS');
     }
 
-    const result = await this.providerService.sendSms(to, from, body, {
+    const mediaUrls = input.mediaUrls ?? [];
+    if (mediaUrls.length > 8) throw new BadRequestException('A message can contain at most 8 media attachments');
+
+    const result = mediaUrls.length
+      ? await this.providerService.sendMms(to, from, body, mediaUrls, {
+        countryCode: phoneNumber.countryCode,
+        preferredProvider: input.preferredProvider,
+      })
+      : await this.providerService.sendSms(to, from, body, {
       countryCode: phoneNumber.countryCode,
       preferredProvider: input.preferredProvider,
     });
@@ -116,11 +136,12 @@ export class MessagesService {
       body,
       direction: MessageDirection.OUTBOUND,
       status: this.normalizeProviderStatus(result.status),
-      type: MessageType.SMS,
+      type: mediaUrls.length ? MessageType.MMS : MessageType.SMS,
       providerMessageSid: result.sid,
       phoneNumberId: phoneNumber.id,
       userId,
       numSegments: Math.max(1, Math.ceil(body.length / 160)),
+      mediaUrls,
       metadata: { provider: result.provider, routeLabel: result.routeLabel },
     }));
     await this.numberRepo.increment({ id: phoneNumber.id }, 'smsSent', 1);

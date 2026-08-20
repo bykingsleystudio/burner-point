@@ -23,4 +23,10 @@ export class LoginDto {
   @IsString()
   @MinLength(8)
   password: string;
+
+  @ApiPropertyOptional({ example: '123456', description: 'Required when authenticator-app 2FA is enabled' })
+  @IsOptional()
+  @IsString()
+  @MinLength(6)
+  twoFactorCode?: string;
 }
