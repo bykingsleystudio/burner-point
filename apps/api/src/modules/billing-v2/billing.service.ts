@@ -77,7 +77,6 @@ export class BillingService {
         autoRenewAt: item.autoRenewAt?.toISOString() ?? null,
         expiresAt: item.expiresAt?.toISOString() ?? null,
         renewalPriceUsdCents: Number(item.renewalPriceUsdCents ?? 0),
-        renewalPriceDisplayNgnKobo: null,
         countryCode: item.countryCode ?? null,
         provider: item.provider,
       }));
@@ -88,11 +87,6 @@ export class BillingService {
         balanceUsd: creditBalance.wallet.balanceUsdCents / 100,
         lockedBalanceUsdCents: creditBalance.wallet.lockedBalanceUsdCents,
         displayCurrency: 'USD',
-        localDisplay: {
-          currency: null,
-          amountKobo: null,
-          fxRateNgnPerUsd: null,
-        },
         fundingMethods: WALLET_FUNDING_METHODS,
       },
       callCredits: {
@@ -126,9 +120,7 @@ export class BillingService {
         type: item.type,
         status: item.status,
         amountUsdCents: Number(item.amountUsdCents ?? 0),
-        amountKobo: Number(item.amountUsdCents ?? 0),
         balanceAfterUsdCents: Number(item.balanceAfterUsdCents ?? 0),
-        balanceAfterKobo: Number(item.balanceAfterUsdCents ?? 0),
         description: item.description,
         gateway: item.gateway,
         referenceId: item.referenceId,
@@ -192,16 +184,16 @@ export class BillingService {
   async recordWalletTransaction(input: {
     userId: string;
     type: TransactionType;
-    amountKobo: number;
-    balanceAfterKobo: number;
+    amountUsdCents: number;
+    balanceAfterUsdCents: number;
     description: string;
     referenceId?: string;
     externalReference?: string;
     gateway?: PaymentGateway;
     metadata?: Record<string, unknown>;
   }) {
-    const amount = Number(input.amountKobo);
-    const balanceAfter = Number(input.balanceAfterKobo);
+    const amount = Number(input.amountUsdCents);
+    const balanceAfter = Number(input.balanceAfterUsdCents);
     const balanceBefore = balanceAfter - amount;
 
     return this.txRepo.save(
@@ -264,7 +256,7 @@ export class BillingService {
       reference: session.reference,
       gateway: session.gateway,
       status: session.status,
-      amountMinor: Number(session.amountKobo ?? 0),
+      amountMinor: Number(session.amountUsdCents ?? 0),
       currency: session.currency,
       checkoutUrl: session.checkoutUrl ?? null,
       paidAt: session.paidAt?.toISOString() ?? null,

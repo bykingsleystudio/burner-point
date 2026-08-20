@@ -14,10 +14,10 @@ export class KorapayAdapter {
     return { Authorization: `Bearer ${this.cfg.get('KORAPAY_SECRET_KEY')}`, 'Content-Type': 'application/json' };
   }
 
-  async initialize(params: { email: string; amountKobo: number; reference: string }) {
+  async initialize(params: { email: string; amountUsdCents: number; reference: string }) {
     const { data } = await axios.post(`${this.baseUrl}/charges/initialize`, {
       reference: params.reference,
-      amount: params.amountKobo / 100,
+      amount: params.amountUsdCents / 100,
       currency: 'NGN',
       customer: { email: params.email },
       redirect_url: `${this.cfg.get('WEB_URL')}/dashboard/billing?ref=${params.reference}`,

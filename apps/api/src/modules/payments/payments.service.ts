@@ -62,10 +62,11 @@ interface InitializePaymentOptions {
 }
 
 interface PricingResolution {
-  amountMinor: number;
+  providerAmountMinor: number;
+  amountUsdCents: number;
   currency: ChargeCurrency;
-  walletCreditKobo: number;
-  walletEquivalentKobo: number;
+  walletCreditUsdCents: number;
+  walletEquivalentUsdCents: number;
   productLabel: string;
   metadata: Record<string, unknown>;
 }
@@ -114,45 +115,45 @@ const DEFAULT_WALLET_FUNDING_OPTIONS = [
   {
     id: 'wallet-500',
     name: 'Add $5.00',
-    amountKobo: 500,
-    bonusKobo: 0,
-    priceKobo: 500,
+    amountUsdCents: 500,
+    bonusUsdCents: 0,
+    priceUsdCents: 500,
     availableGateways: ['paystack', 'flutterwave', 'nowpayments'],
     isFeatured: false,
   },
   {
     id: 'wallet-1000',
     name: 'Add $10.00',
-    amountKobo: 1000,
-    bonusKobo: 0,
-    priceKobo: 1000,
+    amountUsdCents: 1000,
+    bonusUsdCents: 0,
+    priceUsdCents: 1000,
     availableGateways: ['paystack', 'flutterwave', 'nowpayments'],
     isFeatured: true,
   },
   {
     id: 'wallet-2500',
     name: 'Add $25.00',
-    amountKobo: 2500,
-    bonusKobo: 0,
-    priceKobo: 2500,
+    amountUsdCents: 2500,
+    bonusUsdCents: 0,
+    priceUsdCents: 2500,
     availableGateways: ['paystack', 'flutterwave', 'nowpayments'],
     isFeatured: false,
   },
   {
     id: 'wallet-5000',
     name: 'Add $50.00',
-    amountKobo: 5000,
-    bonusKobo: 0,
-    priceKobo: 5000,
+    amountUsdCents: 5000,
+    bonusUsdCents: 0,
+    priceUsdCents: 5000,
     availableGateways: ['paystack', 'flutterwave', 'nowpayments'],
     isFeatured: false,
   },
   {
     id: 'wallet-10000',
     name: 'Add $100.00',
-    amountKobo: 10000,
-    bonusKobo: 0,
-    priceKobo: 10000,
+    amountUsdCents: 10000,
+    bonusUsdCents: 0,
+    priceUsdCents: 10000,
     availableGateways: ['paystack', 'flutterwave', 'nowpayments'],
     isFeatured: false,
   },
@@ -219,8 +220,8 @@ export class PaymentsService {
         reference,
         userId,
         gateway,
-        amountKobo: pricing.amountMinor,
-        currency: pricing.currency,
+        amountUsdCents: pricing.amountUsdCents,
+        currency: 'USD',
         status: 'pending',
         expiresAt,
         metadata: {
@@ -230,8 +231,9 @@ export class PaymentsService {
           rentalDays: rentalDays || null,
           clientPlatform,
           productLabel: pricing.productLabel,
-          walletCreditKobo: pricing.walletCreditKobo,
-          walletEquivalentKobo: pricing.walletEquivalentKobo,
+          providerCurrency: pricing.currency,
+          walletCreditUsdCents: pricing.walletCreditUsdCents,
+          walletEquivalentUsdCents: pricing.walletEquivalentUsdCents,
           phoneNumber: options.phoneNumber || null,
           countryCode: options.countryCode || null,
           numberType: options.numberType || null,
@@ -274,10 +276,10 @@ export class PaymentsService {
           ));
           break;
         case PaymentGateway.FLUTTERWAVE:
-          ({ checkoutUrl, gatewayReference } = await this.initFlutterwave(user, pricing.amountMinor, reference));
+          ({ checkoutUrl, gatewayReference } = await this.initFlutterwave(user, pricing.providerAmountMinor, reference));
           break;
         case PaymentGateway.KORAPAY:
-          ({ checkoutUrl, gatewayReference } = await this.initKorapay(user.email, pricing.amountMinor, reference));
+          ({ checkoutUrl, gatewayReference } = await this.initKorapay(user.email, pricing.providerAmountMinor, reference));
           break;
         default:
           throw new BadRequestException(`Gateway ${gateway} is not implemented`);
@@ -306,8 +308,8 @@ export class PaymentsService {
     return {
       checkoutUrl,
       reference,
-      amount: pricing.amountMinor,
-      currency: pricing.currency,
+      amountUsdCents: pricing.amountUsdCents,
+      currency: 'USD',
       gateway,
       paymentType: normalizedPaymentType,
       expiresAt: expiresAt.toISOString(),
@@ -637,20 +639,20 @@ export class PaymentsService {
   }
 
   private async fulfillCredits(session: PaymentSession) {
-    const walletCreditKobo = Number(session.metadata?.walletCreditKobo ?? session.metadata?.walletEquivalentKobo ?? 0);
-    if (walletCreditKobo <= 0) throw new BadRequestException('Credit amount is missing');
+    const walletCreditUsdCents = Number(session.metadata?.walletCreditUsdCents ?? session.metadata?.walletEquivalentUsdCents ?? 0);
+    if (walletCreditUsdCents <= 0) throw new BadRequestException('Credit amount is missing');
 
     const user = await this.userRepo.findOne({ where: { id: session.userId } });
     if (!user) throw new NotFoundException('User not found');
 
     const balanceBefore = Number(user.walletBalanceUsdCents);
-    await this.usersService.creditWallet(session.userId, walletCreditKobo);
+    await this.usersService.creditWallet(session.userId, walletCreditUsdCents);
 
     await this.recordTransaction(session, {
       type: TransactionType.DEPOSIT,
-      amountKobo: walletCreditKobo,
-      balanceBeforeKobo: balanceBefore,
-      balanceAfterKobo: balanceBefore + walletCreditKobo,
+      amountUsdCents: walletCreditUsdCents,
+      balanceBeforeUsdCents: balanceBefore,
+      balanceAfterUsdCents: balanceBefore + walletCreditUsdCents,
       description: `Wallet funding via ${session.gateway}`,
     });
   }
@@ -660,7 +662,7 @@ export class PaymentsService {
     const user = await this.userRepo.findOne({ where: { id: session.userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    const amountKobo = Number(metadata.walletEquivalentKobo ?? 0);
+    const amountUsdCents = Number(metadata.walletEquivalentUsdCents ?? 0);
     const phoneNumber = typeof metadata.phoneNumber === 'string' ? metadata.phoneNumber : '';
     const countryCode = typeof metadata.countryCode === 'string' ? metadata.countryCode : '';
     const rentalDays = Number(metadata.rentalDays ?? 7);
@@ -670,7 +672,7 @@ export class PaymentsService {
       await this.numbersService.assignPaidNumber(session.userId, phoneNumber, numberType, countryCode, {
         durationDays: rentalDays,
         paymentReference: session.reference,
-        priceKobo: amountKobo,
+        priceUsdCents: amountUsdCents,
         autoRenew: numberType === NumberType.RENTAL,
       });
       return;
@@ -679,9 +681,9 @@ export class PaymentsService {
     const balance = Number(user.walletBalanceUsdCents);
     await this.recordTransaction(session, {
       type: TransactionType.NUMBER_PURCHASE,
-      amountKobo,
-      balanceBeforeKobo: balance,
-      balanceAfterKobo: balance,
+      amountUsdCents,
+      balanceBeforeUsdCents: balance,
+      balanceAfterUsdCents: balance,
       description: 'Paid rental entitlement awaiting number selection',
       metadata: {
         assignmentStatus: 'awaiting_number_selection',
@@ -700,9 +702,9 @@ export class PaymentsService {
     session: PaymentSession,
     input: {
       type: TransactionType;
-      amountKobo: number;
-      balanceBeforeKobo: number;
-      balanceAfterKobo: number;
+      amountUsdCents: number;
+      balanceBeforeUsdCents: number;
+      balanceAfterUsdCents: number;
       description: string;
       metadata?: Record<string, unknown>;
     },
@@ -712,17 +714,17 @@ export class PaymentsService {
         userId: session.userId,
         type: input.type,
         status: TransactionStatus.COMPLETED,
-        amountUsdCents: input.amountKobo,
-        balanceBeforeUsdCents: input.balanceBeforeKobo,
-        balanceAfterUsdCents: input.balanceAfterKobo,
+        amountUsdCents: input.amountUsdCents,
+        balanceBeforeUsdCents: input.balanceBeforeUsdCents,
+        balanceAfterUsdCents: input.balanceAfterUsdCents,
         description: input.description,
         referenceId: session.id,
         externalReference: session.reference,
         gateway: session.gateway,
         metadata: {
           paymentReference: session.reference,
-          chargeAmountMinor: session.amountKobo,
-          chargeCurrency: session.currency,
+          chargeAmountMinor: session.amountUsdCents,
+          chargeCurrency: session.metadata?.providerCurrency ?? session.currency,
           gatewayReference: session.gatewayReference,
           ...(input.metadata || {}),
         },
@@ -748,14 +750,15 @@ export class PaymentsService {
           throw new BadRequestException('Paddle wallet top-ups need dedicated Paddle price IDs. Use Paystack, Flutterwave, or NOWPayments for wallet funding.');
         }
         const creditPackage = await this.findCreditPackage(packageId);
-        const walletCreditKobo = Number(creditPackage.amountKobo) + Number(creditPackage.bonusKobo || 0);
-        const priceKobo = Number(creditPackage.priceKobo);
-        const settlement = await this.resolveSettlementAmount(priceKobo, currency);
+        const walletCreditUsdCents = Number(creditPackage.amountUsdCents) + Number(creditPackage.bonusUsdCents || 0);
+        const priceUsdCents = Number(creditPackage.priceUsdCents);
+        const settlement = await this.resolveSettlementAmount(priceUsdCents, currency);
         return {
-          amountMinor: settlement.amountMinor,
+          providerAmountMinor: settlement.amountMinor,
+          amountUsdCents: priceUsdCents,
           currency,
-          walletCreditKobo,
-          walletEquivalentKobo: priceKobo,
+          walletCreditUsdCents,
+          walletEquivalentUsdCents: priceUsdCents,
           productLabel: creditPackage.name,
           metadata: { fundingOptionName: creditPackage.name, ...settlement.metadata },
         };
@@ -763,10 +766,11 @@ export class PaymentsService {
 
       const settlement = await this.resolveSettlementAmount(500, currency);
       return {
-        amountMinor: settlement.amountMinor,
+        providerAmountMinor: settlement.amountMinor,
+        amountUsdCents: 500,
         currency,
-        walletCreditKobo: 500,
-        walletEquivalentKobo: 500,
+        walletCreditUsdCents: 500,
+        walletEquivalentUsdCents: 500,
         productLabel: 'Wallet funding',
         metadata: { unitPriceUsdCents: 500, ...settlement.metadata },
       };
@@ -780,10 +784,11 @@ export class PaymentsService {
     const priceUsdCents = this.subscriptionPlanPriceUsdCents(plan);
     const settlement = await this.resolveSettlementAmount(priceUsdCents, currency);
     return {
-      amountMinor: settlement.amountMinor,
+      providerAmountMinor: settlement.amountMinor,
+      amountUsdCents: priceUsdCents,
       currency,
-      walletCreditKobo: 0,
-      walletEquivalentKobo: priceUsdCents,
+      walletCreditUsdCents: 0,
+      walletEquivalentUsdCents: priceUsdCents,
       productLabel: `${this.subscriptionPlanName(plan)} ${this.subscriptionPlanLabel(plan)}`,
       metadata: {
         planId: this.subscriptionPlanId(plan),
@@ -954,7 +959,7 @@ export class PaymentsService {
     if (!apiKey) throw new BadRequestException('NOWPayments is not configured');
 
     const payload = {
-      price_amount: pricing.amountMinor / 100,
+      price_amount: pricing.providerAmountMinor / 100,
       price_currency: 'usd',
       ipn_callback_url: `${this.getApiUrl()}/payments/webhook/nowpayments`,
       order_id: reference,
@@ -996,7 +1001,7 @@ export class PaymentsService {
         'https://api.paystack.co/transaction/initialize',
         {
           email,
-          amount: pricing.amountMinor,
+          amount: pricing.providerAmountMinor,
           reference,
           callback_url: `${this.getWebUrl()}/dashboard/payments/success?ref=${reference}`,
           metadata: {
@@ -1019,7 +1024,7 @@ export class PaymentsService {
     }
   }
 
-  private async initFlutterwave(user: User, amountKobo: number, reference: string) {
+  private async initFlutterwave(user: User, amountUsdCents: number, reference: string) {
     const secret = this.configService.get('FLUTTERWAVE_SECRET_KEY');
     if (!secret) throw new BadRequestException('Flutterwave is not configured');
 
@@ -1027,7 +1032,7 @@ export class PaymentsService {
       'https://api.flutterwave.com/v3/payments',
       {
         tx_ref: reference,
-        amount: amountKobo / 100,
+        amount: amountUsdCents / 100,
         currency: 'NGN',
         redirect_url: `${this.getWebUrl()}/dashboard/payments/success?ref=${reference}`,
         customer: {
@@ -1045,7 +1050,7 @@ export class PaymentsService {
     return { checkoutUrl: res.data.data.link as string, gatewayReference: reference };
   }
 
-  private async initKorapay(email: string, amountKobo: number, reference: string) {
+  private async initKorapay(email: string, amountUsdCents: number, reference: string) {
     const secret = this.configService.get('KORAPAY_SECRET_KEY');
     if (!secret) throw new BadRequestException('Korapay is not configured');
 
@@ -1053,7 +1058,7 @@ export class PaymentsService {
       'https://api.korapay.com/merchant/api/v1/charges/initialize',
       {
         reference,
-        amount: amountKobo / 100,
+        amount: amountUsdCents / 100,
         currency: 'NGN',
         redirect_url: `${this.getWebUrl()}/dashboard/payments/success?ref=${reference}`,
         customer: { email },
@@ -1378,12 +1383,12 @@ export class PaymentsService {
   private isReconciled(session: PaymentSession, reconciliation: ReconciliationCheck): boolean {
     if (!reconciliation.amountMinor && !reconciliation.currency) return true;
 
-    const expectedCurrency = session.currency.toUpperCase();
+    const expectedCurrency = String(session.metadata?.providerCurrency ?? session.currency).toUpperCase();
     const receivedCurrency = reconciliation.currency?.toUpperCase();
     if (receivedCurrency && receivedCurrency !== expectedCurrency) return false;
 
     const receivedAmount = Number(reconciliation.amountMinor ?? 0);
-    if (receivedAmount > 0 && receivedAmount < Number(session.amountKobo)) return false;
+    if (receivedAmount > 0 && receivedAmount < Number(session.amountUsdCents)) return false;
 
     return true;
   }
@@ -1659,7 +1664,7 @@ export class PaymentsService {
   private subscriptionPlanPriceUsdCents(plan: any) {
     if (this.isCatalogPlan(plan)) return Number(plan.priceUsdCents);
     // Legacy column names are retained, but subscription prices are stored as USD cents.
-    return Number(plan.priceKoboMonthly ?? 0);
+    return Number(plan.priceUsdCentsMonthly ?? 0);
   }
 
   private parseDateValue(value: unknown) {

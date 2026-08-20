@@ -176,7 +176,7 @@ export class NumbersService {
     options: {
       durationDays?: number;
       paymentReference: string;
-      priceKobo: number;
+      priceUsdCents: number;
       autoRenew?: boolean;
     },
   ) {
@@ -200,8 +200,8 @@ export class NumbersService {
       countryCode: country,
       userId,
       assignedToUserId: userId,
-      priceUsdCents: options.priceKobo,
-      renewalPriceUsdCents: options.priceKobo,
+      priceUsdCents: options.priceUsdCents,
+      renewalPriceUsdCents: options.priceUsdCents,
       expiresAt,
       autoRenew: Boolean(options.autoRenew),
       capabilities: ['sms', 'mms', 'voice'],

@@ -40,13 +40,13 @@ export class AdminService {
     return { success: true };
   }
 
-  async creditUserWallet(userId: string, amountKobo: number) {
-    const user = await this.usersService.creditWallet(userId, amountKobo);
+  async creditUserWallet(userId: string, amountUsdCents: number) {
+    const user = await this.usersService.creditWallet(userId, amountUsdCents);
     await this.billingService.recordWalletTransaction({
       userId,
       type: TransactionType.ADJUSTMENT,
-      amountKobo: Number(amountKobo),
-      balanceAfterKobo: Number(user.walletBalanceUsdCents),
+      amountUsdCents: Number(amountUsdCents),
+      balanceAfterUsdCents: Number(user.walletBalanceUsdCents),
       description: 'Admin wallet adjustment',
       metadata: { source: 'admin' },
     });

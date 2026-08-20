@@ -12,10 +12,10 @@ export class PaystackAdapter {
 
   constructor(private cfg: ConfigService) {}
 
-  async initialize(params: { email: string; amountKobo: number; reference: string; callbackUrl?: string }) {
+  async initialize(params: { email: string; amountUsdCents: number; reference: string; callbackUrl?: string }) {
     const { data } = await axios.post(`${this.baseUrl}/transaction/initialize`, {
       email: params.email,
-      amount: params.amountKobo, // Paystack uses kobo natively
+      amount: params.amountUsdCents,
       reference: params.reference,
       callback_url: params.callbackUrl,
       currency: 'NGN',

@@ -115,7 +115,7 @@ export class BurnerPoint {
 
   /** Wallet API */
   wallet = {
-    balance: () => this.request<{ balanceKobo: number; balanceNgn: number }>('GET', '/users/me/wallet'),
+    balance: () => this.request<{ balanceUsdCents: number; balanceUsd: number; displayCurrency: 'USD' }>('GET', '/users/me/wallet'),
   };
 }
 

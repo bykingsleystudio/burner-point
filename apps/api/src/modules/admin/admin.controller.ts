@@ -28,7 +28,7 @@ export class AdminController {
   }
 
   @Post('users/:id/credit')
-  creditWallet(@Param('id') id: string, @Body('amountKobo') amountKobo: number) {
-    return this.service.creditUserWallet(id, amountKobo);
+  creditWallet(@Param('id') id: string, @Body('amountUsdCents') amountUsdCents: number) {
+    return this.service.creditUserWallet(id, amountUsdCents);
   }
 }

@@ -89,10 +89,10 @@ export class PaymentSession {
   @Column({ type: 'enum', enum: PaymentGateway })
   gateway: PaymentGateway;
 
-  @Column({ name: 'amount_kobo', type: 'bigint' })
-  amountKobo: number;
+  @Column({ name: 'amount_usd_cents', type: 'bigint' })
+  amountUsdCents: number;
 
-  @Column({ default: 'NGN' })
+  @Column({ default: 'USD' })
   currency: string;
 
   @Column({ unique: true })
@@ -356,7 +356,7 @@ export class Call {
   creditsSpent: number;
 
   @Column({ name: 'price_usd_cents', type: 'int', default: 0 })
-  priceKobo: number;
+  priceUsdCents: number;
 
   @Column({ name: 'failure_reason', nullable: true })
   failureReason: string;
@@ -1055,10 +1055,10 @@ export class Referral {
   status: string;
 
   @Column({ type: 'bigint', default: 0 })
-  referrerBonusKobo: number;
+  referrerBonusUsdCents: number;
 
   @Column({ type: 'bigint', default: 0 })
-  refereeBonusKobo: number;
+  refereeBonusUsdCents: number;
 
   @Column({ default: false })
   bonusPaid: boolean;
@@ -1114,7 +1114,7 @@ export class PhoneOtpSession {
   updatedAt: Date;
 }
 
-// ─── NGN PACKAGES ───────────────────────────────────────────────────────────
+// ─── CREDIT PACKAGES ────────────────────────────────────────────────────────
 
 @Entity('credit_packages')
 export class CreditPackage {

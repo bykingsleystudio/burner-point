@@ -127,13 +127,13 @@ export interface Workspace {
   name: string;
   slug: string;
   ownerUserId: string;
-  walletBalanceKobo: number;
+  walletBalanceUsdCents: number;
   isActive: boolean;
   createdAt: string;
 }
 
 // ─── Utils ────────────────────────────────────────────────────────────────────
-export const KOBO_TO_NGN = (kobo: number): number => kobo / 100;
-export const NGN_TO_KOBO = (ngn: number): number => Math.round(ngn * 100);
-export const NGN_TO_USD = (ngn: number, rate: number): number => ngn / rate;
-export const formatNgn = (kobo: number): string => `₦${KOBO_TO_NGN(kobo).toLocaleString('en-NG')}`;
+export const formatUsd = (cents: number): string => new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+}).format(cents / 100);

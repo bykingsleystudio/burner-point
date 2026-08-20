@@ -6,7 +6,6 @@ import { User } from '../../database/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { BillingService } from '../billing-v2/billing.service';
 
-// Wallet is stored in USD cents (legacy column name "kobo").
 // Referral bonuses are small USD incentives.
 const REFERRER_BONUS_USD_CENTS = 50; // $0.50
 const REFEREE_BONUS_USD_CENTS = 25; // $0.25
@@ -26,8 +25,8 @@ export class GrowthService {
 
     const referral = this.referralRepo.create({
       referrerId, refereeId,
-      referrerBonusKobo: REFERRER_BONUS_USD_CENTS,
-      refereeBonusKobo: REFEREE_BONUS_USD_CENTS,
+      referrerBonusUsdCents: REFERRER_BONUS_USD_CENTS,
+      refereeBonusUsdCents: REFEREE_BONUS_USD_CENTS,
     });
     await this.referralRepo.save(referral);
 
@@ -39,8 +38,8 @@ export class GrowthService {
     await this.billingService.recordWalletTransaction({
       userId: referrerId,
       type: TransactionType.REFERRAL_BONUS,
-      amountKobo: REFERRER_BONUS_USD_CENTS,
-      balanceAfterKobo: Number(referrer.walletBalanceUsdCents),
+      amountUsdCents: REFERRER_BONUS_USD_CENTS,
+      balanceAfterUsdCents: Number(referrer.walletBalanceUsdCents),
       description: 'Referral reward credited',
       referenceId: referral.id,
       metadata: { role: 'referrer', refereeId },
@@ -49,8 +48,8 @@ export class GrowthService {
     await this.billingService.recordWalletTransaction({
       userId: refereeId,
       type: TransactionType.REFERRAL_BONUS,
-      amountKobo: REFEREE_BONUS_USD_CENTS,
-      balanceAfterKobo: Number(referee.walletBalanceUsdCents),
+      amountUsdCents: REFEREE_BONUS_USD_CENTS,
+      balanceAfterUsdCents: Number(referee.walletBalanceUsdCents),
       description: 'Referral welcome credit',
       referenceId: referral.id,
       metadata: { role: 'referee', referrerId },
@@ -62,8 +61,8 @@ export class GrowthService {
 
   async getReferralStats(userId: string) {
     const [referrals, total] = await this.referralRepo.findAndCount({ where: { referrerId: userId } });
-    const totalEarned = referrals.reduce((sum, r) => sum + Number(r.referrerBonusKobo), 0);
-    return { totalReferrals: total, totalEarnedKobo: totalEarned, referrals };
+    const totalEarned = referrals.reduce((sum, r) => sum + Number(r.referrerBonusUsdCents), 0);
+    return { totalReferrals: total, totalEarnedUsdCents: totalEarned, referrals };
   }
 
   async getLeaderboard() {

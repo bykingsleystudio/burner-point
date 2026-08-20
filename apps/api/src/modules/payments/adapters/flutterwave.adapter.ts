@@ -12,10 +12,10 @@ export class FlutterwaveAdapter {
 
   constructor(private cfg: ConfigService) {}
 
-  async initialize(params: { email: string; amountKobo: number; reference: string; callbackUrl?: string }) {
+  async initialize(params: { email: string; amountUsdCents: number; reference: string; callbackUrl?: string }) {
     const { data } = await axios.post(`${this.baseUrl}/payments`, {
       tx_ref: params.reference,
-      amount: params.amountKobo / 100, // Flutterwave uses naira
+      amount: params.amountUsdCents / 100,
       currency: 'NGN',
       redirect_url: params.callbackUrl,
       customer: { email: params.email },
