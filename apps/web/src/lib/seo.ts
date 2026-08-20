@@ -202,7 +202,7 @@ export function baseStructuredData() {
       '@type': 'Organization',
       name: siteName,
       url: siteUrl,
-      logo: `${siteUrl}/assets/logo.svg`,
+      logo: `${siteUrl}/assets/burner-point-combination-mark.svg`,
       slogan: siteTagline,
       sameAs: socialLinks.map((link) => link.href),
       contactPoint: [
@@ -290,7 +290,7 @@ export function pageStructuredData(page: MarketingPageContent, route = routeForS
           name: siteName,
           logo: {
             '@type': 'ImageObject',
-            url: `${siteUrl}/assets/logo.svg`,
+            url: `${siteUrl}/assets/burner-point-combination-mark.svg`,
           },
         },
       })),

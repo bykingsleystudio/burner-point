@@ -348,9 +348,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       >
         <div className={clsx('border-b border-white/8 py-5', sidebarCollapsed ? 'px-3' : 'px-5')}>
           <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
-            <Image src="/assets/logo-mark.svg" alt="" width={28} height={30} className="h-auto w-auto drop-shadow-[0_0_20px_rgba(0,255,157,0.2)]" />
+            <Image src="/assets/burner-point-logo-icon.svg" alt="Burner Point" width={40} height={40} className="h-8 w-8" />
             <span className={clsx(sidebarCollapsed && 'hidden')}>
-              <Image src="/assets/wordmark-white.svg" alt="Burner Point" width={138} height={26} className="h-auto w-auto" />
+              <Image src="/assets/burner-point-combination-mark-gradient.svg" alt="Burner Point" width={220} height={64} className="h-9 w-auto" />
               <span className="mt-1 block text-[11px] text-white/48">Private telecom control surface</span>
             </span>
           </Link>
