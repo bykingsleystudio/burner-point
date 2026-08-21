@@ -32,7 +32,7 @@ interface CachedRates {
 @Injectable()
 export class FxService {
   private readonly logger = new Logger(FxService.name);
-  private readonly provider = 'openexchangerates';
+  private readonly provider = 'forexrateapi';
 
   constructor(
     private readonly configService: ConfigService,
@@ -148,15 +148,22 @@ export class FxService {
   }
 
   private async fetchRates(): Promise<CachedRates> {
-    const appId = this.configService.get<string>('OPEN_EXCHANGE_RATES_APP_ID')?.trim();
-    if (!appId) throw new Error('OPEN_EXCHANGE_RATES_APP_ID is not configured');
+    const apiKey = this.configService.get<string>('FOREXRATEAPI_API_KEY')?.trim();
+    if (!apiKey) throw new Error('FOREXRATEAPI_API_KEY is not configured');
 
-    const response = await axios.get<{ base: string; rates: Record<string, number>; timestamp: number }>(
-      'https://openexchangerates.org/api/latest.json',
-      { params: { app_id: appId, base: PLATFORM_CURRENCY }, timeout: 10000 },
+    const baseUrl = (this.configService.get<string>('FOREXRATEAPI_BASE_URL') || 'https://api.forexrateapi.com').replace(/\/+$/, '');
+
+    const response = await axios.get<{ base: string; rates: Record<string, number>; updated_at?: string }>(
+      `${baseUrl}/v1/latest`,
+      {
+        params: { base: PLATFORM_CURRENCY },
+        headers: { 'X-API-KEY': apiKey },
+        timeout: 10000,
+      },
     );
+
     if (response.data.base !== PLATFORM_CURRENCY || !response.data.rates) {
-      throw new Error('FX provider returned an unexpected base currency');
+      throw new Error('FX provider returned an unexpected response format');
     }
 
     const fetchedAt = new Date().toISOString();
@@ -165,7 +172,7 @@ export class FxService {
     const payload: CachedRates = {
       base: PLATFORM_CURRENCY,
       rates: response.data.rates,
-      providerTimestamp: new Date(response.data.timestamp * 1000).toISOString(),
+      providerTimestamp: response.data.updated_at ? new Date(response.data.updated_at).toISOString() : fetchedAt,
       fetchedAt,
       expiresAt,
     };

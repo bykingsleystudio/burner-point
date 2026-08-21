@@ -110,18 +110,25 @@ export default function WalletFundingPage() {
   const coreGateways = GATEWAYS.filter((gateway) => gateway.category === 'core');
 
   return (
-    <div className="max-w-3xl space-y-8">
+    <div className="max-w-4xl space-y-10">
       <div>
-        <h1 className="text-xl font-bold">Add Funds</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-green">Wallet / Funding</p>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight">Add Funds</h1>
         <p className="mt-1 text-sm text-brand-muted">
           Your wallet balance is stored in USD and is used directly for verifications, rentals, eSIMs, proxies, dedicated VPN IP purchases, and other pay-as-you-go products.
         </p>
       </div>
 
       <section>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-brand-muted">Select Amount</h2>
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-sm font-semibold">Select amount</h2>
+            <p className="mt-1 text-sm text-brand-muted">Choose the wallet value that fits this task.</p>
+          </div>
+          <span className="text-xs text-brand-muted">{options.length} options</span>
+        </div>
         {loading ? (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="h-28 animate-pulse rounded-2xl border border-brand-border bg-brand-card" />
             ))}
@@ -133,7 +140,7 @@ export default function WalletFundingPage() {
                 key={option.id}
                 type="button"
                 onClick={() => setSelectedOption(option)}
-                className={`relative rounded-2xl border p-4 text-left transition-all ${
+                  className={`relative rounded-xl border p-5 text-left transition-all ${
                   selectedOption?.id === option.id
                     ? 'border-brand-green bg-brand-green/10'
                     : 'border-brand-border bg-brand-card hover:border-brand-muted'
@@ -163,11 +170,11 @@ export default function WalletFundingPage() {
       </section>
 
       <section>
-        <div className="mb-3 flex items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-brand-muted">Funding methods</span>
-          <div className="h-px flex-1 bg-brand-border" />
+        <div className="mb-4">
+          <h2 className="text-sm font-semibold">Funding method</h2>
+          <p className="mt-1 text-sm text-brand-muted">Select the provider you want to use for this wallet deposit.</p>
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <div className="grid gap-3">
           {coreGateways.map((gateway) => (
             <GatewayButton
               key={gateway.id}
@@ -179,40 +186,29 @@ export default function WalletFundingPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-brand-border bg-brand-card p-5">
-        <div className="mb-3 flex items-center justify-between">
-          <span className="text-sm text-brand-muted">Funding amount</span>
-          <span className="text-sm font-medium">{selectedOption?.name ?? '-'}</span>
-        </div>
-        <div className="mb-3 flex items-center justify-between">
-          <span className="text-sm text-brand-muted">USD amount</span>
-          <span className="font-mono font-bold text-brand-green">
-            {selectedOption ? formatStoredUsdCents(selectedOption.priceUsdCents) : '-'}
-          </span>
-        </div>
-        <div className="mb-5 flex items-center justify-between">
-          <span className="text-sm text-brand-muted">Informational display</span>
-          <span className="text-sm text-white/70">
+      <section className="rounded-xl border border-brand-green/25 bg-brand-green/[0.05] p-6 text-center sm:p-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-green">Order summary</p>
+        <p className="mt-4 text-5xl font-semibold tracking-tight text-white">
+          {selectedOption ? formatStoredUsdCents(selectedOption.priceUsdCents) : '-'}
+        </p>
+        <p className="mt-2 text-sm text-brand-muted">{selectedOption?.name ?? 'Choose a funding amount'}</p>
+        <div className="mx-auto mt-5 grid max-w-md gap-2 border-t border-brand-green/15 pt-4 text-sm">
+          <div className="flex items-center justify-between"><span className="text-brand-muted">Wallet value</span><span>{selectedOption ? formatStoredUsdCents(selectedOption.amountUsdCents) : '-'}</span></div>
+          <div className="flex items-center justify-between"><span className="text-brand-muted">Gateway</span><span>{selectedGatewayDef?.name ?? '-'}</span></div>
+          <div className="flex items-center justify-between"><span className="text-brand-muted">Display currency</span><span className="text-white/70">
             {selectedOption
               ? (localCurrency.formatUsdCents(selectedOption.priceUsdCents)
                 ? `≈ ${localCurrency.formatUsdCents(selectedOption.priceUsdCents)} ${localCurrency.currency}`
                 : 'Unavailable')
               : '-'}
-          </span>
-        </div>
-        <div className="mb-5 flex items-center justify-between">
-          <span className="text-sm text-brand-muted">Gateway</span>
-          <span className="flex items-center gap-1.5 text-sm">
-            <span>{selectedGatewayDef?.code}</span>
-            <span>{selectedGatewayDef?.name}</span>
-          </span>
+          </span></div>
         </div>
 
         <button
           type="button"
           onClick={initializeFunding}
           disabled={!selectedOption || processing}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-green py-3 font-semibold text-black transition-all hover:bg-opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="mx-auto mt-6 flex min-h-12 w-full max-w-md items-center justify-center gap-2 rounded-full bg-brand-green py-3 font-semibold text-black transition-all hover:bg-neon-green disabled:cursor-not-allowed disabled:opacity-50"
         >
           {processing ? (
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />

@@ -141,58 +141,75 @@ export default function DashboardPage() {
   const firstName = user?.firstName || 'there';
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       {/* Header */}
-      <div className="space-y-2">
-        <p className="text-sm font-mono uppercase tracking-widest text-brand-accent/70">Burner Point</p>
-        <h1 className="text-4xl font-bold tracking-tight">{greeting}, {firstName}.</h1>
-        <p className="text-[var(--bp-foreground-muted)] max-w-2xl">
+      <section className="border-b border-[var(--bp-border-subtle)] pb-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-green">Burner Point / Overview</p>
+        <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">{greeting}, {firstName}.</h1>
+        <p className="mt-3 max-w-2xl text-[var(--bp-foreground-muted)]">
           Private communication, connectivity, and verification in one operational platform.
         </p>
-      </div>
+      </section>
 
-      {/* Wallet Card */}
-      <div className="bg-[var(--bp-surface)] rounded-2xl border border-[var(--bp-border-subtle)] p-6 space-y-4">
-        <div className="flex items-start justify-between">
+      {/* Wallet status */}
+      <section className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
+        <div className="rounded-xl border border-brand-green/30 bg-brand-green/[0.06] p-6 sm:p-8">
+          <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold text-brand-accent uppercase tracking-wider">Available balance</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-green">Available balance</p>
             {loading ? (
               <Skeleton className="mt-3 h-12 w-48" />
             ) : (
-              <p className="mt-3 text-5xl font-bold font-mono">{formatUsdCents(billing?.wallet?.balanceUsdCents)}</p>
+              <p className="mt-4 text-5xl font-semibold tracking-tight">{formatUsdCents(billing?.wallet?.balanceUsdCents)}</p>
             )}
-            <p className="mt-2 text-xs text-[var(--bp-foreground-muted)]">USD canonical | Real-time balance</p>
+            <p className="mt-3 text-sm text-[var(--bp-foreground-muted)]">USD canonical | Real-time balance</p>
           </div>
-          <Wallet className="w-6 h-6 text-brand-accent opacity-60" />
-        </div>
+            <Wallet className="h-6 w-6 text-brand-green" />
+          </div>
 
-        <div className="flex flex-wrap gap-3 pt-4 border-t border-[var(--bp-border-subtle)]">
+          <div className="mt-7 flex flex-wrap gap-3 border-t border-brand-green/15 pt-5">
           <Link
             href="/dashboard/wallet"
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-accent text-black text-sm font-semibold rounded-lg hover:bg-brand-accent/90 transition"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-brand-green px-5 py-3 text-sm font-semibold text-black transition hover:bg-neon-green"
           >
             <Plus className="w-4 h-4" />
             Add funds
           </Link>
           <Link
             href="/dashboard/billing"
-            className="inline-flex items-center gap-2 px-4 py-2.5 border border-[var(--bp-border-subtle)] text-sm font-semibold rounded-lg hover:bg-[var(--bp-surface-muted)] transition"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[var(--bp-border-subtle)] px-5 py-3 text-sm font-semibold transition hover:border-brand-green/50"
           >
             View wallet
           </Link>
-        </div>
+          </div>
 
-        {billing?.wallet?.lockedBalanceUsdCents ? (
-          <p className="text-xs text-[var(--bp-foreground-muted)]">
+          {billing?.wallet?.lockedBalanceUsdCents ? (
+          <p className="mt-4 text-xs text-[var(--bp-foreground-muted)]">
             {formatUsdCents(billing.wallet.lockedBalanceUsdCents)} currently locked in orders
           </p>
-        ) : null}
-      </div>
+          ) : null}
+        </div>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-1">
+          <div className="rounded-xl border border-[var(--bp-border-subtle)] bg-[var(--bp-surface)] p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--bp-foreground-muted)]">Active numbers</p>
+            <p className="mt-3 text-3xl font-semibold">{loading ? '...' : activeNumbers.length}</p>
+            <Link href="/dashboard/numbers" className="mt-2 inline-flex text-sm font-semibold text-brand-green">Manage numbers <ArrowUpRight className="ml-1 h-4 w-4" /></Link>
+          </div>
+          <div className="rounded-xl border border-[var(--bp-border-subtle)] bg-[var(--bp-surface)] p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--bp-foreground-muted)]">Open support</p>
+            <p className="mt-3 text-3xl font-semibold">{loading ? '...' : openTickets.length}</p>
+            <Link href="/dashboard/support" className="mt-2 inline-flex text-sm font-semibold text-brand-green">View support <ArrowUpRight className="ml-1 h-4 w-4" /></Link>
+          </div>
+        </div>
+      </section>
 
       {/* Quick Actions */}
-      <div className="space-y-3">
-        <p className="text-xs font-semibold text-brand-accent uppercase tracking-wider">Quick actions</p>
-        <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+      <section className="space-y-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-green">Start something</p>
+          <p className="mt-1 text-sm text-[var(--bp-foreground-muted)]">Choose the next task without leaving your overview.</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <QuickActionButton href="/dashboard/verify-hub" icon={ShieldCheck} label="Get verification" />
           <QuickActionButton href="/dashboard/rentals" icon={Phone} label="Rent number" />
           <QuickActionButton href="/dashboard/esim" icon={Smartphone} label="Buy eSIM" />
@@ -200,12 +217,15 @@ export default function DashboardPage() {
           <QuickActionButton href="/dashboard/vpn" icon={Shield} label="Secure tunnel" />
           <QuickActionButton href="/dashboard/wallet" icon={Zap} label="Add funds" />
         </div>
-      </div>
+      </section>
 
       {/* Active Products */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-accent">Your Burner Point</h2>
-        <div className="bg-[var(--bp-surface)] rounded-lg border border-[var(--bp-border-subtle)] divide-y divide-[var(--bp-border-subtle)]">
+      <section className="space-y-4">
+        <div className="flex items-end justify-between gap-4">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-brand-green">Your Burner Point</h2>
+          <span className="text-xs text-[var(--bp-foreground-muted)]">Showing {Math.min(activeNumbers.length, 3)} of {activeNumbers.length}</span>
+        </div>
+        <div className="divide-y divide-[var(--bp-border-subtle)] rounded-xl border border-[var(--bp-border-subtle)] bg-[var(--bp-surface)]">
           {activeNumbers.length > 0 ? (
             activeNumbers.slice(0, 3).map((number) => (
               <div key={number.id} className="p-4 flex items-center justify-between hover:bg-[var(--bp-surface-muted)] transition">
@@ -229,14 +249,14 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-      </div>
+      </section>
 
       {/* Recent Activity */}
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Transactions */}
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-accent">Wallet activity</h2>
-          <div className="bg-[var(--bp-surface)] rounded-lg border border-[var(--bp-border-subtle)]">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-brand-green">Wallet activity</h2>
+          <div className="rounded-xl border border-[var(--bp-border-subtle)] bg-[var(--bp-surface)]">
             {loading ? (
               <div className="space-y-4 p-4">
                 <Skeleton className="h-12 w-full" />
@@ -271,8 +291,8 @@ export default function DashboardPage() {
 
         {/* Support Tickets */}
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-accent">Support</h2>
-          <div className="bg-[var(--bp-surface)] rounded-lg border border-[var(--bp-border-subtle)]">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-brand-green">Support</h2>
+          <div className="rounded-xl border border-[var(--bp-border-subtle)] bg-[var(--bp-surface)]">
             {openTickets.length > 0 ? (
               <div className="divide-y divide-[var(--bp-border-subtle)]">
                 {openTickets.slice(0, 3).map((ticket) => (
