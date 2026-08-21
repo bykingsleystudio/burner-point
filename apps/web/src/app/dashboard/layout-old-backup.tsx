@@ -350,7 +350,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
             <Image src="/assets/burner-point-icon-gradient.svg" alt="Burner Point" width={40} height={40} className="h-8 w-8" />
             <span className={clsx(sidebarCollapsed && 'hidden')}>
-              <Image src="/assets/burner-point-horizontal-gradient.svg" alt="Burner Point" width={220} height={64} className="h-9 w-auto" />
+              <span className="relative inline-flex h-6 w-[180px] items-center">
+                <Image src="/assets/burner-point-wordmark-black.svg" alt="Burner Point" width={180} height={32} className="bp-wordmark-light h-5 w-auto" />
+                <Image src="/assets/burner-point-wordmark-white.svg" alt="Burner Point" width={180} height={32} className="bp-wordmark-dark absolute inset-0 h-5 w-auto" />
+                <Image src="/assets/burner-point-wordmark-gradient.svg" alt="Burner Point" width={180} height={32} className="bp-wordmark-gradient absolute inset-0 h-5 w-auto" />
+              </span>
               <span className="mt-1 block text-[11px] text-white/48">Private telecom control surface</span>
             </span>
           </Link>
