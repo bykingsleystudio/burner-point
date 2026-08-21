@@ -41,7 +41,11 @@ export function BpLogo({ compact = false }: { compact?: boolean }) {
     <Link href="/" className="inline-flex items-center gap-3" aria-label="Burner Point home">
       <Image src="/assets/burner-point-logo-icon-gradient.svg" alt="Burner Point" width={compact ? 40 : 52} height={compact ? 40 : 52} priority className={compact ? 'h-10 w-10' : 'h-10 w-10'} />
       {!compact ? (
-        <Image src="/assets/burner-point-wordmark-gradient.svg" alt="Burner Point" width={180} height={32} priority className="h-5 w-auto sm:h-6" />
+        <span className="relative inline-flex h-5 w-[180px] items-center sm:h-6">
+          <Image src="/assets/burner-point-wordmark-black.svg" alt="Burner Point" width={180} height={32} priority className="bp-wordmark-light h-5 w-auto sm:h-6" />
+          <Image src="/assets/burner-point-wordmark-white.svg" alt="Burner Point" width={180} height={32} priority className="bp-wordmark-dark absolute inset-0 h-5 w-auto sm:h-6" />
+          <Image src="/assets/burner-point-wordmark-gradient.svg" alt="Burner Point" width={180} height={32} priority className="bp-wordmark-gradient absolute inset-0 h-5 w-auto sm:h-6" />
+        </span>
       ) : null}
     </Link>
   );

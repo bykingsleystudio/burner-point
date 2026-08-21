@@ -25,7 +25,11 @@ export function AuthShell({
             <div className="bp-auth-header text-center">
               <Link href="/" className="inline-flex items-center justify-center gap-3" aria-label="Burner Point home">
                 <Image src="/assets/burner-point-logo-icon-gradient.svg" alt="Burner Point" width={52} height={52} className="h-10 w-10" />
-                <Image src="/assets/burner-point-wordmark-gradient.svg" alt="Burner Point" width={180} height={32} className="h-5 w-auto" />
+                <span className="relative inline-flex h-5 w-[180px] items-center">
+                  <Image src="/assets/burner-point-wordmark-black.svg" alt="Burner Point" width={180} height={32} className="bp-wordmark-light h-5 w-auto" />
+                  <Image src="/assets/burner-point-wordmark-white.svg" alt="Burner Point" width={180} height={32} className="bp-wordmark-dark absolute inset-0 h-5 w-auto" />
+                  <Image src="/assets/burner-point-wordmark-gradient.svg" alt="Burner Point" width={180} height={32} className="bp-wordmark-gradient absolute inset-0 h-5 w-auto" />
+                </span>
               </Link>
 
               <p className="bp-auth-kicker mt-4 font-mono text-[10px] uppercase tracking-[0.24em] text-brand-green">

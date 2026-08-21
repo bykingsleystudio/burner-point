@@ -136,6 +136,20 @@ html[data-theme='light'] .bp-dashboard-shell [class*='bg-\[\#020806\]'] {
   background-color: var(--bp-surface-raised);
 }
 
+.bp-wordmark-dark,
+.bp-wordmark-gradient {
+  display: none;
+}
+
+html[data-theme='dark'] .bp-wordmark-light {
+  display: none;
+}
+
+html[data-theme='dark'] .bp-wordmark-dark,
+html[data-theme='dark'] .bp-wordmark-gradient {
+  display: block;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     scroll-behavior: auto !important;
