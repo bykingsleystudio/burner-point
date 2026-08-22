@@ -80,3 +80,87 @@
 [data-theme="dark"] .transactions-panel,[data-theme="dark"] .orders-panel,[data-theme="dark"] .notifications-panel,[data-theme="dark"] .activity-panel,[data-theme="dark"] .api-keys-main,[data-theme="dark"] .api-keys-side,[data-theme="dark"] .api-doc-product,[data-theme="dark"] .webhooks-panel,[data-theme="dark"] .profile-main,[data-theme="dark"] .profile-side,[data-theme="dark"] .settings-group,[data-theme="dark"] .security-card,[data-theme="dark"] .transaction-dialog,[data-theme="dark"] .order-dialog,[data-theme="dark"] .api-doc-dialog,[data-theme="dark"] .webhook-dialog { background:#102119; color:var(--ink); }
 [data-theme="dark"] .transactions-panel input,[data-theme="dark"] .transactions-panel select,[data-theme="dark"] .orders-panel input,[data-theme="dark"] .orders-panel select,[data-theme="dark"] .notifications-panel select,[data-theme="dark"] .api-doc-search input,[data-theme="dark"] .api-key-create input,[data-theme="dark"] .api-keys-side input,[data-theme="dark"] .api-keys-side textarea,[data-theme="dark"] .profile-edit input,[data-theme="dark"] .settings-fields input,[data-theme="dark"] .settings-fields select,[data-theme="dark"] .security-code-label input { background:#162b21; color:var(--ink); }
 @media (max-width:760px) { .sidebar { position:fixed; z-index:10; inset:0 auto 0 0; transform:translateX(-100%); transition:transform .2s ease; }.sidebar-open { transform:translateX(0); }.close-menu { display:block; margin-left:auto; border:0; background:none; color:#fff; font-size:24px; }.topbar { height:68px; padding:0 18px; gap:12px; }.menu-toggle { display:block; border:0; background:none; font-size:19px; }.top-actions { gap:12px; }.support-link,.icon-button,.credits-link { display:none; }.balance-chip { gap:5px; }.balance-label { display:none; }.workspace { padding:30px 18px 96px; }.workspace-heading { align-items:start; gap:20px; margin-bottom:26px; }.workspace-heading h1 { font-size:36px; }.workspace-heading .button { padding:11px; font-size:11px; }.overview-grid,.lower-grid,.wallet-layout { grid-template-columns:1fr; }.balance-panel,.status-panel { min-height:180px; }.launcher-grid { grid-template-columns:repeat(2,1fr); }.launcher { margin-right:12px; min-height:150px; }.empty-workspace { min-height:420px; padding:28px; }.empty-workspace h2 { font-size:29px; }.wallet-funding,.wallet-history { padding:22px; }.messenger-panel { min-height:570px; padding:20px; }.composer-fields { grid-template-columns:1fr; }.mobile-nav { position:fixed; z-index:5; display:grid; grid-template-columns:repeat(6,1fr); bottom:0; left:0; right:0; height:68px; background:#fff; border-top:1px solid var(--line); }.mobile-nav a,.mobile-nav button { display:grid; place-items:center; align-content:center; gap:4px; color:var(--muted); font-size:9px; border:0; background:transparent; padding:0; cursor:pointer; }.mobile-nav a span,.mobile-nav button span { font:12px 'DM Mono',monospace; color:var(--deep); }.mobile-nav .mobile-active { color:var(--deep); font-weight:800; box-shadow:inset 0 2px var(--green); }.auth-page { padding:24px 20px; }.auth-caption { display:none; }.auth-card { margin:auto 0; padding:50px 0; }.auth-card h1 { font-size:44px; }.split-fields,.onboarding-options { grid-template-columns:1fr; } }
+/* Fresh shell pass: hide legacy decorative glyph spans where the data action is already clear. */
+.shell-brand { display:flex; align-items:center; gap:12px; min-width:0; }
+.shell-brand img:first-child { width:28px; height:31px; object-fit:contain; }
+.shell-brand img:last-child { width:128px; height:auto; filter:invert(1); }
+.sidebar { background:#013220; box-shadow:12px 0 36px rgba(1,50,32,.08); }
+.sidebar-brand { height:92px; padding:0 22px; }
+.sidebar-scroll { padding:26px 16px; }
+.nav-group { margin-bottom:26px; }
+.nav-group p { margin:0 0 9px; color:#8bb5a2; font-size:9px; }
+.nav-item { border:0; border-radius:3px; padding:10px 11px; color:#b8d4c6; }
+.nav-item:hover,.nav-item.active { background:rgba(0,255,157,.16); color:#fff; border:0; }
+.nav-item.active { box-shadow:inset 3px 0 var(--green); }
+.nav-glyph { border:0; color:#75d7ad; background:rgba(0,255,157,.08); }
+.topbar { height:92px; padding:0 42px; background:#fff; border-bottom:1px solid #d9dfd9; }
+.topbar:before { content:'PRIVATE TELECOM WORKSPACE'; color:#8a9991; font:500 9px 'DM Mono',monospace; letter-spacing:.1em; position:absolute; top:20px; }
+.search-wrap { max-width:520px; margin-top:14px; }
+.search-box { padding:11px 14px; border:1px solid #e3e8e3; background:#f7f9f6; }
+.top-actions { margin-top:14px; }
+.balance-chip { border:1px solid #d9dfd9; background:#f7f9f6; padding:5px 6px 5px 12px; }
+.balance-chip strong { color:#013220; }
+.credits-link,.support-link { color:#013220; font-size:12px; font-weight:800; }
+.workspace { max-width:1440px; padding:42px; background:#f7f9f6; }
+.workspace-heading { margin-bottom:38px; }
+.workspace-heading h1 { font-size:52px; letter-spacing:-.07em; }
+.home-greeting { margin-bottom:24px; }
+.home-greeting h1 { font-size:30px; letter-spacing:-.05em; }
+.overview-grid { gap:14px; }
+.balance-panel { min-height:176px; background:#013220; border:0; box-shadow:0 16px 34px rgba(1,50,32,.12); }
+.balance-panel strong { color:#fff; font-size:42px; }
+.balance-panel span,.balance-panel small { color:#a6cbbc; }
+.balance-panel .eyebrow { color:#8ddfb9; }
+.balance-panel .button span,.launcher b { display:none; }
+.section-block { margin-top:14px; padding:26px; background:#fff; }
+.section-block .section-head { margin-bottom:20px; }
+.section-block h2 { font-size:25px; letter-spacing:-.06em; }
+.launcher-grid { gap:10px; }
+.launcher { background:#fff; border:1px solid #d9dfd9; min-height:138px; padding:18px; transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+.launcher:hover { transform:translateY(-2px); border-color:#013220; box-shadow:0 12px 22px rgba(1,50,32,.08); }
+.launcher-number { color:#013220; }
+.launcher strong { font-size:16px; }
+.mobile-nav { background:#fff; box-shadow:0 -8px 24px rgba(7,17,13,.06); }
+@media (max-width:760px) { .topbar { height:76px; padding:0 18px; }.topbar:before { display:none; }.search-wrap { margin-top:0; }.workspace { padding:28px 18px 100px; }.workspace-heading h1 { font-size:38px; }.section-block { padding:20px 16px; }.launcher { min-height:132px; }.shell-brand img:last-child { width:118px; } }
+/* New product shell language: a quiet operations desk with a clear identity rail. */
+.shell-brand { display:flex; align-items:center; gap:12px; min-width:0; }
+.shell-brand img:first-child { width:28px; height:31px; object-fit:contain; }
+.shell-brand img:last-child { width:128px; height:auto; filter:invert(1); }
+.sidebar { background:#013220; box-shadow:12px 0 36px rgba(1,50,32,.08); }
+.sidebar-brand { height:92px; padding:0 22px; }
+.sidebar-scroll { padding:26px 16px; }
+.nav-group { margin-bottom:26px; }
+.nav-group p { margin:0 0 9px; color:#8bb5a2; font-size:9px; }
+.nav-item { border:0; border-radius:3px; padding:10px 11px; color:#b8d4c6; }
+.nav-item:hover,.nav-item.active { background:rgba(0,255,157,.16); color:#fff; border:0; }
+.nav-item.active { box-shadow:inset 3px 0 var(--green); }
+.nav-glyph { border:0; color:#75d7ad; background:rgba(0,255,157,.08); }
+.topbar { height:92px; padding:0 42px; background:#fff; border-bottom:1px solid #d9dfd9; }
+.topbar:before { content:'PRIVATE TELECOM WORKSPACE'; color:#8a9991; font:500 9px 'DM Mono',monospace; letter-spacing:.1em; position:absolute; top:20px; }
+.search-wrap { max-width:520px; margin-top:14px; }
+.search-box { padding:11px 14px; border:1px solid #e3e8e3; background:#f7f9f6; }
+.top-actions { margin-top:14px; }
+.balance-chip { border:1px solid #d9dfd9; background:#f7f9f6; padding:5px 6px 5px 12px; }
+.balance-chip strong { color:#013220; }
+.credits-link,.support-link { color:#013220; font-size:12px; font-weight:800; }
+.workspace { max-width:1440px; padding:42px; background:#f7f9f6; }
+.workspace-heading { margin-bottom:38px; }
+.workspace-heading h1 { font-size:52px; letter-spacing:-.07em; }
+.home-greeting { margin-bottom:24px; }
+.home-greeting h1 { font-size:30px; letter-spacing:-.05em; }
+.overview-grid { gap:14px; }
+.balance-panel { min-height:176px; background:#013220; border:0; box-shadow:0 16px 34px rgba(1,50,32,.12); }
+.balance-panel strong { color:#fff; font-size:42px; }
+.balance-panel span,.balance-panel small { color:#a6cbbc; }
+.balance-panel .eyebrow { color:#8ddfb9; }
+.dashboard-panel,.quick-actions,.section-block,.wallet-funding,.wallet-history,.messenger-panel,.conversation-list,.verify-marketplace,.verify-orders,.rental-marketplace,.rental-owned,.esim-marketplace,.esim-orders,.proxy-marketplace,.proxy-orders,.vpn-control-panel,.vpn-subscription,.transactions-panel,.orders-panel,.notifications-panel,.activity-panel,.api-keys-main,.api-keys-side,.api-doc-product,.webhooks-panel,.profile-main,.profile-side,.settings-group,.security-card { border-color:#d9dfd9; box-shadow:0 8px 24px rgba(7,17,13,.035); }
+.section-block { margin-top:14px; padding:26px; background:#fff; }
+.section-block .section-head { margin-bottom:20px; }
+.section-block h2 { font-size:25px; letter-spacing:-.06em; }
+.launcher-grid { gap:10px; }
+.launcher { background:#fff; border:1px solid #d9dfd9; min-height:138px; padding:18px; transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+.launcher:hover { transform:translateY(-2px); border-color:#013220; box-shadow:0 12px 22px rgba(1,50,32,.08); }
+.launcher-number { color:#013220; }
+.launcher strong { font-size:16px; }
+.mobile-nav { background:#fff; box-shadow:0 -8px 24px rgba(7,17,13,.06); }
+@media (max-width:760px) { .topbar { height:76px; padding:0 18px; }.topbar:before { display:none; }.search-wrap { margin-top:0; }.workspace { padding:28px 18px 100px; }.workspace-heading h1 { font-size:38px; }.section-block { padding:20px 16px; }.launcher { min-height:132px; }.shell-brand img:last-child { width:118px; } }

@@ -106,7 +106,7 @@ export default function DashboardPage() {
 
   return <div className="app-shell">
     <aside className={`sidebar ${menuOpen ? 'sidebar-open' : ''}`}>
-      <div className="sidebar-brand"><span className="brand-mark">BP</span><span>Burner Point</span><button className="close-menu" onClick={() => setMenuOpen(false)} aria-label="Close navigation">X</button></div>
+      <div className="sidebar-brand"><Link href="/dashboard" className="shell-brand"><img src="/brand/burner-point-mark.svg" alt="" /><img src="/brand/burner-point-wordmark.svg" alt="Burner Point" /></Link><button className="close-menu" onClick={() => setMenuOpen(false)} aria-label="Close navigation">X</button></div>
       <div className="sidebar-scroll">{groups.map((group) => <div className="nav-group" key={group}><p>{group}</p>{navigation.filter((item) => item.group === group).map((item) => <Link data-tour={item.label === 'BP Messenger Pro' ? 'messages' : item.label === 'Transactions' ? 'activity' : item.label === 'Security' ? 'account-security' : undefined} className={pathname === item.href ? 'nav-item active' : 'nav-item'} href={item.href} key={item.href} onClick={() => setMenuOpen(false)}><span className="nav-glyph">{item.label.slice(0, 1)}</span>{item.label}</Link>)}</div>)}</div>
       <div className="sidebar-footer"><Link href="/dashboard/profile">Account menu</Link><button onClick={async () => { await signOut(); window.location.href = '/sign-in'; }}>Sign Out <span>Ã¢â€ â€”</span></button></div>
     </aside>
