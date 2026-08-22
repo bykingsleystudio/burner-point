@@ -73,8 +73,8 @@ export const STACK_REGISTRY: StackIntegrationDefinition[] = [
     category: 'frontend',
     priority: 'core',
     exposure: 'public-client',
-    role: 'Burner Point design system implementation',
-    productSurface: 'Web layout, components, brand states',
+    role: 'Shared utility styling runtime',
+    productSurface: 'Client styling utilities',
     statusWhenNoEnv: 'ready',
   },
   {

@@ -1,17 +1,14 @@
 # Burner Point
 
-Burner Point is a production telecom and privacy platform built around Supabase, Next.js, NestJS, Railway, Vercel, and Expo.
+Burner Point is a production telecom and privacy platform built around Supabase, NestJS, and Railway.
 
 ## Production surfaces
 
-- Web: `https://burnerpoint.com`
 - API: `https://api.burnerpoint.com`
 - WebSocket: `wss://api.burnerpoint.com`
 
 ## Stack
 
-- Web: Next.js, React, TypeScript, Tailwind CSS
-- Mobile: React Native, Expo, EAS
 - API: NestJS on Railway
 - Core platform: Supabase Auth, Postgres, Realtime, Storage
 - Payments: Paystack, Flutterwave, Paddle, NOWPayments
@@ -25,8 +22,6 @@ Burner Point is a production telecom and privacy platform built around Supabase,
 ```text
 apps/
   api/
-  mobile/
-  web/
 docs/
 supabase/
 packages/
@@ -39,15 +34,9 @@ scripts/
 npm install
 cp .env.example .env
 npm run build --prefix apps/api
-npm run build --prefix apps/web
-cd apps/mobile && npx tsc --noEmit
 ```
 
-Local URLs:
-
-- Web: `http://localhost:3000`
-- API: `http://localhost:3001`
-- API docs: `http://localhost:3001/api/docs`
+Local API URL: `http://localhost:3001`
 
 ## Canonical docs
 
@@ -65,9 +54,6 @@ Local URLs:
 ```bash
 npm run security:scan
 npm run build --prefix apps/api
-npm run build --prefix apps/web
-cd apps/mobile && npx tsc --noEmit
-npm run test:e2e --prefix apps/web
 ```
 
 ## Support

@@ -21,11 +21,8 @@
     "lint": "npm run lint --prefix apps/api",
     "security:scan": "node scripts/security/scan-secrets.mjs",
     "verify:api": "npm run build --prefix apps/api",
-    "verify:web": "npm run build --prefix apps/web",
-    "verify:web:e2e": "npm run test:e2e --prefix apps/web",
-    "verify:mobile": "cd apps/mobile && npx tsc --noEmit",
     "test:billing": "node -r ts-node/register/transpile-only --test apps/api/test/call-billing.test.cjs apps/api/test/credits-pricing.test.cjs",
-    "release:verify": "npm run security:scan && npm run verify:api && npm run verify:web && npm run verify:mobile && npm run test:billing",
+    "release:verify": "npm run security:scan && npm run verify:api && npm run test:billing",
     "test": "npm run build && echo 'Build verification passed - TypeScript compilation successful'"
   },
   "dependencies": {
