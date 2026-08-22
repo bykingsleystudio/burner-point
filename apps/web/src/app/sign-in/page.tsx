@@ -10,7 +10,7 @@ export default function SignInPage() {
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setMessage('');
     const form = new FormData(event.currentTarget);
-    try { const tokens = await apiRequest<{ accessToken: string; refreshToken: string; userId: string }>('/auth/login', { method: 'POST', body: JSON.stringify({ identifier: form.get('identifier'), password: form.get('password') }) }); storeTokens(tokens); window.location.href = '/dashboard'; }
+    try { const tokens = await apiRequest<{ accessToken: string; refreshToken: string; userId: string }>('/auth/login', { method: 'POST', body: JSON.stringify({ identifier: form.get('identifier'), password: form.get('password') }) }); storeTokens(tokens); window.localStorage.setItem('bp_announcement_pending', 'true'); window.location.href = '/dashboard'; }
     catch (error) { setMessage(error instanceof Error ? error.message : 'Sign-in failed. Please try again.'); setBusy(false); }
   }
   async function googleSignIn() { setBusy(true); setMessage(''); try { const result = await apiRequest<{ url: string }>('/auth/oauth/google', { method: 'POST' }); window.location.href = result.url; } catch (error) { setMessage(error instanceof Error ? error.message : 'Google sign-in is unavailable.'); setBusy(false); } }
