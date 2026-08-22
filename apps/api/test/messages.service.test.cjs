@@ -32,7 +32,11 @@ function createService({ ownedNumber = true, messages = [], unreadCount = 0 } = 
   };
   const gateway = { emitToUser: (userId, event, payload) => emitted.push({ userId, event, payload }) };
   const developerWebhooks = { enqueueDeveloperWebhookEvent: async () => ({ queued: 0 }) };
-  return { service: new MessagesService(messageRepo, numberRepo, provider, gateway, developerWebhooks), emitted, sent };
+  const revenueCatService = {
+    getEntitlementConfig: () => ({ messenger: 'messenger', premium: 'premium' }),
+    hasAnyActiveEntitlement: async () => true,
+  };
+  return { service: new MessagesService(messageRepo, numberRepo, provider, gateway, developerWebhooks, revenueCatService), emitted, sent };
 }
 
 test('sending from an owned number persists a provider-addressable queued message and emits it privately', async () => {

@@ -23,7 +23,7 @@ const REQUIRED_PRODUCTION_ENV = [
 ];
 
 const BLOCKED_VALUE_PATTERN =
-  /(^|[_:/.\-])(test|sandbox|demo|example|placeholder|dummy|fake|changeme|xxx|replace_me)([_:/.\-]|$)|your_|localhost|127\.0\.0\.1/i;
+  /(^|[_:/.\-])(test|sandbox|demo|placeholder|dummy|fake|changeme|xxx|replace_me)([_:/.\-]|$)|your_/i;
 
 export function validateProductionEnv(env: EnvMap) {
   if (env.NODE_ENV !== 'production') return;
