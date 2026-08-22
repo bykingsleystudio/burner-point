@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { apiRequest, getAccessToken, getRefreshToken, signOut } from '../../../lib/api';
+import { subscribeToRealtime } from '../../../lib/realtime';
 import { LoadingState, StatusBadge } from '../../../components/dashboard-ui';
 
 const navigation = [
@@ -67,6 +68,7 @@ export default function DashboardPage() {
   const [tourStep, setTourStep] = useState<number | null>(null);
   const [announcementOpen, setAnnouncementOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [realtimeVersion, setRealtimeVersion] = useState(0);
 
   useEffect(() => {
     if (!getAccessToken() && !getRefreshToken()) {
@@ -77,6 +79,23 @@ export default function DashboardPage() {
       .then((data) => { setBalance(data); setBalanceState('ready'); })
       .catch(() => setBalanceState('empty'));
   }, []);
+
+  useEffect(() => subscribeToRealtime([
+    'billing.balance.updated',
+    'billing.subscription.updated',
+    'message.sent',
+    'message.received',
+    'message.inbound',
+    'message.status',
+    'message.read',
+    'messenger.call.updated',
+    'call.incoming',
+  ], () => {
+    setRealtimeVersion((version) => version + 1);
+    apiRequest<WalletBalance>('/wallet/balance')
+      .then((data) => { setBalance(data); setBalanceState('ready'); })
+      .catch(() => setBalanceState('empty'));
+  }), []);
 
   useEffect(() => {
     const userId = window.localStorage.getItem('bp_user_id') ?? 'current';
@@ -117,7 +136,7 @@ export default function DashboardPage() {
     <div className="app-main">
       <header className="topbar"><button className="menu-toggle" onClick={() => setMenuOpen(true)} aria-label="Open navigation">Menu</button><div className="search-wrap"><div className="search-box"><span>?</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search products, orders, messages..." aria-label="Search workspace" /></div>{search && <SearchResults query={search} close={() => setSearch('')} />}</div><div className="top-actions"><div className="balance-chip" data-tour="balance"><Link href="/dashboard/wallet"><span className="balance-label">Balance</span><strong>{balanceState === 'ready' ? formatCents(balance?.availableUsdCents, balance?.displayCurrency) : balanceState === 'loading' ? '...' : 'Unavailable'}</strong></Link><button className="add-funds-trigger" onClick={() => setFundingOpen(true)} aria-label="Add funds" title="Add funds">+</button></div><Link href="/dashboard/credits" className="credits-link">Credits</Link><Link href="/dashboard/notifications" aria-label="Notifications" className="icon-button">!</Link><Link href="/dashboard/support" className="support-link">Support</Link><div className="profile-menu"><button className="avatar" onClick={() => setProfileMenuOpen((open) => !open)} aria-label="Open profile menu" aria-expanded={profileMenuOpen} data-tour="account-security">BP</button>{profileMenuOpen && <div className="profile-menu-popover"><Link href="/dashboard/profile" onClick={() => setProfileMenuOpen(false)}>Profile</Link><Link href="/dashboard/settings" onClick={() => setProfileMenuOpen(false)}>Settings</Link><button onClick={async () => { await signOut(); window.location.href = '/sign-in'; }}>Sign Out</button></div>}</div></div></header>
       <main className="workspace"><div className="workspace-heading"><div><p className="eyebrow">{isHome ? 'COMMAND CENTER' : 'BURNER POINT'}</p><h1>{isHome ? 'Your workspace' : activeTitle}</h1></div>{isHome && <Link href="/dashboard/wallet" className="button button-dark">+ Add funds</Link>}</div>
-      {isHome ? <HomeContent balance={balance} balanceState={balanceState} /> : pathname.startsWith('/dashboard/payments/success') ? <PaymentSuccessContent /> : <ProductContent title={activeTitle} />}</main>
+      {isHome ? <HomeContent key={realtimeVersion} balance={balance} balanceState={balanceState} /> : pathname.startsWith('/dashboard/payments/success') ? <PaymentSuccessContent key={realtimeVersion} /> : <ProductContent key={realtimeVersion} title={activeTitle} />}</main>
     </div>
     <nav className="mobile-nav"><Link href="/dashboard" className={pathname === '/dashboard' ? 'mobile-active' : ''}><span>H</span>Home</Link><Link href="/dashboard/messenger" className={pathname === '/dashboard/messenger' ? 'mobile-active' : ''} data-tour="messages"><span>M</span>Messages</Link><button className={mobileSheet === 'hub' ? 'mobile-active' : ''} onClick={() => setMobileSheet('hub')}><span>H</span>Hub</button><button className={mobileSheet === 'store' ? 'mobile-active' : ''} onClick={() => setMobileSheet('store')}><span>S</span>Store</button><Link href="/dashboard/vpn" className={pathname === '/dashboard/vpn' ? 'mobile-active' : ''}><span>V</span>VPN</Link><Link href="/dashboard/transactions" className={pathname === '/dashboard/transactions' ? 'mobile-active' : ''} data-tour="activity"><span>A</span>Activity</Link></nav>{fundingOpen && <AddFundsDialog close={() => setFundingOpen(false)} />}{mobileSheet && <MobileProductSheet type={mobileSheet} close={() => setMobileSheet(null)} />}{announcementOpen && <AnnouncementModal close={dismissAnnouncement} />}{tourStep !== null && <ProductTour step={tourSteps[tourStep]} index={tourStep} total={tourSteps.length} next={() => tourStep === tourSteps.length - 1 ? skipTour() : setTourStep(tourStep + 1)} skip={skipTour} />}
   </div>;
