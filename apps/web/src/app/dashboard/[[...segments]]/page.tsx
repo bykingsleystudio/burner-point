@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { apiRequest, signOut } from '../../../lib/api';
+import { apiRequest, getAccessToken, getRefreshToken, signOut } from '../../../lib/api';
 import { LoadingState, StatusBadge } from '../../../components/dashboard-ui';
 
 const navigation = [
@@ -69,6 +69,10 @@ export default function DashboardPage() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   useEffect(() => {
+    if (!getAccessToken() && !getRefreshToken()) {
+      window.location.href = `/sign-in?next=${encodeURIComponent(window.location.pathname)}`;
+      return;
+    }
     apiRequest<WalletBalance>('/wallet/balance')
       .then((data) => { setBalance(data); setBalanceState('ready'); })
       .catch(() => setBalanceState('empty'));
@@ -158,16 +162,20 @@ function PaymentSuccessContent() {
   useEffect(() => {
     const reference = new URLSearchParams(window.location.search).get('ref');
     let attempts = 0;
+    let interval: number | undefined;
     async function checkPayment() {
       const [history, wallet] = await Promise.all([apiRequest<unknown>('/wallet/transactions').catch(() => []), apiRequest<WalletBalance>('/wallet/balance').catch(() => null)]);
       const match = toCollection(history).find((item) => { if (!item || typeof item !== 'object') return false; const record = item as Record<string, unknown>; return reference && (record.referenceId === reference || record.externalReference === reference) && record.status === 'completed'; });
       if (match && typeof match === 'object' && wallet) { setTransaction(match as Record<string, unknown>); setUpdatedBalance(wallet); setChecking(false); return true; }
       attempts += 1;
-      if (attempts >= 10) setChecking(false);
+      if (attempts >= 10) {
+        setChecking(false);
+        if (interval !== undefined) window.clearInterval(interval);
+      }
       return false;
     }
     checkPayment();
-    const interval = window.setInterval(async () => { if (await checkPayment()) window.clearInterval(interval); }, 3000);
+    interval = window.setInterval(async () => { if (await checkPayment() && interval !== undefined) window.clearInterval(interval); }, 3000);
     return () => window.clearInterval(interval);
   }, []);
   if (checking) return <section className="payment-result"><p className="eyebrow">PAYMENT PROCESSING</p><h2>We are confirming your payment.</h2><p>Balance and receipt details will appear after the payment webhook is verified.</p></section>;
