@@ -27,9 +27,7 @@ import { buildWalletPresentation } from '../../config/money';
 import { EventsGateway } from '../gateway/events.gateway';
 import { UsersService } from '../users/users.service';
 import {
-  defaultNumberDurationDays,
   getNumberProductBasePriceUsdCents,
-  normalizeNumberDurationDays,
   VERIFICATION_LOCK_TIMEOUT_MINUTES,
 } from './product-credit-pricing';
 import {

@@ -4,10 +4,6 @@ import axios from 'axios';
 import * as Twilio from 'twilio';
 import { RedisService } from './redis.service';
 import { resolveApiUrl } from '../../config/runtime-env';
-import { JuicySmsAdapter } from '../providers/juicysms.adapter';
-import { TextVerifiedAdapter } from '../providers/textverified.adapter';
-import { SMSPoolAdapter } from '../providers/smspool.adapter';
-import { QuackrAdapter } from '../providers/quackr.adapter';
 
 export enum ProviderName {
   TWILIO = 'twilio',
@@ -484,7 +480,7 @@ export class ProviderService {
         sendSMS: async () => { throw new Error('JuicySMS outbound messaging is not active in this release'); },
         buyNumber: async () => { throw new Error('JuicySMS number purchase must use verification-hub.createOrder'); },
         releaseNumber: async () => undefined,
-        receiveWebhook: async (payload) => ({ success: true }),
+        receiveWebhook: async (_payload) => ({ success: true }),
         startCall: async () => { throw new Error('JuicySMS voice is not active in this release'); },
         endCall: async () => undefined,
         lookupAvailability: async () => [],
@@ -501,7 +497,7 @@ export class ProviderService {
         sendSMS: async () => { throw new Error('TextVerified outbound messaging is not active in this release'); },
         buyNumber: async () => { throw new Error('TextVerified number purchase must use verification-hub.createOrder'); },
         releaseNumber: async () => undefined,
-        receiveWebhook: async (payload) => ({ success: true }),
+        receiveWebhook: async (_payload) => ({ success: true }),
         startCall: async () => { throw new Error('TextVerified voice is not active in this release'); },
         endCall: async () => undefined,
         lookupAvailability: async () => [],
@@ -518,7 +514,7 @@ export class ProviderService {
         sendSMS: async () => { throw new Error('SMSPool outbound messaging is not active in this release'); },
         buyNumber: async () => { throw new Error('SMSPool number purchase must use rental-hub.createRental'); },
         releaseNumber: async () => undefined,
-        receiveWebhook: async (payload) => ({ success: true }),
+        receiveWebhook: async (_payload) => ({ success: true }),
         startCall: async () => { throw new Error('SMSPool voice is not active in this release'); },
         endCall: async () => undefined,
         lookupAvailability: async () => [],
@@ -535,7 +531,7 @@ export class ProviderService {
         sendSMS: async () => { throw new Error('Quackr outbound messaging is not active in this release'); },
         buyNumber: async () => { throw new Error('Quackr number purchase must use rental-hub.createRental'); },
         releaseNumber: async () => undefined,
-        receiveWebhook: async (payload) => ({ success: true }),
+        receiveWebhook: async (_payload) => ({ success: true }),
         startCall: async () => { throw new Error('Quackr voice is not active in this release'); },
         endCall: async () => undefined,
         lookupAvailability: async () => [],
@@ -565,9 +561,9 @@ export class ProviderService {
     return ProviderName.TWILIO;
   }
 
-  private getVerificationProviderChain(countryCode: string, serviceCode?: string): ProviderName[] {
+  private getVerificationProviderChain(countryCode: string, _serviceCode?: string): ProviderName[] {
     const verifyHubEnabled = this.configService.get<string>('VERIFY_HUB_ENABLED')?.toLowerCase() === 'true';
-    const verifyHubProviders = this.configService.get<string>('VERIFY_HUB_PROVIDERS')?.split(',').map((p) => p.trim()) || [];
+    this.configService.get<string>('VERIFY_HUB_PROVIDERS')?.split(',').map((p) => p.trim());
     const verifyHubPriority = this.configService.get<string>('VERIFY_HUB_PROVIDER_PRIORITY')?.split(',').map((p) => p.trim()) || [];
 
     // If feature gate is off, fall back to legacy providers only

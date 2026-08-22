@@ -47,6 +47,13 @@ export function clearTokens() {
   window.localStorage.removeItem('bp_user_id');
 }
 
+export async function verifyTurnstile(token: string) {
+  return apiRequest<{ success: boolean }>('/auth/turnstile/verify', {
+    method: 'POST',
+    body: JSON.stringify({ token }),
+  });
+}
+
 export async function apiRequest<T>(path: string, init: RequestInit = {}, retry = true): Promise<T> {
   const method = (init.method ?? 'GET').toUpperCase();
   if (method === 'GET' && retry) {

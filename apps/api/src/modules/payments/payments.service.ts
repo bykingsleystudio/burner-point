@@ -85,12 +85,6 @@ interface ProviderVerificationResult {
   reason?: string;
 }
 
-const USD_CENTS = {
-  verification: 99,
-  rental: 599,
-  subscription: 1599,
-};
-
 const PADDLE_CONFIG = {
   API_URL: 'https://api.paddle.com',
   SANDBOX_API_URL: 'https://sandbox-api.paddle.com',

@@ -32,12 +32,13 @@ interface CachedRates {
 @Injectable()
 export class FxService {
   private readonly logger = new Logger(FxService.name);
-  private readonly provider = 'forexrateapi';
 
   constructor(
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
   ) {}
+
+  private readonly provider = 'forexrateapi';
 
   getSupportedCurrencies(): string[] {
     return [...new Set(Object.values(countries).flatMap((country) => country.currency))].sort();
@@ -152,12 +153,12 @@ export class FxService {
     if (!apiKey) throw new Error('FOREXRATEAPI_API_KEY is not configured');
 
     const baseUrl = (this.configService.get<string>('FOREXRATEAPI_BASE_URL') || 'https://api.forexrateapi.com').replace(/\/+$/, '');
+    const supportedCurrencies = this.getSupportedCurrencies().filter((currency) => currency !== PLATFORM_CURRENCY).join(',');
 
-    const response = await axios.get<{ base: string; rates: Record<string, number>; updated_at?: string }>(
+    const response = await axios.get<{ base: string; rates: Record<string, number>; updated_at?: string; timestamp?: number }>(
       `${baseUrl}/v1/latest`,
       {
-        params: { base: PLATFORM_CURRENCY },
-        headers: { 'X-API-KEY': apiKey },
+        params: { api_key: apiKey, base: PLATFORM_CURRENCY, currencies: supportedCurrencies },
         timeout: 10000,
       },
     );
@@ -172,7 +173,11 @@ export class FxService {
     const payload: CachedRates = {
       base: PLATFORM_CURRENCY,
       rates: response.data.rates,
-      providerTimestamp: response.data.updated_at ? new Date(response.data.updated_at).toISOString() : fetchedAt,
+      providerTimestamp: response.data.updated_at
+        ? new Date(response.data.updated_at).toISOString()
+        : response.data.timestamp
+          ? new Date(response.data.timestamp * 1000).toISOString()
+          : fetchedAt,
       fetchedAt,
       expiresAt,
     };

@@ -33,13 +33,13 @@ test('provider response exposes its timestamp and caches the USD rates payload',
   axios.get = async () => ({ data: { base: 'USD', timestamp: 1700000000, rates: { NGN: 1500.1234 } } });
   try {
     const redis = makeRedis();
-    const service = new FxService(makeConfig({ OPEN_EXCHANGE_RATES_APP_ID: 'server-only', FX_CACHE_TTL_SECONDS: 300 }), redis);
+    const service = new FxService(makeConfig({ FOREXRATEAPI_API_KEY: 'server-only', FX_CACHE_TTL_SECONDS: 300 }), redis);
     const response = await service.getRate('NGN');
     assert.equal(response.baseCurrency, 'USD');
     assert.equal(response.quoteCurrency, 'NGN');
     assert.equal(response.rate, 1500.1234);
     assert.equal(response.providerTimestamp, '2023-11-14T22:13:20.000Z');
-    assert.equal(response.provider, 'openexchangerates');
+    assert.equal(response.provider, 'forexrateapi');
     assert.equal(response.cached, false);
   } finally {
     axios.get = originalGet;

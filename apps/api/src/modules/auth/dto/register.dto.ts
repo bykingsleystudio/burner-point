@@ -55,4 +55,8 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   referralCode?: string;
+
+  @ApiProperty({ description: 'Cloudflare Turnstile response token' })
+  @IsString()
+  turnstileToken: string;
 }

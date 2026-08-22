@@ -341,7 +341,7 @@ export const DEPLOYMENT_TARGETS: DeploymentTargetDefinition[] = [
     environmentScope: ['staging', 'production'],
     ownerSurface: 'Primary Nigerian/local card and transfer checkout',
     requiredEnv: ['PAYSTACK_SECRET_KEY'],
-    optionalEnv: ['PAYSTACK_WEBHOOK_SECRET', 'PAYSTACK_PUBLIC_KEY', 'OPEN_EXCHANGE_RATES_APP_ID'],
+    optionalEnv: ['PAYSTACK_WEBHOOK_SECRET', 'PAYSTACK_PUBLIC_KEY'],
     productionRequired: true,
     releaseCheck: 'Checkout initialization, webhook verification, ledger crediting, and reconciliation are tested.',
     rollback: 'Disable Paystack checkout route and keep Paddle/NOWPayments available where policy allows.',

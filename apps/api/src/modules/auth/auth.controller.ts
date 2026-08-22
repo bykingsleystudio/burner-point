@@ -17,6 +17,7 @@ export class AuthController {
   @Post('register')
   @ApiOperation({ summary: 'Register a new account with Supabase' })
   async register(@Body() dto: RegisterDto, @Req() req: Request) {
+    await this.requireTurnstile(dto.turnstileToken, req);
     return this.authService.register(dto, req.ip);
   }
 
@@ -24,6 +25,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login with email or phone number and password' })
   async login(@Body() dto: LoginDto, @Req() req: Request) {
+    await this.requireTurnstile(dto.turnstileToken, req);
     return this.authService.login(dto, req.ip);
   }
 
@@ -65,10 +67,11 @@ export class AuthController {
   @Post('oauth/:provider')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'OAuth login with Google, Apple, or Microsoft' })
-  async oauthLogin(@Param('provider') provider: 'google' | 'apple' | 'microsoft') {
+  async oauthLogin(@Param('provider') provider: 'google' | 'apple' | 'microsoft', @Body('turnstileToken') turnstileToken: string, @Req() req: Request) {
     if (!['google', 'apple', 'microsoft'].includes(provider)) {
       throw new BadRequestException('Unsupported OAuth provider');
     }
+    await this.requireTurnstile(turnstileToken, req);
     return this.authService.oauthLogin(provider);
   }
 
@@ -104,6 +107,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Verify a Cloudflare Turnstile token for the web auth flow' })
   async verifyTurnstile(@Body('token') token: string, @Req() req: Request) {
+    return this.authService.verifyTurnstile(token, req.ip);
+  }
+
+  private requireTurnstile(token: string, req: Request) {
     return this.authService.verifyTurnstile(token, req.ip);
   }
 

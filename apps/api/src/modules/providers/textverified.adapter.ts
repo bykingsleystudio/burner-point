@@ -13,11 +13,6 @@ import { ProviderName, ProviderPricingResult, RouteProduct } from '../global/pro
  * Currencies: USD
  */
 
-interface TextVerifiedAuthResponse {
-  token: string;
-  expiresIn: number;
-}
-
 interface TextVerifiedService {
   id: string;
   serviceName: string;
