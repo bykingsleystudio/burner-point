@@ -22,7 +22,8 @@ function userFacingError(status: number, fallback: string) {
   return fallback;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
+const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/+$/, '') ?? '';
+const API_URL = configuredApiUrl ? `${configuredApiUrl.replace(/\/api$/, '')}/api` : '';
 const inFlightGetRequests = new Map<string, Promise<unknown>>();
 
 export function getAccessToken() {
