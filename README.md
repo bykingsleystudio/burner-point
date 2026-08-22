@@ -40,6 +40,8 @@ Local API URL: `http://localhost:3001`
 
 ## Canonical docs
 
+- [Frontend design system](docs/frontend-design-system.md)
+- [Provider integration contract](docs/provider-integrations.md)
 - [Environment](docs/environment.md)
 - [Deployment](docs/deployment.md)
 - [Security](docs/security.md)
